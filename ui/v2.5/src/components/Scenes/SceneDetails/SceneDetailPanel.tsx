@@ -7,6 +7,7 @@ import { PerformerCard } from "src/components/Performers/PerformerCard";
 import { sortPerformers } from "src/core/performers";
 import { DirectorLink } from "src/components/Shared/Link";
 import { SimilarScenes } from "./SimilarScenes";
+import { URLsField } from "src/utils/field";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -34,12 +35,14 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     ));
     return (
       <>
-        <h6>
-          <FormattedMessage
-            id="countables.tags"
-            values={{ count: props.scene.tags.length }}
-          />
-        </h6>
+        <div className="mt-3 mb-3">
+          <h4>
+            <FormattedMessage
+              id="countables.tags"
+              values={{ count: props.scene.tags.length }}
+            />
+          </h4>
+        </div>
         {tags}
       </>
     );
@@ -58,12 +61,14 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
     return (
       <>
-        <h6>
-          <FormattedMessage
-            id="countables.performers"
-            values={{ count: props.scene.performers.length }}
-          />
-        </h6>
+        <div className="mt-3 mb-3">
+          <h4>
+            <FormattedMessage
+              id="countables.performers"
+              values={{ count: props.scene.performers.length }}
+            />
+          </h4>
+        </div>
         <div className="row justify-content-center scene-performers">
           {cards}
         </div>
@@ -78,6 +83,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     <>
       <div className="row">
         <div className={`${sceneDetailsWidth} col-12 scene-details`}>
+          <URLsField id="urls" urls={props.scene.urls} truncate />
           <h6>
             <FormattedMessage id="created_at" />:{" "}
             {TextUtils.formatDateTime(intl, props.scene.created_at)}{" "}

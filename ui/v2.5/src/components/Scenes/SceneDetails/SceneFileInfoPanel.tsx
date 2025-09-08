@@ -292,7 +292,6 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
         )}
         {renderFunscript()}
         {renderInteractiveSpeed()}
-        <URLsField id="urls" urls={props.scene.urls} truncate />
         {renderStashIDs()}
       </dl>
 
