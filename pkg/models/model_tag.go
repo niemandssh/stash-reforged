@@ -12,6 +12,7 @@ type Tag struct {
 	Favorite      bool      `json:"favorite"`
 	Description   string    `json:"description"`
 	IgnoreAutoTag bool      `json:"ignore_auto_tag"`
+	Weight        float64   `json:"weight"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 
@@ -25,6 +26,7 @@ func NewTag() Tag {
 	return Tag{
 		CreatedAt: currentTime,
 		UpdatedAt: currentTime,
+		Weight:    0.5, // Default weight
 	}
 }
 
@@ -52,6 +54,7 @@ type TagPartial struct {
 	Description   OptionalString
 	Favorite      OptionalBool
 	IgnoreAutoTag OptionalBool
+	Weight        OptionalFloat64
 	CreatedAt     OptionalTime
 	UpdatedAt     OptionalTime
 

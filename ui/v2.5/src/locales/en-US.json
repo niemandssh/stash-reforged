@@ -27,5 +27,7 @@
     "hair_color": "Hair Color",
     "organized": "Organized",
     "performer_favorite": "Performer Favorited",
-    "is_broken": "Broken"
+    "is_broken": "Broken",
+    "tag_weight": "Tag Weight",
+    "tag_weight_help": "Weight for similarity calculation (0.0 - 1.0, default: 0.5)"
 }

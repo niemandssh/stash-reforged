@@ -205,6 +205,27 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
           setUpdateField({ description: v })
         )}
 
+        <Form.Group controlId="weight">
+          <Form.Label>
+            <FormattedMessage id="tag_weight" />
+          </Form.Label>
+          <Form.Control
+            type="number"
+            min="0"
+            max="1"
+            step="0.1"
+            value={updateInput.weight ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setUpdateField({ 
+                weight: value === "" ? undefined : parseFloat(value) 
+              });
+            }}
+            disabled={isUpdating}
+            title={intl.formatMessage({ id: "tag_weight_help" })}
+          />
+        </Form.Group>
+
         <Tags
           isUpdating={isUpdating}
           controlId="parent-tags"

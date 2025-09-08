@@ -24,6 +24,7 @@ func (j *SimilarityJob) Execute(ctx context.Context, progress *job.Progress) err
 	calculator := similarity.NewSceneSimilarityCalculator(
 		repo.SceneSimilarity,
 		repo.Scene,
+		repo.Tag,
 		weights,
 	)
 

@@ -18,7 +18,7 @@ import { Tag, TagSelect } from "../TagSelect";
 
 interface ITagEditPanel {
   tag: Partial<GQL.TagDataFragment>;
-  onSubmit: (tag: GQL.TagCreateInput) => Promise<void>;
+  onSubmit: (tag: GQL.TagUpdateInput) => Promise<void>;
   onCancel: () => void;
   onDelete: () => void;
   setImage: (image?: string | null) => void;
@@ -52,6 +52,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     parent_ids: yup.array(yup.string().required()).defined(),
     child_ids: yup.array(yup.string().required()).defined(),
     ignore_auto_tag: yup.boolean().defined(),
+    weight: yup.number().min(0).max(1).default(0.5),
     image: yup.string().nullable().optional(),
   });
 
@@ -63,6 +64,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     parent_ids: (tag?.parents ?? []).map((t) => t.id),
     child_ids: (tag?.children ?? []).map((t) => t.id),
     ignore_auto_tag: tag?.ignore_auto_tag ?? false,
+    weight: tag?.weight ?? 0.5,
   };
 
   type InputValues = yup.InferType<typeof schema>;
@@ -208,6 +210,12 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         {renderInputField("sort_name", "text")}
         {renderStringListField("aliases")}
         {renderInputField("description", "textarea")}
+        {renderInputField("weight", "number", "tag_weight", { 
+          min: 0, 
+          max: 1, 
+          step: 0.1,
+          title: intl.formatMessage({ id: "tag_weight_help" })
+        })}
         {renderParentTagsField()}
         {renderSubTagsField()}
         <hr />

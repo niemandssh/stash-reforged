@@ -365,7 +365,7 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
     };
   });
 
-  async function onSave(input: GQL.TagCreateInput) {
+  async function onSave(input: GQL.TagUpdateInput) {
     const oldRelations = {
       parents: tag.parents ?? [],
       children: tag.children ?? [],

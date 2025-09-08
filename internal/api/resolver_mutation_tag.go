@@ -38,6 +38,9 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input TagCreateInput) 
 	newTag.Favorite = translator.bool(input.Favorite)
 	newTag.Description = translator.string(input.Description)
 	newTag.IgnoreAutoTag = translator.bool(input.IgnoreAutoTag)
+	if input.Weight != nil {
+		newTag.Weight = *input.Weight
+	}
 
 	var err error
 
@@ -107,6 +110,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input TagUpdateInput) 
 	updatedTag.Favorite = translator.optionalBool(input.Favorite, "favorite")
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
 	updatedTag.Description = translator.optionalString(input.Description, "description")
+	updatedTag.Weight = translator.optionalFloat64(input.Weight, "weight")
 
 	updatedTag.Aliases = translator.updateStrings(input.Aliases, "aliases")
 
@@ -175,6 +179,7 @@ func (r *mutationResolver) BulkTagUpdate(ctx context.Context, input BulkTagUpdat
 	updatedTag.Description = translator.optionalString(input.Description, "description")
 	updatedTag.Favorite = translator.optionalBool(input.Favorite, "favorite")
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
+	updatedTag.Weight = translator.optionalFloat64(input.Weight, "weight")
 
 	updatedTag.Aliases = translator.updateStringsBulk(input.Aliases, "aliases")
 
