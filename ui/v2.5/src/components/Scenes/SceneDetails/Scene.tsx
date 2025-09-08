@@ -602,7 +602,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <div className="scene-header">
               {scene.is_broken && <BrokenBadge />}
               <h3 className={cx({ "no-studio": !scene.studio })}>
-                <TruncatedText lineCount={2} text={title} />
+                {title}
               </h3>
             </div>
           </div>

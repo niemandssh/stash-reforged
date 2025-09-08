@@ -74,7 +74,6 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
           id="path"
           url={`file://${props.file.path}`}
           value={`file://${props.file.path}`}
-          truncate
         />
         <TextField id="filesize">
           <span className="text-truncate">
