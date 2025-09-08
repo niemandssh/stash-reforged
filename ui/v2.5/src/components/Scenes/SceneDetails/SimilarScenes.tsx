@@ -23,7 +23,7 @@ import { GroupTag } from "src/components/Groups/GroupTag";
 import { faTag, faFilm, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
 interface SimilarScenesProps {
-  scene: GQL.Scene;
+  scene: GQL.SceneDataFragment;
   limit?: number;
 }
 
@@ -315,7 +315,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (loading) {
     return (
-      <div className="similar-scenes mt-5">
+      <div className="similar-scenes mt-3">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
@@ -326,7 +326,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (error) {
     return (
-      <div className="similar-scenes mt-5">
+      <div className="similar-scenes mt-3">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
@@ -337,7 +337,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (allSimilarScenes.length === 0) {
     return (
-      <div className="similar-scenes mt-5">
+      <div className="similar-scenes mt-3">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
@@ -356,7 +356,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
   };
 
   return (
-    <div className="similar-scenes mt-5">
+    <div className="similar-scenes mt-3">
       <style>{`
         .similar-scenes .similarity-badge {
           position: absolute;
@@ -365,7 +365,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
           z-index: 10;
         }
       `}</style>
-      <div className="mb-3">
+      <div className="mt-3 mb-3">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
