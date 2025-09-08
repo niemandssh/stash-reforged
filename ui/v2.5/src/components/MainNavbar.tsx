@@ -234,19 +234,24 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
   }
 };
 
-// Функция для получения полностью случайной сцены
+// Функция для получения случайной сцены с рейтингом >= 55
 const getRandomScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
     
-    // Сначала получаем общее количество всех сцен
+    // Сначала получаем общее количество сцен с рейтингом >= 55
     const countResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
           per_page: 0, // Только количество
         },
-        scene_filter: {}, // Без фильтров - любые сцены
+        scene_filter: {
+          rating100: {
+            modifier: GQL.CriterionModifier.GreaterThan,
+            value: 54, // > 54 means >= 55
+          },
+        },
       },
     });
 
@@ -265,8 +270,14 @@ const getRandomScene = async (): Promise<string | null> => {
         filter: {
           per_page: 1,
           page: randomPage,
+          sort: "random",
         },
-        scene_filter: {}, // Без фильтров - любые сцены
+        scene_filter: {
+          rating100: {
+            modifier: GQL.CriterionModifier.GreaterThan,
+            value: 54, // > 54 means >= 55
+          },
+        },
       },
     });
 
