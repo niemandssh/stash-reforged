@@ -423,3 +423,12 @@ start-compiler-container:
 .PHONY: remove-compiler-container
 remove-compiler-container:
 	docker rm -f -v build
+
+dev:
+	make server-start
+
+fdev:
+	make ui-start
+
+compile:
+	make generate
