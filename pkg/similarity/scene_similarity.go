@@ -33,14 +33,16 @@ func DefaultSimilarityWeights() SimilarityWeights {
 type SceneSimilarityCalculator struct {
 	repository models.SceneSimilarityReaderWriter
 	sceneRepo  models.SceneReader
+	tagRepo    models.TagReader
 	weights    SimilarityWeights
 }
 
 // NewSceneSimilarityCalculator creates a new similarity calculator
-func NewSceneSimilarityCalculator(repository models.SceneSimilarityReaderWriter, sceneRepo models.SceneReader, weights SimilarityWeights) *SceneSimilarityCalculator {
+func NewSceneSimilarityCalculator(repository models.SceneSimilarityReaderWriter, sceneRepo models.SceneReader, tagRepo models.TagReader, weights SimilarityWeights) *SceneSimilarityCalculator {
 	return &SceneSimilarityCalculator{
 		repository: repository,
 		sceneRepo:  sceneRepo,
+		tagRepo:    tagRepo,
 		weights:    weights,
 	}
 }
@@ -90,7 +92,7 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 		fmt.Printf("DEBUG: Scene %d has %d tags: %v\n", scene1.ID, len(tags1), tags1)
 		fmt.Printf("DEBUG: Scene %d has %d tags: %v\n", scene2.ID, len(tags2), tags2)
 	}
-	tagScore, err := c.calculateTagSimilarity(tags1, tags2)
+	tagScore, err := c.calculateTagSimilarity(ctx, tags1, tags2)
 	if err != nil {
 		return 0, fmt.Errorf("calculating tag similarity: %w", err)
 	}
@@ -161,9 +163,9 @@ func (c *SceneSimilarityCalculator) calculateGroupSimilarity(groups1, groups2 []
 	return float64(shared) / float64(total), nil
 }
 
-// calculateTagSimilarity calculates similarity based on shared tags
+// calculateTagSimilarity calculates similarity based on shared tags with weights
 // Dynamic weight: more shared tags = higher similarity score
-func (c *SceneSimilarityCalculator) calculateTagSimilarity(tags1, tags2 []int) (float64, error) {
+func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
 	// Check if this is for scene 1 (we need to pass this info somehow)
 	// For now, let's always show debug for tag similarity
 	fmt.Printf("DEBUG: calculateTagSimilarity: tags1=%v, tags2=%v\n", tags1, tags2)
@@ -173,40 +175,96 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(tags1, tags2 []int) (
 		return 0.0, nil
 	}
 
-	shared := c.countSharedElements(tags1, tags2)
-	fmt.Printf("DEBUG: Shared tags: %d\n", shared)
+	// Get all unique tags from both scenes
+	allTags := make(map[int]bool)
+	for _, tagID := range tags1 {
+		allTags[tagID] = true
+	}
+	for _, tagID := range tags2 {
+		allTags[tagID] = true
+	}
+
+	// Load tag weights from database
+	tagWeights := make(map[int]float64)
+	for tagID := range allTags {
+		tag, err := c.tagRepo.Find(ctx, tagID)
+		if err != nil {
+			fmt.Printf("DEBUG: Error loading tag %d: %v\n", tagID, err)
+			continue
+		}
+		if tag != nil {
+			tagWeights[tagID] = tag.Weight
+		} else {
+			tagWeights[tagID] = 0.5 // Default weight if tag not found
+		}
+	}
+
+	// Calculate weighted similarity
+	var weightedShared float64
+	var weightedTotal float64
+
+	// Calculate weighted shared tags
+	sharedTags := make(map[int]bool)
+	for _, tagID := range tags1 {
+		if c.contains(tags2, tagID) {
+			sharedTags[tagID] = true
+			weight := tagWeights[tagID]
+			weightedShared += weight
+		}
+	}
+
+	// Calculate weighted total for both tag lists
+	for _, tagID := range tags1 {
+		weight := tagWeights[tagID]
+		weightedTotal += weight
+	}
+	for _, tagID := range tags2 {
+		weight := tagWeights[tagID]
+		weightedTotal += weight
+	}
+
+	// Subtract shared weights to avoid double counting
+	weightedTotal -= weightedShared
+
+	fmt.Printf("DEBUG: Weighted shared: %.3f, Weighted total: %.3f\n", weightedShared, weightedTotal)
 
 	// If no shared tags, return 0
-	if shared == 0 {
+	if weightedShared == 0 {
 		fmt.Printf("DEBUG: No shared tags, returning 0.0\n")
 		return 0.0, nil
 	}
 
-	total := len(tags1) + len(tags2) - shared
-	fmt.Printf("DEBUG: Total unique tags: %d (len1=%d, len2=%d, shared=%d)\n", total, len(tags1), len(tags2), shared)
-
-	if total == 0 {
-		fmt.Printf("DEBUG: Total is 0, returning 0.0\n")
+	if weightedTotal == 0 {
+		fmt.Printf("DEBUG: Weighted total is 0, returning 0.0\n")
 		return 0.0, nil
 	}
 
-	// Calculate coverage-based similarity instead of Jaccard
+	// Calculate coverage-based similarity with weights
 	// This gives higher scores when all tags from one scene are present in another
-	coverage1 := float64(shared) / float64(len(tags1)) // How much of tags1 is covered by tags2
-	coverage2 := float64(shared) / float64(len(tags2)) // How much of tags2 is covered by tags1
+	var weightedTags1, weightedTags2 float64
+	for _, tagID := range tags1 {
+		weightedTags1 += tagWeights[tagID]
+	}
+	for _, tagID := range tags2 {
+		weightedTags2 += tagWeights[tagID]
+	}
+
+	coverage1 := weightedShared / weightedTags1 // How much of tags1 is covered by tags2
+	coverage2 := weightedShared / weightedTags2 // How much of tags2 is covered by tags1
 
 	// Use the higher coverage (more generous scoring)
 	coverageScore := math.Max(coverage1, coverage2)
-	fmt.Printf("DEBUG: Coverage calculation: tags1=%d, tags2=%d, shared=%d\n", len(tags1), len(tags2), shared)
+	fmt.Printf("DEBUG: Weighted coverage calculation: tags1=%.3f, tags2=%.3f, shared=%.3f\n", weightedTags1, weightedTags2, weightedShared)
 	fmt.Printf("DEBUG: Coverage1: %.3f, Coverage2: %.3f, Final: %.3f\n", coverage1, coverage2, coverageScore)
 
 	// Apply dynamic multiplier based on number of shared tags
 	// More shared tags = higher multiplier (up to 2x for 5+ shared tags)
-	multiplier := 1.0 + math.Min(float64(shared-1)*0.2, 1.0)
-	fmt.Printf("DEBUG: Multiplier: 1.0 + min((%d-1)*0.2, 1.0) = %.3f\n", shared, multiplier)
+	sharedCount := len(sharedTags)
+	multiplier := 1.0 + math.Min(float64(sharedCount-1)*0.2, 1.0)
+	fmt.Printf("DEBUG: Multiplier: 1.0 + min((%d-1)*0.2, 1.0) = %.3f\n", sharedCount, multiplier)
 
 	finalScore := coverageScore * multiplier
-	fmt.Printf("DEBUG: Final tag similarity: %.3f * %.3f = %.3f\n", coverageScore, multiplier, finalScore)
+	fmt.Printf("DEBUG: Final weighted tag similarity: %.3f * %.3f = %.3f\n", coverageScore, multiplier, finalScore)
 
 	return finalScore, nil
 }
@@ -239,6 +297,16 @@ func (c *SceneSimilarityCalculator) countSharedElements(slice1, slice2 []int) in
 	}
 
 	return shared
+}
+
+// contains checks if a slice contains a specific element
+func (c *SceneSimilarityCalculator) contains(slice []int, element int) bool {
+	for _, item := range slice {
+		if item == element {
+			return true
+		}
+	}
+	return false
 }
 
 // CalculateAndStoreSimilarity calculates similarity between two scenes and stores it

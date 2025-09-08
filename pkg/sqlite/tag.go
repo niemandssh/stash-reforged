@@ -37,6 +37,7 @@ type tagRow struct {
 	Favorite      bool        `db:"favorite"`
 	Description   zero.String `db:"description"`
 	IgnoreAutoTag bool        `db:"ignore_auto_tag"`
+	Weight        float64     `db:"weight"`
 	CreatedAt     Timestamp   `db:"created_at"`
 	UpdatedAt     Timestamp   `db:"updated_at"`
 
@@ -51,6 +52,7 @@ func (r *tagRow) fromTag(o models.Tag) {
 	r.Favorite = o.Favorite
 	r.Description = zero.StringFrom(o.Description)
 	r.IgnoreAutoTag = o.IgnoreAutoTag
+	r.Weight = o.Weight
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
 }
@@ -63,6 +65,7 @@ func (r *tagRow) resolve() *models.Tag {
 		Favorite:      r.Favorite,
 		Description:   r.Description.String,
 		IgnoreAutoTag: r.IgnoreAutoTag,
+		Weight:        r.Weight,
 		CreatedAt:     r.CreatedAt.Timestamp,
 		UpdatedAt:     r.UpdatedAt.Timestamp,
 	}
@@ -94,6 +97,7 @@ func (r *tagRowRecord) fromPartial(o models.TagPartial) {
 	r.setNullString("description", o.Description)
 	r.setBool("favorite", o.Favorite)
 	r.setBool("ignore_auto_tag", o.IgnoreAutoTag)
+	r.setFloat64("weight", o.Weight)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)
 }

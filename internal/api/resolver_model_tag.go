@@ -54,6 +54,10 @@ func (r *tagResolver) Aliases(ctx context.Context, obj *models.Tag) (ret []strin
 	return obj.Aliases.List(), nil
 }
 
+func (r *tagResolver) Weight(ctx context.Context, obj *models.Tag) (float64, error) {
+	return obj.Weight, nil
+}
+
 func (r *tagResolver) SceneCount(ctx context.Context, obj *models.Tag, depth *int) (ret int, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = scene.CountByTagID(ctx, r.repository.Scene, obj.ID, depth)
