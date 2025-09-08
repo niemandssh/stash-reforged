@@ -110,9 +110,19 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 		fmt.Printf("DEBUG: Studio similarity: %.3f * %.3f = %.3f\n", studioScore, c.weights.Studio, studioContribution)
 	}
 
-	finalScore := math.Min(totalScore, 1.0)
+	// Apply broken status penalty
+	brokenPenalty := 1.0
+	if scene1.IsBroken || scene2.IsBroken {
+		brokenPenalty = 0.3 // Strong penalty for broken scenes
+		if debugScene1 {
+			fmt.Printf("DEBUG: Broken penalty applied: %.3f\n", brokenPenalty)
+		}
+	}
+
+	finalScore := math.Min(totalScore, 1.0) * brokenPenalty
 	if debugScene1 {
-		fmt.Printf("DEBUG: Total weighted score: %.3f (capped at %.3f)\n", totalScore, finalScore)
+		fmt.Printf("DEBUG: Total weighted score: %.3f (capped at %.3f, broken penalty: %.3f)\n", totalScore, math.Min(totalScore, 1.0), brokenPenalty)
+		fmt.Printf("DEBUG: Final score: %.3f\n", finalScore)
 		fmt.Printf("=== END DEBUG FOR SCENE 1 ===\n")
 	}
 	return finalScore, nil
@@ -240,8 +250,40 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		return 0.0, nil
 	}
 
-	// Calculate weighted similarity based on shared tags
-	// Higher weight means more important tag, so it contributes more to similarity
+	// Check for 100% match: all tags from first scene are in second scene
+	allTags1InTags2 := true
+	for _, tagID := range tags1 {
+		if !c.contains(tags2, tagID) {
+			allTags1InTags2 = false
+			break
+		}
+	}
+
+	if allTags1InTags2 {
+		fmt.Printf("DEBUG: 100%% match - all tags from first scene are in second scene\n")
+		// Calculate maximum multiplier for 100% match based on tag weights
+		var maxMultiplier float64
+		for _, tagID := range tags1 {
+			weight := tagWeights[tagID]
+			if weight >= 1.0 {
+				maxMultiplier += 0.5
+			} else if weight > 0.7 {
+				maxMultiplier += 0.4
+			} else if weight > 0.5 {
+				maxMultiplier += 0.3
+			} else {
+				maxMultiplier += 0.2
+			}
+		}
+		// Ensure minimum multiplier of 1.0
+		if maxMultiplier < 1.0 {
+			maxMultiplier = 1.0
+		}
+		fmt.Printf("DEBUG: 100%% match multiplier: %.3f\n", maxMultiplier)
+		return maxMultiplier, nil
+	}
+
+	// Calculate base similarity using weighted tags
 	var weightedTags1, weightedTags2 float64
 	for _, tagID := range tags1 {
 		weightedTags1 += tagWeights[tagID]
@@ -250,23 +292,56 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		weightedTags2 += tagWeights[tagID]
 	}
 
-	// Calculate coverage: how much of the weighted tags are shared
-	coverage1 := weightedShared / weightedTags1 // How much of weighted tags1 is covered by tags2
-	coverage2 := weightedShared / weightedTags2 // How much of weighted tags2 is covered by tags1
+	// Calculate weighted similarity: shared weight / total weight of first scene
+	// Start from 0.5 base and add weighted contribution
+	baseSimilarity := 0.5 + (weightedShared/weightedTags1)*0.5
+	fmt.Printf("DEBUG: Base similarity: 0.5 + (%.3f / %.3f) * 0.5 = %.3f\n", weightedShared, weightedTags1, baseSimilarity)
 
-	// Use the higher coverage (more generous scoring)
-	coverageScore := math.Max(coverage1, coverage2)
-	fmt.Printf("DEBUG: Weighted coverage calculation: tags1=%.3f, tags2=%.3f, shared=%.3f\n", weightedTags1, weightedTags2, weightedShared)
-	fmt.Printf("DEBUG: Coverage1: %.3f, Coverage2: %.3f, Final: %.3f\n", coverage1, coverage2, coverageScore)
+	// Calculate weight-based multiplier
+	var highWeightTags, mediumWeightTags, lowWeightTags int
+	var totalWeight float64
 
-	// Apply dynamic multiplier based on number of shared tags
-	// More shared tags = higher multiplier (up to 2x for 5+ shared tags)
-	sharedCount := len(sharedTags)
-	multiplier := 1.0 + math.Min(float64(sharedCount-1)*0.2, 1.0)
-	fmt.Printf("DEBUG: Multiplier: 1.0 + min((%d-1)*0.2, 1.0) = %.3f\n", sharedCount, multiplier)
+	for tagID := range sharedTags {
+		weight := tagWeights[tagID]
+		totalWeight += weight
 
-	finalScore := coverageScore * multiplier
-	fmt.Printf("DEBUG: Final weighted tag similarity: %.3f * %.3f = %.3f\n", coverageScore, multiplier, finalScore)
+		if weight >= 1.0 {
+			highWeightTags++
+		} else if weight > 0.7 {
+			highWeightTags++
+		} else if weight > 0.5 {
+			mediumWeightTags++
+		} else {
+			lowWeightTags++
+		}
+	}
+
+	// Calculate multiplier based on weight distribution
+	var multiplier float64
+	if highWeightTags > 0 {
+		// Significant multiplier for high weight tags
+		multiplier = 1.0 + float64(highWeightTags)*0.3
+	} else if mediumWeightTags > 0 {
+		// Small multiplier for medium weight tags
+		multiplier = 1.0 + float64(mediumWeightTags)*0.1
+	} else {
+		// Penalty for low weight tags
+		multiplier = 0.5 + float64(lowWeightTags)*0.1
+	}
+
+	// Additional bonus for high average weight
+	avgWeight := totalWeight / float64(len(sharedTags))
+	if avgWeight > 0.8 {
+		multiplier *= 1.2
+	} else if avgWeight < 0.3 {
+		multiplier *= 0.8
+	}
+
+	fmt.Printf("DEBUG: Weight distribution: high=%d, medium=%d, low=%d, avg=%.3f\n", highWeightTags, mediumWeightTags, lowWeightTags, avgWeight)
+	fmt.Printf("DEBUG: Multiplier: %.3f\n", multiplier)
+
+	finalScore := baseSimilarity * multiplier
+	fmt.Printf("DEBUG: Final weighted tag similarity: %.3f * %.3f = %.3f\n", baseSimilarity, multiplier, finalScore)
 
 	return finalScore, nil
 }
