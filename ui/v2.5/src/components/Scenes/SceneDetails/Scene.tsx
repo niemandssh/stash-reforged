@@ -322,6 +322,34 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     );
   }
 
+  async function onRescanSimilarity() {
+    try {
+      // Trigger similarity recalculation by updating a similarity-affecting field
+      // This will trigger the similarity job in the backend
+      await updateScene({
+        variables: {
+          input: {
+            id: scene.id,
+            // Update tag_ids to trigger similarity recalculation
+            // We'll set the same tag_ids to trigger the update
+            tag_ids: scene.tags.map(tag => tag.id),
+          },
+        },
+      });
+
+      Toast.success(
+        intl.formatMessage(
+          { id: "toast.rescanning_similarity" },
+          {
+            entity: intl.formatMessage({ id: "scene" }).toLocaleLowerCase(),
+          }
+        )
+      );
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
   async function onGenerateScreenshot(at?: number) {
     await generateScreenshot({
       variables: {
@@ -381,6 +409,13 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.rescan" />
           </Dropdown.Item>
         )}
+        <Dropdown.Item
+          key="rescan-similarity"
+          className="bg-secondary text-white"
+          onClick={() => onRescanSimilarity()}
+        >
+          <FormattedMessage id="actions.rescan_similarity" />
+        </Dropdown.Item>
         <Dropdown.Item
           key="generate"
           className="bg-secondary text-white"

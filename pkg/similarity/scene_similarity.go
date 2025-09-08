@@ -22,7 +22,7 @@ func DefaultSimilarityWeights() SimilarityWeights {
 	return SimilarityWeights{
 		Performers: 0.3, // 30% weight
 		Groups:     0.2, // 20% weight
-		Tags:       0.4, // 40% weight (highest)
+		Tags:       0.7, // 70% weight (highest)
 		Studio:     0.1, // 10% weight (lowest)
 		/////////////////////////////////////////////////////////////
 		MinScore: 0.1, // Only store similarities with score >= 0.1
@@ -190,17 +190,23 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(tags1, tags2 []int) (
 		return 0.0, nil
 	}
 
-	// Jaccard similarity coefficient
-	jaccardScore := float64(shared) / float64(total)
-	fmt.Printf("DEBUG: Jaccard score: %d / %d = %.3f\n", shared, total, jaccardScore)
+	// Calculate coverage-based similarity instead of Jaccard
+	// This gives higher scores when all tags from one scene are present in another
+	coverage1 := float64(shared) / float64(len(tags1)) // How much of tags1 is covered by tags2
+	coverage2 := float64(shared) / float64(len(tags2)) // How much of tags2 is covered by tags1
+
+	// Use the higher coverage (more generous scoring)
+	coverageScore := math.Max(coverage1, coverage2)
+	fmt.Printf("DEBUG: Coverage calculation: tags1=%d, tags2=%d, shared=%d\n", len(tags1), len(tags2), shared)
+	fmt.Printf("DEBUG: Coverage1: %.3f, Coverage2: %.3f, Final: %.3f\n", coverage1, coverage2, coverageScore)
 
 	// Apply dynamic multiplier based on number of shared tags
 	// More shared tags = higher multiplier (up to 2x for 5+ shared tags)
 	multiplier := 1.0 + math.Min(float64(shared-1)*0.2, 1.0)
 	fmt.Printf("DEBUG: Multiplier: 1.0 + min((%d-1)*0.2, 1.0) = %.3f\n", shared, multiplier)
 
-	finalScore := jaccardScore * multiplier
-	fmt.Printf("DEBUG: Final tag similarity: %.3f * %.3f = %.3f\n", jaccardScore, multiplier, finalScore)
+	finalScore := coverageScore * multiplier
+	fmt.Printf("DEBUG: Final tag similarity: %.3f * %.3f = %.3f\n", coverageScore, multiplier, finalScore)
 
 	return finalScore, nil
 }
