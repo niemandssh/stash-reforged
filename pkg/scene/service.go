@@ -13,10 +13,11 @@ type Config interface {
 }
 
 type Service struct {
-	File             models.FileReaderWriter
-	Repository       models.SceneReaderWriter
-	MarkerRepository models.SceneMarkerReaderWriter
-	PluginCache      *plugin.Cache
+	File                 models.FileReaderWriter
+	Repository           models.SceneReaderWriter
+	MarkerRepository     models.SceneMarkerReaderWriter
+	SimilarityRepository models.SceneSimilarityReaderWriter
+	PluginCache          *plugin.Cache
 
 	Paths  *paths.Paths
 	Config Config

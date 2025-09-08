@@ -39,6 +39,17 @@ func (j *SimilarityJob) Execute(ctx context.Context, progress *job.Progress) err
 			return fmt.Errorf("creating database context: %w", err)
 		}
 
+		// Check if the scene still exists before proceeding
+		scene, err := repo.Scene.Find(dbCtx, *j.sceneID)
+		if err != nil {
+			return fmt.Errorf("finding scene %d: %w", *j.sceneID, err)
+		}
+		if scene == nil {
+			logger.Warnf("Scene %d not found, skipping similarity recalculation", *j.sceneID)
+			progress.SetProcessed(1)
+			return nil
+		}
+
 		scenes, err := repo.Scene.All(dbCtx)
 		if err != nil {
 			return fmt.Errorf("finding all scenes: %w", err)

@@ -3,9 +3,9 @@ import React, { useState, useMemo } from "react";
 import { FormattedMessage } from "react-intl";
 import { useQuery } from "@apollo/client";
 import * as GQL from "src/core/generated-graphql";
+import { useSimilarityJobMonitor } from "src/hooks/useSimilarityJobMonitor";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
-import { SceneCard } from "src/components/Scenes/SceneCard";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { GridCard } from "src/components/Shared/GridCard/GridCard";
 import { ConfigurationContext } from "src/hooks/Config";
@@ -193,7 +193,7 @@ const SimilarSceneCard: React.FC<SimilarSceneCardProps> = ({
       scene.scene_markers.length > 0
     ) {
       return (
-        <>
+        <React.Fragment key="popover-button-group">
           <hr />
           <ButtonGroup className="card-popovers">
             {maybeRenderTagPopoverButton()}
@@ -201,7 +201,7 @@ const SimilarSceneCard: React.FC<SimilarSceneCardProps> = ({
             {maybeRenderGroupPopoverButton()}
             {maybeRenderSceneMarkerPopoverButton()}
           </ButtonGroup>
-        </>
+        </React.Fragment>
       );
     }
   }
@@ -270,13 +270,23 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
   const [displayLimit, setDisplayLimit] = useState(limit);
 
   // Use GraphQL query to fetch similar scenes
-  const { data, loading, error } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
+  const { data, loading, error, refetch } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
     GQL.FindSimilarScenesDocument,
     {
       variables: { id: scene.id, limit: 100 }, // Fetch more than needed
       skip: !scene.id,
     }
   );
+
+  // Monitor similarity job completion for this scene
+  useSimilarityJobMonitor({
+    onSimilarityJobComplete: (completedSceneId) => {
+      if (completedSceneId === scene.id) {
+        console.log(`Similarity job completed for scene ${scene.id}, similar scenes will be refreshed`);
+      }
+    },
+    refetch: refetch
+  });
 
   const allSimilarScenes = data?.findScene?.similar_scenes || [];
   const displayedScenes = allSimilarScenes.slice(0, displayLimit);
@@ -305,7 +315,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (loading) {
     return (
-      <div className="similar-scenes">
+      <div className="similar-scenes mt-5">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
@@ -316,7 +326,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (error) {
     return (
-      <div className="similar-scenes">
+      <div className="similar-scenes mt-5">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>
@@ -327,7 +337,7 @@ export const SimilarScenes: React.FC<SimilarScenesProps> = ({
 
   if (allSimilarScenes.length === 0) {
     return (
-      <div className="similar-scenes">
+      <div className="similar-scenes mt-5">
         <h4>
           <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
         </h4>

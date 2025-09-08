@@ -505,11 +505,13 @@ const sceneMutationImpactedTypeFields = {
 
 const sceneMutationImpactedQueries = [
   GQL.FindScenesDocument, // various filters
+  GQL.FindSceneDocument, // individual scene queries (includes similar_scenes)
   GQL.FindGroupsDocument, // is missing scenes
   GQL.FindGalleriesDocument, // is missing scenes
   GQL.FindPerformersDocument, // filter by scene count
   GQL.FindStudiosDocument, // filter by scene count
   GQL.FindTagsDocument, // filter by scene count
+  GQL.FindSimilarScenesDocument, // similar scenes query
 ];
 
 export const mutateCreateScene = (input: GQL.SceneCreateInput) =>
@@ -544,8 +546,41 @@ export const mutateCreateScene = (input: GQL.SceneCreateInput) =>
 
 export const useSceneUpdate = () =>
   GQL.useSceneUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.sceneUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.sceneUpdate || !variables) return;
+
+      const scene = result.data.sceneUpdate;
+      
+      // Update the specific scene's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Scene", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
+
+      // Check if any similarity-affecting fields were updated
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      const updatedFields = Object.keys(variables.input);
+      const needsSimilarityUpdate = similarityFields.some(field => 
+        updatedFields.includes(field)
+      );
+
+      if (needsSimilarityUpdate) {
+        // Don't evict immediately - let the similarity job monitor handle it
+        // when the backend job completes
+        console.log(`Similarity job will be triggered for scene ${variables.input.id}`);
+      } else {
+        // For non-similarity affecting changes, evict immediately
+        cache.evict({
+          fieldName: "findScene",
+          args: { id: variables.input.id }
+        });
+      }
 
       evictTypeFields(cache, sceneMutationImpactedTypeFields);
       evictQueries(cache, sceneMutationImpactedQueries);
@@ -558,6 +593,29 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
     update(cache, result) {
       if (!result.data?.bulkSceneUpdate) return;
 
+      // Check if any similarity-affecting fields were updated
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      const updatedFields = Object.keys(input);
+      const needsSimilarityUpdate = similarityFields.some(field => 
+        updatedFields.includes(field)
+      );
+
+      // Evict similar scenes for all updated scenes
+      if (input.ids) {
+        input.ids.forEach(id => {
+          if (needsSimilarityUpdate) {
+            // Don't evict immediately - let the similarity job monitor handle it
+            console.log(`Similarity job will be triggered for scene ${id}`);
+          } else {
+            // For non-similarity affecting changes, evict immediately
+            cache.evict({
+              fieldName: "findScene",
+              args: { id }
+            });
+          }
+        });
+      }
+
       evictTypeFields(cache, sceneMutationImpactedTypeFields);
       evictQueries(cache, sceneMutationImpactedQueries);
     },
@@ -568,6 +626,28 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
     variables: { input },
     update(cache, result) {
       if (!result.data?.scenesUpdate) return;
+
+      // Check if any similarity-affecting fields were updated
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      
+      // Evict similar scenes for all updated scenes
+      input.forEach(sceneInput => {
+        const updatedFields = Object.keys(sceneInput);
+        const needsSimilarityUpdate = similarityFields.some(field => 
+          updatedFields.includes(field)
+        );
+
+        if (needsSimilarityUpdate) {
+          // Don't evict immediately - let the similarity job monitor handle it
+          console.log(`Similarity job will be triggered for scene ${sceneInput.id}`);
+        } else {
+          // For non-similarity affecting changes, evict immediately
+          cache.evict({
+            fieldName: "findScene",
+            args: { id: sceneInput.id }
+          });
+        }
+      });
 
       evictTypeFields(cache, sceneMutationImpactedTypeFields);
       evictQueries(cache, sceneMutationImpactedQueries);
