@@ -129,6 +129,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     stash_ids: yup.mixed<GQL.StashIdInput[]>().defined(),
     details: yup.string().ensure(),
     cover_image: yup.string().nullable().optional(),
+    is_broken: yup.boolean().defined(),
   });
 
   const initialValues = useMemo(
@@ -148,6 +149,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       stash_ids: getStashIDs(scene.stash_ids),
       details: scene.details ?? "",
       cover_image: initialCoverImage,
+      is_broken: scene.is_broken ?? false,
     }),
     [scene, initialCoverImage]
   );
@@ -687,6 +689,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderInputField("details", "textarea", "details", props);
   }
 
+  function renderIsBrokenField() {
+    const title = intl.formatMessage({ id: "is_broken" });
+    const control = (
+      <Form.Check
+        type="checkbox"
+        id="is_broken"
+        checked={formik.values.is_broken}
+        onChange={(e) => formik.setFieldValue("is_broken", e.target.checked)}
+        isInvalid={!!formik.errors.is_broken}
+      />
+    );
+
+    return renderField("is_broken", title, control);
+  }
+
   return (
     <div id="scene-edit-details">
       <Prompt
@@ -756,6 +773,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderPerformersField()}
             {renderGroupsField()}
             {renderTagsField()}
+            {renderIsBrokenField()}
 
             {renderStashIDsField(
               "stash_ids",

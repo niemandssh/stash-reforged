@@ -19,6 +19,7 @@ type Scene struct {
 	// Rating expressed in 1-100 scale
 	Rating    *int `json:"rating"`
 	Organized bool `json:"organized"`
+	IsBroken  bool `json:"is_broken"`
 	StudioID  *int `json:"studio_id"`
 
 	// transient - not persisted
@@ -64,6 +65,7 @@ type ScenePartial struct {
 	// Rating expressed in 1-100 scale
 	Rating       OptionalInt
 	Organized    OptionalBool
+	IsBroken     OptionalBool
 	StudioID     OptionalInt
 	CreatedAt    OptionalTime
 	UpdatedAt    OptionalTime
@@ -207,6 +209,7 @@ func (s ScenePartial) UpdateInput(id int) SceneUpdateInput {
 		Date:         dateStr,
 		Rating100:    s.Rating.Ptr(),
 		Organized:    s.Organized.Ptr(),
+		IsBroken:     s.IsBroken.Ptr(),
 		StudioID:     s.StudioID.StringPtr(),
 		GalleryIds:   s.GalleryIDs.IDStrings(),
 		PerformerIds: s.PerformerIDs.IDStrings(),

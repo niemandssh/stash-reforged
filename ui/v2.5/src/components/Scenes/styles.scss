@@ -186,6 +186,13 @@ textarea.scene-description {
   text-shadow: 0 0 3px #000;
 }
 
+.broken-badge-overlay {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+}
+
 .scene-specs-overlay {
   right: 0.7rem;
 }

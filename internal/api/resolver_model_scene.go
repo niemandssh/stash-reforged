@@ -103,6 +103,10 @@ func (r *sceneResolver) Rating100(ctx context.Context, obj *models.Scene) (*int,
 	return obj.Rating, nil
 }
 
+func (r *sceneResolver) IsBroken(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.IsBroken, nil
+}
+
 func (r *sceneResolver) Paths(ctx context.Context, obj *models.Scene) (*ScenePathsType, error) {
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	config := manager.GetInstance().Config

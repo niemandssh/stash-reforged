@@ -31,6 +31,8 @@ type SceneFilterType struct {
 	Rating100 *IntCriterionInput `json:"rating100"`
 	// Filter by organized
 	Organized *bool `json:"organized"`
+	// Filter by is_broken
+	IsBroken *bool `json:"is_broken"`
 	// Filter by o-counter
 	OCounter *IntCriterionInput `json:"o_counter"`
 	// Filter Scenes that have an exact phash match available
@@ -156,6 +158,7 @@ type SceneCreateInput struct {
 	Date         *string           `json:"date"`
 	Rating100    *int              `json:"rating100"`
 	Organized    *bool             `json:"organized"`
+	IsBroken     *bool             `json:"is_broken"`
 	StudioID     *string           `json:"studio_id"`
 	GalleryIds   []string          `json:"gallery_ids"`
 	PerformerIds []string          `json:"performer_ids"`
@@ -184,6 +187,7 @@ type SceneUpdateInput struct {
 	Rating100        *int              `json:"rating100"`
 	OCounter         *int              `json:"o_counter"`
 	Organized        *bool             `json:"organized"`
+	IsBroken         *bool             `json:"is_broken"`
 	StudioID         *string           `json:"studio_id"`
 	GalleryIds       []string          `json:"gallery_ids"`
 	PerformerIds     []string          `json:"performer_ids"`

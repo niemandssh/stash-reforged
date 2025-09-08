@@ -30,6 +30,7 @@ import { PatchComponent } from "src/patch";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 import { GroupTag } from "../Groups/GroupTag";
 import { FileSize } from "../Shared/FileSize";
+import { BrokenBadge } from "../Shared/BrokenBadge";
 
 interface IScenePreviewProps {
   isPortrait: boolean;
@@ -345,7 +346,16 @@ const SceneCardDetails = PatchComponent(
 const SceneCardOverlays = PatchComponent(
   "SceneCard.Overlays",
   (props: ISceneCardProps) => {
-    return <StudioOverlay studio={props.scene.studio} />;
+    return (
+      <>
+        <StudioOverlay studio={props.scene.studio} />
+        {props.scene.is_broken && (
+          <div className="broken-badge-overlay">
+            <BrokenBadge />
+          </div>
+        )}
+      </>
+    );
   }
 );
 

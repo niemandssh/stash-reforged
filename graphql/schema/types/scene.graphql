@@ -52,6 +52,7 @@ type Scene {
   interactive: Boolean!
   interactive_speed: Int
   captions: [VideoCaption!]
+  is_broken: Boolean!
   created_at: Time!
   updated_at: Time!
   "The last time play count was updated"
@@ -104,6 +105,7 @@ input SceneCreateInput {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
+  is_broken: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!]
@@ -137,6 +139,7 @@ input SceneUpdateInput {
   o_counter: Int
     @deprecated(reason: "Unsupported - Use sceneIncrementO/sceneDecrementO")
   organized: Boolean
+  is_broken: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!]
@@ -184,6 +187,7 @@ input BulkSceneUpdateInput {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
+  is_broken: Boolean
   studio_id: ID
   gallery_ids: BulkUpdateIds
   performer_ids: BulkUpdateIds
