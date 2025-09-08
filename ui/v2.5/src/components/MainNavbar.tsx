@@ -16,6 +16,7 @@ import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { LinkContainer } from "react-router-bootstrap";
 import { Link, NavLink, useLocation, useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
+import * as GQL from "src/core/generated-graphql";
 
 import SessionUtils from "src/utils/session";
 import { Icon } from "src/components/Shared/Icon";
@@ -33,6 +34,7 @@ import {
   faPlayCircle,
   faQuestionCircle,
   faSignOutAlt,
+  faStarHalfStroke,
   faTag,
   faTimes,
   faUser,
@@ -40,6 +42,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
+import { getClient } from "src/core/StashService";
 
 interface IMenuItem {
   name: string;
@@ -164,6 +167,44 @@ const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
 
+// Функция для получения случайной сцены без рейтинга и тегов
+const getRandomUnratedScene = async (): Promise<string | null> => {
+  try {
+    const client = getClient();
+    const result = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 100, // Получаем до 100 сцен для выбора случайной
+        },
+        scene_filter: {
+          rating100: {
+            modifier: GQL.CriterionModifier.IsNull,
+            value: 0,
+          },
+          tag_count: {
+            modifier: GQL.CriterionModifier.Equals,
+            value: 0,
+          },
+        },
+      },
+    });
+
+    const scenes = result.data?.findScenes?.scenes || [];
+    if (scenes.length === 0) {
+      return null;
+    }
+
+    // Выбираем случайную сцену
+    const randomIndex = Math.floor(Math.random() * scenes.length);
+    const randomScene = scenes[randomIndex];
+    return randomScene?.id || null;
+  } catch (error) {
+    console.error("Ошибка при получении случайной сцены:", error);
+    return null;
+  }
+};
+
 const MainNavbarMenuItems = PatchComponent(
   "MainNavBar.MenuItems",
   (props: React.PropsWithChildren<{}>) => {
@@ -243,6 +284,19 @@ export const MainNavbar: React.FC = () => {
     },
     [history]
   );
+
+  const handleReviewClick = useCallback(async () => {
+    const sceneId = await getRandomUnratedScene();
+    if (sceneId) {
+      history.push(`/scenes/${sceneId}`);
+    } else {
+      // Показываем уведомление, если нет сцен для рецензирования
+      alert(intl.formatMessage({ 
+        id: "no_scenes_to_review", 
+        defaultMessage: "Нет сцен без рейтинга и тегов для рецензирования" 
+      }));
+    }
+  }, [history, intl]);
 
   const pathname = location.pathname.replace(/\/$/, "");
   let newPath = newPathsList.includes(pathname) ? `${pathname}/new` : null;
@@ -409,6 +463,16 @@ export const MainNavbar: React.FC = () => {
           <MainNavbarUtilityItems>
             {renderUtilityButtons()}
           </MainNavbarUtilityItems>
+          <button
+            type="button"
+            className="btn btn-primary review-btn ml-2"
+            style={{ display: "inline-block", visibility: "visible" }}
+            onClick={handleReviewClick}
+            title="Review unrated video or video without tags"
+          >
+            <Icon icon={faStarHalfStroke} className="mr-1" />
+            Review
+          </button>
           <Navbar.Toggle className="nav-menu-toggle ml-sm-2">
             <Icon icon={expanded ? faTimes : faBars} />
           </Navbar.Toggle>

@@ -431,4 +431,4 @@ fdev:
 	make ui-start
 
 compile:
-	make generate
+	make generate && make ui
