@@ -1411,3 +1411,10 @@ select {
   overflow-y: auto;
   padding-right: 1.5rem;
 }
+
+// Стили для кнопки Review
+.review-btn {
+  display: inline-block !important;
+  visibility: visible !important;
+  margin-left: 8px;
+}
