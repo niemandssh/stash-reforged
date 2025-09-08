@@ -33,6 +33,7 @@ import {
   faMapMarkerAlt,
   faPlayCircle,
   faQuestionCircle,
+  faRandom,
   faSignOutAlt,
   faStarHalfStroke,
   faTag,
@@ -171,11 +172,42 @@ const newPathsList = allMenuItems
 const getRandomUnratedScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
+    
+    // Сначала получаем общее количество сцен без рейтинга и тегов
+    const countResult = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 0, // Только количество
+        },
+        scene_filter: {
+          rating100: {
+            modifier: GQL.CriterionModifier.IsNull,
+            value: 0,
+          },
+          tag_count: {
+            modifier: GQL.CriterionModifier.Equals,
+            value: 0,
+          },
+        },
+      },
+    });
+
+    const totalCount = countResult.data?.findScenes?.count || 0;
+    if (totalCount === 0) {
+      return null;
+    }
+
+    // Выбираем случайную страницу
+    const randomPage = Math.floor(Math.random() * totalCount) + 1;
+    
+    // Получаем сцену с этой страницы
     const result = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
-          per_page: 100, // Получаем до 100 сцен для выбора случайной
+          per_page: 1,
+          page: randomPage,
         },
         scene_filter: {
           rating100: {
@@ -195,10 +227,55 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       return null;
     }
 
-    // Выбираем случайную сцену
-    const randomIndex = Math.floor(Math.random() * scenes.length);
-    const randomScene = scenes[randomIndex];
-    return randomScene?.id || null;
+    return scenes[0]?.id || null;
+  } catch (error) {
+    console.error("Ошибка при получении случайной сцены:", error);
+    return null;
+  }
+};
+
+// Функция для получения полностью случайной сцены
+const getRandomScene = async (): Promise<string | null> => {
+  try {
+    const client = getClient();
+    
+    // Сначала получаем общее количество всех сцен
+    const countResult = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 0, // Только количество
+        },
+        scene_filter: {}, // Без фильтров - любые сцены
+      },
+    });
+
+    const totalCount = countResult.data?.findScenes?.count || 0;
+    if (totalCount === 0) {
+      return null;
+    }
+
+    // Выбираем случайную страницу
+    const randomPage = Math.floor(Math.random() * totalCount) + 1;
+    
+    // Получаем сцену с этой страницы
+    const result = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 1,
+          page: randomPage,
+        },
+        scene_filter: {}, // Без фильтров - любые сцены
+      },
+    });
+
+    const scenes = result.data?.findScenes?.scenes || [];
+    if (scenes.length === 0) {
+      return null;
+    }
+
+    return scenes[0]?.id || null;
   } catch (error) {
     console.error("Ошибка при получении случайной сцены:", error);
     return null;
@@ -294,6 +371,19 @@ export const MainNavbar: React.FC = () => {
       alert(intl.formatMessage({ 
         id: "no_scenes_to_review", 
         defaultMessage: "Нет сцен без рейтинга и тегов для рецензирования" 
+      }));
+    }
+  }, [history, intl]);
+
+  const handleRandomClick = useCallback(async () => {
+    const sceneId = await getRandomScene();
+    if (sceneId) {
+      history.push(`/scenes/${sceneId}`);
+    } else {
+      // Показываем уведомление, если нет сцен
+      alert(intl.formatMessage({ 
+        id: "no_scenes_available", 
+        defaultMessage: "Нет доступных сцен" 
       }));
     }
   }, [history, intl]);
@@ -472,6 +562,16 @@ export const MainNavbar: React.FC = () => {
           >
             <Icon icon={faStarHalfStroke} className="mr-1" />
             Review
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary random-btn ml-2"
+            style={{ display: "inline-block", visibility: "visible" }}
+            onClick={handleRandomClick}
+            title="Open random scene"
+          >
+            <Icon icon={faRandom} className="mr-1" />
+            Random
           </button>
           <Navbar.Toggle className="nav-menu-toggle ml-sm-2">
             <Icon icon={expanded ? faTimes : faBars} />
