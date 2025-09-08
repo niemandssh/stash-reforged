@@ -132,6 +132,11 @@ func (s *Service) Destroy(ctx context.Context, scene *models.Scene, fileDeleter 
 		}
 	}
 
+	// Clean up similarity relationships before destroying the scene
+	if err := s.SimilarityRepository.DeleteByScene(ctx, scene.ID); err != nil {
+		return err
+	}
+
 	if err := s.Repository.Destroy(ctx, scene.ID); err != nil {
 		return err
 	}
