@@ -15,6 +15,7 @@ fragment SceneData on Scene {
     language_code
     caption_type
   }
+  is_broken
   created_at
   updated_at
   resume_time

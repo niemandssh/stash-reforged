@@ -12,6 +12,7 @@ import { useSceneUpdate } from "src/core/StashService";
 import { IColumn, ListTable } from "../List/ListTable";
 import { useTableColumns } from "src/hooks/useTableColumns";
 import { FileSize } from "../Shared/FileSize";
+import { BrokenBadge } from "../Shared/BrokenBadge";
 
 interface ISceneListTableProps {
   scenes: GQL.SlimSceneDataFragment[];
@@ -67,9 +68,12 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
       : `/scenes/${scene.id}`;
 
     return (
-      <Link to={sceneLink} title={title}>
-        <span className="ellips-data">{title}</span>
-      </Link>
+      <div className="d-flex align-items-center">
+        {scene.is_broken && <BrokenBadge className="me-2" />}
+        <Link to={sceneLink} title={title}>
+          <span className="ellips-data">{title}</span>
+        </Link>
+      </div>
     );
   };
 
