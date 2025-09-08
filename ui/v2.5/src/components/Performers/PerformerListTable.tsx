@@ -21,6 +21,7 @@ import {
 import TextUtils from "src/utils/text";
 import { getCountryByISO } from "src/utils/country";
 import { IColumn, ListTable } from "../List/ListTable";
+import { DeathRibbon } from "../Shared/DeathRibbon";
 
 interface IPerformerListTableProps {
   performers: GQL.PerformerDataFragment[];
@@ -64,13 +65,14 @@ export const PerformerListTable: React.FC<IPerformerListTableProps> = (
   }
 
   const ImageCell = (performer: GQL.PerformerDataFragment) => (
-    <Link to={`/performers/${performer.id}`}>
+    <Link to={`/performers/${performer.id}`} className="position-relative">
       <img
         loading="lazy"
-        className="image-thumbnail"
+        className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
         alt={performer.name ?? ""}
         src={performer.image_path ?? ""}
       />
+      {performer.death_date && <DeathRibbon />}
     </Link>
   );
 

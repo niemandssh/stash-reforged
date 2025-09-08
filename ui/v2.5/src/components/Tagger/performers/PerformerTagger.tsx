@@ -26,6 +26,7 @@ import { useUpdatePerformer } from "../queries";
 import { faStar, faTags } from "@fortawesome/free-solid-svg-icons";
 import { mergeStashIDs } from "src/utils/stashbox";
 import { ExternalLink } from "src/components/Shared/ExternalLink";
+import { DeathRibbon } from "src/components/Shared/DeathRibbon";
 import { useTaggerConfig } from "../config";
 
 type JobFragment = Pick<
@@ -555,8 +556,13 @@ const PerformerTaggerList: React.FC<IPerformerTaggerListProps> = ({
               endpoint={selectedEndpoint.endpoint}
             />
           )}
-          <Card className="performer-card p-0 m-0">
-            <img src={performer.image_path ?? ""} alt="" />
+          <Card className="performer-card p-0 m-0 position-relative">
+            <img 
+              src={performer.image_path ?? ""} 
+              alt="" 
+              className={performer.death_date ? 'deceased' : ''}
+            />
+            {performer.death_date && <DeathRibbon size="large" />}
           </Card>
           <div className={`${CLASSNAME}-details`}>
             <Link

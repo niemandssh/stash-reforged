@@ -7,11 +7,12 @@ import { sortPerformers } from "src/core/performers";
 import { HoverPopover } from "./HoverPopover";
 import { Icon } from "./Icon";
 import { PerformerLink, PerformerLinkType } from "./TagLink";
+import { DeathRibbon } from "./DeathRibbon";
 
 interface IProps {
   performers: Pick<
     GQL.Performer,
-    "id" | "name" | "image_path" | "disambiguation" | "gender"
+    "id" | "name" | "image_path" | "disambiguation" | "gender" | "death_date"
   >[];
   linkType?: PerformerLinkType;
 }
@@ -25,13 +26,14 @@ export const PerformerPopoverButton: React.FC<IProps> = ({
     <div className="performer-tag-container row" key={performer.id}>
       <Link
         to={`/performers/${performer.id}`}
-        className="performer-tag col m-auto zoom-2"
+        className="performer-tag col m-auto zoom-2 position-relative"
       >
         <img
-          className="image-thumbnail"
+          className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
           alt={performer.name ?? ""}
           src={performer.image_path ?? ""}
         />
+        {performer.death_date && <DeathRibbon />}
       </Link>
       <PerformerLink
         key={performer.id}
