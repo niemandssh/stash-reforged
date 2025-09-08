@@ -82,6 +82,14 @@ func (p *Progress) SetProcessed(processed int) {
 	p.calculatePercent()
 }
 
+// GetTotal returns the total number of work units.
+func (p *Progress) GetTotal() int {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	return p.total
+}
+
 func (p *Progress) calculatePercent() {
 	switch {
 	case !p.defined || p.total <= 0:

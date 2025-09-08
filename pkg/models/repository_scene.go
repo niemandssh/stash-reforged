@@ -104,6 +104,7 @@ type SceneReader interface {
 	VideoFileLoader
 
 	All(ctx context.Context) ([]*Scene, error)
+	AllWithRelationships(ctx context.Context) ([]*Scene, error)
 	Wall(ctx context.Context, q *string) ([]*Scene, error)
 	Size(ctx context.Context) (float64, error)
 	Duration(ctx context.Context) (float64, error)

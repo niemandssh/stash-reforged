@@ -123,3 +123,7 @@ mutation SceneMerge($input: SceneMergeInput!) {
     id
   }
 }
+
+mutation RecalculateSceneSimilarities($scene_id: ID) {
+  recalculateSceneSimilarities(scene_id: $scene_id)
+}

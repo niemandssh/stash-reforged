@@ -12,6 +12,7 @@ import {
   mutateMigrateBlobs,
   mutateOptimiseDatabase,
   mutateCleanGenerated,
+  mutateRecalculateSceneSimilarities,
 } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import downloadFile from "src/utils/download";
@@ -381,6 +382,24 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
     }
   }
 
+  async function onRecalculateSceneSimilarities() {
+    try {
+      await mutateRecalculateSceneSimilarities();
+      Toast.success(
+        intl.formatMessage(
+          { id: "config.tasks.added_job_to_queue" },
+          {
+            operation_name: intl.formatMessage({
+              id: "actions.recalculate_scene_similarities",
+            }),
+          }
+        )
+      );
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
   async function onAnonymise(download?: boolean) {
     try {
       setIsAnonymiseRunning(true);
@@ -505,6 +524,19 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
             onClick={() => onOptimiseDatabase()}
           >
             <FormattedMessage id="actions.optimise_database" />
+          </Button>
+        </Setting>
+
+        <Setting
+          headingID="actions.recalculate_scene_similarities"
+          subHeadingID="config.tasks.recalculate_scene_similarities_desc"
+        >
+          <Button
+            id="recalculateSceneSimilarities"
+            variant="secondary"
+            onClick={() => onRecalculateSceneSimilarities()}
+          >
+            <FormattedMessage id="actions.recalculate_scene_similarities" />
           </Button>
         </Setting>
       </SettingSection>
