@@ -261,26 +261,42 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 
 	if allTags1InTags2 {
 		fmt.Printf("DEBUG: 100%% match - all tags from first scene are in second scene\n")
-		// Calculate maximum multiplier for 100% match based on tag weights
-		var maxMultiplier float64
+
+		// Check if there's at least one tag with weight 1.0
+		hasWeight1Tag := false
 		for _, tagID := range tags1 {
 			weight := tagWeights[tagID]
 			if weight >= 1.0 {
-				maxMultiplier += 0.5
-			} else if weight > 0.7 {
-				maxMultiplier += 0.4
-			} else if weight > 0.5 {
-				maxMultiplier += 0.3
-			} else {
-				maxMultiplier += 0.2
+				hasWeight1Tag = true
+				break
 			}
 		}
-		// Ensure minimum multiplier of 1.0
-		if maxMultiplier < 1.0 {
-			maxMultiplier = 1.0
+
+		if hasWeight1Tag {
+			// Calculate maximum multiplier for 100% match based on tag weights
+			var maxMultiplier float64
+			for _, tagID := range tags1 {
+				weight := tagWeights[tagID]
+				if weight >= 1.0 {
+					maxMultiplier += 0.5
+				} else if weight > 0.7 {
+					maxMultiplier += 0.4
+				} else if weight > 0.5 {
+					maxMultiplier += 0.3
+				} else {
+					maxMultiplier += 0.2
+				}
+			}
+			// Ensure minimum multiplier of 1.0
+			if maxMultiplier < 1.0 {
+				maxMultiplier = 1.0
+			}
+			fmt.Printf("DEBUG: 100%% match with weight 1.0 tag - multiplier: %.3f\n", maxMultiplier)
+			return maxMultiplier, nil
+		} else {
+			// No weight 1.0 tag - treat as partial match
+			fmt.Printf("DEBUG: 100%% match but no weight 1.0 tag - treating as partial match\n")
 		}
-		fmt.Printf("DEBUG: 100%% match multiplier: %.3f\n", maxMultiplier)
-		return maxMultiplier, nil
 	}
 
 	// Calculate base similarity using weighted tags
