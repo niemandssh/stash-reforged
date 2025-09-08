@@ -20,10 +20,10 @@ type SimilarityWeights struct {
 // DefaultSimilarityWeights returns the default weights for similarity calculation
 func DefaultSimilarityWeights() SimilarityWeights {
 	return SimilarityWeights{
-		Performers: 0.3, // 30% weight
+		Performers: 0.4, // 30% weight
 		Groups:     0.2, // 20% weight
-		Tags:       0.7, // 70% weight (highest)
-		Studio:     0.1, // 10% weight (lowest)
+		Tags:       0.5, // 50% weight (highest)
+		Studio:     0.2, // 10% weight (lowest)
 		/////////////////////////////////////////////////////////////
 		MinScore: 0.1, // Only store similarities with score >= 0.1
 	}
@@ -164,7 +164,8 @@ func (c *SceneSimilarityCalculator) calculateGroupSimilarity(groups1, groups2 []
 }
 
 // calculateTagSimilarity calculates similarity based on shared tags with weights
-// Dynamic weight: more shared tags = higher similarity score
+// Weight system: 0.0 = least important, 1.0 = most important
+// Higher weight tags contribute more to similarity calculation
 func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
 	// Check if this is for scene 1 (we need to pass this info somehow)
 	// For now, let's always show debug for tag similarity
@@ -239,8 +240,8 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		return 0.0, nil
 	}
 
-	// Calculate coverage-based similarity with weights
-	// This gives higher scores when all tags from one scene are present in another
+	// Calculate weighted similarity based on shared tags
+	// Higher weight means more important tag, so it contributes more to similarity
 	var weightedTags1, weightedTags2 float64
 	for _, tagID := range tags1 {
 		weightedTags1 += tagWeights[tagID]
@@ -249,8 +250,9 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		weightedTags2 += tagWeights[tagID]
 	}
 
-	coverage1 := weightedShared / weightedTags1 // How much of tags1 is covered by tags2
-	coverage2 := weightedShared / weightedTags2 // How much of tags2 is covered by tags1
+	// Calculate coverage: how much of the weighted tags are shared
+	coverage1 := weightedShared / weightedTags1 // How much of weighted tags1 is covered by tags2
+	coverage2 := weightedShared / weightedTags2 // How much of weighted tags2 is covered by tags1
 
 	// Use the higher coverage (more generous scoring)
 	coverageScore := math.Max(coverage1, coverage2)
