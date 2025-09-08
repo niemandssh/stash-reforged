@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
 import * as GQL from "src/core/generated-graphql";
-import { queryFindScenes, useFindScenes } from "src/core/StashService";
+import { queryFindScenes, useFindScenes, getClient } from "src/core/StashService";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
 import { Tagger } from "../Tagger/scenes/SceneTagger";
@@ -144,25 +144,67 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
   const playScene = usePlayScene();
 
   const playRandom = useCallback(async () => {
-    // query for a random scene
+    // query for a random scene with rating >= 55
     if (count === 0) {
       return;
     }
 
-    const pages = Math.ceil(count / filter.itemsPerPage);
-    const page = Math.floor(Math.random() * pages) + 1;
+    try {
+      const client = getClient();
+      
+      // First get count of scenes with rating >= 55
+      const countResult = await client.query<GQL.FindScenesQuery>({
+        query: GQL.FindScenesDocument,
+        variables: {
+          filter: {
+            per_page: 0, // Only count
+          },
+          scene_filter: {
+            rating100: {
+              modifier: GQL.CriterionModifier.GreaterThan,
+              value: 54, // > 54 means >= 55
+            },
+          },
+        },
+      });
 
-    const indexMax = Math.min(filter.itemsPerPage, count);
-    const index = Math.floor(Math.random() * indexMax);
-    const filterCopy = cloneDeep(filter);
-    filterCopy.currentPage = page;
-    filterCopy.sortBy = "random";
-    const queryResults = await queryFindScenes(filterCopy);
-    const scene = queryResults.data.findScenes.scenes[index];
-    if (scene) {
-      // navigate to the image player page
-      const queue = SceneQueue.fromListFilterModel(filterCopy);
-      playScene(queue, scene.id, { sceneIndex: index });
+      const totalCount = countResult.data?.findScenes?.count || 0;
+      if (totalCount === 0) {
+        return;
+      }
+
+      // Choose random page
+      const randomPage = Math.floor(Math.random() * totalCount) + 1;
+      
+      // Get scene from that page
+      const result = await client.query<GQL.FindScenesQuery>({
+        query: GQL.FindScenesDocument,
+        variables: {
+          filter: {
+            per_page: 1,
+            page: randomPage,
+            sort: "random",
+          },
+          scene_filter: {
+            rating100: {
+              modifier: GQL.CriterionModifier.GreaterThan,
+              value: 54, // > 54 means >= 55
+            },
+          },
+        },
+      });
+
+      const scenes = result.data?.findScenes?.scenes || [];
+      if (scenes.length === 0) {
+        return;
+      }
+
+      const scene = scenes[0];
+      // navigate to the scene player page
+      const queue = SceneQueue.fromListFilterModel(filter);
+      playScene(queue, scene.id, { sceneIndex: 0 });
+    } catch (error) {
+      console.error("Error getting random scene:", error);
     }
   }, [filter, count, playScene]);
 
