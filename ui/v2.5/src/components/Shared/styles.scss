@@ -951,3 +951,83 @@ $sticky-header-height: calc(50px + 3.3rem);
     }
   }
 }
+
+// Death ribbon styles
+.death-ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 10;
+
+  // Small ribbon (default)
+  &--small {
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 20px solid #000;
+
+    .death-ribbon__inner {
+      position: absolute;
+      top: -20px;
+      left: -20px;
+      width: 40px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .death-ribbon__text {
+      color: #fff;
+      font-size: 8px;
+      font-weight: bold;
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+      transform: rotate(45deg);
+      margin-top: -2px;
+    }
+  }
+
+  // Large ribbon for big cards
+  &--large {
+    border-left: 40px solid transparent;
+    border-right: 40px solid transparent;
+    border-top: 40px solid #000;
+
+    .death-ribbon__inner {
+      position: absolute;
+      top: -40px;
+      left: -40px;
+      width: 80px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .death-ribbon__text {
+      color: #fff;
+      font-size: 14px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      transform: rotate(45deg);
+      margin-top: -4px;
+    }
+  }
+}
+
+// Death image effects - darken images for deceased performers
+.performer-card-image.deceased,
+.performer-card-image img.deceased,
+.image-thumbnail.deceased,
+.performer-select-image.deceased,
+.performer-card img.deceased,
+.performer-tag img.deceased,
+.performer-select-image-link img.deceased,
+.detail-header-image .performer.deceased {
+  filter: grayscale(50%);
+
+  &:hover {
+    filter: grayscale(0%);
+  }
+}

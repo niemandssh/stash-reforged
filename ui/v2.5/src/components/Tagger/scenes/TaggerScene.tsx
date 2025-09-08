@@ -10,6 +10,7 @@ import { OperationButton } from "src/components/Shared/OperationButton";
 import { StashIDPill } from "src/components/Shared/StashID";
 import { PerformerLink, TagLink } from "src/components/Shared/TagLink";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
+import { DeathRibbon } from "src/components/Shared/DeathRibbon";
 import { parsePath, prepareQueryString } from "src/components/Tagger/utils";
 import { ScenePreview } from "src/components/Scenes/SceneCard";
 import { TaggerStateContext } from "../context";
@@ -49,14 +50,15 @@ const TaggerSceneDetails: React.FC<ITaggerSceneDetails> = ({ scene }) => {
                 <div className="performer-tag-container row" key={performer.id}>
                   <Link
                     to={`/performers/${performer.id}`}
-                    className="performer-tag col m-auto zoom-2"
+                    className="performer-tag col m-auto zoom-2 position-relative"
                   >
                     <img
                       loading="lazy"
-                      className="image-thumbnail"
+                      className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
                       alt={performer.name ?? ""}
                       src={performer.image_path ?? ""}
                     />
+                    {performer.death_date && <DeathRibbon />}
                   </Link>
                   <PerformerLink
                     key={performer.id}

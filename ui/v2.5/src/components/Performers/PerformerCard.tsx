@@ -22,6 +22,7 @@ import { RatingBanner } from "../Shared/RatingBanner";
 import { usePerformerUpdate } from "src/core/StashService";
 import { ILabeledId } from "src/models/list-filter/types";
 import { FavoriteIcon } from "../Shared/FavoriteIcon";
+import { DeathRibbon } from "../Shared/DeathRibbon";
 import { PatchComponent } from "src/patch";
 
 export interface IPerformerCardExtraCriteria {
@@ -225,6 +226,7 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
         />
         {maybeRenderRatingBanner()}
         {maybeRenderFlag()}
+        {performer.death_date && <DeathRibbon size="large" />}
       </>
     );
   }
@@ -269,7 +271,7 @@ const PerformerCardImage: React.FC<IPerformerCardProps> = PatchComponent(
       <>
         <img
           loading="lazy"
-          className="performer-card-image"
+          className={`performer-card-image ${performer.death_date ? 'deceased' : ''}`}
           alt={performer.name ?? ""}
           src={performer.image_path ?? ""}
         />

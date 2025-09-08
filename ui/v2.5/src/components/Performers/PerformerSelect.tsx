@@ -31,6 +31,7 @@ import { PatchComponent, PatchFunction } from "src/patch";
 import { TruncatedText } from "../Shared/TruncatedText";
 import TextUtils from "src/utils/text";
 import { PerformerPopover } from "./PerformerPopover";
+import { DeathRibbon } from "../Shared/DeathRibbon";
 import { Placement } from "react-bootstrap/esm/Overlay";
 
 export type SelectObject = {
@@ -153,13 +154,14 @@ const _PerformerSelect: React.FC<
             <Link
               to={`/performers/${object.id}`}
               target="_blank"
-              className="performer-select-image-link"
+              className="performer-select-image-link position-relative"
             >
               <img
-                className="performer-select-image"
+                className={`performer-select-image ${object.death_date ? 'deceased' : ''}`}
                 src={object.image_path ?? ""}
                 loading="lazy"
               />
+              {object.death_date && <DeathRibbon />}
             </Link>
             <span className="performer-select-details">
               <TruncatedText

@@ -47,6 +47,7 @@ import { HeaderImage } from "src/components/Shared/DetailsPage/HeaderImage";
 import { LightboxLink } from "src/hooks/Lightbox/LightboxLink";
 import { PatchComponent } from "src/patch";
 import { ILightboxImage } from "src/hooks/Lightbox/types";
+import { DeathRibbon } from "src/components/Shared/DeathRibbon";
 
 interface IProps {
   performer: GQL.PerformerDataFragment;
@@ -218,11 +219,14 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
         <HeaderImage encodingImage={encodingImage}>
           {!!activeImage && (
             <LightboxLink images={lightboxImages}>
-              <DetailImage
-                className="performer"
-                src={activeImage}
-                alt={performer.name}
-              />
+              <div className="position-relative">
+                <DetailImage
+                  className={`performer ${performer.death_date ? 'deceased' : ''}`}
+                  src={activeImage}
+                  alt={performer.name}
+                />
+                {performer.death_date && <DeathRibbon size="large" />}
+              </div>
             </LightboxLink>
           )}
         </HeaderImage>
