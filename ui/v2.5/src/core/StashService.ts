@@ -4,6 +4,7 @@ import {
   FetchResult,
   NetworkStatus,
   useQuery,
+  gql,
 } from "@apollo/client";
 import { Modifiers } from "@apollo/client/cache";
 import {
@@ -2820,6 +2821,12 @@ export const mutateMigrateBlobs = (input: GQL.MigrateBlobsInput) =>
   client.mutate<GQL.MigrateBlobsMutation>({
     mutation: GQL.MigrateBlobsDocument,
     variables: { input },
+  });
+
+export const mutateRecalculateSceneSimilarities = (sceneID?: string) =>
+  client.mutate<GQL.RecalculateSceneSimilaritiesMutation>({
+    mutation: GQL.RecalculateSceneSimilaritiesDocument,
+    variables: { scene_id: sceneID },
   });
 
 /// Misc

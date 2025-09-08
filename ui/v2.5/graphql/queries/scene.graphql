@@ -102,3 +102,14 @@ query FindScenesForSelect(
     }
   }
 }
+
+query FindSimilarScenes($id: ID!, $limit: Int) {
+  findScene(id: $id) {
+    similar_scenes(limit: $limit) {
+      scene {
+        ...SlimSceneData
+      }
+      similarity_score
+    }
+  }
+}

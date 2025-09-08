@@ -414,3 +414,62 @@ func (r *sceneResolver) OHistory(ctx context.Context, obj *models.Scene) ([]*tim
 
 	return ptrRet, nil
 }
+
+func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, limit *int) ([]*models.SimilarScene, error) {
+	// Default limit to 10 if not specified
+	defaultLimit := 10
+	if limit != nil {
+		defaultLimit = *limit
+	}
+
+	// Get similar scenes from the database within a transaction
+	var similarities []*models.SceneSimilarity
+	if err := r.repository.WithTxn(ctx, func(ctx context.Context) error {
+		var err error
+		similarities, err = r.repository.SceneSimilarity.FindSimilarScenes(ctx, obj.ID, defaultLimit)
+		return err
+	}); err != nil {
+		return nil, fmt.Errorf("finding similar scenes: %w", err)
+	}
+
+	if len(similarities) == 0 {
+		return []*models.SimilarScene{}, nil
+	}
+
+	// Extract scene IDs
+	sceneIDs := make([]int, len(similarities))
+	for i, sim := range similarities {
+		sceneIDs[i] = sim.SimilarSceneID
+	}
+
+	// Load the actual scenes within a transaction
+	var scenes []*models.Scene
+	if err := r.repository.WithTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scenes, err = r.repository.Scene.FindMany(ctx, sceneIDs)
+		return err
+	}); err != nil {
+		return nil, fmt.Errorf("loading similar scenes: %w", err)
+	}
+
+	// Create SimilarScene objects with scores
+	similarScenes := make([]*models.SimilarScene, len(similarities))
+	for i, sim := range similarities {
+		// Find the corresponding scene
+		var scene *models.Scene
+		for _, s := range scenes {
+			if s.ID == sim.SimilarSceneID {
+				scene = s
+				break
+			}
+		}
+		if scene != nil {
+			similarScenes[i] = &models.SimilarScene{
+				Scene:           scene,
+				SimilarityScore: sim.SimilarityScore,
+			}
+		}
+	}
+
+	return similarScenes, nil
+}

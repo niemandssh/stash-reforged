@@ -82,6 +82,14 @@ type Scene {
 
   "Return valid stream paths"
   sceneStreams: [SceneStreamEndpoint!]!
+  
+  "Similar scenes based on performers, groups, tags, and studio"
+  similar_scenes(limit: Int): [SimilarScene!]!
+}
+
+type SimilarScene {
+  scene: Scene!
+  similarity_score: Float!
 }
 
 input SceneMovieInput {

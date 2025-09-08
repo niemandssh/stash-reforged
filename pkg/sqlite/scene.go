@@ -23,19 +23,20 @@ import (
 )
 
 const (
-	sceneTable            = "scenes"
-	scenesFilesTable      = "scenes_files"
-	sceneIDColumn         = "scene_id"
-	performersScenesTable = "performers_scenes"
-	scenesTagsTable       = "scenes_tags"
-	scenesGalleriesTable  = "scenes_galleries"
-	groupsScenesTable     = "groups_scenes"
-	scenesURLsTable       = "scene_urls"
-	sceneURLColumn        = "url"
-	scenesViewDatesTable  = "scenes_view_dates"
-	sceneViewDateColumn   = "view_date"
-	scenesODatesTable     = "scenes_o_dates"
-	sceneODateColumn      = "o_date"
+	sceneTable             = "scenes"
+	scenesFilesTable       = "scenes_files"
+	sceneIDColumn          = "scene_id"
+	performersScenesTable  = "performers_scenes"
+	scenesTagsTable        = "scenes_tags"
+	scenesGalleriesTable   = "scenes_galleries"
+	groupsScenesTable      = "groups_scenes"
+	scenesURLsTable        = "scene_urls"
+	sceneURLColumn         = "url"
+	scenesViewDatesTable   = "scenes_view_dates"
+	sceneViewDateColumn    = "view_date"
+	scenesODatesTable      = "scenes_o_dates"
+	sceneODateColumn       = "o_date"
+	sceneSimilaritiesTable = "scene_similarities"
 
 	sceneCoverBlobColumn = "cover_blob"
 )
@@ -925,6 +926,27 @@ func (qb *SceneStore) All(ctx context.Context) ([]*models.Scene, error) {
 		fileTable.Col("basename").Asc(),
 		table.Col("date").Asc(),
 	))
+}
+
+func (qb *SceneStore) AllWithRelationships(ctx context.Context) ([]*models.Scene, error) {
+	scenes, err := qb.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("DEBUG: AllWithRelationships loaded %d scenes\n", len(scenes))
+
+	// Load relationships for all scenes
+	for _, scene := range scenes {
+		if err := scene.LoadRelationships(ctx, qb); err != nil {
+			return nil, fmt.Errorf("loading relationships for scene %d: %w", scene.ID, err)
+		}
+		// Check if tags were loaded
+		tags := scene.TagIDs.List()
+		fmt.Printf("DEBUG: Scene %d has %d tags after LoadRelationships: %v\n", scene.ID, len(tags), tags)
+	}
+
+	return scenes, nil
 }
 
 func (qb *SceneStore) makeQuery(ctx context.Context, sceneFilter *models.SceneFilterType, findFilter *models.FindFilterType) (*queryBuilder, error) {

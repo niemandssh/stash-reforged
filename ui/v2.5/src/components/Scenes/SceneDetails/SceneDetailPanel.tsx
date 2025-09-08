@@ -6,6 +6,7 @@ import { TagLink } from "src/components/Shared/TagLink";
 import { PerformerCard } from "src/components/Performers/PerformerCard";
 import { sortPerformers } from "src/core/performers";
 import { DirectorLink } from "src/components/Shared/Link";
+import { SimilarScenes } from "./SimilarScenes";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -103,6 +104,11 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
           {renderDetails()}
           {renderTags()}
           {renderPerformers()}
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-12">
+          <SimilarScenes scene={props.scene} />
         </div>
       </div>
     </>

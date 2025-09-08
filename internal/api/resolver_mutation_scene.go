@@ -31,6 +31,15 @@ func (r *mutationResolver) getScene(ctx context.Context, id int) (ret *models.Sc
 	return ret, nil
 }
 
+// scheduleSimilarityRecalculation schedules similarity recalculation for a scene in the background
+func (r *mutationResolver) scheduleSimilarityRecalculation(ctx context.Context, sceneID int) {
+	// Create similarity job for the specific scene
+	job := manager.NewSimilarityJob(r.repository, &sceneID)
+
+	// Add the job to the job manager
+	manager.GetInstance().JobManager.Add(ctx, job.GetDescription(), job)
+}
+
 func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCreateInput) (ret *models.Scene, err error) {
 	translator := changesetTranslator{
 		inputMap: getUpdateInputMap(ctx),
@@ -109,6 +118,9 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 	}); err != nil {
 		return nil, err
 	}
+
+	// Schedule similarity recalculation for the new scene
+	r.scheduleSimilarityRecalculation(ctx, ret.ID)
 
 	return ret, nil
 }
@@ -313,6 +325,26 @@ func (r *mutationResolver) sceneUpdate(ctx context.Context, input models.SceneUp
 
 	if err := r.sceneUpdateCoverImage(ctx, scene, coverImageData); err != nil {
 		return nil, err
+	}
+
+	// Check if any similarity-affecting fields were updated
+	similarityFields := []string{"performer_ids", "tag_ids", "groups", "studio_id"}
+	fields := translator.getFields()
+	needsSimilarityUpdate := false
+
+outer:
+	for _, field := range similarityFields {
+		for _, updatedField := range fields {
+			if field == updatedField {
+				needsSimilarityUpdate = true
+				break outer
+			}
+		}
+	}
+
+	// Schedule similarity recalculation if needed
+	if needsSimilarityUpdate {
+		r.scheduleSimilarityRecalculation(ctx, sceneID)
 	}
 
 	return scene, nil
@@ -1150,4 +1182,23 @@ func (r *mutationResolver) SceneGenerateScreenshot(ctx context.Context, id strin
 	}
 
 	return "todo", nil
+}
+
+func (r *mutationResolver) RecalculateSceneSimilarities(ctx context.Context, sceneID *string) (string, error) {
+	var sceneIDInt *int
+	if sceneID != nil {
+		id, err := strconv.Atoi(*sceneID)
+		if err != nil {
+			return "", fmt.Errorf("converting scene id: %w", err)
+		}
+		sceneIDInt = &id
+	}
+
+	// Create similarity job
+	job := manager.NewSimilarityJob(r.repository, sceneIDInt)
+
+	// Start the job
+	jobID := manager.GetInstance().JobManager.Add(ctx, job.GetDescription(), job)
+
+	return strconv.Itoa(jobID), nil
 }

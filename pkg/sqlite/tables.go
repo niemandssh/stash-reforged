@@ -224,6 +224,11 @@ var (
 		},
 		dateColumn: goqu.T(scenesODatesTable).Col(sceneODateColumn),
 	}
+
+	sceneSimilaritiesTableMgr = &table{
+		table:    goqu.T(sceneSimilaritiesTable),
+		idColumn: goqu.T(sceneSimilaritiesTable).Col(idColumn),
+	}
 )
 
 var (
