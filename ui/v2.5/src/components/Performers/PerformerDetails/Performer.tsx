@@ -31,6 +31,7 @@ import { PerformerEditPanel } from "./PerformerEditPanel";
 import { PerformerSubmitButton } from "./PerformerSubmitButton";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { DetailImage } from "src/components/Shared/DetailImage";
+import { ImageCropper } from "src/components/Shared/ImageCropper";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
 import { ExternalLinkButtons } from "src/components/Shared/ExternalLinksButton";
@@ -218,16 +219,10 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
       return (
         <HeaderImage encodingImage={encodingImage}>
           {!!activeImage && (
-            <LightboxLink images={lightboxImages}>
-              <div className="position-relative">
-                <DetailImage
-                  className={`performer ${performer.death_date ? 'deceased' : ''}`}
-                  src={activeImage}
-                  alt={performer.name}
-                />
-                {performer.death_date && <DeathRibbon size="large" />}
-              </div>
-            </LightboxLink>
+            <ImageCropper
+              imageSrc={activeImage}
+              performerId={performer.id}
+            />
           )}
         </HeaderImage>
       );

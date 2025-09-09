@@ -1,3 +1,52 @@
+// Image Cropper Styles
+.image-cropper-container {
+  .cropper-view-box img { 
+    transition: none; 
+  }
+  
+  .detail-header-image { 
+    flex-direction: column;
+    padding: 0 !important; // Убираем отступы слева и справа
+  }
+
+  #crop-btn-container {
+    margin-top: 10px;
+    margin-left: 0;
+    padding-left: 0;
+    text-align: left;
+    
+    #crop-start {
+      margin-right: 0.5rem;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    
+    #crop-accept,
+    #crop-cancel {
+      margin-top: 10px;
+      width: calc(50% - 2.5px);
+      display: inline-block;
+      box-sizing: border-box;
+    }
+    
+    #crop-cancel {
+      margin-right: 5px;
+    }
+    
+    #crop-accept {
+      margin-left: 0;
+    }
+    
+    p {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+      width: 100%;
+      display: block;
+    }
+  }
+}
+
 .LoadingIndicator {
   // fade in animation - delay showing
   animation: fadeInAnimation ease 200ms;
