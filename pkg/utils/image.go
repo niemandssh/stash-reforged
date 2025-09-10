@@ -56,7 +56,7 @@ func ReadImageFromURL(ctx context.Context, url string) ([]byte, error) {
 	if req.URL.Scheme != "" {
 		req.Header.Set("Referer", req.URL.Scheme+"://"+req.Host+"/")
 	}
-	req.Header.Set("User-Agent", getUserAgent())
+	req.Header.Set("User-Agent", GetUserAgent())
 
 	resp, err := client.Do(req)
 

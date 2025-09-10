@@ -135,9 +135,11 @@ func (i *imageGetter) getImage(ctx context.Context, url string) (*string, error)
 	}
 
 	userAgent := i.globalConfig.GetScraperUserAgent()
-	if userAgent != "" {
-		req.Header.Set("User-Agent", userAgent)
+	if userAgent == "" {
+		// Use default user agent if none is configured
+		userAgent = utils.GetUserAgent()
 	}
+	req.Header.Set("User-Agent", userAgent)
 
 	// assume is a URL for now
 

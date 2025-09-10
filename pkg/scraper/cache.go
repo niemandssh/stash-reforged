@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -126,13 +127,34 @@ type Cache struct {
 
 // newClient creates a scraper-local http client we use throughout the scraper subsystem.
 func newClient(gc GlobalConfig) *http.Client {
-	client := &http.Client{
-		Transport: &http.Transport{ // ignore insecure certificates
-			TLSClientConfig:     &tls.Config{InsecureSkipVerify: !gc.GetScraperCertCheck()},
-			MaxIdleConnsPerHost: maxIdleConnsPerHost,
-			Proxy:               http.ProxyFromEnvironment,
+	transport := &http.Transport{
+		TLSClientConfig:     &tls.Config{InsecureSkipVerify: !gc.GetScraperCertCheck()},
+		MaxIdleConnsPerHost: maxIdleConnsPerHost,
+		Proxy:               http.ProxyFromEnvironment,
+		// Add connection pooling and keep-alive settings
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		// Enable HTTP/2 as some sites require it
+		ForceAttemptHTTP2: true,
+		// Add custom dialer with timeout and force IPv4
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			d := &net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}
+			// Force IPv4 by using "tcp4" instead of "tcp"
+			if network == "tcp" {
+				network = "tcp4"
+			}
+			return d.DialContext(ctx, network, addr)
 		},
-		Timeout: scrapeGetTimeout,
+	}
+
+	client := &http.Client{
+		Transport: transport,
+		Timeout:   scrapeGetTimeout,
 		// defaultCheckRedirect code with max changed from 10 to maxRedirects
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			if len(via) >= maxRedirects {
