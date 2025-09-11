@@ -151,7 +151,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
 
     try {
       const client = getClient();
-      
+
       // First get count of scenes with rating >= 55
       const countResult = await client.query<GQL.FindScenesQuery>({
         query: GQL.FindScenesDocument,
@@ -175,7 +175,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
 
       // Choose random page
       const randomPage = Math.floor(Math.random() * totalCount) + 1;
-      
+
       // Get scene from that page
       const result = await client.query<GQL.FindScenesQuery>({
         query: GQL.FindScenesDocument,
