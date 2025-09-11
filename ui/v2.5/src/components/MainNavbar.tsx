@@ -35,6 +35,7 @@ import {
   faQuestionCircle,
   faRandom,
   faSignOutAlt,
+  faStar,
   faStarHalfStroke,
   faTag,
   faTimes,
@@ -172,7 +173,7 @@ const newPathsList = allMenuItems
 const getRandomUnratedScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
-    
+
     // Сначала получаем общее количество сцен без рейтинга и тегов
     const countResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
@@ -200,7 +201,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
 
     // Выбираем случайную страницу
     const randomPage = Math.floor(Math.random() * totalCount) + 1;
-    
+
     // Получаем сцену с этой страницы
     const result = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
@@ -234,12 +235,11 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
   }
 };
 
-// Функция для получения случайной сцены с рейтингом >= 55
-const getRandomScene = async (): Promise<string | null> => {
+// Функция для получения случайной сцены с настраиваемым рейтингом
+const getRandomScene = async (ratingThreshold: number = 55): Promise<string | null> => {
   try {
     const client = getClient();
-    
-    // Сначала получаем общее количество сцен с рейтингом >= 55
+
     const countResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
@@ -249,7 +249,7 @@ const getRandomScene = async (): Promise<string | null> => {
         scene_filter: {
           rating100: {
             modifier: GQL.CriterionModifier.GreaterThan,
-            value: 54, // > 54 means >= 55
+            value: ratingThreshold - 1, // > (threshold-1) means >= threshold
           },
         },
       },
@@ -260,9 +260,8 @@ const getRandomScene = async (): Promise<string | null> => {
       return null;
     }
 
-    // Выбираем случайную страницу
     const randomPage = Math.floor(Math.random() * totalCount) + 1;
-    
+
     // Получаем сцену с этой страницы
     const result = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
@@ -275,7 +274,7 @@ const getRandomScene = async (): Promise<string | null> => {
         scene_filter: {
           rating100: {
             modifier: GQL.CriterionModifier.GreaterThan,
-            value: 54, // > 54 means >= 55
+            value: ratingThreshold - 1, // > (threshold-1) means >= threshold
           },
         },
       },
@@ -291,6 +290,11 @@ const getRandomScene = async (): Promise<string | null> => {
     console.error("Ошибка при получении случайной сцены:", error);
     return null;
   }
+};
+
+// Функция для получения случайной сцены с настраиваемым рейтингом (для Random Best)
+const getRandomBestScene = async (ratingThreshold: number = 90): Promise<string | null> => {
+  return getRandomScene(ratingThreshold);
 };
 
 const MainNavbarMenuItems = PatchComponent(
@@ -379,25 +383,40 @@ export const MainNavbar: React.FC = () => {
       history.push(`/scenes/${sceneId}`);
     } else {
       // Показываем уведомление, если нет сцен для рецензирования
-      alert(intl.formatMessage({ 
-        id: "no_scenes_to_review", 
-        defaultMessage: "Нет сцен без рейтинга и тегов для рецензирования" 
+      alert(intl.formatMessage({
+        id: "no_scenes_to_review",
+        defaultMessage: "Нет сцен без рейтинга и тегов для рецензирования"
       }));
     }
   }, [history, intl]);
 
   const handleRandomClick = useCallback(async () => {
-    const sceneId = await getRandomScene();
+    const ratingThreshold = configuration?.interface?.randomRatingThreshold ?? 55;
+    const sceneId = await getRandomScene(ratingThreshold);
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
       // Показываем уведомление, если нет сцен
-      alert(intl.formatMessage({ 
-        id: "no_scenes_available", 
-        defaultMessage: "Нет доступных сцен" 
+      alert(intl.formatMessage({
+        id: "no_scenes_available",
+        defaultMessage: `Нет сцен с рейтингом >= ${ratingThreshold}`
       }));
     }
-  }, [history, intl]);
+  }, [history, intl, configuration]);
+
+  const handleRandomBestClick = useCallback(async () => {
+    const ratingThreshold = configuration?.interface?.randomBestRatingThreshold ?? 90;
+    const sceneId = await getRandomBestScene(ratingThreshold);
+    if (sceneId) {
+      history.push(`/scenes/${sceneId}`);
+    } else {
+      // Показываем уведомление, если нет сцен с высоким рейтингом
+      alert(intl.formatMessage({
+        id: "no_best_scenes_available",
+        defaultMessage: `Нет сцен с рейтингом >= ${ratingThreshold}`
+      }));
+    }
+  }, [history, intl, configuration]);
 
   const pathname = location.pathname.replace(/\/$/, "");
   let newPath = newPathsList.includes(pathname) ? `${pathname}/new` : null;
@@ -579,10 +598,20 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary random-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleRandomClick}
-            title="Open random scene"
+            title={`Open random scene with rating >= ${configuration?.interface?.randomRatingThreshold ?? 55}`}
           >
             <Icon icon={faRandom} className="mr-1" />
             Random
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary random-best-btn ml-2"
+            style={{ display: "inline-block", visibility: "visible" }}
+            onClick={handleRandomBestClick}
+            title={`Open random scene with rating >= ${configuration?.interface?.randomBestRatingThreshold ?? 90}`}
+          >
+            <Icon icon={faStar} className="mr-1" />
+            Random best
           </button>
           <Navbar.Toggle className="nav-menu-toggle ml-sm-2">
             <Icon icon={expanded ? faTimes : faBars} />

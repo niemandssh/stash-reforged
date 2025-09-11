@@ -158,6 +158,9 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 	handyKey := config.GetHandyKey()
 	scriptOffset := config.GetFunscriptOffset()
 	useStashHostedFunscript := config.GetUseStashHostedFunscript()
+	randomRatingThreshold := config.GetRandomRatingThreshold()
+	randomBestRatingThreshold := config.GetRandomBestRatingThreshold()
+	fmt.Printf("makeConfigInterfaceResult: randomRatingThreshold=%d, randomBestRatingThreshold=%d\n", randomRatingThreshold, randomBestRatingThreshold)
 	imageLightboxOptions := config.GetImageLightboxOptions()
 	disableDropdownCreate := config.GetDisableDropdownCreate()
 
@@ -189,6 +192,9 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 		HandyKey:                &handyKey,
 		FunscriptOffset:         &scriptOffset,
 		UseStashHostedFunscript: &useStashHostedFunscript,
+
+		RandomRatingThreshold:     &randomRatingThreshold,
+		RandomBestRatingThreshold: &randomBestRatingThreshold,
 	}
 }
 

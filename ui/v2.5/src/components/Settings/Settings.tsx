@@ -10,6 +10,7 @@ import { SettingsConfigurationPanel } from "./SettingsSystemPanel";
 import { SettingsInterfacePanel } from "./SettingsInterfacePanel/SettingsInterfacePanel";
 import { SettingsLogsPanel } from "./SettingsLogsPanel";
 import { SettingsTasksPanel } from "./Tasks/SettingsTasksPanel";
+import { SettingsCustomPanel } from "./SettingsCustomPanel";
 import { SettingsPluginsPanel } from "./SettingsPluginsPanel";
 import { SettingsScrapingPanel } from "./SettingsScrapingPanel";
 import { SettingsToolsPanel } from "./SettingsToolsPanel";
@@ -21,6 +22,7 @@ import Changelog from "../Changelog/Changelog";
 
 const validTabs = [
   "tasks",
+  "custom",
   "library",
   "interface",
   "security",
@@ -56,6 +58,13 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
               <LinkContainer to="/settings?tab=tasks">
                 <Nav.Link eventKey="tasks">
                   <FormattedMessage id="config.categories.tasks" />
+                </Nav.Link>
+              </LinkContainer>
+            </Nav.Item>
+            <Nav.Item>
+              <LinkContainer to="/settings?tab=custom">
+                <Nav.Link eventKey="custom">
+                  <FormattedMessage id="config.categories.custom" />
                 </Nav.Link>
               </LinkContainer>
             </Nav.Item>
@@ -169,6 +178,9 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
             </Tab.Pane>
             <Tab.Pane eventKey="tasks">
               <SettingsTasksPanel />
+            </Tab.Pane>
+            <Tab.Pane eventKey="custom">
+              <SettingsCustomPanel />
             </Tab.Pane>
             <Tab.Pane eventKey="services" unmountOnExit>
               <SettingsServicesPanel />

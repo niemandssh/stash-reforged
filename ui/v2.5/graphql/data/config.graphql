@@ -107,6 +107,8 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
   handyKey
   funscriptOffset
   useStashHostedFunscript
+  randomRatingThreshold
+  randomBestRatingThreshold
 }
 
 fragment ConfigDLNAData on ConfigDLNAResult {

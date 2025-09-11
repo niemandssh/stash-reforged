@@ -221,6 +221,12 @@ const (
 	UseStashHostedFunscript        = "use_stash_hosted_funscript"
 	useStashHostedFunscriptDefault = false
 
+	// Random button rating thresholds
+	RandomRatingThreshold            = "random_rating_threshold"
+	randomRatingThresholdDefault     = 55
+	RandomBestRatingThreshold        = "random_best_rating_threshold"
+	randomBestRatingThresholdDefault = 90
+
 	DrawFunscriptHeatmapRange        = "draw_funscript_heatmap_range"
 	drawFunscriptHeatmapRangeDefault = true
 
@@ -595,6 +601,21 @@ func (i *Config) getBoolDefault(key string, def bool) bool {
 	v := i.forKey(key)
 	if v.Exists(key) {
 		ret = v.Bool(key)
+	}
+	return ret
+}
+
+func (i *Config) getIntDefault(key string, def int) int {
+	i.RLock()
+	defer i.RUnlock()
+
+	ret := def
+	v := i.forKey(key)
+	if v.Exists(key) {
+		ret = v.Int(key)
+		fmt.Printf("getIntDefault: key=%s, found value=%d, default=%d\n", key, ret, def)
+	} else {
+		fmt.Printf("getIntDefault: key=%s, not found, using default=%d\n", key, def)
 	}
 	return ret
 }
@@ -1448,6 +1469,14 @@ func (i *Config) GetUseStashHostedFunscript() bool {
 	return i.getBoolDefault(UseStashHostedFunscript, useStashHostedFunscriptDefault)
 }
 
+func (i *Config) GetRandomRatingThreshold() int {
+	return i.getIntDefault(RandomRatingThreshold, randomRatingThresholdDefault)
+}
+
+func (i *Config) GetRandomBestRatingThreshold() int {
+	return i.getIntDefault(RandomBestRatingThreshold, randomBestRatingThresholdDefault)
+}
+
 func (i *Config) GetDeleteFileDefault() bool {
 	return i.getBool(DeleteFileDefault)
 }
@@ -1832,6 +1861,14 @@ func (i *Config) setExistingSystemDefaults() {
 		// Existing systems as of the introduction of the taskbar should inform users.
 		if !i.main.Exists(ShowOneTimeMovedNotification) {
 			i.set(ShowOneTimeMovedNotification, true)
+		}
+
+		// Set default rating thresholds for existing systems
+		if !i.main.Exists(RandomRatingThreshold) {
+			i.set(RandomRatingThreshold, randomRatingThresholdDefault)
+		}
+		if !i.main.Exists(RandomBestRatingThreshold) {
+			i.set(RandomBestRatingThreshold, randomBestRatingThresholdDefault)
 		}
 	}
 }
