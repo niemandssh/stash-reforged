@@ -7,8 +7,8 @@ interface BrokenBadgeProps {
 
 export const BrokenBadge: React.FC<BrokenBadgeProps> = ({ className = "" }) => {
   return (
-    <Badge 
-      variant="danger" 
+    <Badge
+      variant="danger"
       className={`broken-badge ${className}`}
       style={{
         backgroundColor: "#dc3545",

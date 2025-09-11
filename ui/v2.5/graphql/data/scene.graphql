@@ -16,6 +16,7 @@ fragment SceneData on Scene {
     caption_type
   }
   is_broken
+  is_probably_broken
   created_at
   updated_at
   resume_time

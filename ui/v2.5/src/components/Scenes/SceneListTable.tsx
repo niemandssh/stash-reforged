@@ -13,6 +13,7 @@ import { IColumn, ListTable } from "../List/ListTable";
 import { useTableColumns } from "src/hooks/useTableColumns";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
+import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 
 interface ISceneListTableProps {
   scenes: GQL.SlimSceneDataFragment[];
@@ -70,6 +71,7 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
     return (
       <div className="d-flex align-items-center">
         {scene.is_broken && <BrokenBadge className="me-2" />}
+        {!scene.is_broken && scene.is_probably_broken && <ProbablyBrokenBadge className="me-2" />}
         <Link to={sceneLink} title={title}>
           <span className="ellips-data">{title}</span>
         </Link>

@@ -28,6 +28,7 @@ import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import { BrokenBadge } from "src/components/Shared/BrokenBadge";
+import { ProbablyBrokenBadge } from "src/components/Shared/ProbablyBrokenBadge";
 import { useToast } from "src/hooks/Toast";
 import SceneQueue, { QueuedScene } from "src/models/sceneQueue";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -636,6 +637,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             )}
             <div className="scene-header">
               {scene.is_broken && <BrokenBadge />}
+              {!scene.is_broken && scene.is_probably_broken && <ProbablyBrokenBadge />}
               <h3 className={cx({ "no-studio": !scene.studio })}>
                 {title}
               </h3>
@@ -720,9 +722,28 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 }) => {
   const { id } = match.params;
   const { configuration } = useContext(ConfigurationContext);
-  const { data, loading, error } = useFindScene(id);
+  const { data, loading, error, refetch } = useFindScene(id);
 
   const [scene, setScene] = useState<GQL.SceneDataFragment>();
+
+  // Debug logging
+  React.useEffect(() => {
+    if (data?.findScene) {
+      console.log('[DEBUG] Scene data received:', {
+        id: data.findScene.id,
+        is_broken: data.findScene.is_broken,
+        is_probably_broken: data.findScene.is_probably_broken,
+        video_codec: data.findScene.files?.[0]?.video_codec,
+        audio_codec: data.findScene.files?.[0]?.audio_codec
+      });
+    }
+  }, [data]);
+
+  // Debug: Force refetch on mount
+  React.useEffect(() => {
+    console.log('[DEBUG] Forcing refetch for scene', id);
+    refetch();
+  }, [id, refetch]);
 
   // useLayoutEffect to update before paint
   useLayoutEffect(() => {

@@ -53,6 +53,7 @@ type Scene {
   interactive_speed: Int
   captions: [VideoCaption!]
   is_broken: Boolean!
+  is_probably_broken: Boolean! # Resolver
   created_at: Time!
   updated_at: Time!
   "The last time play count was updated"

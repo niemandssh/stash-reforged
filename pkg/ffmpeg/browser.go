@@ -6,21 +6,24 @@ import (
 )
 
 // only support H264 by default, since Safari does not support VP8/VP9
-var defaultSupportedCodecs = []string{H264, H265}
+var defaultSupportedCodecs = []string{H264, H265, Hevc}
 
-var validForH264Mkv = []Container{Mp4, Matroska}
-var validForH264 = []Container{Mp4}
-var validForH265Mkv = []Container{Mp4, Matroska}
-var validForH265 = []Container{Mp4}
+var validForH264Mkv = []Container{Mp4, Matroska, Avi, Mov, Wmv}
+var validForH264 = []Container{Mp4, Avi, Mov, Wmv}
+var validForH265Mkv = []Container{Mp4, Matroska, Avi, Mov, Wmv}
+var validForH265 = []Container{Mp4, Avi, Mov, Wmv}
 var validForVp8 = []Container{Webm}
 var validForVp9Mkv = []Container{Webm, Matroska}
 var validForVp9 = []Container{Webm}
-var validForHevcMkv = []Container{Mp4, Matroska}
-var validForHevc = []Container{Mp4}
+var validForHevcMkv = []Container{Mp4, Matroska, Avi, Mov, Wmv}
+var validForHevc = []Container{Mp4, Avi, Mov, Wmv}
 
 var validAudioForMkv = []ProbeAudioCodec{Aac, Mp3, Vorbis, Opus}
 var validAudioForWebm = []ProbeAudioCodec{Vorbis, Opus}
 var validAudioForMp4 = []ProbeAudioCodec{Aac, Mp3, Opus}
+var validAudioForAvi = []ProbeAudioCodec{Aac, Mp3, Vorbis, Opus}
+var validAudioForMov = []ProbeAudioCodec{Aac, Mp3, Opus}
+var validAudioForWmv = []ProbeAudioCodec{Aac, Mp3}
 
 var (
 	// ErrUnsupportedVideoCodecForBrowser is returned when the video codec is not supported for browser streaming.
@@ -87,6 +90,12 @@ func IsValidAudioForContainer(audio ProbeAudioCodec, format Container) bool {
 		return isValidAudio(audio, validAudioForWebm)
 	case Mp4:
 		return isValidAudio(audio, validAudioForMp4)
+	case Avi:
+		return isValidAudio(audio, validAudioForAvi)
+	case Mov:
+		return isValidAudio(audio, validAudioForMov)
+	case Wmv:
+		return isValidAudio(audio, validAudioForWmv)
 	}
 	return false
 }

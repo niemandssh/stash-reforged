@@ -7,6 +7,7 @@ import (
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/fsutil"
+	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 )
 
@@ -146,7 +147,7 @@ func GetSceneStreamPaths(scene *models.Scene, directStreamURL *url.URL, maxStrea
 
 	var endpoints []*SceneStreamEndpoint
 
-	// direct stream should only apply when the audio codec is supported
+	// direct stream should only apply when both video and audio codecs are supported
 	audioCodec := ffmpeg.MissingUnsupported
 	if pf.AudioCodec != "" {
 		audioCodec = ffmpeg.ProbeAudioCodec(pf.AudioCodec)
@@ -155,8 +156,45 @@ func GetSceneStreamPaths(scene *models.Scene, directStreamURL *url.URL, maxStrea
 	// don't care if we can't get the container
 	container, _ := GetVideoFileContainer(pf)
 
-	if HasTranscode(scene, config.GetInstance().GetVideoFileNamingAlgorithm()) || ffmpeg.IsValidAudioForContainer(audioCodec, container) {
+	var videoCodec string
+	if pf.VideoCodec != "" {
+		videoCodec = pf.VideoCodec
+	}
+
+	// Check if the video is streamable (both video codec and audio codec must be supported)
+	isStreamable := ffmpeg.IsStreamable(videoCodec, audioCodec, container) == nil
+	hasTranscode := HasTranscode(scene, config.GetInstance().GetVideoFileNamingAlgorithm())
+
+	// Determine if video is probably broken (not supported by browsers)
+	isProbablyBroken := !isStreamable
+
+	// Debug logging for WMV files
+	if container == ffmpeg.Wmv {
+		logger.Infof("[DEBUG] WMV file analysis for scene %d:", scene.ID)
+		logger.Infof("  Video codec: %s", videoCodec)
+		logger.Infof("  Audio codec: %s", audioCodec)
+		logger.Infof("  Container: %s", container)
+		logger.Infof("  Is streamable: %t", isStreamable)
+		logger.Infof("  Has transcode: %t", hasTranscode)
+		logger.Infof("  Is probably broken: %t", isProbablyBroken)
+		if !isStreamable {
+			err := ffmpeg.IsStreamable(videoCodec, audioCodec, container)
+			logger.Infof("  Streamable error: %v", err)
+		}
+	}
+
+	// Use direct stream if:
+	// 1. We have a transcode AND the original file is NOT streamable (fallback to transcode)
+	// 2. We don't have a transcode AND the original file IS streamable (direct stream)
+	if (hasTranscode && !isStreamable) || (!hasTranscode && isStreamable) {
 		endpoints = append(endpoints, makeStreamEndpoint(directEndpointType, ""))
+		if container == ffmpeg.Wmv {
+			logger.Infof("[DEBUG] WMV file will use direct stream")
+		}
+	} else {
+		if container == ffmpeg.Wmv {
+			logger.Infof("[DEBUG] WMV file will NOT use direct stream")
+		}
 	}
 
 	// only add mkv stream endpoint if the scene container is an mkv already
@@ -235,4 +273,42 @@ func HasTranscode(scene *models.Scene, fileNamingAlgo models.HashAlgorithm) bool
 	transcodePath := instance.Paths.Scene.GetTranscodePath(sceneHash)
 	ret, _ := fsutil.FileExists(transcodePath)
 	return ret
+}
+
+// IsProbablyBroken returns true if the scene's primary file is not streamable
+// by browsers (e.g., WMV files with unsupported codecs)
+func IsProbablyBroken(scene *models.Scene) bool {
+	if scene == nil {
+		return false
+	}
+
+	pf := scene.Files.Primary()
+	if pf == nil {
+		return false
+	}
+
+	// Get audio codec
+	audioCodec := ffmpeg.MissingUnsupported
+	if pf.AudioCodec != "" {
+		audioCodec = ffmpeg.ProbeAudioCodec(pf.AudioCodec)
+	}
+
+	// Get container
+	container, err := GetVideoFileContainer(pf)
+	if err != nil {
+		// If we can't get container, assume it's not broken
+		return false
+	}
+
+	// Get video codec
+	var videoCodec string
+	if pf.VideoCodec != "" {
+		videoCodec = pf.VideoCodec
+	}
+
+	// Check if the video is streamable (both video codec and audio codec must be supported)
+	isStreamable := ffmpeg.IsStreamable(videoCodec, audioCodec, container) == nil
+
+	// Video is probably broken if it's not streamable
+	return !isStreamable
 }

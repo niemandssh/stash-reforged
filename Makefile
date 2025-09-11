@@ -428,7 +428,7 @@ dev:
 	make server-start
 
 fdev:
-	make ui-start
+	make generate && make ui-start
 
 compile:
 	make generate && make ui

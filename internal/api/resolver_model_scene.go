@@ -8,6 +8,7 @@ import (
 	"github.com/stashapp/stash/internal/api/loaders"
 	"github.com/stashapp/stash/internal/api/urlbuilders"
 	"github.com/stashapp/stash/internal/manager"
+	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 )
 
@@ -107,7 +108,21 @@ func (r *sceneResolver) IsBroken(ctx context.Context, obj *models.Scene) (bool, 
 	return obj.IsBroken, nil
 }
 
+func (r *sceneResolver) IsProbablyBroken(ctx context.Context, obj *models.Scene) (bool, error) {
+	// Load primary file if not already loaded
+	_, err := r.getPrimaryFile(ctx, obj)
+	if err != nil {
+		logger.Infof("[DEBUG] IsProbablyBroken: failed to load primary file for scene %d: %v", obj.ID, err)
+		return false, err
+	}
+
+	// Use the manager function to determine if the scene is probably broken
+	result := manager.IsProbablyBroken(obj)
+	return result, nil
+}
+
 func (r *sceneResolver) Paths(ctx context.Context, obj *models.Scene) (*ScenePathsType, error) {
+	logger.Infof("[DEBUG] Paths resolver called for scene %d", obj.ID)
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	config := manager.GetInstance().Config
 	builder := urlbuilders.NewSceneURLBuilder(baseURL, obj)

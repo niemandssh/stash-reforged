@@ -31,6 +31,7 @@ import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 import { GroupTag } from "../Groups/GroupTag";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
+import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 
 interface IScenePreviewProps {
   isPortrait: boolean;
@@ -352,6 +353,11 @@ const SceneCardOverlays = PatchComponent(
         {props.scene.is_broken && (
           <div className="broken-badge-overlay">
             <BrokenBadge />
+          </div>
+        )}
+        {!props.scene.is_broken && props.scene.is_probably_broken && (
+          <div className="probably-broken-badge-overlay">
+            <ProbablyBrokenBadge />
           </div>
         )}
       </>
