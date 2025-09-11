@@ -546,22 +546,11 @@ export const mutateCreateScene = (input: GQL.SceneCreateInput) =>
 
 export const useSceneUpdate = () =>
   GQL.useSceneUpdateMutation({
+    refetchQueries: [GQL.FindSceneDocument],
     update(cache, result, { variables }) {
       if (!result.data?.sceneUpdate || !variables) return;
 
       const scene = result.data.sceneUpdate;
-
-      // Update the specific scene's rating100 field in cache
-      if (variables.input.rating100 !== undefined) {
-        cache.modify({
-          id: cache.identify({ __typename: "Scene", id: variables.input.id }),
-          fields: {
-            rating100() {
-              return variables.input.rating100 ?? null;
-            },
-          },
-        });
-      }
 
       // Check if any similarity-affecting fields were updated
       const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
@@ -600,6 +589,20 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
         updatedFields.includes(field)
       );
 
+      // Update rating100 field in cache for all updated scenes
+      if (input.rating100 !== undefined && input.ids) {
+        input.ids.forEach(id => {
+          cache.modify({
+            id: cache.identify({ __typename: "Scene", id }),
+            fields: {
+              rating100() {
+                return input.rating100 ?? null;
+              },
+            },
+          });
+        });
+      }
+
       // Evict similar scenes for all updated scenes
       if (input.ids) {
         input.ids.forEach(id => {
@@ -607,11 +610,14 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
             // Don't evict immediately - let the similarity job monitor handle it
             console.log(`Similarity job will be triggered for scene ${id}`);
           } else {
-            // For non-similarity affecting changes, evict immediately
-            cache.evict({
-              fieldName: "findScene",
-              args: { id }
-            });
+            // For non-similarity affecting changes, only evict if rating was not updated
+            // to avoid overriding the cache.modify above
+            if (input.rating100 === undefined) {
+              cache.evict({
+                fieldName: "findScene",
+                args: { id }
+              });
+            }
           }
         });
       }
@@ -630,6 +636,20 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
       // Check if any similarity-affecting fields were updated
       const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
 
+      // Update rating100 field in cache for all updated scenes
+      input.forEach(sceneInput => {
+        if (sceneInput.rating100 !== undefined) {
+          cache.modify({
+            id: cache.identify({ __typename: "Scene", id: sceneInput.id }),
+            fields: {
+              rating100() {
+                return sceneInput.rating100 ?? null;
+              },
+            },
+          });
+        }
+      });
+
       // Evict similar scenes for all updated scenes
       input.forEach(sceneInput => {
         const updatedFields = Object.keys(sceneInput);
@@ -641,11 +661,14 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
           // Don't evict immediately - let the similarity job monitor handle it
           console.log(`Similarity job will be triggered for scene ${sceneInput.id}`);
         } else {
-          // For non-similarity affecting changes, evict immediately
-          cache.evict({
-            fieldName: "findScene",
-            args: { id: sceneInput.id }
-          });
+          // For non-similarity affecting changes, only evict if rating was not updated
+          // to avoid overriding the cache.modify above
+          if (sceneInput.rating100 === undefined) {
+            cache.evict({
+              fieldName: "findScene",
+              args: { id: sceneInput.id }
+            });
+          }
         }
       });
 
@@ -1144,8 +1167,20 @@ const imageMutationImpactedQueries = [
 
 export const useImageUpdate = () =>
   GQL.useImageUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.imageUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.imageUpdate || !variables) return;
+
+      // Update the specific image's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Image", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
 
       evictTypeFields(cache, imageMutationImpactedTypeFields);
       evictQueries(cache, imageMutationImpactedQueries);
@@ -1154,8 +1189,22 @@ export const useImageUpdate = () =>
 
 export const useBulkImageUpdate = () =>
   GQL.useBulkImageUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.bulkImageUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.bulkImageUpdate || !variables) return;
+
+      // Update rating100 field in cache for all updated images
+      if (variables.input.rating100 !== undefined && variables.input.ids) {
+        variables.input.ids.forEach(id => {
+          cache.modify({
+            id: cache.identify({ __typename: "Image", id }),
+            fields: {
+              rating100() {
+                return variables.input.rating100 ?? null;
+              },
+            },
+          });
+        });
+      }
 
       evictTypeFields(cache, imageMutationImpactedTypeFields);
       evictQueries(cache, imageMutationImpactedQueries);
@@ -1398,8 +1447,20 @@ export const useGroupCreate = () =>
 
 export const useGroupUpdate = () =>
   GQL.useGroupUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.groupUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.groupUpdate || !variables) return;
+
+      // Update the specific group's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Group", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
 
       evictTypeFields(cache, groupMutationImpactedTypeFields);
       evictQueries(cache, groupMutationImpactedQueries);
@@ -1411,6 +1472,20 @@ export const useBulkGroupUpdate = (input: GQL.BulkGroupUpdateInput) =>
     variables: { input },
     update(cache, result) {
       if (!result.data?.bulkGroupUpdate) return;
+
+      // Update rating100 field in cache for all updated groups
+      if (input.rating100 !== undefined && input.ids) {
+        input.ids.forEach(id => {
+          cache.modify({
+            id: cache.identify({ __typename: "Group", id }),
+            fields: {
+              rating100() {
+                return input.rating100 ?? null;
+              },
+            },
+          });
+        });
+      }
 
       evictTypeFields(cache, groupMutationImpactedTypeFields);
       evictQueries(cache, groupMutationImpactedQueries);
@@ -1628,8 +1703,20 @@ export const useGalleryCreate = () =>
 
 export const useGalleryUpdate = () =>
   GQL.useGalleryUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.galleryUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.galleryUpdate || !variables) return;
+
+      // Update the specific gallery's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Gallery", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
 
       evictTypeFields(cache, galleryMutationImpactedTypeFields);
       evictQueries(cache, galleryMutationImpactedQueries);
@@ -1638,8 +1725,22 @@ export const useGalleryUpdate = () =>
 
 export const useBulkGalleryUpdate = () =>
   GQL.useBulkGalleryUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.bulkGalleryUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.bulkGalleryUpdate || !variables) return;
+
+      // Update rating100 field in cache for all updated galleries
+      if (variables.input.rating100 !== undefined && variables.input.ids) {
+        variables.input.ids.forEach(id => {
+          cache.modify({
+            id: cache.identify({ __typename: "Gallery", id }),
+            fields: {
+              rating100() {
+                return variables.input.rating100 ?? null;
+              },
+            },
+          });
+        });
+      }
 
       evictTypeFields(cache, galleryMutationImpactedTypeFields);
       evictQueries(cache, galleryMutationImpactedQueries);
@@ -1840,8 +1941,20 @@ export const usePerformerCreate = () =>
 
 export const usePerformerUpdate = () =>
   GQL.usePerformerUpdateMutation({
-    update(cache, result) {
-      if (!result.data?.performerUpdate) return;
+    update(cache, result, { variables }) {
+      if (!result.data?.performerUpdate || !variables) return;
+
+      // Update the specific performer's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Performer", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
 
       evictTypeFields(cache, performerMutationImpactedTypeFields);
       evictQueries(cache, performerMutationImpactedQueries);
@@ -1853,6 +1966,20 @@ export const useBulkPerformerUpdate = (input: GQL.BulkPerformerUpdateInput) =>
     variables: { input },
     update(cache, result) {
       if (!result.data?.bulkPerformerUpdate) return;
+
+      // Update rating100 field in cache for all updated performers
+      if (input.rating100 !== undefined && input.ids) {
+        input.ids.forEach(id => {
+          cache.modify({
+            id: cache.identify({ __typename: "Performer", id }),
+            fields: {
+              rating100() {
+                return input.rating100 ?? null;
+              },
+            },
+          });
+        });
+      }
 
       evictTypeFields(cache, performerMutationImpactedTypeFields);
       evictQueries(cache, performerMutationImpactedQueries);
@@ -1964,9 +2091,21 @@ export const useStudioCreate = () =>
 
 export const useStudioUpdate = () =>
   GQL.useStudioUpdateMutation({
-    update(cache, result) {
+    update(cache, result, { variables }) {
       const studio = result.data?.studioUpdate;
-      if (!studio) return;
+      if (!studio || !variables) return;
+
+      // Update the specific studio's rating100 field in cache
+      if (variables.input.rating100 !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Studio", id: variables.input.id }),
+          fields: {
+            rating100() {
+              return variables.input.rating100 ?? null;
+            },
+          },
+        });
+      }
 
       const obj = { __typename: "Studio", id: studio.id };
       evictTypeFields(
