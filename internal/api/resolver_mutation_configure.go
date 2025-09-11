@@ -510,6 +510,9 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input ConfigI
 	r.setConfigInt(config.FunscriptOffset, input.FunscriptOffset)
 	r.setConfigBool(config.UseStashHostedFunscript, input.UseStashHostedFunscript)
 
+	r.setConfigInt(config.RandomRatingThreshold, input.RandomRatingThreshold)
+	r.setConfigInt(config.RandomBestRatingThreshold, input.RandomBestRatingThreshold)
+
 	if err := c.Write(); err != nil {
 		return makeConfigInterfaceResult(), err
 	}

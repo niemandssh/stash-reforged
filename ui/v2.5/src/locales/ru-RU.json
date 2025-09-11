@@ -227,6 +227,7 @@
         "categories": {
             "about": "О программе",
             "changelog": "Список изменений",
+            "custom": "Пользовательские",
             "interface": "Интерфейс",
             "logs": "Журнал",
             "metadata_providers": "Поставщик метаданных",
@@ -237,6 +238,13 @@
             "system": "Система",
             "tasks": "Задачи",
             "tools": "Инструменты"
+        },
+        "custom": {
+            "rating_thresholds": "Пороги рейтинга",
+            "random_rating_threshold": "Порог рейтинга для кнопки Random",
+            "random_rating_threshold_desc": "Минимальный рейтинг (0-100) для сцен, показываемых кнопкой Random",
+            "random_best_rating_threshold": "Порог рейтинга для кнопки Random Best",
+            "random_best_rating_threshold_desc": "Минимальный рейтинг (0-100) для сцен, показываемых кнопкой Random Best"
         },
         "dlna": {
             "allow_temp_ip": "Разрешить {tempIP}",
