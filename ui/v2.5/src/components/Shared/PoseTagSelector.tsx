@@ -45,7 +45,9 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         console.log("Pose tags filter:", filter.makeFilter());
         const result = await queryFindTags(filter);
         console.log("Loaded pose tags:", result.data.findTags.tags);
-        setPoseTags(result.data.findTags.tags as unknown as GQL.Tag[]);
+        const poseTags = result.data.findTags.tags as unknown as GQL.Tag[];
+        console.log("Setting pose tags:", poseTags);
+        setPoseTags(poseTags);
       } catch (error) {
         console.error("Error loading pose tags:", error);
       } finally {
@@ -59,11 +61,20 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const handleTagToggle = (tagId: string) => {
     if (disabled) return;
 
+    console.log("PoseTagSelector handleTagToggle called with tagId:", tagId);
+    console.log("Current selectedTagIds:", selectedTagIds);
+    
     const isSelected = selectedTagIds.includes(tagId);
+    console.log("Is selected:", isSelected);
+    
     if (isSelected) {
-      onSelectionChange(selectedTagIds.filter(id => id !== tagId));
+      const newSelection = selectedTagIds.filter(id => id !== tagId);
+      console.log("Removing tag, new selection:", newSelection);
+      onSelectionChange(newSelection);
     } else {
-      onSelectionChange([...selectedTagIds, tagId]);
+      const newSelection = [...selectedTagIds, tagId];
+      console.log("Adding tag, new selection:", newSelection);
+      onSelectionChange(newSelection);
     }
   };
 

@@ -10,6 +10,7 @@ import {
   useListSceneScrapers,
   mutateReloadScrapers,
   queryScrapeSceneQueryFragment,
+  queryFindTags,
 } from "src/core/StashService";
 import { Icon } from "src/components/Shared/Icon";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -23,6 +24,7 @@ import { getStashIDs } from "src/utils/stashIds";
 import { useFormik } from "formik";
 import { Prompt } from "react-router-dom";
 import { ConfigurationContext } from "src/hooks/Config";
+import { ListFilterModel } from "src/models/list-filter/filter";
 import { IGroupEntry, SceneGroupTable } from "./SceneGroupTable";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { objectTitle } from "src/core/files";
@@ -173,38 +175,65 @@ export const SceneEditPanel: React.FC<IProps> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
-  const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
+  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } = useTagsEdit(
     scene.tags,
     (ids) => formik.setFieldValue("tag_ids", ids)
   );
 
+  // Загружаем полную информацию о тегах для синхронизации
+  const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
+  
+  useEffect(() => {
+    const loadAllTags = async () => {
+      try {
+        const filter = new ListFilterModel(GQL.FilterMode.Tags);
+        filter.itemsPerPage = -1;
+        filter.sortBy = "name";
+        filter.sortDirection = GQL.SortDirectionEnum.Asc;
+        
+        const result = await queryFindTags(filter);
+        setAllTags(result.data.findTags.tags as unknown as GQL.Tag[]);
+        console.log("Loaded all tags for sync:", result.data.findTags.tags);
+      } catch (error) {
+        console.error("Error loading all tags:", error);
+      }
+    };
+    
+    loadAllTags();
+  }, []);
+
   // Инициализация выбранных тегов поз из существующих тегов сцены
   useEffect(() => {
+    console.log("Initializing pose tags from scene.tags:", scene.tags);
     if (scene.tags) {
       const poseTagIds = scene.tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
+      console.log("Found pose tag IDs:", poseTagIds);
       setSelectedPoseTagIds(poseTagIds);
     }
   }, [scene.tags]);
 
-  // Синхронизация выбранных тегов поз с общим состоянием тегов
+  // Синхронизация тегов поз из общего списка тегов (только при изменении formik.values.tag_ids)
   useEffect(() => {
-    if (tags.length > 0) {
-      // Обновляем состояние тегов в хуке useTagsEdit
+    console.log("Sync useEffect triggered - formik.values.tag_ids:", formik.values.tag_ids, "allTags:", allTags);
+    if (allTags.length > 0) {
       const currentTagIds = formik.values.tag_ids || [];
-      const nonPoseTagIds = currentTagIds.filter(tagId => {
-        const tag = tags.find(t => t.id === tagId);
-        return !tag || !tag.is_pose_tag;
+      const poseTagIdsFromTags = currentTagIds.filter(tagId => {
+        const tag = allTags.find(t => t.id === tagId);
+        return tag && tag.is_pose_tag;
       });
-      const newTagIds = [...nonPoseTagIds, ...selectedPoseTagIds];
       
-      if (!isEqual(currentTagIds.sort(), newTagIds.sort())) {
-        const newTags = newTagIds.map(id => tags.find(t => t.id === id)).filter(Boolean) as typeof tags;
-        tagsControl().props.onSelect?.(newTags);
+      console.log("Pose tag IDs from allTags:", poseTagIdsFromTags);
+      console.log("Current selectedPoseTagIds:", selectedPoseTagIds);
+      
+      // Обновляем selectedPoseTagIds только если они отличаются
+      if (!isEqual(poseTagIdsFromTags.sort(), selectedPoseTagIds.sort())) {
+        console.log("Updating selectedPoseTagIds to:", poseTagIdsFromTags);
+        setSelectedPoseTagIds(poseTagIdsFromTags);
       }
     }
-  }, [selectedPoseTagIds, tags, formik.values.tag_ids]);
+  }, [formik.values.tag_ids, allTags]);
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
@@ -252,22 +281,37 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   function onPoseTagSelectionChange(poseTagIds: string[]) {
+    console.log("onPoseTagSelectionChange called with:", poseTagIds);
     setSelectedPoseTagIds(poseTagIds);
     
     // Получаем текущие теги сцены
     const currentTagIds = formik.values.tag_ids || [];
+    console.log("Current tag_ids:", currentTagIds);
+    console.log("Available allTags:", allTags);
     
     // Удаляем все теги поз из текущих тегов
     const nonPoseTagIds = currentTagIds.filter(tagId => {
-      const tag = tags.find(t => t.id === tagId);
+      const tag = allTags.find(t => t.id === tagId);
       return !tag || !tag.is_pose_tag;
     });
+    console.log("Non-pose tag IDs:", nonPoseTagIds);
     
     // Добавляем выбранные теги поз
     const newTagIds = [...nonPoseTagIds, ...poseTagIds];
+    console.log("New tag IDs:", newTagIds);
     
-    // Обновляем поле tag_ids в formik
-    formik.setFieldValue("tag_ids", newTagIds);
+    // Обновляем состояние в хуке useTagsEdit с новыми тегами
+    if (allTags.length > 0) {
+      const newTags = newTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as typeof tags;
+      console.log("New tags for useTagsEdit:", newTags);
+      
+      // Обновляем состояние в useTagsEdit - это автоматически обновит formik.values.tag_ids
+      onSetTags(newTags);
+    } else {
+      console.log("AllTags not available yet, skipping useTagsEdit update");
+      // Если allTags еще не загружены, обновляем только formik
+      formik.setFieldValue("tag_ids", newTagIds);
+    }
   }
 
   useEffect(() => {
@@ -862,8 +906,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderGalleriesField()}
             {renderStudioField()}
             {renderPerformersField()}
-            {renderTagsField()}
             {renderPoseTagsField()}
+            {renderTagsField()}
             {renderIsBrokenField()}
             {renderGroupsField()}
 
