@@ -63,7 +63,10 @@ export function useFilterURL(
         // filter may have changed if random seed was set, update the URL
         const newParams = newFilter.makeQueryParameters();
         if (newParams !== location.search) {
-          history.replace({ ...history.location, search: newParams });
+          // Use setTimeout to avoid updating during render
+          setTimeout(() => {
+            history.replace({ ...history.location, search: newParams });
+          }, 0);
         }
 
         return newFilter;

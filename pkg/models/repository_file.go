@@ -19,6 +19,7 @@ type FileFinder interface {
 	FindByFingerprint(ctx context.Context, fp Fingerprint) ([]File, error)
 	FindByZipFileID(ctx context.Context, zipFileID FileID) ([]File, error)
 	FindByFileInfo(ctx context.Context, info fs.FileInfo, size int64) ([]File, error)
+	FindByBasenameAndParentFolderID(ctx context.Context, basename string, parentFolderID FolderID) (File, error)
 }
 
 // FileQueryer provides methods to query files.

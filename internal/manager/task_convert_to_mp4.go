@@ -201,7 +201,7 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		return fmt.Errorf("converted file validation failed: %w", err)
 	}
 
-	newFile, err := t.createNewVideoFile(ctx, tempFile)
+	newFile, isUpdated, err := t.createNewVideoFile(ctx, tempFile)
 	if err != nil {
 		return fmt.Errorf("failed to create new video file: %w", err)
 	}
@@ -210,51 +210,78 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		return fmt.Errorf("failed to update scene with new file: %w", err)
 	}
 
-	finalPath := t.getFinalPath(newFile)
-	logger.Infof("[convert] moving file from %s to %s", tempFile, finalPath)
+	if isUpdated {
+		// File was updated, copy temp file content to existing file
+		finalPath := newFile.Base().Path
+		logger.Infof("[convert] copying temp file content to existing file: %s", finalPath)
 
-	// Check if temp file exists
-	if _, err := os.Stat(tempFile); err != nil {
-		return fmt.Errorf("temp file does not exist: %w", err)
-	}
+		// Copy temp file content to the existing file
+		if err := t.copyFileContent(tempFile, finalPath); err != nil {
+			return fmt.Errorf("failed to copy temp file content to existing file: %w", err)
+		}
 
-	if err := os.Rename(tempFile, finalPath); err != nil {
-		return fmt.Errorf("failed to move converted file to final location: %w", err)
-	}
+		// Validate the updated file
+		if err := t.validateConvertedFile(finalPath); err != nil {
+			logger.Errorf("[convert] updated file validation failed: %v", err)
+			return fmt.Errorf("updated file validation failed: %w", err)
+		}
 
-	// Verify the file was moved successfully
-	if _, err := os.Stat(finalPath); err != nil {
-		return fmt.Errorf("final file does not exist after move: %w", err)
-	}
-
-	logger.Infof("[convert] successfully moved file to %s", finalPath)
-
-	if err := t.updateFilePath(ctx, newFile, finalPath); err != nil {
-		return fmt.Errorf("failed to update file path: %w", err)
-	}
-
-	// Validate the converted file before removing the original
-	if err := t.validateConvertedFile(finalPath); err != nil {
-		logger.Errorf("[convert] converted file validation failed, keeping original: %v", err)
-		return fmt.Errorf("converted file validation failed: %w", err)
-	}
-
-	// Remove the original file only after successful validation
-	originalPath := f.Path
-	if err := os.Remove(originalPath); err != nil {
-		logger.Warnf("[convert] failed to remove original file %s: %v", originalPath, err)
+		logger.Infof("[convert] successfully updated existing file: %s", finalPath)
 	} else {
-		logger.Infof("[convert] removed original file: %s", originalPath)
-	}
+		// New file was created, move temp file to final location
+		finalPath := t.getFinalPath(newFile)
+		logger.Infof("[convert] moving file from %s to %s", tempFile, finalPath)
 
-	// Delete the old file record from database
-	if err := t.deleteOldFileRecord(ctx, f); err != nil {
-		logger.Warnf("[convert] failed to delete old file record: %v", err)
-	} else {
-		logger.Infof("[convert] deleted old file record from database")
+		// Check if temp file exists
+		if _, err := os.Stat(tempFile); err != nil {
+			return fmt.Errorf("temp file does not exist: %w", err)
+		}
+
+		if err := os.Rename(tempFile, finalPath); err != nil {
+			return fmt.Errorf("failed to move converted file to final location: %w", err)
+		}
+
+		// Verify the file was moved successfully
+		if _, err := os.Stat(finalPath); err != nil {
+			return fmt.Errorf("final file does not exist after move: %w", err)
+		}
+
+		logger.Infof("[convert] successfully moved file to %s", finalPath)
+
+		if err := t.updateFilePath(ctx, newFile, finalPath); err != nil {
+			return fmt.Errorf("failed to update file path: %w", err)
+		}
+
+		// Validate the converted file before removing the original
+		if err := t.validateConvertedFile(finalPath); err != nil {
+			logger.Errorf("[convert] converted file validation failed, keeping original: %v", err)
+			return fmt.Errorf("converted file validation failed: %w", err)
+		}
+
+		// Remove the original file only after successful validation
+		originalPath := f.Path
+		if err := os.Remove(originalPath); err != nil {
+			logger.Warnf("[convert] failed to remove original file %s: %v", originalPath, err)
+		} else {
+			logger.Infof("[convert] removed original file: %s", originalPath)
+		}
+
+		// Delete the old file record from database
+		if err := t.deleteOldFileRecord(ctx, f); err != nil {
+			logger.Warnf("[convert] failed to delete old file record: %v", err)
+		} else {
+			logger.Infof("[convert] deleted old file record from database")
+		}
 	}
 
 	// Recalculate hashes for the new file
+	var finalPath string
+	if isUpdated {
+		finalPath = newFile.Base().Path
+	} else {
+		finalPath = t.getFinalPath(newFile)
+	}
+
 	if err := t.recalculateFileHashes(ctx, newFile, finalPath); err != nil {
 		logger.Warnf("[convert] failed to recalculate file hashes: %v", err)
 	} else {
@@ -703,17 +730,17 @@ func (t *ConvertToMP4Task) validateConvertedFile(filePath string) error {
 	return nil
 }
 
-func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath string) (*models.VideoFile, error) {
+func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath string) (*models.VideoFile, bool, error) {
 	ffprobe := t.FFProbe
 	videoFile, err := ffprobe.NewVideoFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to probe file: %w", err)
+		return nil, false, fmt.Errorf("failed to probe file: %w", err)
 	}
 
 	// Get the original file to copy its parent_folder_id
 	originalFile, err := t.Repository.File.FindByPath(ctx, t.Scene.Files.Primary().Path)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find original file: %w", err)
+		return nil, false, fmt.Errorf("failed to find original file: %w", err)
 	}
 
 	// Create proper basename with .mp4 extension
@@ -722,6 +749,64 @@ func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath stri
 	nameWithoutExt := strings.TrimSuffix(originalBasename, ext)
 	properBasename := nameWithoutExt + ".mp4"
 
+	// Check if a file with the same basename already exists in the same folder
+	existingFile, err := t.Repository.File.FindByBasenameAndParentFolderID(ctx, properBasename, originalFile.Base().ParentFolderID)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to check for existing file: %w", err)
+	}
+
+	if existingFile != nil {
+		// File with same name already exists, update it instead of creating new one
+		logger.Infof("[convert] file %s already exists in folder %d, updating existing file", properBasename, originalFile.Base().ParentFolderID)
+
+		// Cast to VideoFile to access video-specific fields
+		existingVideoFile, ok := existingFile.(*models.VideoFile)
+		if !ok {
+			return nil, false, fmt.Errorf("existing file is not a video file")
+		}
+
+		// Check if the existing file is already associated with this scene
+		isAssociated, err := t.isFileAssociatedWithScene(ctx, existingVideoFile.ID)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to check file association: %w", err)
+		}
+
+		// Update the existing file with new metadata
+		existingVideoFile.Base().Path = filePath
+		existingVideoFile.Base().Size = videoFile.Size
+		existingVideoFile.Base().ModTime = time.Now()
+		existingVideoFile.Base().UpdatedAt = time.Now()
+
+		// Update video-specific metadata
+		existingVideoFile.Duration = videoFile.FileDuration
+		existingVideoFile.VideoCodec = videoFile.VideoCodec
+		existingVideoFile.AudioCodec = videoFile.AudioCodec
+		existingVideoFile.Width = videoFile.Width
+		existingVideoFile.Height = videoFile.Height
+		existingVideoFile.FrameRate = videoFile.FrameRate
+		existingVideoFile.BitRate = videoFile.Bitrate
+		existingVideoFile.Format = "mp4"
+
+		// Update the file in database
+		err = t.Repository.File.Update(ctx, existingVideoFile)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to update existing video file in database: %w", err)
+		}
+
+		// If file is not associated with this scene, associate it
+		if !isAssociated {
+			logger.Infof("[convert] associating existing file %d with scene %d", existingVideoFile.ID, t.Scene.ID)
+			fileIDs := []models.FileID{existingVideoFile.ID}
+			if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
+				return nil, false, fmt.Errorf("failed to associate existing file with scene: %w", err)
+			}
+		}
+
+		logger.Infof("[convert] updated existing file %d with new MP4 metadata", existingVideoFile.ID)
+		return existingVideoFile, true, nil
+	}
+
+	// No existing file found, create new one
 	newFile := &models.VideoFile{
 		BaseFile: &models.BaseFile{
 			Path:           filePath, // This will be updated later in updateFilePath
@@ -747,10 +832,10 @@ func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath stri
 	// Create the file in database
 	err = t.Repository.File.Create(ctx, newFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create video file in database: %w", err)
+		return nil, false, fmt.Errorf("failed to create video file in database: %w", err)
 	}
 
-	return newFile, nil
+	return newFile, false, nil
 }
 
 func (t *ConvertToMP4Task) updateSceneWithNewFile(ctx context.Context, newFile *models.VideoFile) error {
@@ -916,5 +1001,54 @@ func (t *ConvertToMP4Task) generateVTTFile(ctx context.Context, file *models.Vid
 	}
 
 	logger.Infof("[convert] successfully generated VTT file: %s", vttPath)
+	return nil
+}
+
+// isFileAssociatedWithScene checks if a file is already associated with the current scene
+func (t *ConvertToMP4Task) isFileAssociatedWithScene(ctx context.Context, fileID models.FileID) (bool, error) {
+	// Get all files associated with the scene
+	sceneFiles, err := t.Repository.Scene.GetFiles(ctx, t.Scene.ID)
+	if err != nil {
+		return false, fmt.Errorf("failed to get scene files: %w", err)
+	}
+
+	// Check if the file ID is in the list
+	for _, sceneFile := range sceneFiles {
+		if sceneFile.ID == fileID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// copyFileContent copies the content from source to destination file
+func (t *ConvertToMP4Task) copyFileContent(src, dst string) error {
+	// Open source file
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source file %s: %w", src, err)
+	}
+	defer srcFile.Close()
+
+	// Create destination file
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file %s: %w", dst, err)
+	}
+	defer dstFile.Close()
+
+	// Copy content
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content from %s to %s: %w", src, dst, err)
+	}
+
+	// Sync to ensure data is written to disk
+	if err := dstFile.Sync(); err != nil {
+		return fmt.Errorf("failed to sync destination file %s: %w", dst, err)
+	}
+
+	logger.Infof("[convert] successfully copied file content from %s to %s", src, dst)
 	return nil
 }

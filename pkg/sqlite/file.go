@@ -789,6 +789,23 @@ func (qb *FileStore) CountByFolderID(ctx context.Context, folderID models.Folder
 	return count(ctx, q)
 }
 
+// FindByBasenameAndParentFolderID finds a file by basename and parent folder ID.
+func (qb *FileStore) FindByBasenameAndParentFolderID(ctx context.Context, basename string, parentFolderID models.FolderID) (models.File, error) {
+	table := qb.table()
+
+	q := qb.selectDataset().Prepared(true).Where(
+		table.Col("basename").Eq(basename),
+		table.Col("parent_folder_id").Eq(parentFolderID),
+	)
+
+	ret, err := qb.get(ctx, q)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, fmt.Errorf("getting file by basename %s and parent folder id %d: %w", basename, parentFolderID, err)
+	}
+
+	return ret, nil
+}
+
 func (qb *FileStore) IsPrimary(ctx context.Context, fileID models.FileID) (bool, error) {
 	joinTables := []exp.IdentifierExpression{
 		scenesFilesJoinTable,

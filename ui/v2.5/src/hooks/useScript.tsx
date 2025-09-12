@@ -17,7 +17,7 @@ const useScript = (urls: string | string[], condition: boolean = true) => {
       setLoadStates(urlArray.map(() => false));
     }
 
-    const scripts = urlArray.map((url) => {
+    const scripts = urlArray.map((url, index) => {
       const script = document.createElement("script");
 
       script.src = url;
@@ -26,7 +26,7 @@ const useScript = (urls: string | string[], condition: boolean = true) => {
 
       function onLoad() {
         setLoadStates((prev) =>
-          prev!.map((state, i) => (i === urlArray.indexOf(url) ? true : state))
+          prev!.map((state, i) => (i === index ? true : state))
         );
       }
       script.addEventListener("load", onLoad);
@@ -67,7 +67,7 @@ export const useCSS = (urls: string | string[], condition?: boolean) => {
   }, [urls]);
 
   useEffect(() => {
-    const links = urlArray.map((url) => {
+    const links = urlArray.map((url, index) => {
       const link = document.createElement("link");
 
       link.href = url;

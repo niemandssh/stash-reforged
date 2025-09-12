@@ -199,6 +199,29 @@ func (_m *FileReaderWriter) FindByFileInfo(ctx context.Context, info fs.FileInfo
 	return r0, r1
 }
 
+// FindByBasenameAndParentFolderID provides a mock function with given fields: ctx, basename, parentFolderID
+func (_m *FileReaderWriter) FindByBasenameAndParentFolderID(ctx context.Context, basename string, parentFolderID models.FolderID) (models.File, error) {
+	ret := _m.Called(ctx, basename, parentFolderID)
+
+	var r0 models.File
+	if rf, ok := ret.Get(0).(func(context.Context, string, models.FolderID) models.File); ok {
+		r0 = rf(ctx, basename, parentFolderID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(models.File)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, models.FolderID) error); ok {
+		r1 = rf(ctx, basename, parentFolderID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // FindByFingerprint provides a mock function with given fields: ctx, fp
 func (_m *FileReaderWriter) FindByFingerprint(ctx context.Context, fp models.Fingerprint) ([]models.File, error) {
 	ret := _m.Called(ctx, fp)
