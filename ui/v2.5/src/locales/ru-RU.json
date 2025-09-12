@@ -1464,6 +1464,8 @@
     "playdate_recorded_no": "Нет сохраненной даты просмотра",
     "subsidiary_studio_count": "Количество дочерних студий",
     "time": "Время",
+    "start_time": "Время начала",
+    "end_time": "Время окончания",
     "validation": {
         "date_invalid_form": "${path} должен быть в формате ГГГГ-ММ-ДД",
         "blank": "${path} не должен быть пустым",

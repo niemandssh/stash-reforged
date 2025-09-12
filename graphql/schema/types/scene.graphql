@@ -65,6 +65,11 @@ type Scene {
   "The number ot times a scene has been played"
   play_count: Int
 
+  "Video trimming - start time in seconds"
+  start_time: Float
+  "Video trimming - end time in seconds"
+  end_time: Float
+
   "Times a scene was played"
   play_history: [Time!]!
   "Times the o counter was incremented"
@@ -168,6 +173,11 @@ input SceneUpdateInput {
     @deprecated(
       reason: "Unsupported - Use sceneIncrementPlayCount/sceneDecrementPlayCount"
     )
+
+  "Video trimming - start time in seconds"
+  start_time: Float
+  "Video trimming - end time in seconds"
+  end_time: Float
 
   primary_file_id: ID
 }

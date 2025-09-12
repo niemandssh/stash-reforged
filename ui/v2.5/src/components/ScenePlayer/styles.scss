@@ -522,6 +522,146 @@ $sceneTabWidth: 450px;
   right: 0;
 }
 
+.scrubber-trimmed-segments {
+  height: 20px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  z-index: 1;
+}
+
+.scrubber-trimmed-segment {
+  background-color: rgba(255, 0, 0, 0.3);
+  border: 1px solid rgba(255, 0, 0, 0.6);
+  height: 100%;
+  position: absolute;
+  top: 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: rgba(255, 0, 0, 0.4);
+  }
+}
+
+// Video.js progress bar trimmed segments
+.video-js .vjs-progress-control .vjs-progress-holder {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      to right,
+      rgba(255, 0, 0, 0.3) 0%,
+      rgba(255, 0, 0, 0.3) var(--trim-start-percent, 0%),
+      transparent var(--trim-start-percent, 0%),
+      transparent var(--trim-end-percent, 100%),
+      rgba(255, 0, 0, 0.3) var(--trim-end-percent, 100%),
+      rgba(255, 0, 0, 0.3) 100%
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.trim-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.trim-label {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 3px;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+
+.trim-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+
+.trim-button {
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 6px 12px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #444;
+  }
+
+  &.clear {
+    background-color: #d32f2f;
+    
+    &:hover {
+      background-color: #f44336;
+    }
+  }
+  
+  &.toggle {
+    &.enabled {
+      background-color: #4caf50;
+      
+      &:hover {
+        background-color: #66bb6a;
+      }
+    }
+    
+    &.disabled {
+      background-color: #757575;
+      
+      &:hover {
+        background-color: #9e9e9e;
+      }
+    }
+  }
+}
+
+.trim-status {
+  background-color: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.5);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-left: 8px;
+}
+
+.trim-status-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 193, 7, 0.8);
+  border: 1px solid rgba(255, 193, 7, 0.9);
+  border-radius: 4px;
+  padding: 6px 12px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.trim-status-text {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 .scrubber-tag {
   background-color: #000;
   cursor: pointer;

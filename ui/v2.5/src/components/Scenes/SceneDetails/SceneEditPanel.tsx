@@ -14,7 +14,10 @@ import {
 import { Icon } from "src/components/Shared/Icon";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { ImageInput } from "src/components/Shared/ImageInput";
+import { DurationInput } from "src/components/Shared/DurationInput";
+import { getPlayerPosition } from "src/components/ScenePlayer/util";
 import { useToast } from "src/hooks/Toast";
+import { useTrimContext } from "src/contexts/TrimContext";
 import ImageUtils from "src/utils/image";
 import { getStashIDs } from "src/utils/stashIds";
 import { useFormik } from "formik";
@@ -109,6 +112,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   // Network state
   const [isLoading, setIsLoading] = useState(false);
+  const { trimEnabled, setTrimEnabled } = useTrimContext();
 
   const schema = yup.object({
     title: yup.string().ensure(),
@@ -132,6 +136,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
     details: yup.string().ensure(),
     cover_image: yup.string().nullable().optional(),
     is_broken: yup.boolean().defined(),
+    start_time: yup.number().nullable().optional(),
+    end_time: yup.number().nullable().optional(),
   });
 
   const initialValues = useMemo(
@@ -152,6 +158,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
       details: scene.details ?? "",
       cover_image: initialCoverImage,
       is_broken: scene.is_broken ?? false,
+      start_time: scene.start_time ?? null,
+      end_time: scene.end_time ?? null,
     }),
     [scene, initialCoverImage]
   );
@@ -763,6 +771,20 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("is_broken", title, control);
   }
 
+  function renderDurationField(fieldName: keyof InputValues & string, labelId: string) {
+    const title = intl.formatMessage({ id: labelId });
+    const control = (
+      <DurationInput
+        value={formik.values[fieldName] as number | null}
+        setValue={(value) => formik.setFieldValue(fieldName, value)}
+        disabled={isLoading}
+        onReset={() => formik.setFieldValue(fieldName, getPlayerPosition() ?? null)}
+      />
+    );
+
+    return renderField(fieldName, title, control);
+  }
+
   return (
     <div id="scene-edit-details">
       <Prompt
@@ -794,6 +816,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
                 <FormattedMessage id="actions.delete" />
               </Button>
             )}
+            <Button
+              className={`edit-button ${trimEnabled ? 'btn-success' : 'btn-secondary'}`}
+              onClick={() => setTrimEnabled(!trimEnabled)}
+              title={`${trimEnabled ? 'Disable' : 'Enable'} trim mode`}
+            >
+              {trimEnabled ? 'Trim ON' : 'Trim OFF'}
+            </Button>
           </div>
           {!isNew && (
             <div className="ml-auto text-right d-flex">
@@ -826,6 +855,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
             {renderDateField("date")}
             {renderInputField("director")}
+
+            {renderDurationField("start_time", "start_time")}
+            {renderDurationField("end_time", "end_time")}
 
             {renderGalleriesField()}
             {renderStudioField()}

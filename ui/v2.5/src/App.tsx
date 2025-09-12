@@ -12,6 +12,7 @@ import cloneDeep from "lodash-es/cloneDeep";
 import mergeWith from "lodash-es/mergeWith";
 import { ToastProvider } from "src/hooks/Toast";
 import { LightboxProvider } from "src/hooks/Lightbox/context";
+import { TrimProvider } from "src/contexts/TrimContext";
 import { initPolyfills } from "src/polyfills";
 
 import locales, { registerCountry } from "src/locales";
@@ -330,28 +331,30 @@ export const App: React.FC = () => {
         formats={intlFormats}
       >
         <ToastProvider>
-          <PluginsLoader>
-            <AppContainer>
-              <ConfigurationProvider
-                configuration={config.data?.configuration}
-                loading={config.loading}
-              >
-                {maybeRenderReleaseNotes()}
-                <ConnectionMonitor />
-                <Suspense fallback={<LoadingIndicator />}>
-                  <LightboxProvider>
-                    <ManualProvider>
-                      <InteractiveProvider>
-                        <Helmet {...titleProps} />
-                        {maybeRenderNavbar()}
-                        <MainContainer>{renderContent()}</MainContainer>
-                      </InteractiveProvider>
-                    </ManualProvider>
-                  </LightboxProvider>
-                </Suspense>
-              </ConfigurationProvider>
-            </AppContainer>
-          </PluginsLoader>
+          <TrimProvider>
+            <PluginsLoader>
+              <AppContainer>
+                <ConfigurationProvider
+                  configuration={config.data?.configuration}
+                  loading={config.loading}
+                >
+                  {maybeRenderReleaseNotes()}
+                  <ConnectionMonitor />
+                  <Suspense fallback={<LoadingIndicator />}>
+                    <LightboxProvider>
+                      <ManualProvider>
+                        <InteractiveProvider>
+                          <Helmet {...titleProps} />
+                          {maybeRenderNavbar()}
+                          <MainContainer>{renderContent()}</MainContainer>
+                        </InteractiveProvider>
+                      </ManualProvider>
+                    </LightboxProvider>
+                  </Suspense>
+                </ConfigurationProvider>
+              </AppContainer>
+            </PluginsLoader>
+          </TrimProvider>
         </ToastProvider>
       </IntlProvider>
     </ErrorBoundary>

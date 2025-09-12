@@ -1523,6 +1523,8 @@
   "tattoos": "Tattoos",
   "time": "Time",
   "time_end": "End Time",
+  "start_time": "Start Time",
+  "end_time": "End Time",
   "title": "Title",
   "toast": {
     "added_entity": "Added {count, plural, one {{singularEntity}} other {{pluralEntity}}}",

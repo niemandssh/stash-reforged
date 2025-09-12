@@ -488,3 +488,11 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 
 	return similarScenes, nil
 }
+
+func (r *sceneResolver) StartTime(ctx context.Context, obj *models.Scene) (*float64, error) {
+	return obj.StartTime, nil
+}
+
+func (r *sceneResolver) EndTime(ctx context.Context, obj *models.Scene) (*float64, error) {
+	return obj.EndTime, nil
+}

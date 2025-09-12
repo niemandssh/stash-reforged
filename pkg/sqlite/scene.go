@@ -84,14 +84,16 @@ type sceneRow struct {
 	Director zero.String `db:"director"`
 	Date     NullDate    `db:"date"`
 	// expressed as 1-100
-	Rating       null.Int  `db:"rating"`
-	Organized    bool      `db:"organized"`
-	IsBroken     bool      `db:"is_broken"`
-	StudioID     null.Int  `db:"studio_id,omitempty"`
-	CreatedAt    Timestamp `db:"created_at"`
-	UpdatedAt    Timestamp `db:"updated_at"`
-	ResumeTime   float64   `db:"resume_time"`
-	PlayDuration float64   `db:"play_duration"`
+	Rating       null.Int   `db:"rating"`
+	Organized    bool       `db:"organized"`
+	IsBroken     bool       `db:"is_broken"`
+	StudioID     null.Int   `db:"studio_id,omitempty"`
+	CreatedAt    Timestamp  `db:"created_at"`
+	UpdatedAt    Timestamp  `db:"updated_at"`
+	ResumeTime   float64    `db:"resume_time"`
+	PlayDuration float64    `db:"play_duration"`
+	StartTime    null.Float `db:"start_time"`
+	EndTime      null.Float `db:"end_time"`
 
 	// not used in resolutions or updates
 	CoverBlob zero.String `db:"cover_blob"`
@@ -112,6 +114,8 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
 	r.ResumeTime = o.ResumeTime
 	r.PlayDuration = o.PlayDuration
+	r.StartTime = float64FromPtr(o.StartTime)
+	r.EndTime = float64FromPtr(o.EndTime)
 }
 
 type sceneQueryRow struct {
@@ -145,6 +149,8 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 
 		ResumeTime:   r.ResumeTime,
 		PlayDuration: r.PlayDuration,
+		StartTime:    nullFloatPtr(r.StartTime),
+		EndTime:      nullFloatPtr(r.EndTime),
 	}
 
 	if r.PrimaryFileFolderPath.Valid && r.PrimaryFileBasename.Valid {
@@ -172,6 +178,8 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setTimestamp("updated_at", o.UpdatedAt)
 	r.setFloat64("resume_time", o.ResumeTime)
 	r.setFloat64("play_duration", o.PlayDuration)
+	r.setNullFloat64("start_time", o.StartTime)
+	r.setNullFloat64("end_time", o.EndTime)
 }
 
 type sceneRepositoryType struct {

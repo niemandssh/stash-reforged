@@ -79,6 +79,8 @@ type Scene struct {
 	OHistory    []json.JSONTime `json:"o_history,omitempty"`
 
 	PlayDuration float64          `json:"play_duration,omitempty"`
+	StartTime    *float64         `json:"start_time,omitempty"`
+	EndTime      *float64         `json:"end_time,omitempty"`
 	StashIDs     []models.StashID `json:"stash_ids,omitempty"`
 }
 

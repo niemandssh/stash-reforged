@@ -200,6 +200,8 @@ type SceneUpdateInput struct {
 	ResumeTime    *float64       `json:"resume_time"`
 	PlayDuration  *float64       `json:"play_duration"`
 	PlayCount     *int           `json:"play_count"`
+	StartTime     *float64       `json:"start_time"`
+	EndTime       *float64       `json:"end_time"`
 	PrimaryFileID *string        `json:"primary_file_id"`
 }
 

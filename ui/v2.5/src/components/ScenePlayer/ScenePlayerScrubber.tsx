@@ -192,6 +192,11 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
         if (target.hasAttribute("data-marker-id")) {
           newPosition = midpointOffset - target.offsetLeft;
         }
+
+        if (target.hasAttribute("data-trimmed-segment")) {
+          // User clicked on trimmed segment - allow free playback
+          newPosition = midpointOffset - (target.offsetLeft + event.offsetX);
+        }
       }
       if (Math.abs(velocity.current) > 25) {
         newPosition = position.current + velocity.current * 10;
@@ -311,6 +316,54 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     });
   }
 
+  function renderTrimmedSegments() {
+    const { duration } = file;
+    const startTime = scene.start_time ?? 0;
+    const endTime = scene.end_time ?? 0;
+    
+    if (startTime <= 0 && endTime <= 0) return null;
+    if (!width || duration <= 0) return null;
+
+    const segments = [];
+    const totalWidth = width; // Use total width instead of scrubWidth
+    
+    // Add segment from 0 to start_time (if start_time > 0)
+    if (startTime > 0) {
+      const left = 0;
+      const segmentWidth = (totalWidth * startTime) / duration;
+      segments.push(
+        <div
+          key="trimmed-start"
+          className="scrubber-trimmed-segment"
+          data-trimmed-segment="true"
+          style={{
+            left: `${left}px`,
+            width: `${segmentWidth}px`,
+          }}
+        />
+      );
+    }
+    
+    // Add segment from end_time to duration (if end_time > 0)
+    if (endTime > 0 && endTime < duration) {
+      const left = (totalWidth * endTime) / duration;
+      const segmentWidth = (totalWidth * (duration - endTime)) / duration;
+      segments.push(
+        <div
+          key="trimmed-end"
+          className="scrubber-trimmed-segment"
+          data-trimmed-segment="true"
+          style={{
+            left: `${left}px`,
+            width: `${segmentWidth}px`,
+          }}
+        />
+      );
+    }
+
+    return segments;
+  }
+
   return (
     <div className="scrubber-wrapper">
       <Button
@@ -330,6 +383,9 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
               : undefined,
           }}
         />
+        <div className="scrubber-trimmed-segments">
+          {renderTrimmedSegments()}
+        </div>
         <div ref={indicatorEl} id="scrubber-position-indicator" />
         <div id="scrubber-current-position" />
         <div className="scrubber-viewport">

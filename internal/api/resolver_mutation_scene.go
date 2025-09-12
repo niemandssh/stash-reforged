@@ -205,6 +205,8 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	}
 
 	updatedScene.PlayDuration = translator.optionalFloat64(input.PlayDuration, "play_duration")
+	updatedScene.StartTime = translator.optionalFloat64(input.StartTime, "start_time")
+	updatedScene.EndTime = translator.optionalFloat64(input.EndTime, "end_time")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
 	updatedScene.StashIDs = translator.updateStashIDs(input.StashIds, "stash_ids")

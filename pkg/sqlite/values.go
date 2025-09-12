@@ -33,6 +33,14 @@ func nullFloatPtr(i null.Float) *float64 {
 	return &v
 }
 
+func float64FromPtr(f *float64) null.Float {
+	if f == nil {
+		return null.NewFloat(0, false)
+	}
+
+	return null.FloatFrom(*f)
+}
+
 func nullIntFolderIDPtr(i null.Int) *models.FolderID {
 	if !i.Valid {
 		return nil
