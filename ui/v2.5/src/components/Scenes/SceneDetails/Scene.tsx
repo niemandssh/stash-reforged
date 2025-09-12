@@ -791,22 +791,9 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 
   const [scene, setScene] = useState<GQL.SceneDataFragment>();
 
-  // Debug logging
-  React.useEffect(() => {
-    if (data?.findScene) {
-      console.log('[DEBUG] Scene data received:', {
-        id: data.findScene.id,
-        is_broken: data.findScene.is_broken,
-        is_probably_broken: data.findScene.is_probably_broken,
-        video_codec: data.findScene.files?.[0]?.video_codec,
-        audio_codec: data.findScene.files?.[0]?.audio_codec
-      });
-    }
-  }, [data]);
 
-  // Debug: Force refetch on mount
+  // Force refetch on mount
   React.useEffect(() => {
-    console.log('[DEBUG] Forcing refetch for scene', id);
     refetch();
   }, [id, refetch]);
 

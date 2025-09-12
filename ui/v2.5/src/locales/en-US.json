@@ -7,7 +7,8 @@
         "add_entity": "Add {entityType}",
         "add_manual_date": "Add manual date",
         "add_o": "Add O",
-        "add_play": "Add play"
+        "add_play": "Add play",
+        "show_more": "Show More"
     },
     "config": {
         "tools": {
