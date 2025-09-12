@@ -104,6 +104,7 @@ export const DurationInput: React.FC<IProps> = ({
     } else if (value !== null && value !== undefined) {
       return TextUtils.secondsToTimestamp(value, includeMS);
     }
+    return "";
   }, [value, tmpValue]);
 
   const format = "hh:mm:ss.ms";

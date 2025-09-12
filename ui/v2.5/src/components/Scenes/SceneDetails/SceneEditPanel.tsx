@@ -766,7 +766,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       <SceneGroupTable value={groupEntries} onUpdate={onSetGroupEntries} />
     );
 
-    return renderField("groups", title, control, fullWidthProps);
+    return renderField("groups", title, control);
   }
 
   function renderTagsField() {
@@ -893,23 +893,23 @@ export const SceneEditPanel: React.FC<IProps> = ({
         <Row className="form-container px-3">
           <Col lg={7} xl={12}>
             {renderInputField("title")}
-            {renderInputField("code", "text", "scene_code")}
 
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
 
             {renderDateField("date")}
-            {renderInputField("director")}
 
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}
 
-            {renderGalleriesField()}
-            {renderStudioField()}
             {renderPerformersField()}
             {renderPoseTagsField()}
             {renderTagsField()}
             {renderIsBrokenField()}
+            {renderInputField("code", "text", "scene_code")}
+            {renderStudioField()}
+            {renderInputField("director")}
             {renderGroupsField()}
+            {renderGalleriesField()}
 
             {renderStashIDsField(
               "stash_ids",
