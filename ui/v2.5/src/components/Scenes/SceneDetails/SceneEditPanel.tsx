@@ -41,6 +41,7 @@ import { Gallery, GallerySelect } from "src/components/Galleries/GallerySelect";
 import { Group } from "src/components/Groups/GroupSelect";
 import { useTagsEdit } from "src/hooks/tagsEdit";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
+import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
 
 const SceneScrapeDialog = lazyComponent(() => import("./SceneScrapeDialog"));
 const SceneQueryModal = lazyComponent(() => import("./SceneQueryModal"));
@@ -79,6 +80,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     useState<boolean>(false);
   const [scrapedScene, setScrapedScene] = useState<GQL.ScrapedScene | null>();
   const [endpoint, setEndpoint] = useState<string>();
+  const [selectedPoseTagIds, setSelectedPoseTagIds] = useState<string[]>([]);
 
   useEffect(() => {
     setGalleries(
@@ -168,6 +170,34 @@ export const SceneEditPanel: React.FC<IProps> = ({
     (ids) => formik.setFieldValue("tag_ids", ids)
   );
 
+  // Инициализация выбранных тегов поз из существующих тегов сцены
+  useEffect(() => {
+    if (scene.tags) {
+      const poseTagIds = scene.tags
+        .filter(tag => tag.is_pose_tag)
+        .map(tag => tag.id);
+      setSelectedPoseTagIds(poseTagIds);
+    }
+  }, [scene.tags]);
+
+  // Синхронизация выбранных тегов поз с общим состоянием тегов
+  useEffect(() => {
+    if (tags.length > 0) {
+      // Обновляем состояние тегов в хуке useTagsEdit
+      const currentTagIds = formik.values.tag_ids || [];
+      const nonPoseTagIds = currentTagIds.filter(tagId => {
+        const tag = tags.find(t => t.id === tagId);
+        return !tag || !tag.is_pose_tag;
+      });
+      const newTagIds = [...nonPoseTagIds, ...selectedPoseTagIds];
+      
+      if (!isEqual(currentTagIds.sort(), newTagIds.sort())) {
+        const newTags = newTagIds.map(id => tags.find(t => t.id === id)).filter(Boolean) as typeof tags;
+        tagsControl().props.onSelect?.(newTags);
+      }
+    }
+  }, [selectedPoseTagIds, tags, formik.values.tag_ids]);
+
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
     const formImage = formik.values.cover_image;
@@ -211,6 +241,25 @@ export const SceneEditPanel: React.FC<IProps> = ({
   function onSetStudio(item: Studio | null) {
     setStudio(item);
     formik.setFieldValue("studio_id", item ? item.id : null);
+  }
+
+  function onPoseTagSelectionChange(poseTagIds: string[]) {
+    setSelectedPoseTagIds(poseTagIds);
+    
+    // Получаем текущие теги сцены
+    const currentTagIds = formik.values.tag_ids || [];
+    
+    // Удаляем все теги поз из текущих тегов
+    const nonPoseTagIds = currentTagIds.filter(tagId => {
+      const tag = tags.find(t => t.id === tagId);
+      return !tag || !tag.is_pose_tag;
+    });
+    
+    // Добавляем выбранные теги поз
+    const newTagIds = [...nonPoseTagIds, ...poseTagIds];
+    
+    // Обновляем поле tag_ids в formik
+    formik.setFieldValue("tag_ids", newTagIds);
   }
 
   useEffect(() => {
@@ -673,6 +722,16 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("tag_ids", title, tagsControl(), fullWidthProps);
   }
 
+  function renderPoseTagsField() {
+    return (
+      <PoseTagSelector
+        selectedTagIds={selectedPoseTagIds}
+        onSelectionChange={onPoseTagSelectionChange}
+        disabled={isLoading}
+      />
+    );
+  }
+
   function renderDetailsField() {
     const props = {
       labelProps: {
@@ -771,9 +830,10 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderGalleriesField()}
             {renderStudioField()}
             {renderPerformersField()}
-            {renderGroupsField()}
             {renderTagsField()}
+            {renderPoseTagsField()}
             {renderIsBrokenField()}
+            {renderGroupsField()}
 
             {renderStashIDsField(
               "stash_ids",

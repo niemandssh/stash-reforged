@@ -18,6 +18,7 @@ type Tag struct {
 	Image         string        `json:"image,omitempty"`
 	Parents       []string      `json:"parents,omitempty"`
 	IgnoreAutoTag bool          `json:"ignore_auto_tag,omitempty"`
+	IsPoseTag     bool          `json:"is_pose_tag,omitempty"`
 	CreatedAt     json.JSONTime `json:"created_at,omitempty"`
 	UpdatedAt     json.JSONTime `json:"updated_at,omitempty"`
 }

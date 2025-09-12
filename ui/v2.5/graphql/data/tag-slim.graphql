@@ -6,4 +6,5 @@ fragment SlimTagData on Tag {
   image_path
   parent_count
   child_count
+  is_pose_tag
 }

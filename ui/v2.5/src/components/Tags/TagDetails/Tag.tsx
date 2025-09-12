@@ -18,6 +18,7 @@ import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { Icon } from "src/components/Shared/Icon";
+import { PoseTagIcon } from "src/components/Shared/PoseTagIcon";
 import { useToast } from "src/hooks/Toast";
 import { ConfigurationContext } from "src/hooks/Config";
 import { tagRelationHook } from "src/core/tags";
@@ -36,6 +37,7 @@ import {
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { DetailImage } from "src/components/Shared/DetailImage";
+import { TagImageCropper } from "src/components/Shared/TagImageCropper";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
 import { TagGroupsPanel } from "./TagGroupsPanel";
@@ -373,8 +375,8 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
     const result = await updateTag({
       variables: {
         input: {
-          id: tag.id,
           ...input,
+          id: tag.id,
         },
       },
     });
@@ -518,26 +520,43 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
         />
         <div className="detail-container">
           <HeaderImage encodingImage={encodingImage}>
-            {tagImage && (
-              <DetailImage className="logo" alt={tag.name} src={tagImage} />
+            {tagImage && !isEditing && !tagImage.includes('default=true') && (
+              <TagImageCropper
+                imageSrc={tagImage}
+                tagId={tag.id}
+              />
+            )}
+            {tagImage && !isEditing && tagImage.includes('default=true') && (
+              <DetailImage className="tag" alt={tag.name} src={tagImage} />
+            )}
+            {tagImage && isEditing && (
+              <DetailImage className="tag" alt={tag.name} src={tagImage} />
             )}
           </HeaderImage>
           <div className="row">
             <div className="tag-head col">
-              <DetailTitle name={tag.name} classNamePrefix="tag">
-                {!isEditing && (
-                  <ExpandCollapseButton
-                    collapsed={collapsed}
-                    setCollapsed={(v) => setCollapsed(v)}
+              <div className="tag-title-with-icon">
+                {tag.is_pose_tag && (
+                  <PoseTagIcon
+                    className="pose-tag-icon-before-title"
+                    title="Tag for sex pose"
                   />
                 )}
-                <span className="name-icons">
-                  <FavoriteIcon
-                    favorite={tag.favorite}
-                    onToggleFavorite={(v) => setFavorite(v)}
-                  />
-                </span>
-              </DetailTitle>
+                <DetailTitle name={tag.name} classNamePrefix="tag">
+                  {!isEditing && (
+                    <ExpandCollapseButton
+                      collapsed={collapsed}
+                      setCollapsed={(v) => setCollapsed(v)}
+                    />
+                  )}
+                  <span className="name-icons">
+                    <FavoriteIcon
+                      favorite={tag.favorite}
+                      onToggleFavorite={(v) => setFavorite(v)}
+                    />
+                  </span>
+                </DetailTitle>
+              </div>
 
               <AliasList aliases={tag.aliases} />
               {!isEditing && (

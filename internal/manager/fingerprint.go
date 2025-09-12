@@ -13,11 +13,11 @@ import (
 	"github.com/stashapp/stash/pkg/models"
 )
 
-type fingerprintCalculator struct {
+type FingerprintCalculator struct {
 	Config *config.Config
 }
 
-func (c *fingerprintCalculator) calculateOshash(f *models.BaseFile, o file.Opener) (*models.Fingerprint, error) {
+func (c *FingerprintCalculator) calculateOshash(f *models.BaseFile, o file.Opener) (*models.Fingerprint, error) {
 	r, err := o.Open()
 	if err != nil {
 		return nil, fmt.Errorf("opening file: %w", err)
@@ -41,7 +41,7 @@ func (c *fingerprintCalculator) calculateOshash(f *models.BaseFile, o file.Opene
 	}, nil
 }
 
-func (c *fingerprintCalculator) calculateMD5(o file.Opener) (*models.Fingerprint, error) {
+func (c *FingerprintCalculator) calculateMD5(o file.Opener) (*models.Fingerprint, error) {
 	r, err := o.Open()
 	if err != nil {
 		return nil, fmt.Errorf("opening file: %w", err)
@@ -60,7 +60,7 @@ func (c *fingerprintCalculator) calculateMD5(o file.Opener) (*models.Fingerprint
 	}, nil
 }
 
-func (c *fingerprintCalculator) CalculateFingerprints(f *models.BaseFile, o file.Opener, useExisting bool) ([]models.Fingerprint, error) {
+func (c *FingerprintCalculator) CalculateFingerprints(f *models.BaseFile, o file.Opener, useExisting bool) ([]models.Fingerprint, error) {
 	var ret []models.Fingerprint
 	calculateMD5 := true
 

@@ -52,6 +52,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     parent_ids: yup.array(yup.string().required()).defined(),
     child_ids: yup.array(yup.string().required()).defined(),
     ignore_auto_tag: yup.boolean().defined(),
+    is_pose_tag: yup.boolean().defined(),
     weight: yup.number().min(0).max(1).default(0.5),
     image: yup.string().nullable().optional(),
   });
@@ -64,6 +65,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     parent_ids: (tag?.parents ?? []).map((t) => t.id),
     child_ids: (tag?.children ?? []).map((t) => t.id),
     ignore_auto_tag: tag?.ignore_auto_tag ?? false,
+    is_pose_tag: tag?.is_pose_tag ?? false,
     weight: tag?.weight ?? 0.5,
   };
 
@@ -220,6 +222,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         {renderSubTagsField()}
         <hr />
         {renderInputField("ignore_auto_tag", "checkbox")}
+        {renderInputField("is_pose_tag", "checkbox")}
       </Form>
 
       <DetailsEditNavbar

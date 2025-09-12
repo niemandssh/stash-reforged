@@ -14,6 +14,7 @@ import (
 	"github.com/stashapp/stash/pkg/plugin"
 	"github.com/stashapp/stash/pkg/plugin/hook"
 	"github.com/stashapp/stash/pkg/scene"
+	"github.com/stashapp/stash/pkg/scene/generate"
 	"github.com/stashapp/stash/pkg/sliceutil"
 	"github.com/stashapp/stash/pkg/sliceutil/stringslice"
 	"github.com/stashapp/stash/pkg/utils"
@@ -1199,6 +1200,63 @@ func (r *mutationResolver) RecalculateSceneSimilarities(ctx context.Context, sce
 
 	// Start the job
 	jobID := manager.GetInstance().JobManager.Add(ctx, job.GetDescription(), job)
+
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) SceneConvertToMp4(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	// Получаем сцену и загружаем файлы в одной транзакции
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Загружаем файлы сцены внутри транзакции
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	// Создаем задачу конвертации
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	g := &generate.Generator{
+		Encoder:      manager.GetInstance().FFMpeg,
+		FFMpegConfig: manager.GetInstance().Config,
+		LockManager:  manager.GetInstance().ReadLockManager,
+		MarkerPaths:  manager.GetInstance().Paths.SceneMarkers,
+		ScenePaths:   manager.GetInstance().Paths.Scene,
+		Overwrite:    true,
+	}
+
+	// Create fingerprint calculator
+	fingerprintCalc := &manager.FingerprintCalculator{Config: manager.GetInstance().Config}
+
+	task := &manager.ConvertToMP4Task{
+		Scene:                 *scene,
+		FileNamingAlgorithm:   fileNamingAlgorithm,
+		G:                     g,
+		FFMpeg:                manager.GetInstance().FFMpeg,
+		FFProbe:               manager.GetInstance().FFProbe,
+		Config:                manager.GetInstance().Config,
+		Paths:                 manager.GetInstance().Paths,
+		Repository:            r.repository,
+		FingerprintCalculator: fingerprintCalc,
+	}
+
+	// Запускаем задачу напрямую через JobManager
+	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
 
 	return strconv.Itoa(jobID), nil
 }

@@ -207,7 +207,8 @@ func (o TranscodeOptions) makeStreamArgs(sm *StreamManager) Args {
 
 	args = args.Input(o.VideoFile.Path)
 
-	videoOnly := ProbeAudioCodec(o.VideoFile.AudioCodec) == MissingUnsupported
+	audioCodec := ProbeAudioCodec(o.VideoFile.AudioCodec)
+	videoOnly := audioCodec == MissingUnsupported
 
 	videoFilter := sm.encoder.hwMaxResFilter(codec, o.VideoFile, maxTranscodeSize, fullhw)
 

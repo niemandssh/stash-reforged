@@ -345,7 +345,8 @@ func (s *runningStream) makeStreamArgs(sm *StreamManager, segment int) Args {
 
 	args = args.Input(s.vf.Path)
 
-	videoOnly := ProbeAudioCodec(s.vf.AudioCodec) == MissingUnsupported
+	audioCodec := ProbeAudioCodec(s.vf.AudioCodec)
+	videoOnly := audioCodec == MissingUnsupported
 
 	videoFilter := sm.encoder.hwMaxResFilter(codec, s.vf, s.maxTranscodeSize, fullhw)
 

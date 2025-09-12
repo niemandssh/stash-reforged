@@ -58,6 +58,7 @@ const criterionOptions = [
   createStringCriterionOption("aliases"),
   createStringCriterionOption("description"),
   createBooleanCriterionOption("ignore_auto_tag"),
+  createBooleanCriterionOption("is_pose_tag"),
   createMandatoryNumberCriterionOption("scene_count"),
   createMandatoryNumberCriterionOption("image_count"),
   createMandatoryNumberCriterionOption("gallery_count"),

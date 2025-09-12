@@ -38,7 +38,7 @@ export type SelectObject = {
 
 export type Tag = Pick<
   GQL.Tag,
-  "id" | "name" | "sort_name" | "aliases" | "image_path"
+  "id" | "name" | "sort_name" | "aliases" | "image_path" | "is_pose_tag"
 >;
 type Option = SelectOption<Tag>;
 

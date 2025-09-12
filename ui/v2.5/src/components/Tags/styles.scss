@@ -72,6 +72,21 @@
 
 #tag-page {
   .tag-head {
+    .tag-title-with-icon {
+      display: flex;
+      align-items: center;
+      
+      .pose-tag-icon-before-title {
+        fill: white;
+        margin-right: 0.375rem;
+        vertical-align: middle;
+        width: 32px;
+        height: 32px;
+        display: inline-block;
+        flex-shrink: 0;
+      }
+    }
+
     .name-icons {
       .not-favorite {
         color: rgba(191, 204, 214, 0.5);
@@ -154,4 +169,24 @@
   height: 25px;
   margin-right: 0.5em;
   width: 25px;
+}
+
+.sticky .tag-name {
+  .pose-tag-icon-before-title {
+    fill: white;
+    margin-right: 0.375rem;
+    vertical-align: middle;
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+  }
+}
+
+// Crop image button styles
+.image-cropper-container {
+  .detail-header-image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }

@@ -1080,3 +1080,96 @@ $sticky-header-height: calc(50px + 3.3rem);
     filter: grayscale(0%);
   }
 }
+
+// Pose Tag Selector Styles
+.pose-tag-selector {
+  margin-bottom: 1rem;
+  
+  .pose-tag-list {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid $secondary;
+    border-radius: 0.375rem;
+    background-color: $body-bg;
+  }
+
+  .pose-tag-item {
+    border: none;
+    border-bottom: 1px solid $secondary;
+    padding: 0.75rem;
+    transition: background-color 0.2s ease;
+    background-color: $body-bg;
+    color: $text-color;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover:not(.disabled) {
+      background-color: rgba(138, 155, 168, 0.1);
+    }
+
+    &.selected {
+      background-color: rgba(15, 153, 96, 0.1);
+      border-left: 3px solid #0f9960;
+    }
+
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .pose-tag-icon {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+
+      .pose-icon {
+        width: 24px;
+        height: 24px;
+        fill: $text-color;
+      }
+
+      .pose-tag-image {
+        width: 28px;
+        height: 28px;
+        object-fit: cover;
+        border-radius: 0.25rem;
+      }
+    }
+
+    .pose-tag-content {
+      min-width: 0; // Позволяет тексту обрезаться
+    }
+
+    .pose-tag-name {
+      font-weight: 500;
+      color: $text-color !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: lowercase;
+      
+      &::first-letter {
+        text-transform: uppercase;
+      }
+    }
+
+    .pose-tag-description {
+      margin-top: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: $text-muted !important;
+    }
+
+    .pose-tag-check {
+      flex-shrink: 0;
+      margin-left: 0.5rem;
+    }
+  }
+}

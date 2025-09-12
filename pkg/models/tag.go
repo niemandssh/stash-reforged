@@ -40,6 +40,8 @@ type TagFilterType struct {
 	ChildCount *IntCriterionInput `json:"child_count"`
 	// Filter by autotag ignore value
 	IgnoreAutoTag *bool `json:"ignore_auto_tag"`
+	// Filter by pose tag value
+	IsPoseTag *bool `json:"is_pose_tag"`
 	// Filter by related scenes that meet this criteria
 	ScenesFilter *SceneFilterType `json:"scenes_filter"`
 	// Filter by related images that meet this criteria

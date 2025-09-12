@@ -116,7 +116,7 @@ func (s *Manager) Scan(ctx context.Context, input ScanMetadataInput) (int, error
 				Filter: file.FilterFunc(imageFileFilter),
 			},
 		},
-		FingerprintCalculator: &fingerprintCalculator{s.Config},
+		FingerprintCalculator: &FingerprintCalculator{s.Config},
 		FS:                    &file.OsFS{},
 	}
 
@@ -184,6 +184,20 @@ func (s *Manager) RunSingleTask(ctx context.Context, t Task) int {
 
 	j := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
 		t.Start(ctx)
+		defer wg.Done()
+		// TODO - return error from task
+		return nil
+	})
+
+	return s.JobManager.Add(ctx, t.GetDescription(), j)
+}
+
+func (s *Manager) RunSingleTaskWithProgress(ctx context.Context, t TaskWithProgress) int {
+	var wg sync.WaitGroup
+	wg.Add(1)
+
+	j := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		t.StartWithProgress(ctx, progress)
 		defer wg.Done()
 		// TODO - return error from task
 		return nil

@@ -4,6 +4,7 @@ import {
   FetchResult,
   NetworkStatus,
   useQuery,
+  useMutation,
   gql,
 } from "@apollo/client";
 import { Modifiers } from "@apollo/client/cache";
@@ -907,6 +908,15 @@ export const useSceneResetActivity = (
 
 export const useSceneGenerateScreenshot = () =>
   GQL.useSceneGenerateScreenshotMutation();
+
+export const useSceneConvertToMP4 = () => {
+  const mutation = gql`
+    mutation SceneConvertToMp4($id: ID!) {
+      sceneConvertToMp4(id: $id)
+    }
+  `;
+  return useMutation(mutation);
+};
 
 export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
   client.mutate<GQL.SceneUpdateMutation>({

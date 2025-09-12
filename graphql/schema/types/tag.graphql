@@ -6,6 +6,7 @@ type Tag {
   description: String
   aliases: [String!]!
   ignore_auto_tag: Boolean!
+  is_pose_tag: Boolean!
   weight: Float!
   created_at: Time!
   updated_at: Time!
@@ -33,6 +34,7 @@ input TagCreateInput {
   description: String
   aliases: [String!]
   ignore_auto_tag: Boolean
+  is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
   "This should be a URL or a base64 encoded data URL"
@@ -50,6 +52,7 @@ input TagUpdateInput {
   description: String
   aliases: [String!]
   ignore_auto_tag: Boolean
+  is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
   "This should be a URL or a base64 encoded data URL"
@@ -78,6 +81,7 @@ input BulkTagUpdateInput {
   description: String
   aliases: BulkUpdateStrings
   ignore_auto_tag: Boolean
+  is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
 

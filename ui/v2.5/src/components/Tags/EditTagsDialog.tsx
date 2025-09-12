@@ -201,6 +201,14 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
           />
         </Form.Group>
 
+        <Form.Group controlId="is_pose_tag">
+          <IndeterminateCheckbox
+            setChecked={(checked) => setUpdateField({ is_pose_tag: checked })}
+            checked={updateInput.is_pose_tag ?? undefined}
+            label={intl.formatMessage({ id: "is_pose_tag" })}
+          />
+        </Form.Group>
+
         {renderTextField("description", updateInput.description, (v) =>
           setUpdateField({ description: v })
         )}

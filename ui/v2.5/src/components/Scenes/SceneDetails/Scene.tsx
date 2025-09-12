@@ -20,6 +20,7 @@ import {
   queryFindScenes,
   queryFindScenesByID,
   useSceneIncrementPlayCount,
+  useSceneConvertToMP4,
 } from "src/core/StashService";
 
 import { SceneEditPanel } from "./SceneEditPanel";
@@ -193,6 +194,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementO] = useSceneIncrementO(scene.id);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
+  const [convertToMP4] = useSceneConvertToMP4();
 
   function incrementPlayCount() {
     incrementPlay({
@@ -361,6 +363,27 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     Toast.success(intl.formatMessage({ id: "toast.generating_screenshot" }));
   }
 
+  async function onConvertToMP4() {
+    try {
+      const result = await convertToMP4({
+        variables: {
+          id: scene.id,
+        },
+      });
+      
+      if (result.data?.sceneConvertToMP4) {
+        Toast.success(
+          intl.formatMessage(
+            { id: "actions.convert_to_mp4_started" },
+            { jobId: result.data.sceneConvertToMP4 }
+          )
+        );
+      }
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
   function onDeleteDialogClosed(deleted: boolean) {
     setIsDeleteAlertOpen(false);
     if (deleted) {
@@ -438,6 +461,15 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
+        {scene.files.length > 0 && (scene.files[0]?.format !== "mp4" || scene.files[0]?.video_codec !== "h264") && (
+          <Dropdown.Item
+            key="convert-to-mp4"
+            className="bg-secondary text-white"
+            onClick={() => onConvertToMP4()}
+          >
+            <FormattedMessage id="actions.convert_to_mp4" />
+          </Dropdown.Item>
+        )}
         {boxes.length > 0 && (
           <Dropdown.Item
             key="submit"

@@ -1,7 +1,9 @@
 import React from "react";
 import { TagLink } from "src/components/Shared/TagLink";
 import { DetailItem } from "src/components/Shared/DetailItem";
+import { useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
+import { PoseTagIcon } from "src/components/Shared/PoseTagIcon";
 
 interface ITagDetails {
   tag: GQL.TagDataFragment;
@@ -73,6 +75,8 @@ export const TagDetailsPanel: React.FC<ITagDetails> = ({ tag, fullWidth }) => {
 };
 
 export const CompressedTagDetailsPanel: React.FC<ITagDetails> = ({ tag }) => {
+  const intl = useIntl();
+  
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -81,6 +85,12 @@ export const CompressedTagDetailsPanel: React.FC<ITagDetails> = ({ tag }) => {
     <div className="sticky detail-header">
       <div className="sticky detail-header-group">
         <a className="tag-name" onClick={() => scrollToTop()}>
+          {tag.is_pose_tag && (
+            <PoseTagIcon
+              className="pose-tag-icon-before-title"
+              title="Tag for sex pose"
+            />
+          )}
           {tag.name}
         </a>
         {tag.description ? (
