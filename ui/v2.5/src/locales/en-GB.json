@@ -23,6 +23,8 @@
     "clear": "Clear",
     "convert_to_mp4": "Convert to MP4",
     "convert_to_mp4_started": "MP4 conversion started (job {jobId})",
+    "convert_hls_to_mp4": "Convert HLS to MP4",
+    "convert_hls_to_mp4_started": "HLS to MP4 conversion started (job {jobId})",
     "clear_back_image": "Clear back image",
     "clear_date_data": "Clear date data",
     "clear_front_image": "Clear front image",

@@ -16,6 +16,8 @@
         "clear": "Очистить",
         "convert_to_mp4": "Конвертировать в MP4",
         "convert_to_mp4_started": "Конвертация в MP4 запущена (задача {jobId})",
+        "convert_hls_to_mp4": "Конвертировать HLS в MP4",
+        "convert_hls_to_mp4_started": "Конвертация HLS в MP4 запущена (задача {jobId})",
         "clear_back_image": "Очистить заднее изображение",
         "clear_front_image": "Убрать переднее изображение",
         "clear_image": "Удалить изображение",

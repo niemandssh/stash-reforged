@@ -309,6 +309,9 @@ func IsProbablyBroken(scene *models.Scene) bool {
 	// Check if the video is streamable (both video codec and audio codec must be supported)
 	isStreamable := ffmpeg.IsStreamable(videoCodec, audioCodec, container) == nil
 
-	// Video is probably broken if it's not streamable
-	return !isStreamable
+	// Check if it's an HLS video (likely to have sync issues)
+	isHLSVideo := ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration)
+
+	// Video is probably broken if it's not streamable OR if it's an HLS video
+	return !isStreamable || isHLSVideo
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/stashapp/stash/internal/manager"
+	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/file"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
@@ -1256,6 +1257,88 @@ func (r *mutationResolver) SceneConvertToMp4(ctx context.Context, id string) (st
 	}
 
 	// Запускаем задачу напрямую через JobManager
+	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
+
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) SceneConvertHLSToMp4(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	// Get scene and load files in one transaction
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Load scene files within transaction
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	// Check if it's actually an HLS video
+	pf := scene.Files.Primary()
+	if pf == nil {
+		return "", fmt.Errorf("no primary file found for scene %d", sceneID)
+	}
+
+	audioCodec := ffmpeg.MissingUnsupported
+	if pf.AudioCodec != "" {
+		audioCodec = ffmpeg.ProbeAudioCodec(pf.AudioCodec)
+	}
+
+	container, err := manager.GetVideoFileContainer(pf)
+	if err != nil {
+		return "", fmt.Errorf("error getting container: %w", err)
+	}
+
+	var videoCodec string
+	if pf.VideoCodec != "" {
+		videoCodec = pf.VideoCodec
+	}
+
+	if !ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration) {
+		return "", fmt.Errorf("scene %d is not detected as HLS video", sceneID)
+	}
+
+	// Create HLS conversion task
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	g := &generate.Generator{
+		Encoder:      manager.GetInstance().FFMpeg,
+		FFMpegConfig: manager.GetInstance().Config,
+		LockManager:  manager.GetInstance().ReadLockManager,
+		MarkerPaths:  manager.GetInstance().Paths.SceneMarkers,
+		ScenePaths:   manager.GetInstance().Paths.Scene,
+		Overwrite:    true,
+	}
+
+	// Create fingerprint calculator
+	fingerprintCalc := &manager.FingerprintCalculator{Config: manager.GetInstance().Config}
+
+	task := &manager.ConvertHLSToMP4Task{
+		Scene:                 *scene,
+		FileNamingAlgorithm:   fileNamingAlgorithm,
+		G:                     g,
+		FFMpeg:                manager.GetInstance().FFMpeg,
+		FFProbe:               manager.GetInstance().FFProbe,
+		Config:                manager.GetInstance().Config,
+		Paths:                 manager.GetInstance().Paths,
+		Repository:            r.repository,
+		FingerprintCalculator: fingerprintCalc,
+	}
+
+	// Start the task via JobManager
 	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
 
 	return strconv.Itoa(jobID), nil

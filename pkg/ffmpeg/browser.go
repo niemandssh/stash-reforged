@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 // only support H264 by default, since Safari does not support VP8/VP9
@@ -54,6 +55,36 @@ func IsStreamable(videoCodec string, audioCodec ProbeAudioCodec, container Conta
 	}
 
 	return nil
+}
+
+// IsHLSVideo detects if a video file is likely from HLS based on common characteristics
+func IsHLSVideo(videoCodec string, audioCodec ProbeAudioCodec, container Container, duration float64) bool {
+	// HLS videos often have these characteristics:
+	// 1. MP4 container with H.264 video and AAC audio
+	// 2. Duration is often a multiple of 2 seconds (HLS segment length)
+	// 3. May have specific metadata or timing issues
+
+	if container != Mp4 {
+		return false
+	}
+
+	// Check for H.264 video and AAC audio (common HLS combination)
+	if videoCodec != H264 || audioCodec != Aac {
+		return false
+	}
+
+	// Check if duration is a multiple of 2 seconds (typical HLS segment length)
+	// Allow some tolerance for rounding errors
+	if duration > 0 {
+		segmentLength := 2.0
+		remainder := math.Mod(duration, segmentLength)
+		// Consider it HLS if remainder is very close to 0 or very close to segmentLength
+		if remainder < 0.1 || remainder > (segmentLength-0.1) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func isValidCodec(codecName string, supportedCodecs []string) bool {

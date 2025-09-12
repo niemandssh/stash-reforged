@@ -321,6 +321,8 @@ type Mutation {
 
   "Converts a scene to MP4 format. Returns the job ID."
   sceneConvertToMp4(id: ID!): ID!
+  "Converts an HLS video to MP4 format with audio sync fixes. Returns the job ID."
+  sceneConvertHLSToMP4(id: ID!): ID!
   "Decrements the play count for the scene, removing the specific times or the last recorded time if not provided."
   sceneDeletePlay(id: ID!, times: [Timestamp!]): HistoryMutationResult!
   "Resets the play count for a scene to 0. Returns the new play count value."

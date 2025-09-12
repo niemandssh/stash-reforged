@@ -21,6 +21,7 @@ import {
   queryFindScenesByID,
   useSceneIncrementPlayCount,
   useSceneConvertToMP4,
+  useSceneConvertHLSToMP4,
 } from "src/core/StashService";
 
 import { SceneEditPanel } from "./SceneEditPanel";
@@ -54,6 +55,7 @@ import { lazyComponent } from "src/utils/lazyComponent";
 import cx from "classnames";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { PatchComponent, PatchContainerComponent } from "src/patch";
+import { isHLSVideo } from "src/utils/hlsDetection";
 
 const SubmitStashBoxDraft = lazyComponent(
   () => import("src/components/Dialogs/SubmitDraft")
@@ -195,6 +197,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
+  const [convertHLSToMP4] = useSceneConvertHLSToMP4();
 
   function incrementPlayCount() {
     incrementPlay({
@@ -384,6 +387,27 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   }
 
+  async function onConvertHLSToMP4() {
+    try {
+      const result = await convertHLSToMP4({
+        variables: {
+          id: scene.id,
+        },
+      });
+      
+      if (result.data?.sceneConvertHLSToMP4) {
+        Toast.success(
+          intl.formatMessage(
+            { id: "actions.convert_hls_to_mp4_started" },
+            { jobId: result.data.sceneConvertHLSToMP4 }
+          )
+        );
+      }
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
   function onDeleteDialogClosed(deleted: boolean) {
     setIsDeleteAlertOpen(false);
     if (deleted) {
@@ -461,13 +485,22 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
-        {scene.files.length > 0 && (scene.files[0]?.format !== "mp4" || scene.files[0]?.video_codec !== "h264") && (
+        {scene.files.length > 0 && scene.files[0]?.video_codec !== "h264" && (
           <Dropdown.Item
             key="convert-to-mp4"
             className="bg-secondary text-white"
             onClick={() => onConvertToMP4()}
           >
             <FormattedMessage id="actions.convert_to_mp4" />
+          </Dropdown.Item>
+        )}
+        {scene.files.length > 0 && isHLSVideo(scene) && (
+          <Dropdown.Item
+            key="convert-hls-to-mp4"
+            className="bg-secondary text-white"
+            onClick={() => onConvertHLSToMP4()}
+          >
+            <FormattedMessage id="actions.convert_hls_to_mp4" />
           </Dropdown.Item>
         )}
         {boxes.length > 0 && (
