@@ -73,17 +73,17 @@
 #tag-page {
   .tag-head {
     .tag-title-with-icon {
-      display: flex;
       align-items: center;
+      display: flex;
       
       .pose-tag-icon-before-title {
+        display: inline-block;
         fill: white;
+        flex-shrink: 0;
+        height: 32px;
         margin-right: 0.375rem;
         vertical-align: middle;
         width: 32px;
-        height: 32px;
-        display: inline-block;
-        flex-shrink: 0;
       }
     }
 
@@ -173,20 +173,20 @@
 
 .sticky .tag-name {
   .pose-tag-icon-before-title {
+    display: inline-block;
     fill: white;
+    height: 32px;
     margin-right: 0.375rem;
     vertical-align: middle;
     width: 32px;
-    height: 32px;
-    display: inline-block;
   }
 }
 
 // Crop image button styles
 .image-cropper-container {
   .detail-header-image {
+    align-items: center;
     display: flex;
     flex-direction: column;
-    align-items: center;
   }
 }

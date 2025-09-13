@@ -298,6 +298,7 @@ dd {
   -webkit-box-orient: vertical;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow: hidden;
 }
 
@@ -1414,14 +1415,14 @@ select {
 
 // Стили для кнопки Review
 .review-btn {
-  display: inline-block !important;
-  visibility: visible !important;
+  display: inline-block;
   margin-left: 8px;
+  visibility: visible;
 }
 
 // Стили для кнопки Random
 .random-btn {
-  display: inline-block !important;
-  visibility: visible !important;
+  display: inline-block;
   margin-left: 8px;
+  visibility: visible;
 }

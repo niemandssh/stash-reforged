@@ -135,9 +135,9 @@ export const TagImageCropper: React.FC<ITagImageCropperProps> = ({
         style={{ transition: "none" }}
       />
 
-      <div id="crop-btn-container">
+      <div className="crop-btn-container">
         <Button
-          id="crop-start"
+          className="crop-start"
           variant="secondary"
           onClick={handleCropStart}
           style={{ display: cropping ? "none" : "inline-block" }}
@@ -147,7 +147,7 @@ export const TagImageCropper: React.FC<ITagImageCropperProps> = ({
         </Button>
 
         <Button
-          id="crop-cancel"
+          className="crop-cancel"
           variant="danger"
           onClick={handleCropCancel}
           style={{ display: cropping ? "inline-block" : "none" }}
@@ -156,7 +156,7 @@ export const TagImageCropper: React.FC<ITagImageCropperProps> = ({
         </Button>
 
         <Button
-          id="crop-accept"
+          className="crop-accept"
           variant="success"
           onClick={handleCropAccept}
           style={{ display: cropping && cropperReady ? "inline-block" : "none" }}

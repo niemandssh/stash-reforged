@@ -533,10 +533,10 @@ $sceneTabWidth: 450px;
 .scrubber-trimmed-segment {
   background-color: rgba(255, 0, 0, 0.3);
   border: 1px solid rgba(255, 0, 0, 0.6);
+  cursor: pointer;
   height: 100%;
   position: absolute;
   top: 0;
-  cursor: pointer;
 
   &:hover {
     background-color: rgba(255, 0, 0, 0.4);
@@ -548,12 +548,6 @@ $sceneTabWidth: 450px;
   position: relative;
   
   &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
     background: linear-gradient(
       to right,
       rgba(255, 0, 0, 0.3) 0%,
@@ -563,17 +557,23 @@ $sceneTabWidth: 450px;
       rgba(255, 0, 0, 0.3) var(--trim-end-percent, 100%),
       rgba(255, 0, 0, 0.3) 100%
     );
+    bottom: 0;
+    content: '';
+    left: 0;
     pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
     z-index: 1;
   }
 }
 
 .trim-indicator {
+  left: 50%;
+  pointer-events: none;
   position: absolute;
   top: 50%;
-  left: 50%;
   transform: translate(-50%, -50%);
-  pointer-events: none;
 }
 
 .trim-label {
@@ -586,13 +586,13 @@ $sceneTabWidth: 450px;
 }
 
 .trim-controls {
+  align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
-  align-items: center;
   margin: 10px 0;
   padding: 0 20px;
-  flex-wrap: wrap;
 }
 
 .trim-button {
@@ -640,24 +640,24 @@ $sceneTabWidth: 450px;
   background-color: rgba(255, 193, 7, 0.2);
   border: 1px solid rgba(255, 193, 7, 0.5);
   border-radius: 4px;
-  padding: 4px 8px;
   margin-left: 8px;
+  padding: 4px 8px;
 }
 
 .trim-status-overlay {
-  position: absolute;
-  top: 10px;
-  right: 10px;
   background-color: rgba(255, 193, 7, 0.8);
   border: 1px solid rgba(255, 193, 7, 0.9);
   border-radius: 4px;
-  padding: 6px 12px;
-  z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 6px 12px;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 1000;
 }
 
 .trim-status-text {
-  color: #ffffff;
+  color: #fff;
   font-size: 11px;
   font-weight: 500;
 }

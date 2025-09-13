@@ -90,8 +90,8 @@
 
 // Стили для новой звездочной системы рейтинга
   .rating-number-stars {
-    display: inline-flex;
     align-items: center; // Выравниваем все элементы по центру
+    display: inline-flex;
     gap: 0; // Убираем промежутки между звездами в паре
     
     // Убираем промежутки между звездами
@@ -100,12 +100,12 @@
     }
 
   button {
-    display: flex;
     align-items: center; // Выравниваем содержимое кнопки
-    justify-content: center;
-    position: relative;
+    display: flex;
     font-size: 1.2em; // Уменьшаем размер звезд в 1.25 раза (1.5 / 1.25 = 1.2)
+    justify-content: center;
     outline: none; // Убираем outline у кнопок
+    position: relative;
     
     &:hover {
       outline: none; // Убираем outline при наведении
@@ -115,13 +115,13 @@
     }
     
     &:focus {
-      outline: none; // Убираем outline при фокусе
       box-shadow: none; // Убираем box-shadow при фокусе
+      outline: none; // Убираем outline при фокусе
     }
     
     &:focus-visible {
-      outline: none; // Убираем outline при фокусе (современные браузеры)
       box-shadow: none; // Убираем box-shadow при фокусе
+      outline: none; // Убираем outline при фокусе (современные браузеры)
     }
 
     &.star-fill-0 .filled-star {
@@ -177,113 +177,113 @@
     }
 
     .filled-star {
-      position: absolute;
-      overflow: hidden;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
       align-items: center;
+      display: flex;
+      height: 100%;
       justify-content: center;
+      left: 0;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      width: 100%;
 
       &.star-color-white {
-        color: white !important;
+        color: white;
       }
 
       &.star-color-gold {
-        color: gold !important;
+        color: gold;
       }
     }
 
     .unfilled-star {
       color: rgba(221, 221, 221, 0.3); // Полупрозрачные пустые звезды
-      transition: color 0.2s ease;
       position: relative;
+      transition: color 0.2s ease;
       z-index: 1;
     }
 
     // Стили для визуального объединения звезд в пары
     &.star-odd {
-      width: 11px; // Увеличили ширину кнопки на 1px
       height: 1.5em; // Высота звезды
-      position: relative;
       overflow: hidden; // Скрываем переполнение
+      position: relative;
+      width: 11px; // Увеличили ширину кнопки на 1px
       z-index: 1; // Нечетные звезды ниже (левая половина)
       
       .filled-star {
-        position: absolute;
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
         left: 0;
+        position: absolute;
         top: 0;
         width: 20px; // Полная ширина звезды
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         z-index: 2; // Поверх unfilled
       }
       
       .unfilled-star {
-        position: absolute;
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
         left: 0;
+        position: absolute;
         top: 0;
         width: 20px; // Полная ширина звезды
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         z-index: 1; // Под filled
       }
     }
 
     &.star-even {
-      width: 11px; // Увеличили ширину кнопки на 1px
       height: 1.5em; // Высота звезды
-      position: relative;
       overflow: hidden; // Скрываем переполнение
+      position: relative;
+      width: 11px; // Увеличили ширину кнопки на 1px
       z-index: 1; // Четные звезды тоже на том же уровне
       
       .filled-star {
-        position: absolute;
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
         left: -10px; // Сдвигаем влево на половину ширины, чтобы показать правую половину
+        position: absolute;
         top: 0;
         width: 20px; // Полная ширина звезды
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         z-index: 2; // Поверх unfilled
       }
       
       .unfilled-star {
-        position: absolute;
+        align-items: center;
+        display: flex;
+        height: 100%;
+        justify-content: center;
         left: -10px; // Сдвигаем влево на половину ширины, чтобы показать правую половину
+        position: absolute;
         top: 0;
         width: 20px; // Полная ширина звезды
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         z-index: 1; // Под filled
       }
     }
   }
 
   .star-rating-number {
-    font-size: 1rem; // Увеличили размер шрифта ещё на 1px (0.95rem + 0.05rem)
-    margin-left: 0.5rem;
-    margin-top: 3px;
-    font-weight: 500;
+    align-items: center; // Дополнительное выравнивание по вертикали
     align-self: center; // Выравниваем число по центру
     display: flex;
-    align-items: center; // Дополнительное выравнивание по вертикали
+    font-size: 1rem; // Увеличили размер шрифта ещё на 1px (0.95rem + 0.05rem)
+    font-weight: 500;
+    margin-left: 0.5rem;
+    margin-top: 3px;
 
     &.star-color-white {
-      color: white !important;
+      color: white;
     }
 
     &.star-color-gold {
-      color: gold !important;
+      color: gold;
     }
   }
 }

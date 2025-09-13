@@ -188,27 +188,27 @@ textarea.scene-description {
 
 .broken-badge-overlay {
   position: absolute;
-  top: 0.5rem;
   right: 0.5rem;
+  top: 0.5rem;
   z-index: 10;
 }
 
 .probably-broken-badge-overlay {
   position: absolute;
-  top: 0.5rem;
   right: 0.5rem;
+  top: 0.5rem;
   z-index: 10;
 }
 
 .probably-broken-badge {
-  background-color: #ff6b35 !important;
-  color: white !important;
-  font-size: 0.75em !important;
-  font-weight: bold;
-  padding: 4px 8px !important;
+  background-color: #ff6b35;
   border-radius: 4px;
-  text-transform: uppercase;
+  color: white;
+  font-size: 0.75em;
+  font-weight: bold;
   letter-spacing: 0.5px;
+  padding: 4px 8px;
+  text-transform: uppercase;
 }
 
 .scene-specs-overlay {
@@ -302,8 +302,8 @@ textarea.scene-description {
 .scene-marker-card.card {
   overflow: hidden;
   padding: 0;
-  z-index: 1;
   position: relative;
+  z-index: 1;
 
   @media (max-width: 576px) {
     width: 100%;
