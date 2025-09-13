@@ -1173,3 +1173,73 @@ $sticky-header-height: calc(50px + 3.3rem);
     }
   }
 }
+
+// Pose Tags Display Styles (for scene details)
+.pose-tags-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .pose-tag-item-display {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    background-color: rgba(138, 155, 168, 0.1);
+    border: 1px solid $secondary;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    min-width: 0;
+
+    &:hover {
+      background-color: rgba(138, 155, 168, 0.2);
+      border-color: $primary;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pose-tag-icon-display {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.5rem;
+
+      .pose-icon-display {
+        width: 20px;
+        height: 20px;
+        fill: $text-color;
+      }
+
+      .pose-tag-image-display {
+        width: 22px;
+        height: 22px;
+        object-fit: contain;
+        object-position: center bottom;
+        border-radius: 0.25rem;
+      }
+    }
+
+    .pose-tag-content-display {
+      min-width: 0;
+      flex-grow: 1;
+    }
+
+    .pose-tag-name-display {
+      font-weight: 500;
+      color: $text-color !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-transform: lowercase;
+      font-size: 0.9rem;
+      
+      &::first-letter {
+        text-transform: uppercase;
+      }
+    }
+
+  }
+}

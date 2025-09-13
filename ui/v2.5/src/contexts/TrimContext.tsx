@@ -10,7 +10,13 @@ const TrimContext = createContext<TrimContextType | undefined>(undefined);
 export const useTrimContext = () => {
   const context = useContext(TrimContext);
   if (context === undefined) {
-    throw new Error('useTrimContext must be used within a TrimProvider');
+    // Return default values instead of throwing error
+    // This prevents issues with lazy-loaded components
+    console.warn('useTrimContext used outside of TrimProvider, using default values');
+    return {
+      trimEnabled: true,
+      setTrimEnabled: () => {}
+    };
   }
   return context;
 };

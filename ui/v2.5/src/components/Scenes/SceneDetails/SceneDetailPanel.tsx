@@ -8,6 +8,7 @@ import { sortPerformers } from "src/core/performers";
 import { DirectorLink } from "src/components/Shared/Link";
 import { SimilarScenes } from "./SimilarScenes";
 import { URLsField } from "src/utils/field";
+import { PoseTagsDisplay } from "./PoseTagsDisplay";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -29,8 +30,9 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   }
 
   function renderTags() {
-    if (props.scene.tags.length === 0) return;
-    const tags = props.scene.tags.map((tag) => (
+    const regularTags = props.scene.tags.filter(tag => !tag.is_pose_tag);
+    if (regularTags.length === 0) return;
+    const tags = regularTags.map((tag) => (
       <TagLink key={tag.id} tag={tag} />
     ));
     return (
@@ -39,7 +41,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
           <h4>
             <FormattedMessage
               id="countables.tags"
-              values={{ count: props.scene.tags.length }}
+              values={{ count: regularTags.length }}
             />
           </h4>
         </div>
@@ -108,6 +110,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       <div className="row">
         <div className="col-12">
           {renderDetails()}
+          <PoseTagsDisplay scene={props.scene} />
           {renderTags()}
           {renderPerformers()}
         </div>

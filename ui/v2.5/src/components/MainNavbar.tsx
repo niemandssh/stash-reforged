@@ -169,13 +169,14 @@ const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
 
-// Функция для получения случайной сцены без рейтинга и тегов
+// Функция для получения случайной сцены для рецензирования
+// Приоритет: сначала сцены без рейтинга, затем сцены без тегов
 const getRandomUnratedScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
 
-    // Сначала получаем общее количество сцен без рейтинга и тегов
-    const countResult = await client.query<GQL.FindScenesQuery>({
+    // Сначала пытаемся найти сцены без рейтинга (приоритет)
+    const unratedCountResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -186,35 +187,45 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
             modifier: GQL.CriterionModifier.IsNull,
             value: 0,
           },
-          tag_count: {
-            modifier: GQL.CriterionModifier.Equals,
-            value: 0,
-          },
         },
       },
     });
 
-    const totalCount = countResult.data?.findScenes?.count || 0;
-    if (totalCount === 0) {
-      return null;
+    const unratedCount = unratedCountResult.data?.findScenes?.count || 0;
+    if (unratedCount > 0) {
+      // Выбираем случайную страницу из сцен без рейтинга
+      const randomPage = Math.floor(Math.random() * unratedCount) + 1;
+
+      const result = await client.query<GQL.FindScenesQuery>({
+        query: GQL.FindScenesDocument,
+        variables: {
+          filter: {
+            per_page: 1,
+            page: randomPage,
+          },
+          scene_filter: {
+            rating100: {
+              modifier: GQL.CriterionModifier.IsNull,
+              value: 0,
+            },
+          },
+        },
+      });
+
+      const scenes = result.data?.findScenes?.scenes || [];
+      if (scenes.length > 0) {
+        return scenes[0]?.id || null;
+      }
     }
 
-    // Выбираем случайную страницу
-    const randomPage = Math.floor(Math.random() * totalCount) + 1;
-
-    // Получаем сцену с этой страницы
-    const result = await client.query<GQL.FindScenesQuery>({
+    // Если нет сцен без рейтинга, ищем сцены без тегов (резерв)
+    const untaggedCountResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
-          per_page: 1,
-          page: randomPage,
+          per_page: 0, // Только количество
         },
         scene_filter: {
-          rating100: {
-            modifier: GQL.CriterionModifier.IsNull,
-            value: 0,
-          },
           tag_count: {
             modifier: GQL.CriterionModifier.Equals,
             value: 0,
@@ -223,12 +234,34 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       },
     });
 
-    const scenes = result.data?.findScenes?.scenes || [];
-    if (scenes.length === 0) {
-      return null;
+    const untaggedCount = untaggedCountResult.data?.findScenes?.count || 0;
+    if (untaggedCount > 0) {
+      // Выбираем случайную страницу из сцен без тегов
+      const randomPage = Math.floor(Math.random() * untaggedCount) + 1;
+
+      const result = await client.query<GQL.FindScenesQuery>({
+        query: GQL.FindScenesDocument,
+        variables: {
+          filter: {
+            per_page: 1,
+            page: randomPage,
+          },
+          scene_filter: {
+            tag_count: {
+              modifier: GQL.CriterionModifier.Equals,
+              value: 0,
+            },
+          },
+        },
+      });
+
+      const scenes = result.data?.findScenes?.scenes || [];
+      if (scenes.length > 0) {
+        return scenes[0]?.id || null;
+      }
     }
 
-    return scenes[0]?.id || null;
+    return null;
   } catch (error) {
     console.error("Ошибка при получении случайной сцены:", error);
     return null;
@@ -385,7 +418,7 @@ export const MainNavbar: React.FC = () => {
       // Показываем уведомление, если нет сцен для рецензирования
       alert(intl.formatMessage({
         id: "no_scenes_to_review",
-        defaultMessage: "Нет сцен без рейтинга и тегов для рецензирования"
+        defaultMessage: "Нет сцен без рейтинга или без тегов для рецензирования"
       }));
     }
   }, [history, intl]);
