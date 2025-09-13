@@ -18,7 +18,7 @@ import { Tag, TagSelect } from "../TagSelect";
 
 interface ITagEditPanel {
   tag: Partial<GQL.TagDataFragment>;
-  onSubmit: (tag: GQL.TagUpdateInput) => Promise<void>;
+  onSubmit: (tag: GQL.TagCreateInput | GQL.TagUpdateInput) => Promise<void>;
   onCancel: () => void;
   onDelete: () => void;
   setImage: (image?: string | null) => void;
@@ -54,6 +54,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     ignore_auto_tag: yup.boolean().defined(),
     is_pose_tag: yup.boolean().defined(),
     weight: yup.number().min(0).max(1).default(0.5),
+    color: yup.string().nullable().optional(),
     image: yup.string().nullable().optional(),
   });
 
@@ -67,6 +68,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     ignore_auto_tag: tag?.ignore_auto_tag ?? false,
     is_pose_tag: tag?.is_pose_tag ?? false,
     weight: tag?.weight ?? 0.5,
+    color: tag?.color ?? "",
   };
 
   type InputValues = yup.InferType<typeof schema>;
@@ -118,7 +120,40 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
   async function onSave(input: InputValues) {
     setIsLoading(true);
     try {
-      await onSubmit(input);
+      if (isNew) {
+        // Convert InputValues to GQL create input format
+        const gqlInput: GQL.TagCreateInput = {
+          name: input.name,
+          sort_name: input.sort_name || undefined,
+          aliases: input.aliases,
+          description: input.description || undefined,
+          parent_ids: input.parent_ids,
+          child_ids: input.child_ids,
+          ignore_auto_tag: input.ignore_auto_tag,
+          is_pose_tag: input.is_pose_tag,
+          weight: input.weight,
+          color: input.color || undefined,
+        };
+        
+        await onSubmit(gqlInput);
+      } else {
+        // Convert InputValues to GQL update input format
+        const gqlInput: GQL.TagUpdateInput = {
+          id: tag.id!,
+          name: input.name,
+          sort_name: input.sort_name || undefined,
+          aliases: input.aliases,
+          description: input.description || undefined,
+          parent_ids: input.parent_ids,
+          child_ids: input.child_ids,
+          ignore_auto_tag: input.ignore_auto_tag,
+          is_pose_tag: input.is_pose_tag,
+          weight: input.weight,
+          color: input.color || undefined,
+        };
+        
+        await onSubmit(gqlInput);
+      }
       formik.resetForm();
     } catch (e) {
       Toast.error(e);
@@ -148,6 +183,136 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     intl,
     formik
   );
+
+  // Утилита для определения цвета текста на основе цвета фона
+  const getContrastColor = (backgroundColor: string): string => {
+    if (!backgroundColor) return "#000000";
+    
+    let r = 0, g = 0, b = 0;
+    
+    // Обработка hex цветов
+    if (backgroundColor.startsWith("#")) {
+      const hex = backgroundColor.replace("#", "");
+      if (hex.length === 3) {
+        r = parseInt(hex[0] + hex[0], 16);
+        g = parseInt(hex[1] + hex[1], 16);
+        b = parseInt(hex[2] + hex[2], 16);
+      } else if (hex.length === 6) {
+        r = parseInt(hex.substr(0, 2), 16);
+        g = parseInt(hex.substr(2, 2), 16);
+        b = parseInt(hex.substr(4, 2), 16);
+      }
+    }
+    // Обработка rgb/rgba цветов
+    else if (backgroundColor.startsWith("rgb")) {
+      const matches = backgroundColor.match(/\d+/g);
+      if (matches && matches.length >= 3) {
+        r = parseInt(matches[0]);
+        g = parseInt(matches[1]);
+        b = parseInt(matches[2]);
+      }
+    }
+    // Обработка hsl цветов
+    else if (backgroundColor.startsWith("hsl")) {
+      const matches = backgroundColor.match(/\d+/g);
+      if (matches && matches.length >= 3) {
+        const h = parseInt(matches[0]) / 360;
+        const s = parseInt(matches[1]) / 100;
+        const l = parseInt(matches[2]) / 100;
+        
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        
+        if (s === 0) {
+          r = g = b = l;
+        } else {
+          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+          const p = 2 * l - q;
+          r = hue2rgb(p, q, h + 1/3);
+          g = hue2rgb(p, q, h);
+          b = hue2rgb(p, q, h - 1/3);
+        }
+        
+        r = Math.round(r * 255);
+        g = Math.round(g * 255);
+        b = Math.round(b * 255);
+      }
+    }
+    
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128 ? "#000000" : "#ffffff";
+  };
+
+  function renderColorField() {
+    const title = intl.formatMessage({ id: "Color" });
+    const backgroundColor = formik.values.color || "#bfccd6";
+    const textColor = getContrastColor(backgroundColor);
+    
+    const control = (
+      <div>
+        <div className="d-flex align-items-center mb-3">
+          <Form.Control
+            type="color"
+            name="color"
+            className="text-input mr-2"
+            value={formik.values.color || "#bfccd6"}
+            onChange={(e) => formik.setFieldValue("color", e.target.value)}
+            style={{ width: "60px", height: "38px" }}
+          />
+          <Form.Control
+            type="text"
+            name="color_text"
+            className="text-input"
+            value={formik.values.color || ""}
+            onChange={(e) => formik.setFieldValue("color", e.target.value)}
+            placeholder="#000000"
+            style={{ flex: 1 }}
+          />
+        </div>
+        
+        {/* Превью тега */}
+        <div className="tag-preview d-flex align-items-center">
+          <small className="text-muted mr-3">
+            <FormattedMessage id="preview" />:
+          </small>
+          <div 
+            className="px-2 py-1 rounded"
+            style={{ 
+              backgroundColor: backgroundColor,
+              color: textColor,
+              border: `1px solid ${backgroundColor}`,
+              fontSize: "0.875rem",
+              fontWeight: "500"
+            }}
+          >
+            {formik.values.name || intl.formatMessage({ id: "tag" })}
+          </div>
+        </div>
+      </div>
+    );
+
+    return renderField("color", title, control);
+  }
+
+  // Утилита для генерации случайного цвета если цвет не задан
+  const generateRandomColor = (seed: string): string => {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const hue = Math.abs(hash) % 360;
+    const saturation = 60 + (Math.abs(hash) % 30);
+    const lightness = 45 + (Math.abs(hash >> 8) % 20);
+    
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  };
 
   function renderParentTagsField() {
     const title = intl.formatMessage({ id: "parent_tags" });
@@ -218,6 +383,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           step: 0.1,
           title: intl.formatMessage({ id: "tag_weight_help" })
         })}
+        {renderColorField()}
         {renderParentTagsField()}
         {renderSubTagsField()}
         <hr />

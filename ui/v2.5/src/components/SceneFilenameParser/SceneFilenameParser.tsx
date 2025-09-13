@@ -188,10 +188,7 @@ export const SceneFilenameParser: React.FC = () => {
     try {
       await updateScenes();
       Toast.success(
-        intl.formatMessage(
-          { id: "toast.updated_entity" },
-          { entity: intl.formatMessage({ id: "scenes" }).toLocaleLowerCase() }
-        )
+        intl.formatMessage({ id: "toast.scene_with_similars_updated" })
       );
     } catch (e) {
       Toast.error(e);

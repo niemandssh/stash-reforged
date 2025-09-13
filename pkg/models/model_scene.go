@@ -3,7 +3,6 @@ package models
 import (
 	"context"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -143,10 +142,8 @@ func (s *Scene) LoadPerformerIDs(ctx context.Context, l PerformerIDLoader) error
 }
 
 func (s *Scene) LoadTagIDs(ctx context.Context, l TagIDLoader) error {
-	fmt.Printf("DEBUG: LoadTagIDs for scene %d, already loaded: %v\n", s.ID, s.TagIDs.Loaded())
 	return s.TagIDs.load(func() ([]int, error) {
 		ids, err := l.GetTagIDs(ctx, s.ID)
-		fmt.Printf("DEBUG: GetTagIDs for scene %d returned %d tags: %v, error: %v\n", s.ID, len(ids), ids, err)
 		return ids, err
 	})
 }

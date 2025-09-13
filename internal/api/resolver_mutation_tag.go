@@ -39,6 +39,11 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input TagCreateInput) 
 	newTag.Description = translator.string(input.Description)
 	newTag.IgnoreAutoTag = translator.bool(input.IgnoreAutoTag)
 	newTag.IsPoseTag = translator.bool(input.IsPoseTag)
+	newTag.Color = translator.string(input.Color)
+
+	// Debug: log the color value
+	logger.Infof("TagCreate - Color input: %v, processed: %s", input.Color, newTag.Color)
+
 	if input.Weight != nil {
 		newTag.Weight = *input.Weight
 	}
@@ -112,6 +117,11 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input TagUpdateInput) 
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
 	updatedTag.IsPoseTag = translator.optionalBool(input.IsPoseTag, "is_pose_tag")
 	updatedTag.Description = translator.optionalString(input.Description, "description")
+	updatedTag.Color = translator.optionalString(input.Color, "color")
+
+	// Debug: log the color value
+	logger.Infof("TagUpdate - Color input: %v, hasField: %v", input.Color, translator.hasField("color"))
+
 	updatedTag.Weight = translator.optionalFloat64(input.Weight, "weight")
 
 	updatedTag.Aliases = translator.updateStrings(input.Aliases, "aliases")
@@ -182,6 +192,7 @@ func (r *mutationResolver) BulkTagUpdate(ctx context.Context, input BulkTagUpdat
 	updatedTag.Favorite = translator.optionalBool(input.Favorite, "favorite")
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
 	updatedTag.IsPoseTag = translator.optionalBool(input.IsPoseTag, "is_pose_tag")
+	updatedTag.Color = translator.optionalString(input.Color, "color")
 	updatedTag.Weight = translator.optionalFloat64(input.Weight, "weight")
 
 	updatedTag.Aliases = translator.updateStringsBulk(input.Aliases, "aliases")

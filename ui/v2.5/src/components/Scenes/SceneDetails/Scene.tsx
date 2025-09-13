@@ -280,10 +280,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       },
     });
     Toast.success(
-      intl.formatMessage(
-        { id: "toast.updated_entity" },
-        { entity: intl.formatMessage({ id: "scene" }).toLocaleLowerCase() }
-      )
+      intl.formatMessage({ id: "toast.scene_with_similars_updated" })
     );
   }
 

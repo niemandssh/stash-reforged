@@ -263,12 +263,7 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
       });
 
       Toast.success(
-        intl.formatMessage(
-          { id: "toast.updated_entity" },
-          {
-            entity: intl.formatMessage({ id: "scene" }).toLocaleLowerCase(),
-          }
-        )
+        intl.formatMessage({ id: "toast.scene_with_similars_updated" })
       );
     } catch (e) {
       Toast.error(e);
@@ -286,12 +281,7 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
       });
 
       Toast.success(
-        intl.formatMessage(
-          { id: "toast.updated_entity" },
-          {
-            entity: intl.formatMessage({ id: "scene" }).toLocaleLowerCase(),
-          }
-        )
+        intl.formatMessage({ id: "toast.scene_with_similars_updated" })
       );
     } catch (e) {
       Toast.error(e);

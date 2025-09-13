@@ -53,14 +53,6 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 		return 1.0, nil // Same scene
 	}
 
-	// Debug for scene ID 1 - useful for testing
-	debugScene1 := scene1.ID == 1 || scene2.ID == 1
-
-	if debugScene1 {
-		fmt.Printf("=== DEBUG FOR SCENE 1 ===\n")
-		fmt.Printf("Comparing scenes %d and %d\n", scene1.ID, scene2.ID)
-	}
-
 	var totalScore float64
 
 	// Calculate performer similarity
@@ -70,9 +62,6 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 	}
 	performerContribution := performerScore * c.weights.Performers
 	totalScore += performerContribution
-	if debugScene1 {
-		fmt.Printf("DEBUG: Performer similarity: %.3f * %.3f = %.3f\n", performerScore, c.weights.Performers, performerContribution)
-	}
 
 	// Calculate group similarity
 	groupScore, err := c.calculateGroupSimilarity(scene1.Groups.List(), scene2.Groups.List())
@@ -81,50 +70,29 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 	}
 	groupContribution := groupScore * c.weights.Groups
 	totalScore += groupContribution
-	if debugScene1 {
-		fmt.Printf("DEBUG: Group similarity: %.3f * %.3f = %.3f\n", groupScore, c.weights.Groups, groupContribution)
-	}
 
 	// Calculate tag similarity
 	tags1 := scene1.TagIDs.List()
 	tags2 := scene2.TagIDs.List()
-	if debugScene1 {
-		fmt.Printf("DEBUG: Scene %d has %d tags: %v\n", scene1.ID, len(tags1), tags1)
-		fmt.Printf("DEBUG: Scene %d has %d tags: %v\n", scene2.ID, len(tags2), tags2)
-	}
 	tagScore, err := c.calculateTagSimilarity(ctx, tags1, tags2)
 	if err != nil {
 		return 0, fmt.Errorf("calculating tag similarity: %w", err)
 	}
 	tagContribution := tagScore * c.weights.Tags
 	totalScore += tagContribution
-	if debugScene1 {
-		fmt.Printf("DEBUG: Tag similarity: %.3f * %.3f = %.3f\n", tagScore, c.weights.Tags, tagContribution)
-	}
 
 	// Calculate studio similarity
 	studioScore := c.calculateStudioSimilarity(scene1.StudioID, scene2.StudioID)
 	studioContribution := studioScore * c.weights.Studio
 	totalScore += studioContribution
-	if debugScene1 {
-		fmt.Printf("DEBUG: Studio similarity: %.3f * %.3f = %.3f\n", studioScore, c.weights.Studio, studioContribution)
-	}
 
 	// Apply broken status penalty
 	brokenPenalty := 1.0
 	if scene1.IsBroken || scene2.IsBroken {
 		brokenPenalty = 0.3 // Strong penalty for broken scenes
-		if debugScene1 {
-			fmt.Printf("DEBUG: Broken penalty applied: %.3f\n", brokenPenalty)
-		}
 	}
 
 	finalScore := math.Min(totalScore, 1.0) * brokenPenalty
-	if debugScene1 {
-		fmt.Printf("DEBUG: Total weighted score: %.3f (capped at %.3f, broken penalty: %.3f)\n", totalScore, math.Min(totalScore, 1.0), brokenPenalty)
-		fmt.Printf("DEBUG: Final score: %.3f\n", finalScore)
-		fmt.Printf("=== END DEBUG FOR SCENE 1 ===\n")
-	}
 	return finalScore, nil
 }
 
@@ -177,12 +145,7 @@ func (c *SceneSimilarityCalculator) calculateGroupSimilarity(groups1, groups2 []
 // Weight system: 0.0 = least important, 1.0 = most important
 // Higher weight tags contribute more to similarity calculation
 func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
-	// Check if this is for scene 1 (we need to pass this info somehow)
-	// For now, let's always show debug for tag similarity
-	fmt.Printf("DEBUG: calculateTagSimilarity: tags1=%v, tags2=%v\n", tags1, tags2)
-
 	if len(tags1) == 0 && len(tags2) == 0 {
-		fmt.Printf("DEBUG: Both tag lists empty, returning 0.0\n")
 		return 0.0, nil
 	}
 
@@ -200,7 +163,6 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 	for tagID := range allTags {
 		tag, err := c.tagRepo.Find(ctx, tagID)
 		if err != nil {
-			fmt.Printf("DEBUG: Error loading tag %d: %v\n", tagID, err)
 			continue
 		}
 		if tag != nil {
@@ -237,16 +199,12 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 	// Subtract shared weights to avoid double counting
 	weightedTotal -= weightedShared
 
-	fmt.Printf("DEBUG: Weighted shared: %.3f, Weighted total: %.3f\n", weightedShared, weightedTotal)
-
 	// If no shared tags, return 0
 	if weightedShared == 0 {
-		fmt.Printf("DEBUG: No shared tags, returning 0.0\n")
 		return 0.0, nil
 	}
 
 	if weightedTotal == 0 {
-		fmt.Printf("DEBUG: Weighted total is 0, returning 0.0\n")
 		return 0.0, nil
 	}
 
@@ -260,8 +218,6 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 	}
 
 	if allTags1InTags2 {
-		fmt.Printf("DEBUG: 100%% match - all tags from first scene are in second scene\n")
-
 		// Check if there's at least one tag with weight >= 0.85
 		hasHighWeightTag := false
 		for _, tagID := range tags1 {
@@ -291,11 +247,7 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 			if maxMultiplier < 1.0 {
 				maxMultiplier = 1.0
 			}
-			fmt.Printf("DEBUG: 100%% match with high weight tag (>=0.85) - multiplier: %.3f\n", maxMultiplier)
 			return maxMultiplier, nil
-		} else {
-			// No high weight tag - treat as partial match
-			fmt.Printf("DEBUG: 100%% match but no high weight tag (>=0.85) - treating as partial match\n")
 		}
 	}
 
@@ -311,7 +263,6 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 	// Calculate weighted similarity: shared weight / total weight of first scene
 	// Start from 0.5 base and add weighted contribution
 	baseSimilarity := 0.5 + (weightedShared/weightedTags1)*0.5
-	fmt.Printf("DEBUG: Base similarity: 0.5 + (%.3f / %.3f) * 0.5 = %.3f\n", weightedShared, weightedTags1, baseSimilarity)
 
 	// Calculate weight-based multiplier
 	var highWeightTags, mediumWeightTags, lowWeightTags int
@@ -353,12 +304,7 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		multiplier *= 0.8
 	}
 
-	fmt.Printf("DEBUG: Weight distribution: high=%d, medium=%d, low=%d, avg=%.3f\n", highWeightTags, mediumWeightTags, lowWeightTags, avgWeight)
-	fmt.Printf("DEBUG: Multiplier: %.3f\n", multiplier)
-
 	finalScore := baseSimilarity * multiplier
-	fmt.Printf("DEBUG: Final weighted tag similarity: %.3f * %.3f = %.3f\n", baseSimilarity, multiplier, finalScore)
-
 	return finalScore, nil
 }
 
@@ -409,23 +355,9 @@ func (c *SceneSimilarityCalculator) CalculateAndStoreSimilarity(ctx context.Cont
 		return err
 	}
 
-	// Special debug for scene ID 1
-	debugScene1 := scene1.ID == 1 || scene2.ID == 1
-
-	if debugScene1 {
-		fmt.Printf("DEBUG: Total similarity score between scenes %d and %d: %.3f (threshold: %.3f)\n", scene1.ID, scene2.ID, score, c.weights.MinScore)
-	}
-
 	// Only store if similarity score is above threshold
 	if score < c.weights.MinScore {
-		if debugScene1 {
-			fmt.Printf("DEBUG: Score %.3f below threshold %.3f, not storing\n", score, c.weights.MinScore)
-		}
 		return nil
-	}
-
-	if debugScene1 {
-		fmt.Printf("DEBUG: Score %.3f above threshold %.3f, storing similarity\n", score, c.weights.MinScore)
 	}
 
 	similarity := models.SceneSimilarity{

@@ -22,6 +22,7 @@
         "clear_front_image": "Убрать переднее изображение",
         "clear_image": "Удалить изображение",
         "close": "Закрыть",
+        "Color": "Цвет",
         "confirm": "Подтвердить",
         "continue": "Продолжить",
         "create": "Создать",
@@ -1346,7 +1347,11 @@
         "started_generating": "Генерация запущена",
         "started_importing": "Импортирование начато",
         "updated_entity": "Обновлен {entity}",
-        "image_index_too_large": "Ошибка: индекс изображения больше, чем количество изображений в Галерее"
+        "scene_with_similars_updated": "Сцена с похожими была обновлена",
+        "image_index_too_large": "Ошибка: индекс изображения больше, чем количество изображений в Галерее",
+        "similarity_recalculation_started": "Начат пересчёт похожих сцен для сцены {sceneId}",
+        "similarity_recalculation_completed": "Пересчёт похожих сцен завершён для сцены {sceneId}",
+        "similarity_recalculation_failed": "Ошибка пересчёта похожих сцен для сцены {sceneId}"
     },
     "total": "Всего",
     "true": "Да",

@@ -30,6 +30,7 @@
     "clear_front_image": "Clear front image",
     "clear_image": "Clear Image",
     "close": "Close",
+    "Color": "Color",
     "confirm": "Confirm",
     "continue": "Continue",
     "copy_to_clipboard": "Copy to clipboard",
@@ -1544,7 +1545,11 @@
     "started_auto_tagging": "Started auto tagging",
     "started_generating": "Started generating",
     "started_importing": "Started importing",
-    "updated_entity": "Updated {entity}"
+    "updated_entity": "Updated {entity}",
+    "scene_with_similars_updated": "Scene with similars was updated",
+    "similarity_recalculation_started": "Started similarity recalculation for scene {sceneId}",
+    "similarity_recalculation_completed": "Similarity recalculation completed for scene {sceneId}",
+    "similarity_recalculation_failed": "Similarity recalculation failed for scene {sceneId}"
   },
   "total": "Total",
   "true": "True",

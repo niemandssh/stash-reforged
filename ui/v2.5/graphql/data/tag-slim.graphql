@@ -4,6 +4,7 @@ fragment SlimTagData on Tag {
   sort_name
   aliases
   image_path
+  color
   parent_count
   child_count
   is_pose_tag

@@ -97,10 +97,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     try {
       await updateScenes();
       Toast.success(
-        intl.formatMessage(
-          { id: "toast.updated_entity" },
-          { entity: intl.formatMessage({ id: "scenes" }).toLocaleLowerCase() }
-        )
+        intl.formatMessage({ id: "toast.scene_with_similars_updated" })
       );
       props.onClose(true);
     } catch (e) {

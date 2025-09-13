@@ -14,6 +14,7 @@ type Tag struct {
 	IgnoreAutoTag bool      `json:"ignore_auto_tag"`
 	IsPoseTag     bool      `json:"is_pose_tag"`
 	Weight        float64   `json:"weight"`
+	Color         string    `json:"color"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 
@@ -57,6 +58,7 @@ type TagPartial struct {
 	IgnoreAutoTag OptionalBool
 	IsPoseTag     OptionalBool
 	Weight        OptionalFloat64
+	Color         OptionalString
 	CreatedAt     OptionalTime
 	UpdatedAt     OptionalTime
 

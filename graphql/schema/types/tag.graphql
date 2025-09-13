@@ -8,6 +8,7 @@ type Tag {
   ignore_auto_tag: Boolean!
   is_pose_tag: Boolean!
   weight: Float!
+  color: String
   created_at: Time!
   updated_at: Time!
   favorite: Boolean!
@@ -37,6 +38,7 @@ input TagCreateInput {
   is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
+  color: String
   "This should be a URL or a base64 encoded data URL"
   image: String
 
@@ -55,6 +57,7 @@ input TagUpdateInput {
   is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
+  color: String
   "This should be a URL or a base64 encoded data URL"
   image: String
 
@@ -84,6 +87,7 @@ input BulkTagUpdateInput {
   is_pose_tag: Boolean
   favorite: Boolean
   weight: Float
+  color: String
 
   parent_ids: BulkUpdateIds
   child_ids: BulkUpdateIds

@@ -15,6 +15,69 @@ import { Icon } from "../Shared/Icon";
 import { FormattedMessage } from "react-intl";
 import { PatchComponent } from "src/patch";
 
+const getContrastColor = (backgroundColor: string): string => {
+  if (!backgroundColor) return "#000000";
+  
+  let r = 0, g = 0, b = 0;
+  
+  if (backgroundColor.startsWith("#")) {
+    const hex = backgroundColor.replace("#", "");
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    }
+  }
+  else if (backgroundColor.startsWith("rgb")) {
+    const matches = backgroundColor.match(/\d+/g);
+    if (matches && matches.length >= 3) {
+      r = parseInt(matches[0]);
+      g = parseInt(matches[1]);
+      b = parseInt(matches[2]);
+    }
+  }
+  else if (backgroundColor.startsWith("hsl")) {
+    const matches = backgroundColor.match(/\d+/g);
+    if (matches && matches.length >= 3) {
+      const h = parseInt(matches[0]) / 360;
+      const s = parseInt(matches[1]) / 100;
+      const l = parseInt(matches[2]) / 100;
+      
+      const hue2rgb = (p: number, q: number, t: number) => {
+        if (t < 0) t += 1;
+        if (t > 1) t += 1;
+        if (t < 1/6) return p + (q - p) * 6 * t;
+        if (t < 1/2) return q;
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        return p;
+      };
+      
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      
+      r = Math.round(r * 255);
+      g = Math.round(g * 255);
+      b = Math.round(b * 255);
+    }
+  }
+  
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  const textColor = brightness > 128 ? "#000000" : "#ffffff";
+  
+  return textColor;
+};
+
 type SceneMarkerFragment = Pick<GQL.SceneMarker, "id" | "title" | "seconds"> & {
   scene: Pick<GQL.Scene, "id">;
   primary_tag: Pick<GQL.Tag, "id" | "name">;
@@ -24,12 +87,14 @@ interface ISortNameLinkProps {
   link: string;
   className?: string;
   sortName?: string;
+  style?: React.CSSProperties;
 }
 
 const SortNameLinkComponent: React.FC<ISortNameLinkProps> = ({
   link,
   sortName,
   className,
+  style,
   children,
 }) => {
   return (
@@ -38,6 +103,7 @@ const SortNameLinkComponent: React.FC<ISortNameLinkProps> = ({
       data-sort-name={sortName}
       className={cx("tag-item", className)}
       variant="secondary"
+      style={style}
     >
       <Link to={link}>{children}</Link>
     </Badge>
@@ -228,7 +294,7 @@ export const GalleryLink: React.FC<IGalleryLinkProps> = ({
 };
 
 interface ITagLinkProps {
-  tag: INamedObject;
+  tag: INamedObject & { color?: string | null };
   linkType?:
     | "scene"
     | "gallery"
@@ -289,17 +355,24 @@ export const TagLink: React.FC<ITagLinkProps> = PatchComponent(
       );
     }, [hierarchyTooltipID]);
 
+    const tagStyle = tag.color ? {
+      backgroundColor: tag.color
+    } : undefined;
+
     return (
       <SortNameLinkComponent
         sortName={tag.sort_name || title}
         link={link}
         className={className}
+        style={tagStyle}
       >
         <TagPopover id={tag.id ?? ""} placement={hoverPlacement}>
-          {title}
+          <span style={tag.color ? { color: getContrastColor(tag.color) } : undefined}>
+            {title}
+          </span>
           {showHierarchyIcon && (
             <OverlayTrigger placement="top" overlay={tooltip}>
-              <span className="icon-wrapper">
+              <span className="icon-wrapper" style={tag.color ? { color: getContrastColor(tag.color) } : undefined}>
                 <span className="vertical-line">|</span>
                 <Icon icon={faFolderTree} className="tag-icon" />
               </span>

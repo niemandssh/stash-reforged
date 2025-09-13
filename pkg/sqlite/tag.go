@@ -39,6 +39,7 @@ type tagRow struct {
 	IgnoreAutoTag bool        `db:"ignore_auto_tag"`
 	IsPoseTag     bool        `db:"is_pose_tag"`
 	Weight        float64     `db:"weight"`
+	Color         zero.String `db:"color"`
 	CreatedAt     Timestamp   `db:"created_at"`
 	UpdatedAt     Timestamp   `db:"updated_at"`
 
@@ -55,6 +56,7 @@ func (r *tagRow) fromTag(o models.Tag) {
 	r.IgnoreAutoTag = o.IgnoreAutoTag
 	r.IsPoseTag = o.IsPoseTag
 	r.Weight = o.Weight
+	r.Color = zero.StringFrom(o.Color)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
 }
@@ -69,6 +71,7 @@ func (r *tagRow) resolve() *models.Tag {
 		IgnoreAutoTag: r.IgnoreAutoTag,
 		IsPoseTag:     r.IsPoseTag,
 		Weight:        r.Weight,
+		Color:         r.Color.String,
 		CreatedAt:     r.CreatedAt.Timestamp,
 		UpdatedAt:     r.UpdatedAt.Timestamp,
 	}
@@ -102,6 +105,7 @@ func (r *tagRowRecord) fromPartial(o models.TagPartial) {
 	r.setBool("ignore_auto_tag", o.IgnoreAutoTag)
 	r.setBool("is_pose_tag", o.IsPoseTag)
 	r.setFloat64("weight", o.Weight)
+	r.setNullString("color", o.Color)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)
 }

@@ -1,6 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useJobsSubscribeSubscription, JobStatus, JobStatusUpdateType } from "src/core/generated-graphql";
+import { useToast } from "./Toast";
+import { useIntl } from "react-intl";
 
 interface SimilarityJobMonitorOptions {
   onSimilarityJobComplete?: (sceneId: string) => void;
@@ -12,6 +14,20 @@ export const useSimilarityJobMonitor = (options?: SimilarityJobMonitorOptions) =
   const { data: jobsData } = useJobsSubscribeSubscription();
   const onCompleteRef = useRef(options?.onSimilarityJobComplete);
   const refetchRef = useRef(options?.refetch);
+  const Toast = useToast();
+  const intl = useIntl();
+  
+  // Track processed jobs to avoid duplicate notifications
+  const [processedJobs, setProcessedJobs] = useState<Set<string>>(new Set());
+  
+  // Clean up old processed jobs periodically to avoid memory leaks
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      setProcessedJobs(new Set());
+    }, 60000); // Clear every minute
+    
+    return () => clearInterval(cleanup);
+  }, []);
 
   // Update refs when options change
   useEffect(() => {
@@ -30,6 +46,20 @@ export const useSimilarityJobMonitor = (options?: SimilarityJobMonitorOptions) =
     
     if (!isSimilarityJob) return;
 
+    // Extract scene ID from job description
+    const sceneIdMatch = job.description?.match(/scene (\d+)/);
+    if (!sceneIdMatch) return;
+
+    const sceneId = sceneIdMatch[1];
+    const jobKey = `${job.id}-${sceneId}`;
+
+    // Check if we've already processed this job event
+    if (processedJobs.has(jobKey)) return;
+
+    // Check if job was just started
+    const isJobStarted = event.type === JobStatusUpdateType.Add || 
+      (event.type === JobStatusUpdateType.Update && job.status === JobStatus.Running);
+
     // Check if job was completed (removed or finished)
     const isJobComplete = 
       event.type === JobStatusUpdateType.Remove ||
@@ -37,24 +67,48 @@ export const useSimilarityJobMonitor = (options?: SimilarityJobMonitorOptions) =
       job.status === JobStatus.Failed ||
       job.status === JobStatus.Cancelled;
 
-    if (!isJobComplete) return;
+    if (isJobStarted) {
+      // Mark as processed and show notification about starting similarity recalculation
+      setProcessedJobs(prev => new Set(prev).add(jobKey));
+      Toast.success(
+        intl.formatMessage(
+          { id: "toast.similarity_recalculation_started" },
+          { sceneId }
+        )
+      );
+    }
 
-    // Extract scene ID from job description
-    const sceneIdMatch = job.description?.match(/scene (\d+)/);
-    if (!sceneIdMatch) return;
+    if (isJobComplete) {
+      // Mark as processed and show notification about completion
+      setProcessedJobs(prev => new Set(prev).add(jobKey));
+      
+      if (job.status === JobStatus.Finished) {
+        Toast.success(
+          intl.formatMessage(
+            { id: "toast.similarity_recalculation_completed" },
+            { sceneId }
+          )
+        );
+      } else if (job.status === JobStatus.Failed) {
+        Toast.error(
+          intl.formatMessage(
+            { id: "toast.similarity_recalculation_failed" },
+            { sceneId }
+          )
+        );
+      }
+      
+      // Evict similar scenes cache to force refetch
+      client.cache.evict({
+        fieldName: "findScene",
+        args: { id: sceneId }
+      });
 
-    const sceneId = sceneIdMatch[1];
-    
-    // Evict similar scenes cache to force refetch
-    client.cache.evict({
-      fieldName: "findScene",
-      args: { id: sceneId }
-    });
+      // Also trigger a refetch if available
+      refetchRef.current?.();
 
-    // Also trigger a refetch if available
-    refetchRef.current?.();
-
-    // Call the completion callback
-    onCompleteRef.current?.(sceneId);
-  }, [jobsData, client.cache]);
+      // Call the completion callback
+      onCompleteRef.current?.(sceneId);
+    }
+  }, [jobsData, client.cache, Toast, intl, processedJobs]);
 };

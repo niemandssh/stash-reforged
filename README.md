@@ -14,6 +14,7 @@ This version will be always in develop branch.
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video)
+- [x] **Tag colors** - mark important tags
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's photo cropper

@@ -31,6 +31,8 @@
     "is_broken": "Broken",
     "tag_weight": "Tag Weight",
     "tag_weight_help": "Weight for similarity calculation (0.0 = least important, 1.0 = most important, default: 0.5)",
+    "Color": "Color",
+    "preview": "Preview",
     "loading": {
         "generic": "Loading…",
         "plugins": "Loading plugins…"
