@@ -1,14 +1,14 @@
 import React from "react";
 import { Badge as BootstrapBadge } from "react-bootstrap";
 
-interface BadgeProps {
+interface IBadgeProps {
   variant?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark";
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ 
+export const Badge: React.FC<IBadgeProps> = ({ 
   variant = "primary", 
   children, 
   className = "",

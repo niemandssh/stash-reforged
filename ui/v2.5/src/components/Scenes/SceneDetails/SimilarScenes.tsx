@@ -22,12 +22,12 @@ import { PerformerPopoverButton } from "src/components/Shared/PerformerPopoverBu
 import { GroupTag } from "src/components/Groups/GroupTag";
 import { faTag, faFilm, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 
-interface SimilarScenesProps {
+interface ISimilarScenesProps {
   scene: GQL.SceneDataFragment;
   limit?: number;
 }
 
-interface SimilarSceneCardProps {
+interface ISimilarSceneCardProps {
   scene: GQL.SlimSceneDataFragment;
   similarityScore: number;
   getSimilarityColor: (score: number) => string;
@@ -35,7 +35,7 @@ interface SimilarSceneCardProps {
   getSimilarityTextColor: (score: number) => string;
 }
 
-const SimilarSceneCard: React.FC<SimilarSceneCardProps> = ({
+const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   scene,
   similarityScore,
   getSimilarityColor,
@@ -43,7 +43,6 @@ const SimilarSceneCard: React.FC<SimilarSceneCardProps> = ({
   getSimilarityTextColor
 }) => {
   const { configuration } = React.useContext(ConfigurationContext);
-  const cont = configuration?.interface.continuePlaylistDefault ?? false;
   
   const sceneLink = `/scenes/${scene.id}`;
   
@@ -263,7 +262,7 @@ const SimilarSceneCard: React.FC<SimilarSceneCardProps> = ({
   );
 };
 
-export const SimilarScenes: React.FC<SimilarScenesProps> = ({ 
+export const SimilarScenes: React.FC<ISimilarScenesProps> = ({ 
   scene, 
   limit = 10 
 }) => {

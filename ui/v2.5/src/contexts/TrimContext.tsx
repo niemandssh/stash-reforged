@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-interface TrimContextType {
+interface ITrimContextType {
   trimEnabled: boolean;
   setTrimEnabled: (enabled: boolean) => void;
 }
 
-const TrimContext = createContext<TrimContextType | undefined>(undefined);
+const TrimContext = createContext<ITrimContextType | undefined>(undefined);
 
 export const useTrimContext = () => {
   const context = useContext(TrimContext);
@@ -21,13 +21,13 @@ export const useTrimContext = () => {
   return context;
 };
 
-interface TrimProviderProps {
+interface ITrimProviderProps {
   children: ReactNode;
 }
 
 const TRIM_ENABLED_KEY = 'stash_trim_enabled';
 
-export const TrimProvider: React.FC<TrimProviderProps> = ({ children }) => {
+export const TrimProvider: React.FC<ITrimProviderProps> = ({ children }) => {
   // Initialize from localStorage or default to true
   const [trimEnabled, setTrimEnabledState] = useState(() => {
     try {

@@ -27,7 +27,6 @@ import cx from "classnames";
 import {
   useSceneSaveActivity,
   useSceneIncrementPlayCount,
-  useSceneUpdate,
 } from "src/core/StashService";
 import { useTrimContext } from "src/contexts/TrimContext";
 
@@ -250,7 +249,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const sceneId = useRef<string>();
     const [sceneSaveActivity] = useSceneSaveActivity();
     const [sceneIncrementPlayCount] = useSceneIncrementPlayCount();
-    const [sceneUpdate] = useSceneUpdate();
 
     const [time, setTime] = useState(0);
     const [ready, setReady] = useState(false);
@@ -660,7 +658,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         player.off("timeupdate", timeupdate);
         clearTimeout(playingTimer.current);
       };
-    }, [getPlayer, interactiveClient, scene, trimEnabled]);
+    }, [getPlayer, interactiveClient, scene, trimEnabled, pausedByTrim, updateVideoJsProgressBarTrimStyles]);
 
     useEffect(() => {
       const player = getPlayer();

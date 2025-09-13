@@ -26,7 +26,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
   useEffect(() => {
     return () => {
       if (cropperRef.current) {
-        (cropperRef.current as any).destroy();
+        (cropperRef.current as { destroy: () => void }).destroy();
       }
     };
   }, []);
@@ -44,7 +44,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
     setCropping(true);
     setCropperReady(false);
 
-    const cropperOptions: any = {
+    const cropperOptions: Record<string, unknown> = {
       viewMode: 1,
       initialAspectRatio: 2 / 3,
       movable: false,
@@ -56,7 +56,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
       ready() {
         setCropperReady(true);
       },
-      crop(e: any) {
+      crop(e: { detail: { x: number; y: number; width: number; height: number } }) {
         setCropInfo(
           `X: ${Math.round(e.detail.x)}, Y: ${Math.round(e.detail.y)}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(e.detail.height)}px`
         );
@@ -75,7 +75,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
     setCropInfo("");
 
     try {
-      const croppedCanvas = (cropperRef.current as any).getCroppedCanvas();
+      const croppedCanvas = (cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }).getCroppedCanvas();
       const imageDataUrl = croppedCanvas.toDataURL();
 
       const result = await updatePerformer({
@@ -93,7 +93,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
           const newSrc = imageRef.current.src + "?t=" + Date.now();
           imageRef.current.src = newSrc;
         }
-        (cropperRef.current as any).destroy();
+        (cropperRef.current as { destroy: () => void }).destroy();
         cropperRef.current = null;
       } else if (result.errors?.[0]?.message) {
         setCropping(true);
@@ -115,7 +115,7 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
     setCropInfo("");
 
     if (cropperRef.current) {
-      (cropperRef.current as any).destroy();
+      (cropperRef.current as { destroy: () => void }).destroy();
       cropperRef.current = null;
     }
   };

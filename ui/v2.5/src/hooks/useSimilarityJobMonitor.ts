@@ -4,12 +4,12 @@ import { useJobsSubscribeSubscription, JobStatus, JobStatusUpdateType } from "sr
 import { useToast } from "./Toast";
 import { useIntl } from "react-intl";
 
-interface SimilarityJobMonitorOptions {
+interface ISimilarityJobMonitorOptions {
   onSimilarityJobComplete?: (sceneId: string) => void;
   refetch?: () => void;
 }
 
-export const useSimilarityJobMonitor = (options?: SimilarityJobMonitorOptions) => {
+export const useSimilarityJobMonitor = (options?: ISimilarityJobMonitorOptions) => {
   const client = useApolloClient();
   const { data: jobsData } = useJobsSubscribeSubscription();
   const onCompleteRef = useRef(options?.onSimilarityJobComplete);
@@ -38,8 +38,8 @@ export const useSimilarityJobMonitor = (options?: SimilarityJobMonitorOptions) =
   useEffect(() => {
     if (!jobsData?.jobsSubscribe) return;
 
-    const event = jobsData.jobsSubscribe;
-    const job = event.job;
+    const { jobsSubscribe: event } = jobsData;
+    const { job } = event;
 
     // Check if this is a similarity job
     const isSimilarityJob = job.description?.includes("Recalculating similarities for scene");

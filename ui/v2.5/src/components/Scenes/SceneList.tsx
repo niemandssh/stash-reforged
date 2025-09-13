@@ -1,10 +1,9 @@
 import React, { useCallback, useContext, useEffect, useMemo } from "react";
-import cloneDeep from "lodash-es/cloneDeep";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
 import * as GQL from "src/core/generated-graphql";
-import { queryFindScenes, useFindScenes, getClient } from "src/core/StashService";
+import { useFindScenes, getClient } from "src/core/StashService";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
 import { Tagger } from "../Tagger/scenes/SceneTagger";

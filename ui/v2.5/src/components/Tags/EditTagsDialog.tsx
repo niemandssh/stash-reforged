@@ -224,7 +224,7 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
             step="0.1"
             value={updateInput.weight ?? ""}
             onChange={(e) => {
-              const value = e.target.value;
+              const { value } = e.target;
               setUpdateField({ 
                 weight: value === "" ? undefined : parseFloat(value) 
               });

@@ -15,7 +15,7 @@ import { mutateSceneSetPrimaryFile } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import NavUtils from "src/utils/navigation";
 import TextUtils from "src/utils/text";
-import { TextField, URLField, URLsField } from "src/utils/field";
+import { TextField, URLField } from "src/utils/field";
 import { StashIDPill } from "src/components/Shared/StashID";
 import { PatchComponent } from "../../../patch";
 import { FileSize } from "src/components/Shared/FileSize";

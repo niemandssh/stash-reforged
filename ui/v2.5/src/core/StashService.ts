@@ -551,7 +551,6 @@ export const useSceneUpdate = () =>
     update(cache, result, { variables }) {
       if (!result.data?.sceneUpdate || !variables) return;
 
-      const scene = result.data.sceneUpdate;
 
       // Check if any similarity-affecting fields were updated
       const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];

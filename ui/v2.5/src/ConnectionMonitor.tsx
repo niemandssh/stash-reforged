@@ -28,7 +28,7 @@ export const ConnectionMonitor: React.FC = () => {
     }
 
     setCacheState(state);
-  }, [state, Toast, intl]);
+  }, [state, Toast, intl, cachedState]);
 
   return null;
 };

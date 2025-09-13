@@ -1,7 +1,6 @@
 import React from "react";
 import { TagLink } from "src/components/Shared/TagLink";
 import { DetailItem } from "src/components/Shared/DetailItem";
-import { useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import { PoseTagIcon } from "src/components/Shared/PoseTagIcon";
 
@@ -75,7 +74,6 @@ export const TagDetailsPanel: React.FC<ITagDetails> = ({ tag, fullWidth }) => {
 };
 
 export const CompressedTagDetailsPanel: React.FC<ITagDetails> = ({ tag }) => {
-  const intl = useIntl();
   
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });

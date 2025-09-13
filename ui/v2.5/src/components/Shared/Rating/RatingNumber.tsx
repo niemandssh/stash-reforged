@@ -18,17 +18,15 @@ export const RatingNumber = PatchComponent(
   "RatingNumber",
   (props: IRatingNumberProps) => {
     const [hoverRating, setHoverRating] = useState<number | undefined>();
-    const [hoverIsHalf, setHoverIsHalf] = useState<boolean>(false);
+    const [, setHoverIsHalf] = useState<boolean>(false);
     const disabled = props.disabled || !props.onSetRating;
 
     // Конвертируем десятибальный рейтинг (0-100) в звездочный (0-10)
     const rating = props.value ? props.value / 10 : 0;
-    const stars = Math.floor(rating);
-    const fraction = rating - stars;
 
     const max = 20; // 20 звезд, но визуально отображаются как 10 пар
 
-    function setRating(starIndex: number, isHalf: boolean = false) {
+    function setRating(starIndex: number) {
       if (!props.onSetRating) {
         return;
       }

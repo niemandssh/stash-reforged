@@ -1,11 +1,11 @@
 import React from "react";
 import { Badge } from "./Badge";
 
-interface BrokenBadgeProps {
+interface IBrokenBadgeProps {
   className?: string;
 }
 
-export const BrokenBadge: React.FC<BrokenBadgeProps> = ({ className = "" }) => {
+export const BrokenBadge: React.FC<IBrokenBadgeProps> = ({ className = "" }) => {
   return (
     <Badge
       variant="danger"

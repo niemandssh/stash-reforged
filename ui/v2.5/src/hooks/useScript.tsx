@@ -67,7 +67,7 @@ export const useCSS = (urls: string | string[], condition?: boolean) => {
   }, [urls]);
 
   useEffect(() => {
-    const links = urlArray.map((url, index) => {
+    const links = urlArray.map((url) => {
       const link = document.createElement("link");
 
       link.href = url;

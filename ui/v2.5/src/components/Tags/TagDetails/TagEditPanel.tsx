@@ -304,18 +304,18 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
   }
 
   // Утилита для генерации случайного цвета если цвет не задан
-  const generateRandomColor = (seed: string): string => {
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-      hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    
-    const hue = Math.abs(hash) % 360;
-    const saturation = 60 + (Math.abs(hash) % 30);
-    const lightness = 45 + (Math.abs(hash >> 8) % 20);
-    
-    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-  };
+  // const _generateRandomColor = (seed: string): string => {
+  //   let hash = 0;
+  //   for (let i = 0; i < seed.length; i++) {
+  //     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  //   }
+  //   
+  //   const hue = Math.abs(hash) % 360;
+  //   const saturation = 60 + (Math.abs(hash) % 30);
+  //   const lightness = 45 + (Math.abs(hash >> 8) % 20);
+  //   
+  //   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  // };
 
   function renderParentTagsField() {
     const title = intl.formatMessage({ id: "parent_tags" });

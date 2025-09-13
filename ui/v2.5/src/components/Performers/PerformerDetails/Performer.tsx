@@ -30,7 +30,6 @@ import { PerformerAppearsWithPanel } from "./performerAppearsWithPanel";
 import { PerformerEditPanel } from "./PerformerEditPanel";
 import { PerformerSubmitButton } from "./PerformerSubmitButton";
 import { useRatingKeybinds } from "src/hooks/keybinds";
-import { DetailImage } from "src/components/Shared/DetailImage";
 import { ImageCropper } from "src/components/Shared/ImageCropper";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
@@ -45,10 +44,8 @@ import { ExpandCollapseButton } from "src/components/Shared/CollapseButton";
 import { FavoriteIcon } from "src/components/Shared/FavoriteIcon";
 import { AliasList } from "src/components/Shared/DetailsPage/AliasList";
 import { HeaderImage } from "src/components/Shared/DetailsPage/HeaderImage";
-import { LightboxLink } from "src/hooks/Lightbox/LightboxLink";
 import { PatchComponent } from "src/patch";
 import { ILightboxImage } from "src/hooks/Lightbox/types";
-import { DeathRibbon } from "src/components/Shared/DeathRibbon";
 
 interface IProps {
   performer: GQL.PerformerDataFragment;
@@ -215,7 +212,7 @@ interface IPerformerHeaderImageProps {
 const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
   PatchComponent(
     "PerformerHeaderImage",
-    ({ encodingImage, activeImage, lightboxImages, performer }) => {
+    ({ encodingImage, activeImage, performer }) => {
       return (
         <HeaderImage encodingImage={encodingImage}>
           {!!activeImage && (

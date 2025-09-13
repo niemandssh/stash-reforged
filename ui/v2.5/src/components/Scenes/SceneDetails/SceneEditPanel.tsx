@@ -221,7 +221,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
         setSelectedPoseTagIds(poseTagIdsFromTags);
       }
     }
-  }, [formik.values.tag_ids, allTags]);
+  }, [formik.values.tag_ids, allTags, selectedPoseTagIds]);
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;

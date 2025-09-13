@@ -1,11 +1,9 @@
 import React from "react";
-import { FormattedMessage, useIntl } from "react-intl";
 import { SettingSection } from "./SettingSection";
 import { NumberSetting } from "./Inputs";
 import { useSettings } from "./context";
 
 export const SettingsCustomPanel: React.FC = () => {
-  const intl = useIntl();
   const { interface: iface, saveInterface } = useSettings();
 
   return (

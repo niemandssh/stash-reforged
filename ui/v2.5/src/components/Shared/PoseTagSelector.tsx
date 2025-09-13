@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage } from "react-intl";
 import { ListGroup, Form } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import * as GQL from "src/core/generated-graphql";
@@ -20,7 +20,6 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   onSelectionChange,
   disabled = false,
 }) => {
-  const intl = useIntl();
   const history = useHistory();
   const [poseTags, setPoseTags] = useState<GQL.Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,8 +42,8 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         filter.criteria.push(criterion);
 
         const result = await queryFindTags(filter);
-        const poseTags = result.data.findTags.tags as unknown as GQL.Tag[];
-        setPoseTags(poseTags);
+        const loadedPoseTags = result.data.findTags.tags as unknown as GQL.Tag[];
+        setPoseTags(loadedPoseTags);
       } catch (error) {
         console.error("Error loading pose tags:", error);
       } finally {
