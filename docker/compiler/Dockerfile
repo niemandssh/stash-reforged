@@ -12,7 +12,7 @@ RUN echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesourc
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git make tar bash nodejs zip \
+        git make tar bash nodejs zip unzip \
         clang llvm-dev cmake patch libxml2-dev uuid-dev libssl-dev xz-utils \
         bzip2 gzip sed cpio libbz2-dev zlib1g-dev \
         gcc-mingw-w64 \
