@@ -321,12 +321,12 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
   const tagImage = useMemo(() => {
     let existingImage = tag.image_path;
     if (isEditing) {
-      if (image === null && existingImage) {
+      if (image) {
+        return image;
+      } else if (existingImage) {
         const tagImageURL = new URL(existingImage);
         tagImageURL.searchParams.set("default", "true");
         return tagImageURL.toString();
-      } else if (image) {
-        return image;
       }
     }
 
@@ -345,6 +345,13 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
       });
     }
   }
+
+  // Initialize image when entering edit mode
+  useEffect(() => {
+    if (isEditing && !image && tag.image_path) {
+      setImage(tag.image_path);
+    }
+  }, [isEditing, image, tag.image_path]);
 
   // set up hotkeys
   useEffect(() => {
@@ -367,7 +374,7 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
     };
   });
 
-  async function onSave(input: GQL.TagUpdateInput) {
+  async function onSave(input: GQL.TagCreateInput | GQL.TagUpdateInput) {
     const oldRelations = {
       parents: tag.parents ?? [],
       children: tag.children ?? [],

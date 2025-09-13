@@ -69,6 +69,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     is_pose_tag: tag?.is_pose_tag ?? false,
     weight: tag?.weight ?? 0.5,
     color: tag?.color ?? "",
+    image: tag?.image_path ?? null,
   };
 
   type InputValues = yup.InferType<typeof schema>;
@@ -133,6 +134,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           is_pose_tag: input.is_pose_tag,
           weight: input.weight,
           color: input.color || undefined,
+          image: input.image || undefined,
         };
         
         await onSubmit(gqlInput);
@@ -150,6 +152,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           is_pose_tag: input.is_pose_tag,
           weight: input.weight,
           color: input.color || undefined,
+          image: input.image || undefined,
         };
         
         await onSubmit(gqlInput);
