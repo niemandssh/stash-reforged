@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -242,7 +243,16 @@ func makeConfigDefaultsResult() *ConfigDefaultSettingsResult {
 }
 
 func makeConfigUIResult() map[string]interface{} {
-	return config.GetInstance().GetUIConfiguration()
+	c := config.GetInstance()
+	cfg := c.GetUIConfiguration()
+
+	// Load notes from file if it exists
+	notesFile := filepath.Join(filepath.Dir(c.GetConfigPath()), "notes.txt")
+	if content, err := os.ReadFile(notesFile); err == nil {
+		cfg["notes"] = string(content)
+	}
+
+	return cfg
 }
 
 func (r *queryResolver) ValidateStashBoxCredentials(ctx context.Context, input config.StashBoxInput) (*StashBoxValidationResult, error) {

@@ -23,6 +23,8 @@ import { Icon } from "src/components/Shared/Icon";
 import { ConfigurationContext } from "src/hooks/Config";
 import { ManualStateContext } from "./Help/context";
 import { SettingsButton } from "./SettingsButton";
+import { NotesModal } from "./Notes/NotesModal";
+import { useNotes } from "src/hooks/useNotes";
 import {
   faBars,
   faChartColumn,
@@ -40,6 +42,7 @@ import {
   faTimes,
   faUser,
   faVideo,
+  faStickyNote,
 } from "@fortawesome/free-solid-svg-icons";
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
@@ -346,6 +349,8 @@ export const MainNavbar: React.FC = () => {
   const { openManual } = React.useContext(ManualStateContext);
 
   const [expanded, setExpanded] = useState(false);
+  const [showNotesModal, setShowNotesModal] = useState(false);
+  const { notes, saveNotes } = useNotes();
 
   // Show all menu items by default, unless config says otherwise
   const menuItems = useMemo(() => {
@@ -498,6 +503,13 @@ export const MainNavbar: React.FC = () => {
   function renderUtilityButtons() {
     return (
       <>
+        <Button
+          className="nav-utility minimal"
+          onClick={() => setShowNotesModal(true)}
+          title={intl.formatMessage({ id: "notes.title", defaultMessage: "Notes" })}
+        >
+          <Icon icon={faStickyNote} />
+        </Button>
         <NavLink
           className="nav-utility"
           exact
@@ -630,6 +642,13 @@ export const MainNavbar: React.FC = () => {
           </Navbar.Toggle>
         </Nav>
       </Navbar>
+      
+      <NotesModal
+        show={showNotesModal}
+        onHide={() => setShowNotesModal(false)}
+        notes={notes}
+        onSave={saveNotes}
+      />
     </>
   );
 };

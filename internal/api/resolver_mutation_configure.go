@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -672,6 +673,19 @@ func (r *mutationResolver) ConfigureUI(ctx context.Context, input map[string]int
 func (r *mutationResolver) ConfigureUISetting(ctx context.Context, key string, value interface{}) (map[string]interface{}, error) {
 	c := config.GetInstance()
 
+	// Special handling for notes - save to separate file only
+	if key == "notes" {
+		if content, ok := value.(string); ok {
+			// Write notes to notes.txt in .stash directory
+			notesFile := filepath.Join(filepath.Dir(c.GetConfigPath()), "notes.txt")
+			if err := os.WriteFile(notesFile, []byte(content), 0644); err != nil {
+				return nil, fmt.Errorf("failed to write notes file: %v", err)
+			}
+		}
+		// Return current config without modifying notes
+		return c.GetUIConfiguration(), nil
+	}
+
 	cfg := utils.NestedMap(c.GetUIConfiguration())
 
 	// #5483 - convert JSON numbers to float64 or int64
@@ -698,4 +712,38 @@ func (r *mutationResolver) ConfigurePlugin(ctx context.Context, pluginID string,
 	}
 
 	return c.GetPluginConfiguration(pluginID), nil
+}
+
+func (r *mutationResolver) WriteNotesFile(ctx context.Context, content string) (bool, error) {
+	c := config.GetInstance()
+
+	// Write notes to notes.txt in .stash directory
+	notesFile := filepath.Join(filepath.Dir(c.GetConfigPath()), "notes.txt")
+	if err := os.WriteFile(notesFile, []byte(content), 0644); err != nil {
+		return false, fmt.Errorf("failed to write notes file: %v", err)
+	}
+
+	return true, nil
+}
+
+func (r *mutationResolver) ReadNotesFile(ctx context.Context) (*string, error) {
+	c := config.GetInstance()
+
+	// Read notes from notes.txt in .stash directory
+	notesFile := filepath.Join(filepath.Dir(c.GetConfigPath()), "notes.txt")
+
+	// Check if file exists
+	if _, err := os.Stat(notesFile); os.IsNotExist(err) {
+		empty := ""
+		return &empty, nil // Return empty string if file doesn't exist
+	}
+
+	// Read the file
+	content, err := os.ReadFile(notesFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read notes file: %v", err)
+	}
+
+	result := string(content)
+	return &result, nil
 }

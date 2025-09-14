@@ -102,6 +102,9 @@ export interface IUIConfig {
   defaultFilters?: DefaultFilters;
 
   taggerConfig?: ITaggerConfig;
+
+  // Записи пользователя
+  notes?: string;
 }
 
 export function getFrontPageContent(

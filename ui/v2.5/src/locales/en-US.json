@@ -36,5 +36,11 @@
     "loading": {
         "generic": "Loading…",
         "plugins": "Loading plugins…"
+    },
+    "notes": {
+        "title": "Notes",
+        "save": "Save",
+        "cancel": "Cancel",
+        "placeholder": "Enter your notes..."
     }
 }

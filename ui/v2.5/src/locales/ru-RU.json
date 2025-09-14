@@ -1495,5 +1495,11 @@
     "age_on_date": "{age} на момент съемки",
     "sub_group_count": "Кол-во подгрупп",
     "sub_group": "Подгруппа",
-    "studio_tags": "Теги студии"
+    "studio_tags": "Теги студии",
+    "notes": {
+        "title": "Записи",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "placeholder": "Введите ваши записи..."
+    }
 }

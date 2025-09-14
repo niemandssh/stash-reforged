@@ -450,6 +450,8 @@ type Mutation {
   key is a dot separated path to the value
   """
   configureUISetting(key: String!, value: Any): Map!
+  writeNotesFile(content: String!): Boolean!
+  readNotesFile: String
 
   "Generate and set (or clear) API key"
   generateAPIKey(input: GenerateAPIKeyInput!): String!
