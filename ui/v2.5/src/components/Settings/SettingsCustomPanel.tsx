@@ -1,6 +1,6 @@
 import React from "react";
 import { SettingSection } from "./SettingSection";
-import { NumberSetting, BooleanSetting } from "./Inputs";
+import { NumberSetting, BooleanSetting, StringSetting } from "./Inputs";
 import { useSettings } from "./context";
 
 export const SettingsCustomPanel: React.FC = () => {
@@ -32,6 +32,16 @@ export const SettingsCustomPanel: React.FC = () => {
           subHeadingID="config.custom.show_similarity_percent_desc"
           checked={iface.showSimilarityPercent !== undefined ? iface.showSimilarityPercent : true}
           onChange={(v) => saveInterface({ showSimilarityPercent: v })}
+        />
+      </SettingSection>
+
+      <SettingSection headingID="config.custom.external_player">
+        <StringSetting
+          id="external-video-player"
+          headingID="config.custom.external_video_player"
+          subHeadingID="config.custom.external_video_player_desc"
+          value={iface.externalVideoPlayer ?? ""}
+          onChange={(v) => saveInterface({ externalVideoPlayer: v })}
         />
       </SettingSection>
       </div>

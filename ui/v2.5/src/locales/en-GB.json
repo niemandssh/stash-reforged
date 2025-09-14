@@ -278,7 +278,10 @@
       "random_best_rating_threshold_desc": "Minimum rating (0-100) for scenes shown by the Random Best button",
       "similar_scenes": "Similar Scenes",
       "show_similarity_percent": "Show percent of scene similarity",
-      "show_similarity_percent_desc": "Display similarity percentage badges on similar scenes"
+      "show_similarity_percent_desc": "Display similarity percentage badges on similar scenes",
+      "external_player": "External Player",
+      "external_video_player": "External Video Player Command",
+      "external_video_player_desc": "Command to execute for external video player. File path will be automatically appended or you can use {path} placeholder. Examples: 'vlc', 'mpv', '/usr/bin/vlc', 'vlc {path}'"
     },
     "dlna": {
       "allow_temp_ip": "Allow {tempIP}",
@@ -1107,6 +1110,7 @@
   "files": "files",
   "files_amount": "{value} files",
   "filesize": "File Size",
+  "actions": "Actions",
   "filter": "Filter",
   "filter_name": "Filter name",
   "filters": "Filters",

@@ -11,7 +11,7 @@ import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { DeleteFilesDialog } from "src/components/Shared/DeleteFilesDialog";
 import { ReassignFilesDialog } from "src/components/Shared/ReassignFilesDialog";
 import * as GQL from "src/core/generated-graphql";
-import { mutateSceneSetPrimaryFile } from "src/core/StashService";
+import { mutateSceneSetPrimaryFile, useOpenInExternalPlayer } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import NavUtils from "src/utils/navigation";
 import TextUtils from "src/utils/text";
@@ -36,6 +36,8 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
 ) => {
   const intl = useIntl();
   const history = useHistory();
+  const Toast = useToast();
+  const [openInExternalPlayer] = useOpenInExternalPlayer();
 
   // TODO - generalise fingerprints
   const oshash = props.file.fingerprints.find((f) => f.type === "oshash");
@@ -46,6 +48,15 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
     history.push(
       `/scenes/new?from_scene_id=${props.sceneID}&file_id=${props.file.id}`
     );
+  }
+
+  async function onOpenExternalPlayer() {
+    try {
+      await openInExternalPlayer({ variables: { id: props.sceneID } });
+      Toast.success("Opened in external player");
+    } catch (e) {
+      Toast.error(e);
+    }
   }
 
   return (
@@ -75,6 +86,21 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
           url={`file://${props.file.path}`}
           value={`file://${props.file.path}`}
         />
+        <>
+          <dt>
+            <FormattedMessage id="actions" defaultMessage="Actions" />:
+          </dt>
+          <dd>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onOpenExternalPlayer}
+              title="Open in external player"
+            >
+              <FormattedMessage id="actions.open_in_external_player" />
+            </Button>
+          </dd>
+        </>
         <TextField id="filesize">
           <span className="text-truncate">
             <FileSize size={props.file.size} />

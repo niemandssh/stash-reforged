@@ -127,3 +127,7 @@ mutation SceneMerge($input: SceneMergeInput!) {
 mutation RecalculateSceneSimilarities($scene_id: ID) {
   recalculateSceneSimilarities(scene_id: $scene_id)
 }
+
+mutation OpenInExternalPlayer($id: ID!) {
+  openInExternalPlayer(id: $id)
+}

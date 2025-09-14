@@ -231,6 +231,9 @@ const (
 	ShowSimilarityPercent        = "show_similarity_percent"
 	showSimilarityPercentDefault = true
 
+	// External video player
+	ExternalVideoPlayer = "external_video_player"
+
 	DrawFunscriptHeatmapRange        = "draw_funscript_heatmap_range"
 	drawFunscriptHeatmapRangeDefault = true
 
@@ -1483,6 +1486,10 @@ func (i *Config) GetRandomBestRatingThreshold() int {
 
 func (i *Config) GetShowSimilarityPercent() bool {
 	return i.getBoolDefault(ShowSimilarityPercent, showSimilarityPercentDefault)
+}
+
+func (i *Config) GetExternalVideoPlayer() string {
+	return i.getString(ExternalVideoPlayer)
 }
 
 func (i *Config) GetDeleteFileDefault() bool {

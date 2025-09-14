@@ -249,7 +249,13 @@
             "random_rating_threshold": "Порог рейтинга для кнопки Random",
             "random_rating_threshold_desc": "Минимальный рейтинг (0-100) для сцен, показываемых кнопкой Random",
             "random_best_rating_threshold": "Порог рейтинга для кнопки Random Best",
-            "random_best_rating_threshold_desc": "Минимальный рейтинг (0-100) для сцен, показываемых кнопкой Random Best"
+            "random_best_rating_threshold_desc": "Минимальный рейтинг (0-100) для сцен, показываемых кнопкой Random Best",
+            "similar_scenes": "Похожие сцены", 
+            "show_similarity_percent": "Показывать процент схожести сцен",
+            "show_similarity_percent_desc": "Отображать значки процента схожести в похожих сценах",
+            "external_player": "Внешний плеер",
+            "external_video_player": "Команда внешнего видеоплеера",
+            "external_video_player_desc": "Команда для запуска внешнего видеоплеера. Путь к файлу будет автоматически добавлен или можно использовать плейсхолдер {path}. Примеры: 'vlc', 'mpv', '/usr/bin/vlc', 'vlc {path}'"
         },
         "dlna": {
             "allow_temp_ip": "Разрешить {tempIP}",
@@ -1031,6 +1037,7 @@
     "files": "файлы",
     "files_amount": "{value} файлов",
     "filesize": "Размер файла",
+    "actions": "Действия",
     "filter": "Фильтр",
     "filter_name": "Название фильтра",
     "filters": "Фильтры",

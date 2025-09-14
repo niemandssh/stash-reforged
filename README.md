@@ -25,6 +25,7 @@ This version will be always in develop branch.
 - [x] Reorder fields of scene edit (for more comfortable filling)
 - [x] "Merge from/into other scene..." was added in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
 - [x] Notes block with saving text to file (.stash/notes.txt) - for saving links to scrape videos in future, for example
+- [x] Action for open media file in external player
 
 ### TODO
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer

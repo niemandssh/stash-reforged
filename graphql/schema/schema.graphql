@@ -587,6 +587,9 @@ type Mutation {
   
   "Recalculates scene similarities. Returns the job ID"
   recalculateSceneSimilarities(scene_id: ID): ID!
+
+  "Opens scene file in external video player"
+  openInExternalPlayer(id: ID!): Boolean!
 }
 
 type Subscription {

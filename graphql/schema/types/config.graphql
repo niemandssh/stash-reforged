@@ -404,6 +404,9 @@ input ConfigInterfaceInput {
   notificationsEnabled: Boolean
   "Show percent of scene similarity in similar scenes"
   showSimilarityPercent: Boolean
+
+  "External video player command"
+  externalVideoPlayer: String
 }
 
 type ConfigDisableDropdownCreate {
@@ -477,6 +480,9 @@ type ConfigInterfaceResult {
   useStashHostedFunscript: Boolean
   "Show percent of scene similarity in similar scenes"
   showSimilarityPercent: Boolean
+
+  "External video player command"
+  externalVideoPlayer: String
 }
 
 input ConfigDLNAInput {

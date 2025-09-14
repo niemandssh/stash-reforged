@@ -931,6 +931,9 @@ export const useSceneResetActivity = (
 export const useSceneGenerateScreenshot = () =>
   GQL.useSceneGenerateScreenshotMutation();
 
+export const useOpenInExternalPlayer = () =>
+  GQL.useOpenInExternalPlayerMutation();
+
 export const useSceneConvertToMP4 = () => {
   const mutation = gql`
     mutation SceneConvertToMp4($id: ID!) {

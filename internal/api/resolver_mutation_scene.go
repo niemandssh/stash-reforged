@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/stashapp/stash/internal/manager"
@@ -1344,4 +1347,96 @@ func (r *mutationResolver) SceneConvertHLSToMp4(ctx context.Context, id string) 
 	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
 
 	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) OpenInExternalPlayer(ctx context.Context, id string) (bool, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return false, fmt.Errorf("converting scene id: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		return err
+	}); err != nil {
+		return false, fmt.Errorf("finding scene: %w", err)
+	}
+
+	if scene == nil {
+		return false, fmt.Errorf("scene with id %d not found", sceneID)
+	}
+
+	// Get the external player command from configuration
+	config := manager.GetInstance().Config
+	playerCommand := config.GetExternalVideoPlayer()
+
+	if playerCommand == "" {
+		return false, fmt.Errorf("external video player not configured")
+	}
+
+	// Get scene files to find video file path
+	var videoFilePath string
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		if err := scene.LoadFiles(ctx, r.repository.Scene); err != nil {
+			return err
+		}
+
+		pf := scene.Files.Primary()
+		if pf != nil {
+			videoFilePath = pf.Path
+		}
+		return nil
+	}); err != nil {
+		return false, fmt.Errorf("loading scene files: %w", err)
+	}
+
+	if videoFilePath == "" {
+		return false, fmt.Errorf("no video file found for scene")
+	}
+
+	// Check if file exists
+	if _, err := os.Stat(videoFilePath); os.IsNotExist(err) {
+		return false, fmt.Errorf("video file does not exist: %s", videoFilePath)
+	}
+
+	// Log original player command
+	logger.Infof("Original player command: %s", playerCommand)
+	logger.Infof("Video file path: %s", videoFilePath)
+
+	// Escape the file path for shell execution
+	escapedPath := strings.ReplaceAll(videoFilePath, "'", "'\"'\"'")
+	quotedPath := "'" + escapedPath + "'"
+
+	// If command contains {path}, replace it, otherwise just append the path
+	var command string
+	if strings.Contains(playerCommand, "{path}") {
+		command = strings.ReplaceAll(playerCommand, "{path}", quotedPath)
+	} else {
+		command = playerCommand + " " + quotedPath
+	}
+
+	logger.Infof("Final command to execute: %s", command)
+
+	// Use shell to handle complex command with quotes and spaces properly
+	cmd := exec.Command("sh", "-c", command)
+
+	// Set up environment for the command
+	cmd.Env = os.Environ()
+
+	// Start the command in background
+	if err := cmd.Start(); err != nil {
+		logger.Errorf("Failed to start external player with command '%s': %v", command, err)
+		return false, fmt.Errorf("failed to start external player: %w", err)
+	}
+
+	// Don't wait for the command to finish, let it run in background
+	go func() {
+		if err := cmd.Wait(); err != nil {
+			logger.Warnf("External player exited with error: %v", err)
+		}
+	}()
+
+	logger.Infof("Successfully started external player for file '%s'", videoFilePath)
+	return true, nil
 }
