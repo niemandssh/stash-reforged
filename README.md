@@ -22,14 +22,14 @@ This version will be always in develop branch.
 - [x] 10-stars rating by half star
 - [x] RIP ribbon for death performers 
 - [x] Reorder fields of scene edit (for more comfortable filling)
+- [x] Add "merge from/into other scene..." in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
 
 ### TODO
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer
 - [ ] Add notes block with saving text to database - for saving links to scrape videos in future, for example
 - [ ] Fix visual bug if I change some data in scene and set rating (selects hides badges, but after save data all is ok)
 - [ ] Add setting for hide percent of similarity in suggested scenes
-- [ ] For global recount suggested scenes task add info about status of handled videos
-- [ ] Add "merge into other scene..." in scene page (it's exists in the scenes list page now)
+- [ ] For global recount suggested scenes task add info about status of handled videos 
 
 ### About Stash
 [Original repository](https://github.com/stashapp/stash)

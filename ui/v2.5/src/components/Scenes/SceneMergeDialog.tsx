@@ -640,12 +640,16 @@ interface ISceneMergeModalProps {
   show: boolean;
   onClose: (mergedID?: string) => void;
   scenes: { id: string; title: string }[];
+  presetSource?: { id: string; title: string }[];
+  presetDestination?: { id: string; title: string }[];
 }
 
 export const SceneMergeModal: React.FC<ISceneMergeModalProps> = ({
   show,
   onClose,
   scenes,
+  presetSource,
+  presetDestination,
 }) => {
   const [sourceScenes, setSourceScenes] = useState<Scene[]>([]);
   const [destScene, setDestScene] = useState<Scene[]>([]);
@@ -666,7 +670,19 @@ export const SceneMergeModal: React.FC<ISceneMergeModalProps> = ({
   });
 
   useEffect(() => {
-    if (scenes.length > 0) {
+    if (presetSource && presetDestination) {
+      // Use preset values
+      setSourceScenes(presetSource);
+      setDestScene(presetDestination);
+    } else if (presetSource && presetSource.length > 0) {
+      // Only source is preset, destination is empty
+      setSourceScenes(presetSource);
+      setDestScene([]);
+    } else if (presetDestination && presetDestination.length > 0) {
+      // Only destination is preset, source is empty
+      setSourceScenes([]);
+      setDestScene(presetDestination);
+    } else if (scenes.length > 0) {
       // set the first scene as the destination, others as source
       setDestScene([scenes[0]]);
 
@@ -674,7 +690,7 @@ export const SceneMergeModal: React.FC<ISceneMergeModalProps> = ({
         setSourceScenes(scenes.slice(1));
       }
     }
-  }, [scenes]);
+  }, [scenes, presetSource, presetDestination]);
 
   async function loadScenes() {
     const sceneIDs = sourceScenes.map((s) => parseInt(s.id));

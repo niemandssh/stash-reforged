@@ -78,6 +78,8 @@
     "merge": "Merge",
     "merge_from": "Merge from",
     "merge_into": "Merge into",
+    "merge_into_other_scene": "Merge into other scene...",
+    "merge_from_other_scene": "Merge from other scene...",
     "migrate_blobs": "Migrate Blobs",
     "migrate_scene_screenshots": "Migrate Scene Screenshots",
     "next_action": "Next",

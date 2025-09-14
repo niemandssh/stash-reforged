@@ -5,7 +5,6 @@ import React, {
   useMemo,
   useContext,
   useRef,
-  useLayoutEffect,
 } from "react";
 import { FormattedDate, FormattedMessage, useIntl } from "react-intl";
 import { Link, RouteComponentProps } from "react-router-dom";
@@ -86,6 +85,7 @@ const GenerateDialog = lazyComponent(
 const SceneVideoFilterPanel = lazyComponent(
   () => import("./SceneVideoFilterPanel")
 );
+import { SceneMergeModal } from "../SceneMergeDialog";
 
 const VideoFrameRateResolution: React.FC<{
   width?: number;
@@ -212,6 +212,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
+  const [isMergeIntoDialogOpen, setIsMergeIntoDialogOpen] = useState(false);
+  const [isMergeFromDialogOpen, setIsMergeFromDialogOpen] = useState(false);
 
   const onIncrementOClick = async () => {
     try {
@@ -369,7 +371,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           id: scene.id,
         },
       });
-      
+
       if (result.data?.sceneConvertToMP4) {
         Toast.success(
           intl.formatMessage(
@@ -390,7 +392,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           id: scene.id,
         },
       });
-      
+
       if (result.data?.sceneConvertHLSToMP4) {
         Toast.success(
           intl.formatMessage(
@@ -411,6 +413,30 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   }
 
+  function onMergeIntoOtherScene() {
+    setIsMergeIntoDialogOpen(true);
+  }
+
+  function onMergeFromOtherScene() {
+    setIsMergeFromDialogOpen(true);
+  }
+
+  function onMergeDialogClosed(mergedID?: string) {
+    setIsMergeIntoDialogOpen(false);
+    setIsMergeFromDialogOpen(false);
+    if (mergedID) {
+      // For merge into: redirect to the destination scene (mergedID)
+      // For merge from: redirect to the current scene (since current scene becomes the destination)
+      if (isMergeIntoDialogOpen) {
+        // Merge into: redirect to destination scene
+        window.location.href = `/scenes/${mergedID}`;
+      } else {
+        // Merge from: refresh current scene since it becomes the destination
+        window.location.reload();
+      }
+    }
+  }
+
   function maybeRenderDeleteDialog() {
     if (isDeleteAlertOpen) {
       return (
@@ -428,6 +454,34 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             setIsGenerateDialogOpen(false);
           }}
           type="scene"
+        />
+      );
+    }
+  }
+
+  function maybeRenderMergeIntoDialog() {
+    if (isMergeIntoDialogOpen) {
+      return (
+        <SceneMergeModal
+          scenes={[]}
+          presetSource={[{ id: scene.id, title: objectTitle(scene) }]}
+          presetDestination={[]}
+          onClose={onMergeDialogClosed}
+          show
+        />
+      );
+    }
+  }
+
+  function maybeRenderMergeFromDialog() {
+    if (isMergeFromDialogOpen) {
+      return (
+        <SceneMergeModal
+          scenes={[]}
+          presetSource={[]}
+          presetDestination={[{ id: scene.id, title: objectTitle(scene) }]}
+          onClose={onMergeDialogClosed}
+          show
         />
       );
     }
@@ -508,6 +562,20 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.submit_stash_box" />
           </Dropdown.Item>
         )}
+        <Dropdown.Item
+          key="merge-into-other"
+          className="bg-secondary text-white"
+          onClick={() => onMergeIntoOtherScene()}
+        >
+          <FormattedMessage id="actions.merge_into_other_scene" />
+        </Dropdown.Item>
+        <Dropdown.Item
+          key="merge-from-other"
+          className="bg-secondary text-white"
+          onClick={() => onMergeFromOtherScene()}
+        >
+          <FormattedMessage id="actions.merge_from_other_scene" />
+        </Dropdown.Item>
         <Dropdown.Item
           key="delete-scene"
           className="bg-secondary text-white"
@@ -678,6 +746,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       </Helmet>
       {maybeRenderSceneGenerateDialog()}
       {maybeRenderDeleteDialog()}
+      {maybeRenderMergeIntoDialog()}
+      {maybeRenderMergeFromDialog()}
       <div
         className={`scene-tabs order-xl-first order-last ${
           collapsed ? "collapsed" : ""
