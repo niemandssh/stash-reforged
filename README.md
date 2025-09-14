@@ -11,6 +11,7 @@ This version will be always in develop branch.
 
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
+- [x] Setting for show/hide percent of similarity in suggested scenes
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video)
@@ -28,7 +29,6 @@ This version will be always in develop branch.
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer
 - [ ] Add notes block with saving text to database - for saving links to scrape videos in future, for example
 - [ ] Fix visual bug if I change some data in scene and set rating (selects hides badges, but after save data all is ok)
-- [ ] Add setting for hide percent of similarity in suggested scenes
 - [ ] For global recount suggested scenes task add info about status of handled videos 
 
 ### About Stash
