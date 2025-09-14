@@ -1122,20 +1122,6 @@ div.dropdown-menu {
   }
 }
 
-.donate {
-  align-items: center;
-  display: flex;
-  height: 100%;
-
-  svg {
-    color: #ff7373;
-
-    @include media-breakpoint-down(xs) {
-      margin: 0;
-    }
-  }
-}
-
 .error-message {
   white-space: pre-wrap;
 }

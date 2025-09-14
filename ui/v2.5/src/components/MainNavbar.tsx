@@ -27,7 +27,6 @@ import {
   faBars,
   faChartColumn,
   faFilm,
-  faHeart,
   faImage,
   faImages,
   faMapMarkerAlt,
@@ -90,10 +89,6 @@ const messages = defineMessages({
   sceneTagger: {
     id: "sceneTagger",
     defaultMessage: "Scene Tagger",
-  },
-  donate: {
-    id: "donate",
-    defaultMessage: "Donate",
   },
   statistics: {
     id: "statistics",
@@ -503,22 +498,6 @@ export const MainNavbar: React.FC = () => {
   function renderUtilityButtons() {
     return (
       <>
-        <Nav.Link
-          className="nav-utility"
-          href="https://opencollective.com/stashapp"
-          target="_blank"
-          onClick={handleDismiss}
-        >
-          <Button
-            className="minimal donate"
-            title={intl.formatMessage({ id: "donate" })}
-          >
-            <Icon icon={faHeart} />
-            <span className="d-none d-sm-inline">
-              {intl.formatMessage(messages.donate)}
-            </span>
-          </Button>
-        </Nav.Link>
         <NavLink
           className="nav-utility"
           exact
