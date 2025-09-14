@@ -512,6 +512,7 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input ConfigI
 
 	r.setConfigInt(config.RandomRatingThreshold, input.RandomRatingThreshold)
 	r.setConfigInt(config.RandomBestRatingThreshold, input.RandomBestRatingThreshold)
+	r.setConfigBool(config.ShowSimilarityPercent, input.ShowSimilarityPercent)
 
 	if err := c.Write(); err != nil {
 		return makeConfigInterfaceResult(), err

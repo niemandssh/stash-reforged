@@ -227,6 +227,10 @@ const (
 	RandomBestRatingThreshold        = "random_best_rating_threshold"
 	randomBestRatingThresholdDefault = 90
 
+	// Similar scenes settings
+	ShowSimilarityPercent        = "show_similarity_percent"
+	showSimilarityPercentDefault = true
+
 	DrawFunscriptHeatmapRange        = "draw_funscript_heatmap_range"
 	drawFunscriptHeatmapRangeDefault = true
 
@@ -1477,6 +1481,10 @@ func (i *Config) GetRandomBestRatingThreshold() int {
 	return i.getIntDefault(RandomBestRatingThreshold, randomBestRatingThresholdDefault)
 }
 
+func (i *Config) GetShowSimilarityPercent() bool {
+	return i.getBoolDefault(ShowSimilarityPercent, showSimilarityPercentDefault)
+}
+
 func (i *Config) GetDeleteFileDefault() bool {
 	return i.getBool(DeleteFileDefault)
 }
@@ -1869,6 +1877,9 @@ func (i *Config) setExistingSystemDefaults() {
 		}
 		if !i.main.Exists(RandomBestRatingThreshold) {
 			i.set(RandomBestRatingThreshold, randomBestRatingThresholdDefault)
+		}
+		if !i.main.Exists(ShowSimilarityPercent) {
+			i.set(ShowSimilarityPercent, showSimilarityPercentDefault)
 		}
 	}
 }

@@ -402,6 +402,8 @@ input ConfigInterfaceInput {
   noBrowser: Boolean
   "True if we should send notifications to the desktop"
   notificationsEnabled: Boolean
+  "Show percent of scene similarity in similar scenes"
+  showSimilarityPercent: Boolean
 }
 
 type ConfigDisableDropdownCreate {
@@ -473,6 +475,8 @@ type ConfigInterfaceResult {
   funscriptOffset: Int
   "Whether to use Stash Hosted Funscript"
   useStashHostedFunscript: Boolean
+  "Show percent of scene similarity in similar scenes"
+  showSimilarityPercent: Boolean
 }
 
 input ConfigDLNAInput {

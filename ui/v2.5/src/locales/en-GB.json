@@ -275,7 +275,10 @@
       "random_rating_threshold": "Random Button Rating Threshold",
       "random_rating_threshold_desc": "Minimum rating (0-100) for scenes shown by the Random button",
       "random_best_rating_threshold": "Random Best Button Rating Threshold",
-      "random_best_rating_threshold_desc": "Minimum rating (0-100) for scenes shown by the Random Best button"
+      "random_best_rating_threshold_desc": "Minimum rating (0-100) for scenes shown by the Random Best button",
+      "similar_scenes": "Similar Scenes",
+      "show_similarity_percent": "Show percent of scene similarity",
+      "show_similarity_percent_desc": "Display similarity percentage badges on similar scenes"
     },
     "dlna": {
       "allow_temp_ip": "Allow {tempIP}",

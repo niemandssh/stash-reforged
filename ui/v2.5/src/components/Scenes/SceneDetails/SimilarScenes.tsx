@@ -33,6 +33,7 @@ interface ISimilarSceneCardProps {
   getSimilarityColor: (score: number) => string;
   getSimilarityText: (score: number) => string;
   getSimilarityTextColor: (score: number) => string;
+  showSimilarityPercent: boolean;
 }
 
 const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
@@ -40,7 +41,8 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   similarityScore,
   getSimilarityColor,
   getSimilarityText,
-  getSimilarityTextColor
+  getSimilarityTextColor,
+  showSimilarityPercent
 }) => {
   const { configuration } = React.useContext(ConfigurationContext);
   
@@ -229,20 +231,22 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
         </>
       }
       overlays={
-        <div 
-          className="similarity-badge px-2 py-1 rounded fw-bold"
-          style={{ 
-            position: 'absolute',
-            bottom: '12px',
-            left: '8px',
-            backgroundColor: getSimilarityColor(similarityScore),
-            color: getSimilarityTextColor(similarityScore),
-            fontSize: '0.8rem',
-            zIndex: 10
-          }}
-        >
-          {getSimilarityText(similarityScore)}
-        </div>
+        showSimilarityPercent ? (
+          <div 
+            className="similarity-badge px-2 py-1 rounded fw-bold"
+            style={{ 
+              position: 'absolute',
+              bottom: '12px',
+              left: '8px',
+              backgroundColor: getSimilarityColor(similarityScore),
+              color: getSimilarityTextColor(similarityScore),
+              fontSize: '0.8rem',
+              zIndex: 10
+            }}
+          >
+            {getSimilarityText(similarityScore)}
+          </div>
+        ) : null
       }
       details={
         <div className="scene-card__details">
@@ -267,6 +271,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
   limit = 10 
 }) => {
   const [displayLimit, setDisplayLimit] = useState(limit);
+  const { configuration } = React.useContext(ConfigurationContext);
 
   // Use GraphQL query to fetch similar scenes
   const { data, loading, error, refetch } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
@@ -379,6 +384,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
               getSimilarityColor={getSimilarityColor}
               getSimilarityText={getSimilarityText}
               getSimilarityTextColor={getSimilarityTextColor}
+              showSimilarityPercent={configuration?.interface?.showSimilarityPercent !== undefined ? configuration.interface.showSimilarityPercent : true}
             />
           </div>
         ))}

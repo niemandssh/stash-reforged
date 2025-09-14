@@ -1,6 +1,6 @@
 import React from "react";
 import { SettingSection } from "./SettingSection";
-import { NumberSetting } from "./Inputs";
+import { NumberSetting, BooleanSetting } from "./Inputs";
 import { useSettings } from "./context";
 
 export const SettingsCustomPanel: React.FC = () => {
@@ -24,6 +24,16 @@ export const SettingsCustomPanel: React.FC = () => {
           onChange={(v) => saveInterface({ randomBestRatingThreshold: v })}
         />
       </SettingSection>
-    </div>
+      
+      <SettingSection headingID="config.custom.similar_scenes">
+        <BooleanSetting
+          id="show-similarity-percent"
+          headingID="config.custom.show_similarity_percent"
+          subHeadingID="config.custom.show_similarity_percent_desc"
+          checked={iface.showSimilarityPercent !== undefined ? iface.showSimilarityPercent : true}
+          onChange={(v) => saveInterface({ showSimilarityPercent: v })}
+        />
+      </SettingSection>
+      </div>
   );
 };

@@ -109,6 +109,7 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
   useStashHostedFunscript
   randomRatingThreshold
   randomBestRatingThreshold
+  showSimilarityPercent
 }
 
 fragment ConfigDLNAData on ConfigDLNAResult {
