@@ -25,13 +25,13 @@ const TagCreate: React.FC = () => {
 
   const [createTag] = useTagCreate();
 
-  async function onSave(input: GQL.TagCreateInput) {
+  async function onSave(input: GQL.TagCreateInput | GQL.TagUpdateInput) {
     const oldRelations = {
       parents: [],
       children: [],
     };
     const result = await createTag({
-      variables: { input },
+      variables: { input: input as GQL.TagCreateInput },
     });
     if (result.data?.tagCreate?.id) {
       const created = result.data.tagCreate;

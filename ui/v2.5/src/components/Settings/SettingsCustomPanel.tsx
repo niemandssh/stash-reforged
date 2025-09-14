@@ -8,15 +8,13 @@ export const SettingsCustomPanel: React.FC = () => {
 
   return (
     <div className="settings-custom-panel">
-      <SettingSection headingID="config.custom.rating_thresholds" headingDefault="Rating Thresholds">
+      <SettingSection headingID="config.custom.rating_thresholds">
         <NumberSetting
           id="random-rating-threshold"
           headingID="config.custom.random_rating_threshold"
           subHeadingID="config.custom.random_rating_threshold_desc"
           value={iface.randomRatingThreshold ?? 55}
           onChange={(v) => saveInterface({ randomRatingThreshold: v })}
-          min={0}
-          max={100}
         />
         <NumberSetting
           id="random-best-rating-threshold"
@@ -24,8 +22,6 @@ export const SettingsCustomPanel: React.FC = () => {
           subHeadingID="config.custom.random_best_rating_threshold_desc"
           value={iface.randomBestRatingThreshold ?? 90}
           onChange={(v) => saveInterface({ randomBestRatingThreshold: v })}
-          min={0}
-          max={100}
         />
       </SettingSection>
     </div>

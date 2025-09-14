@@ -785,21 +785,14 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const { configuration } = useContext(ConfigurationContext);
   const { data, loading, error, refetch } = useFindScene(id);
 
-  const [scene, setScene] = useState<GQL.SceneDataFragment>();
+  // Use data directly from Apollo instead of useState
+  const scene = data?.findScene;
 
 
   // Force refetch on mount
   React.useEffect(() => {
     refetch();
   }, [id, refetch]);
-
-  // useLayoutEffect to update before paint
-  useLayoutEffect(() => {
-    // only update scene when loading is done
-    if (!loading) {
-      setScene(data?.findScene ?? undefined);
-    }
-  }, [data, loading]);
 
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),

@@ -380,12 +380,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         {renderInputField("sort_name", "text")}
         {renderStringListField("aliases")}
         {renderInputField("description", "textarea")}
-        {renderInputField("weight", "number", "tag_weight", { 
-          min: 0, 
-          max: 1, 
-          step: 0.1,
-          title: intl.formatMessage({ id: "tag_weight_help" })
-        })}
+        {renderInputField("weight", "number", "tag_weight")}
         {renderColorField()}
         {renderParentTagsField()}
         {renderSubTagsField()}

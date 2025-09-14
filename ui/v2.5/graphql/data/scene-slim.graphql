@@ -81,6 +81,7 @@ fragment SlimSceneData on Scene {
     gender
     favorite
     image_path
+    death_date
   }
 
   stash_ids {

@@ -135,14 +135,10 @@ export const RatingNumber = PatchComponent(
       return `star-fill-${fill} ${isEven ? 'star-even' : 'star-odd'}`;
     }
 
-    function handleStarClick(starIndex: number, event: React.MouseEvent) {
+    function handleStarClick(starIndex: number) {
       if (disabled) return;
 
-      const rect = event.currentTarget.getBoundingClientRect();
-      const clickX = event.clientX - rect.left;
-      const isHalf = clickX < rect.width / 2;
-      
-      setRating(starIndex, isHalf);
+      setRating(starIndex);
     }
 
     if (props.clickToRate && !props.disabled) {
@@ -155,7 +151,7 @@ export const RatingNumber = PatchComponent(
                 key={`star-${starIndex}`}
                 disabled={disabled}
                 className={`minimal ${getStarClassName(starIndex)}`}
-                onClick={(e) => handleStarClick(starIndex, e)}
+                onClick={() => handleStarClick(starIndex)}
                 variant="secondary"
                 onMouseEnter={(e) => onMouseOver(starIndex, e)}
                 onMouseLeave={onMouseOut}

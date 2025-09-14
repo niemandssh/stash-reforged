@@ -9,8 +9,8 @@ import { SweatDrops } from "src/components/Shared/SweatDrops";
 export interface IOCounterButtonProps {
   value: number;
   onIncrement: () => Promise<void>;
-  onDecrement: () => Promise<void>;
-  onReset: () => Promise<void>;
+  onDecrement?: () => Promise<void>;
+  onReset?: () => Promise<void>;
 }
 
 export const OCounterButton: React.FC<IOCounterButtonProps> = (
@@ -26,12 +26,14 @@ export const OCounterButton: React.FC<IOCounterButtonProps> = (
   }
 
   async function decrement() {
+    if (!props.onDecrement) return;
     setLoading(true);
     await props.onDecrement();
     setLoading(false);
   }
 
   async function reset() {
+    if (!props.onReset) return;
     setLoading(true);
     await props.onReset();
     setLoading(false);
@@ -52,7 +54,7 @@ export const OCounterButton: React.FC<IOCounterButtonProps> = (
   );
 
   const maybeRenderDropdown = () => {
-    if (props.value) {
+    if (props.value && (props.onDecrement || props.onReset)) {
       return (
         <DropdownButton
           as={ButtonGroup}
@@ -60,14 +62,18 @@ export const OCounterButton: React.FC<IOCounterButtonProps> = (
           variant="secondary"
           className="pl-0 show-carat"
         >
-          <Dropdown.Item onClick={decrement}>
-            <Icon icon={faMinus} />
-            <span>Decrement</span>
-          </Dropdown.Item>
-          <Dropdown.Item onClick={reset}>
-            <Icon icon={faBan} />
-            <span>Reset</span>
-          </Dropdown.Item>
+          {props.onDecrement && (
+            <Dropdown.Item onClick={decrement}>
+              <Icon icon={faMinus} />
+              <span>Decrement</span>
+            </Dropdown.Item>
+          )}
+          {props.onReset && (
+            <Dropdown.Item onClick={reset}>
+              <Icon icon={faBan} />
+              <span>Reset</span>
+            </Dropdown.Item>
+          )}
         </DropdownButton>
       );
     }

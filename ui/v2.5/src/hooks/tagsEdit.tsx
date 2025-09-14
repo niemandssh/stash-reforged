@@ -50,6 +50,7 @@ export function useTagsEdit(
             id: result.data.tagCreate.id,
             name: toCreate.name ?? "",
             aliases: [],
+            is_pose_tag: false,
           },
         ])
       );
@@ -93,6 +94,7 @@ export function useTagsEdit(
           id: p.stored_id!,
           name: p.name ?? "",
           aliases: [],
+          is_pose_tag: false,
         };
       })
     );

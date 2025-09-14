@@ -718,6 +718,7 @@ export const useScenesDestroy = (input: GQL.ScenesDestroyInput) =>
 export const useSceneIncrementO = (id: string) =>
   GQL.useSceneAddOMutation({
     variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
     update(cache, result, { variables }) {
       // this is not perfectly accurate, the time is set server-side
       // it isn't even displayed anywhere in the UI anyway
@@ -726,14 +727,14 @@ export const useSceneIncrementO = (id: string) =>
       const mutationResult = result.data?.sceneAddO;
       if (!mutationResult || !variables) return;
 
-      const { history } = mutationResult;
+      const { history, count } = mutationResult;
       const { times } = variables;
       const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
 
-      const scene = cache.readFragment<GQL.SlimSceneDataFragment>({
+      const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
-        fragment: GQL.SlimSceneDataFragmentDoc,
-        fragmentName: "SlimSceneData",
+        fragment: GQL.SceneDataFragmentDoc,
+        fragmentName: "SceneData",
       });
 
       if (scene) {
@@ -757,16 +758,33 @@ export const useSceneIncrementO = (id: string) =>
 
       updateStats(cache, "total_o_count", timeArray.length);
 
+      // Try using writeFragment to force a complete update
+      if (scene) {
+        cache.writeFragment({
+          id: cache.identify({ __typename: "Scene", id }),
+          fragment: GQL.SceneDataFragmentDoc,
+          fragmentName: "SceneData",
+          data: {
+            ...scene,
+            o_counter: count,
+            o_history: history,
+          },
+        });
+      }
+      
       cache.modify({
         id: cache.identify({ __typename: "Scene", id }),
         fields: {
+          o_counter() {
+            return count;
+          },
           o_history() {
             return history;
           },
         },
       });
 
-      updateO(cache, "Scene", id, history.length);
+      updateO(cache, "Scene", id, count);
       evictQueries(cache, [
         GQL.FindScenesDocument, // filter by o_counter
         GQL.FindPerformersDocument, // filter by o_counter
@@ -777,18 +795,19 @@ export const useSceneIncrementO = (id: string) =>
 export const useSceneDecrementO = (id: string) =>
   GQL.useSceneDeleteOMutation({
     variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
     update(cache, result, { variables }) {
       const mutationResult = result.data?.sceneDeleteO;
       if (!mutationResult || !variables) return;
 
-      const { history } = mutationResult;
+      const { history, count } = mutationResult;
       const { times } = variables;
       const timeArray = !times ? null : Array.isArray(times) ? times : [times];
 
-      const scene = cache.readFragment<GQL.SlimSceneDataFragment>({
+      const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
-        fragment: GQL.SlimSceneDataFragmentDoc,
-        fragmentName: "SlimSceneData",
+        fragment: GQL.SceneDataFragmentDoc,
+        fragmentName: "SceneData",
       });
 
       if (scene) {
@@ -815,13 +834,16 @@ export const useSceneDecrementO = (id: string) =>
       cache.modify({
         id: cache.identify({ __typename: "Scene", id }),
         fields: {
+          o_counter() {
+            return count;
+          },
           o_history() {
             return history;
           },
         },
       });
 
-      updateO(cache, "Scene", id, history.length);
+      updateO(cache, "Scene", id, count);
       evictQueries(cache, [
         GQL.FindScenesDocument, // filter by o_counter
         GQL.FindPerformersDocument, // filter by o_counter
@@ -832,14 +854,15 @@ export const useSceneDecrementO = (id: string) =>
 export const useSceneResetO = (id: string) =>
   GQL.useSceneResetOMutation({
     variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
     update(cache, result) {
       const updatedOCount = result.data?.sceneResetO;
       if (updatedOCount === undefined) return;
 
-      const scene = cache.readFragment<GQL.SlimSceneDataFragment>({
+      const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
-        fragment: GQL.SlimSceneDataFragmentDoc,
-        fragmentName: "SlimSceneData",
+        fragment: GQL.SceneDataFragmentDoc,
+        fragmentName: "SceneData",
       });
 
       if (scene) {

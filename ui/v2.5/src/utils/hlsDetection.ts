@@ -1,9 +1,9 @@
-import { GQL } from "src/core/generated-graphql";
+import { SceneDataFragment } from "src/core/generated-graphql";
 
 /**
  * Detects if a scene is likely an HLS video based on common characteristics
  */
-export function isHLSVideo(scene: GQL.SceneDataFragment): boolean {
+export function isHLSVideo(scene: SceneDataFragment): boolean {
   if (!scene.files || scene.files.length === 0) {
     return false;
   }

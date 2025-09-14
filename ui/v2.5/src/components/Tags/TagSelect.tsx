@@ -199,6 +199,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       id,
       name,
       aliases: [],
+      is_pose_tag: false,
     };
   };
 
