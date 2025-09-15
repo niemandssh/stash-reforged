@@ -28,6 +28,11 @@ func (r *queryResolver) ScrapePerformerURL(ctx context.Context, url string) (*mo
 		return nil, err
 	}
 
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
+	}
+
 	return marshalScrapedPerformer(content)
 }
 
@@ -55,6 +60,11 @@ func (r *queryResolver) ScrapeSceneURL(ctx context.Context, url string) (*models
 		return nil, err
 	}
 
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
+	}
+
 	ret, err := marshalScrapedScene(content)
 	if err != nil {
 		return nil, err
@@ -67,6 +77,11 @@ func (r *queryResolver) ScrapeGalleryURL(ctx context.Context, url string) (*mode
 	content, err := r.scraperCache().ScrapeURL(ctx, url, scraper.ScrapeContentTypeGallery)
 	if err != nil {
 		return nil, err
+	}
+
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
 	}
 
 	ret, err := marshalScrapedGallery(content)
@@ -83,6 +98,11 @@ func (r *queryResolver) ScrapeImageURL(ctx context.Context, url string) (*models
 		return nil, err
 	}
 
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
+	}
+
 	return marshalScrapedImage(content)
 }
 
@@ -90,6 +110,11 @@ func (r *queryResolver) ScrapeMovieURL(ctx context.Context, url string) (*models
 	content, err := r.scraperCache().ScrapeURL(ctx, url, scraper.ScrapeContentTypeMovie)
 	if err != nil {
 		return nil, err
+	}
+
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
 	}
 
 	ret, err := marshalScrapedMovie(content)
@@ -106,9 +131,19 @@ func (r *queryResolver) ScrapeGroupURL(ctx context.Context, url string) (*models
 		return nil, err
 	}
 
+	// if content is nil, no scraper was found for this URL or no data was extracted
+	if content == nil {
+		return nil, nil
+	}
+
 	ret, err := marshalScrapedGroup(content)
 	if err != nil {
 		return nil, err
+	}
+
+	// if no data was returned, return nil
+	if ret == nil {
+		return nil, nil
 	}
 
 	// convert to scraped group
@@ -188,6 +223,9 @@ func (r *queryResolver) ScrapeSingleScene(ctx context.Context, source scraper.So
 			fps, err = r.getScenesFingerprints(ctx, []int{sceneID})
 			if err != nil {
 				return nil, err
+			}
+			if len(fps) == 0 {
+				return nil, fmt.Errorf("no fingerprints found for scene %d", sceneID)
 			}
 			ret, err = client.FindSceneByFingerprints(ctx, fps[0])
 		case input.Query != nil:
@@ -395,6 +433,9 @@ func (r *queryResolver) ScrapeSinglePerformer(ctx context.Context, source scrape
 			names, err := r.findPerformerNames(ctx, []string{*input.PerformerID})
 			if err != nil {
 				return nil, err
+			}
+			if len(names) == 0 {
+				return nil, fmt.Errorf("no names found for performer %s", *input.PerformerID)
 			}
 
 			query = names[0]

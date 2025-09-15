@@ -47,24 +47,30 @@ type isMultiFunc func(key string) bool
 
 func (s mappedConfig) process(ctx context.Context, q mappedQuery, common commonMappedConfig, isMulti isMultiFunc) mappedResults {
 	var ret mappedResults
+	logger.Infof("mappedConfig.process: processing %d mapping configurations", len(s))
 
 	for k, attrConfig := range s {
+		logger.Infof("mappedConfig.process: processing key '%s'", k)
 
 		if attrConfig.Fixed != "" {
+			logger.Infof("mappedConfig.process: key '%s' has fixed value: '%s'", k, attrConfig.Fixed)
 			// TODO - not sure if this needs to set _all_ indexes for the key
 			const i = 0
 			ret = ret.setSingleValue(i, k, attrConfig.Fixed)
 		} else {
 			selector := attrConfig.Selector
 			selector = s.applyCommon(common, selector)
+			logger.Infof("mappedConfig.process: key '%s' using selector: '%s'", k, selector)
 
 			found, err := q.runQuery(selector)
 			if err != nil {
 				logger.Warnf("key '%v': %v", k, err)
 			}
 
+			logger.Infof("mappedConfig.process: key '%s' found %d results", k, len(found))
 			if len(found) > 0 {
 				result := s.postProcess(ctx, q, attrConfig, found)
+				logger.Infof("mappedConfig.process: key '%s' after post-processing: %d results", k, len(result))
 
 				// HACK - if the key is URLs, then we need to set the value as a multi-value
 				isMulti := isMulti != nil && isMulti(k)
@@ -75,10 +81,13 @@ func (s mappedConfig) process(ctx context.Context, q mappedQuery, common commonM
 						ret = ret.setSingleValue(i, k, text)
 					}
 				}
+			} else {
+				logger.Infof("mappedConfig.process: key '%s' found no results", k)
 			}
 		}
 	}
 
+	logger.Infof("mappedConfig.process: completed processing, returning %d result sets", len(ret))
 	return ret
 }
 
@@ -1110,29 +1119,39 @@ func (s mappedScraper) scrapeScenes(ctx context.Context, q mappedQuery) ([]*mode
 }
 
 func (s mappedScraper) scrapeScene(ctx context.Context, q mappedQuery) (*models.ScrapedScene, error) {
+	logger.Infof("mappedScraper.scrapeScene: starting scene scraping")
+
 	sceneScraperConfig := s.Scene
 	if sceneScraperConfig == nil {
+		logger.Infof("mappedScraper.scrapeScene: no scene scraper config found")
 		return nil, nil
 	}
 
 	sceneMap := sceneScraperConfig.mappedConfig
+	logger.Infof("mappedScraper.scrapeScene: found %d scene mapping configs", len(sceneMap))
 
-	logger.Debug(`Processing scene:`)
+	logger.Infof("mappedScraper.scrapeScene: processing scene data")
 	results := sceneMap.process(ctx, q, s.Common, urlsIsMulti)
+	logger.Infof("mappedScraper.scrapeScene: processing returned %d results", len(results))
 
 	var ret models.ScrapedScene
 	if len(results) > 0 {
 		results[0].apply(&ret)
+		logger.Infof("mappedScraper.scrapeScene: applied first result to ScrapedScene")
 	}
+
 	hasRelationships := s.processSceneRelationships(ctx, q, 0, &ret)
+	logger.Infof("mappedScraper.scrapeScene: hasRelationships: %t", hasRelationships)
 
 	// #3953 - process only returns results if the non-relationship fields are
 	// populated
 	// only return if we have results or relationships
 	if len(results) > 0 || hasRelationships {
+		logger.Infof("mappedScraper.scrapeScene: returning scraped scene data")
 		return &ret, nil
 	}
 
+	logger.Infof("mappedScraper.scrapeScene: no results found, returning nil")
 	return nil, nil
 }
 

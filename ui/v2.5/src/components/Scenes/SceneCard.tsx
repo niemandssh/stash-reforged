@@ -350,12 +350,12 @@ const SceneCardOverlays = PatchComponent(
     return (
       <>
         <StudioOverlay studio={props.scene.studio} />
-        {props.scene.is_broken && (
+        {props.scene.is_broken && !props.scene.is_not_broken && (
           <div className="broken-badge-overlay">
             <BrokenBadge />
           </div>
         )}
-        {!props.scene.is_broken && props.scene.is_probably_broken && (
+        {!props.scene.is_broken && props.scene.is_probably_broken && !props.scene.is_not_broken && (
           <div className="probably-broken-badge-overlay">
             <ProbablyBrokenBadge />
           </div>

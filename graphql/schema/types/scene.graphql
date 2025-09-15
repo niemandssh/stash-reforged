@@ -53,6 +53,7 @@ type Scene {
   interactive_speed: Int
   captions: [VideoCaption!]
   is_broken: Boolean!
+  is_not_broken: Boolean!
   is_probably_broken: Boolean! # Resolver
   created_at: Time!
   updated_at: Time!
@@ -154,6 +155,7 @@ input SceneUpdateInput {
     @deprecated(reason: "Unsupported - Use sceneIncrementO/sceneDecrementO")
   organized: Boolean
   is_broken: Boolean
+  is_not_broken: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!]
@@ -207,6 +209,7 @@ input BulkSceneUpdateInput {
   rating100: Int
   organized: Boolean
   is_broken: Boolean
+  is_not_broken: Boolean
   studio_id: ID
   gallery_ids: BulkUpdateIds
   performer_ids: BulkUpdateIds

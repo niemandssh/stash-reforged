@@ -328,25 +328,38 @@ func (c Cache) ScrapeFragment(ctx context.Context, id string, input Input) (Scra
 // and picks the first scraper capable of scraping the given url into the desired
 // content. Returns the scraped content or an error if the scrape fails.
 func (c Cache) ScrapeURL(ctx context.Context, url string, ty ScrapeContentType) (ScrapedContent, error) {
-	for _, s := range c.scrapers {
+	logger.Infof("ScrapeURL: searching scrapers for URL '%s' with type %v", url, ty)
+	logger.Infof("ScrapeURL: total scrapers available: %d", len(c.scrapers))
+
+	for i, s := range c.scrapers {
+		spec := s.spec()
+		logger.Infof("ScrapeURL: checking scraper %d: %s (ID: %s)", i, spec.Name, spec.ID)
+
 		if s.supportsURL(url, ty) {
+			logger.Infof("ScrapeURL: scraper %s supports URL %s", spec.Name, url)
 			ul, ok := s.(urlScraper)
 			if !ok {
 				return nil, fmt.Errorf("%w: cannot use scraper %s as an url scraper", ErrNotSupported, s.spec().ID)
 			}
 			ret, err := ul.viaURL(ctx, c.client, url, ty)
 			if err != nil {
+				logger.Errorf("ScrapeURL: scraper %s returned error: %v", spec.Name, err)
 				return nil, err
 			}
 
 			if ret == nil {
+				logger.Infof("ScrapeURL: scraper %s returned nil content", spec.Name)
 				return ret, nil
 			}
 
+			logger.Infof("ScrapeURL: scraper %s returned content successfully", spec.Name)
 			return c.postScrapeSingle(ctx, ret)
+		} else {
+			logger.Infof("ScrapeURL: scraper %s does NOT support URL %s", spec.Name, url)
 		}
 	}
 
+	logger.Infof("ScrapeURL: no scraper found for URL %s", url)
 	return nil, nil
 }
 

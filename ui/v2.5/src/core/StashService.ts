@@ -553,7 +553,7 @@ export const useSceneUpdate = () =>
 
 
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
       const updatedFields = Object.keys(variables.input);
       const needsSimilarityUpdate = similarityFields.some(field =>
         updatedFields.includes(field)
@@ -583,7 +583,7 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
       if (!result.data?.bulkSceneUpdate) return;
 
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
       const updatedFields = Object.keys(input);
       const needsSimilarityUpdate = similarityFields.some(field =>
         updatedFields.includes(field)
@@ -634,7 +634,7 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
       if (!result.data?.scenesUpdate) return;
 
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id'];
+      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
 
       // Update rating100 field in cache for all updated scenes
       input.forEach(sceneInput => {

@@ -108,6 +108,10 @@ func (r *sceneResolver) IsBroken(ctx context.Context, obj *models.Scene) (bool, 
 	return obj.IsBroken, nil
 }
 
+func (r *sceneResolver) IsNotBroken(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.IsNotBroken, nil
+}
+
 func (r *sceneResolver) IsProbablyBroken(ctx context.Context, obj *models.Scene) (bool, error) {
 	// Load primary file if not already loaded
 	_, err := r.getPrimaryFile(ctx, obj)

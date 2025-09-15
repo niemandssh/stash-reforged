@@ -65,6 +65,8 @@
         "merge": "Слияние",
         "merge_from": "Слияние из",
         "merge_into": "Слияние в",
+        "merge_into_other_scene": "Объединить с другой сценой...",
+        "merge_from_other_scene": "Объединить из другой сцены...",
         "migrate_blobs": "Перенос блоков",
         "migrate_scene_screenshots": "Перенос скриншотов сцены",
         "next_action": "Вперёд",
@@ -1088,6 +1090,7 @@
     "interactive": "Интерактивно",
     "interactive_speed": "Интерактивная скорость",
     "isMissing": "Отсутствует",
+    "is_not_broken": "Не сломано",
     "last_played_at": "Воспроизводился в последний раз",
     "library": "Библиотека",
     "loading": {

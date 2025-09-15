@@ -138,6 +138,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     details: yup.string().ensure(),
     cover_image: yup.string().nullable().optional(),
     is_broken: yup.boolean().defined(),
+    is_not_broken: yup.boolean().defined(),
     start_time: yup.number().nullable().optional(),
     end_time: yup.number().nullable().optional(),
   });
@@ -160,6 +161,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       details: scene.details ?? "",
       cover_image: initialCoverImage,
       is_broken: scene.is_broken ?? false,
+      is_not_broken: scene.is_not_broken ?? false,
       start_time: scene.start_time ?? null,
       end_time: scene.end_time ?? null,
     }),
@@ -790,6 +792,28 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("is_broken", title, control);
   }
 
+  function renderIsNotBrokenField() {
+    const title = intl.formatMessage({ id: "is_not_broken" });
+    const control = (
+      <Form.Check
+        type="checkbox"
+        id="is_not_broken"
+        checked={formik.values.is_not_broken}
+        onChange={(e) => {
+          const checked = e.target.checked;
+          formik.setFieldValue("is_not_broken", checked);
+          // If "Not Broken" is checked, automatically uncheck "Broken"
+          if (checked) {
+            formik.setFieldValue("is_broken", false);
+          }
+        }}
+        isInvalid={!!formik.errors.is_not_broken}
+      />
+    );
+
+    return renderField("is_not_broken", title, control);
+  }
+
   function renderDurationField(fieldName: keyof InputValues & string, labelId: string) {
     const title = intl.formatMessage({ id: labelId });
     const control = (
@@ -880,6 +904,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderPoseTagsField()}
             {renderTagsField()}
             {renderIsBrokenField()}
+            {renderIsNotBrokenField()}
             {renderInputField("code", "text", "scene_code")}
             {renderStudioField()}
             {renderInputField("director")}

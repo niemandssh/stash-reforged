@@ -87,6 +87,7 @@ type sceneRow struct {
 	Rating       null.Int   `db:"rating"`
 	Organized    bool       `db:"organized"`
 	IsBroken     bool       `db:"is_broken"`
+	IsNotBroken  bool       `db:"is_not_broken"`
 	StudioID     null.Int   `db:"studio_id,omitempty"`
 	CreatedAt    Timestamp  `db:"created_at"`
 	UpdatedAt    Timestamp  `db:"updated_at"`
@@ -109,6 +110,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
 	r.IsBroken = o.IsBroken
+	r.IsNotBroken = o.IsNotBroken
 	r.StudioID = intFromPtr(o.StudioID)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
@@ -129,16 +131,17 @@ type sceneQueryRow struct {
 
 func (r *sceneQueryRow) resolve() *models.Scene {
 	ret := &models.Scene{
-		ID:        r.ID,
-		Title:     r.Title.String,
-		Code:      r.Code.String,
-		Details:   r.Details.String,
-		Director:  r.Director.String,
-		Date:      r.Date.DatePtr(),
-		Rating:    nullIntPtr(r.Rating),
-		Organized: r.Organized,
-		IsBroken:  r.IsBroken,
-		StudioID:  nullIntPtr(r.StudioID),
+		ID:          r.ID,
+		Title:       r.Title.String,
+		Code:        r.Code.String,
+		Details:     r.Details.String,
+		Director:    r.Director.String,
+		Date:        r.Date.DatePtr(),
+		Rating:      nullIntPtr(r.Rating),
+		Organized:   r.Organized,
+		IsBroken:    r.IsBroken,
+		IsNotBroken: r.IsNotBroken,
+		StudioID:    nullIntPtr(r.StudioID),
 
 		PrimaryFileID: nullIntFileIDPtr(r.PrimaryFileID),
 		OSHash:        r.PrimaryFileOshash.String,
@@ -173,6 +176,7 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
 	r.setBool("is_broken", o.IsBroken)
+	r.setBool("is_not_broken", o.IsNotBroken)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)

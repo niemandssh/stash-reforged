@@ -17,10 +17,11 @@ type Scene struct {
 	Director string `json:"director"`
 	Date     *Date  `json:"date"`
 	// Rating expressed in 1-100 scale
-	Rating    *int `json:"rating"`
-	Organized bool `json:"organized"`
-	IsBroken  bool `json:"is_broken"`
-	StudioID  *int `json:"studio_id"`
+	Rating      *int `json:"rating"`
+	Organized   bool `json:"organized"`
+	IsBroken    bool `json:"is_broken"`
+	IsNotBroken bool `json:"is_not_broken"`
+	StudioID    *int `json:"studio_id"`
 
 	// transient - not persisted
 	Files         RelatedVideoFiles
@@ -70,6 +71,7 @@ type ScenePartial struct {
 	Rating       OptionalInt
 	Organized    OptionalBool
 	IsBroken     OptionalBool
+	IsNotBroken  OptionalBool
 	StudioID     OptionalInt
 	CreatedAt    OptionalTime
 	UpdatedAt    OptionalTime

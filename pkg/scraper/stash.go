@@ -2,6 +2,7 @@ package scraper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -172,6 +173,10 @@ func (s *stashScraper) scrapeByPerformerFragment(ctx context.Context, scrapedPer
 
 func (s *stashScraper) scrapeBySceneFragment(ctx context.Context, scrapedScene models.ScrapedSceneInput) (ScrapedContent, error) {
 	client := s.getStashClient()
+
+	if len(scrapedScene.URLs) == 0 {
+		return nil, errors.New("no URLs provided for scene fragment scraping")
+	}
 
 	var q struct {
 		FindScene *scrapedSceneStash `graphql:"findScene(id: $f)"`

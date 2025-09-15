@@ -70,8 +70,8 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
 
     return (
       <div className="d-flex align-items-center">
-        {scene.is_broken && <BrokenBadge className="me-2" />}
-        {!scene.is_broken && scene.is_probably_broken && <ProbablyBrokenBadge className="me-2" />}
+        {scene.is_broken && !scene.is_not_broken && <BrokenBadge className="me-2" />}
+        {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge className="me-2" />}
         <Link to={sceneLink} title={title}>
           <span className="ellips-data">{title}</span>
         </Link>

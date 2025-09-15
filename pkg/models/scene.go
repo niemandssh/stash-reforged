@@ -188,6 +188,7 @@ type SceneUpdateInput struct {
 	OCounter         *int              `json:"o_counter"`
 	Organized        *bool             `json:"organized"`
 	IsBroken         *bool             `json:"is_broken"`
+	IsNotBroken      *bool             `json:"is_not_broken"`
 	StudioID         *string           `json:"studio_id"`
 	GalleryIds       []string          `json:"gallery_ids"`
 	PerformerIds     []string          `json:"performer_ids"`

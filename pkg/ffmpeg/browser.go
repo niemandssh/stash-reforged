@@ -66,28 +66,25 @@ func IsHLSVideo(videoCodec string, audioCodec ProbeAudioCodec, container Contain
 		return false
 	}
 
-	// Duration-based heuristic with balanced criteria:
+	// Duration-based heuristic with more conservative criteria for longer videos
 	if duration > 0 {
 		segmentLength := 2.0
 		remainder := math.Mod(duration, segmentLength)
 
-		// Balanced tolerance for duration check (0.03 instead of 0.01 or 0.1)
-		// This catches more potential HLS cases while still reducing false positives
-		isDurationSuspicious := remainder < 0.03 || remainder > (segmentLength-0.03)
+		// Very short durations (< 30 seconds) are highly likely HLS segments
+		isVeryShort := duration < 30.0
+		// Exact multiples of segment length are suspicious regardless of duration
+		isExactMultiple := math.Abs(remainder) < 0.01 || math.Abs(remainder-segmentLength) < 0.01
 
-		if isDurationSuspicious {
-			// Additional heuristics to refine detection:
-			// 1. Very short durations (< 30 seconds) are highly likely HLS segments
-			// 2. Exact multiples of segment length are suspicious
-			// 3. Files with "_hls_" in filename hint (will be checked in enhanced version)
-			isVeryShort := duration < 30.0
-			isExactMultiple := math.Abs(remainder) < 0.01 || math.Abs(remainder-segmentLength) < 0.01
-
-			// Consider it HLS if duration is suspicious AND:
-			// - Very short (definite HLS segment) OR
-			// - Exact multiple (likely HLS timing) OR
-			// - Just suspicious duration (let enhanced detection decide)
-			if isVeryShort || isExactMultiple || isDurationSuspicious {
+		// For short videos, use more lenient tolerance
+		if isVeryShort {
+			isDurationSuspicious := remainder < 0.03 || remainder > (segmentLength-0.03)
+			if isDurationSuspicious || isExactMultiple {
+				return true
+			}
+		} else {
+			// For longer videos, only flag if timing is very exact (likely genuine HLS artifacts)
+			if isExactMultiple {
 				return true
 			}
 		}

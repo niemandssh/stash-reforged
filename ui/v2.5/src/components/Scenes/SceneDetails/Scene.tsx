@@ -767,8 +767,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               </h1>
             )}
             <div className="scene-header">
-              {scene.is_broken && <BrokenBadge />}
-              {!scene.is_broken && scene.is_probably_broken && <ProbablyBrokenBadge />}
+              {scene.is_broken && !scene.is_not_broken && <BrokenBadge />}
+              {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge />}
               <h3 className={cx({ "no-studio": !scene.studio })}>
                 {title}
               </h3>

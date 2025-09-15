@@ -224,6 +224,10 @@ func newScriptScraper(scraper scraperTypeConfig, config config, globalConfig Glo
 func (s *scriptScraper) runScraperScript(ctx context.Context, inString string, out interface{}) error {
 	command := s.scraper.Script
 
+	if len(command) == 0 {
+		return errors.New("scraper script command is empty")
+	}
+
 	var cmd *exec.Cmd
 	if python.IsPythonCommand(command[0]) {
 		pythonPath := s.globalConfig.GetPythonPath()

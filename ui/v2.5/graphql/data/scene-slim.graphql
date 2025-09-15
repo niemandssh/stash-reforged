@@ -12,6 +12,7 @@ fragment SlimSceneData on Scene {
   interactive
   interactive_speed
   is_broken
+  is_not_broken
   is_probably_broken
   resume_time
   play_duration

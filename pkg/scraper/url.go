@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -22,7 +21,6 @@ import (
 	"golang.org/x/net/html/charset"
 
 	"github.com/stashapp/stash/pkg/logger"
-	"github.com/stashapp/stash/pkg/utils"
 )
 
 const scrapeDefaultSleep = time.Second * 2
@@ -56,104 +54,16 @@ func loadURL(ctx context.Context, loadURL string, client *http.Client, scraperCo
 	}
 
 	userAgent := globalConfig.GetScraperUserAgent()
-	if userAgent == "" {
-		// Use default user agent if none is configured
-		userAgent = utils.GetUserAgent()
-	}
-	// Add universal headers to mimic real browser behavior (in realistic order)
-	// Set universal headers first
-	if req.Header.Get("Accept") == "" {
-		req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-	}
-	if req.Header.Get("Accept-Language") == "" {
-		req.Header.Set("Accept-Language", "en-US,en;q=0.9")
-	}
-	if req.Header.Get("Accept-Encoding") == "" {
-		req.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	}
-	if req.Header.Get("Cache-Control") == "" {
-		req.Header.Set("Cache-Control", "max-age=0")
-	}
-	if req.Header.Get("Sec-Ch-Ua") == "" {
-		req.Header.Set("Sec-Ch-Ua", `"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"`)
-	}
-	if req.Header.Get("Sec-Ch-Ua-Mobile") == "" {
-		req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
-	}
-	if req.Header.Get("Sec-Ch-Ua-Platform") == "" {
-		req.Header.Set("Sec-Ch-Ua-Platform", `"Linux"`)
-	}
-	if req.Header.Get("Sec-Fetch-Dest") == "" {
-		req.Header.Set("Sec-Fetch-Dest", "document")
-	}
-	if req.Header.Get("Sec-Fetch-Mode") == "" {
-		req.Header.Set("Sec-Fetch-Mode", "navigate")
-	}
-	if req.Header.Get("Sec-Fetch-Site") == "" {
-		req.Header.Set("Sec-Fetch-Site", "none")
-	}
-	if req.Header.Get("Sec-Fetch-User") == "" {
-		req.Header.Set("Sec-Fetch-User", "?1")
-	}
-	if req.Header.Get("Upgrade-Insecure-Requests") == "" {
-		req.Header.Set("Upgrade-Insecure-Requests", "1")
-	}
-	if req.Header.Get("User-Agent") == "" {
+	if userAgent != "" {
 		req.Header.Set("User-Agent", userAgent)
 	}
-	if req.Header.Get("Connection") == "" {
-		req.Header.Set("Connection", "keep-alive")
-	}
 
-	// Add additional headers that might be required
-	if req.Header.Get("DNT") == "" {
-		req.Header.Set("DNT", "1")
-	}
-	if req.Header.Get("Sec-Fetch-Site") == "" {
-		req.Header.Set("Sec-Fetch-Site", "none")
-	}
-	if req.Header.Get("Sec-Fetch-Mode") == "" {
-		req.Header.Set("Sec-Fetch-Mode", "navigate")
-	}
-	if req.Header.Get("Sec-Fetch-Dest") == "" {
-		req.Header.Set("Sec-Fetch-Dest", "document")
-	}
-	if req.Header.Get("Sec-Fetch-User") == "" {
-		req.Header.Set("Sec-Fetch-User", "?1")
-	}
-
-	// Add headers from driver options (these can override universal headers)
-	if driverOptions != nil {
+	if driverOptions != nil { // setting the Headers after the UA allows us to override it from inside the scraper
 		for _, h := range driverOptions.Headers {
 			if h.Key != "" {
 				req.Header.Set(h.Key, h.Value)
-				logger.Infof("[scraper] adding header <%s:%s>", h.Key, h.Value)
+				logger.Debugf("[scraper] adding header <%s:%s>", h.Key, h.Value)
 			}
-		}
-	}
-
-	if driverOptions != nil {
-		// Add sleep delay for non-CDP requests
-		if driverOptions.Sleep > 0 {
-			sleepDuration := time.Duration(driverOptions.Sleep) * time.Second
-			// Add random jitter to avoid pattern detection (0-3 seconds)
-			jitter := time.Duration(rand.Intn(3000)) * time.Millisecond
-			totalSleep := sleepDuration + jitter
-			fmt.Printf("[scraper] sleeping for %v (base: %v + jitter: %v) before request\n", totalSleep, sleepDuration, jitter)
-			time.Sleep(totalSleep)
-		}
-	} else {
-		// Add default delay even without driver options to avoid rate limiting
-		defaultDelay := time.Duration(1+rand.Intn(3)) * time.Second // 1-3 seconds
-		fmt.Printf("[scraper] adding default delay of %v\n", defaultDelay)
-		time.Sleep(defaultDelay)
-	}
-
-	// Log all headers being sent
-	fmt.Printf("[scraper] sending request to %s with headers:\n", req.URL.String())
-	for name, values := range req.Header {
-		for _, value := range values {
-			fmt.Printf("[scraper] %s: %s\n", name, value)
 		}
 	}
 
@@ -161,8 +71,6 @@ func loadURL(ctx context.Context, loadURL string, client *http.Client, scraperCo
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("[scraper] received response: %d %s\n", resp.StatusCode, resp.Status)
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("http error %d:%s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
@@ -312,9 +220,6 @@ func urlFromCDP(ctx context.Context, urlCDP string, driverOptions scraperDriverO
 		network.SetExtraHTTPHeaders(network.Headers(headers)),
 		chromedp.Navigate(urlCDP),
 		chromedp.Sleep(sleepDuration),
-		// Wait for the page to load completely (wait for specific elements)
-		chromedp.WaitVisible(`h1[id="babename"], a[href*="/babe/"]`, chromedp.ByQuery),
-		chromedp.Sleep(2*time.Second), // Additional wait after elements are visible
 		setCDPClicks(driverOptions),
 		chromedp.OuterHTML("html", &res, chromedp.ByQuery),
 		printCDPCookies(driverOptions, "Cookies set"),
@@ -322,16 +227,6 @@ func urlFromCDP(ctx context.Context, urlCDP string, driverOptions scraperDriverO
 
 	if err != nil {
 		return nil, err
-	}
-
-	// Debug: log the HTML content received from Chrome CDP
-	length := 500
-	if len(res) < length {
-		length = len(res)
-	}
-	fmt.Printf("[scraper] Chrome CDP returned HTML content (first %d chars): %s\n", length, res[:length])
-	if len(res) > 500 {
-		fmt.Printf("[scraper] ... (truncated, total length: %d)\n", len(res))
 	}
 
 	return strings.NewReader(res), nil
@@ -412,7 +307,7 @@ func proxyUsesAuth(proxyUrl string) bool {
 	}
 	reg := regexp.MustCompile(`^(https?:\/\/)(([\P{Cc}]+):([\P{Cc}]+)@)?(([a-zA-Z0-9][a-zA-Z0-9.-]*)(:[0-9]{1,5})?)`)
 	matches := reg.FindAllStringSubmatch(proxyUrl, -1)
-	if matches != nil {
+	if len(matches) > 0 {
 		split := matches[0]
 		return len(split) == 0 || (len(split) > 5 && split[3] != "")
 	}
@@ -427,7 +322,7 @@ func splitProxyAuth(proxyUrl string) (string, string, string) {
 	reg := regexp.MustCompile(`^(https?:\/\/)(([\P{Cc}]+):([\P{Cc}]+)@)?(([a-zA-Z0-9][a-zA-Z0-9.-]*)(:[0-9]{1,5})?)`)
 	matches := reg.FindAllStringSubmatch(proxyUrl, -1)
 
-	if matches != nil && len(matches[0]) > 5 {
+	if len(matches) > 0 && len(matches[0]) > 5 {
 		split := matches[0]
 		return split[1] + split[5], split[3], split[4]
 	}

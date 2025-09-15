@@ -152,9 +152,17 @@ func marshalScrapedGroups(content []scraper.ScrapedContent) ([]*models.ScrapedGr
 
 // marshalScrapedPerformer will marshal a single performer
 func marshalScrapedPerformer(content scraper.ScrapedContent) (*models.ScrapedPerformer, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	p, err := marshalScrapedPerformers([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(p) == 0 {
+		return nil, nil
 	}
 
 	return p[0], nil
@@ -162,9 +170,17 @@ func marshalScrapedPerformer(content scraper.ScrapedContent) (*models.ScrapedPer
 
 // marshalScrapedScene will marshal a single scraped scene
 func marshalScrapedScene(content scraper.ScrapedContent) (*models.ScrapedScene, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	s, err := marshalScrapedScenes([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(s) == 0 {
+		return nil, nil
 	}
 
 	return s[0], nil
@@ -172,9 +188,17 @@ func marshalScrapedScene(content scraper.ScrapedContent) (*models.ScrapedScene, 
 
 // marshalScrapedGallery will marshal a single scraped gallery
 func marshalScrapedGallery(content scraper.ScrapedContent) (*models.ScrapedGallery, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	g, err := marshalScrapedGalleries([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(g) == 0 {
+		return nil, nil
 	}
 
 	return g[0], nil
@@ -182,9 +206,17 @@ func marshalScrapedGallery(content scraper.ScrapedContent) (*models.ScrapedGalle
 
 // marshalScrapedImage will marshal a single scraped image
 func marshalScrapedImage(content scraper.ScrapedContent) (*models.ScrapedImage, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	g, err := marshalScrapedImages([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(g) == 0 {
+		return nil, nil
 	}
 
 	return g[0], nil
@@ -192,19 +224,35 @@ func marshalScrapedImage(content scraper.ScrapedContent) (*models.ScrapedImage, 
 
 // marshalScrapedMovie will marshal a single scraped movie
 func marshalScrapedMovie(content scraper.ScrapedContent) (*models.ScrapedMovie, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	m, err := marshalScrapedMovies([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(m) == 0 {
+		return nil, nil
 	}
 
 	return m[0], nil
 }
 
-// marshalScrapedMovie will marshal a single scraped movie
+// marshalScrapedGroup will marshal a single scraped group
 func marshalScrapedGroup(content scraper.ScrapedContent) (*models.ScrapedGroup, error) {
+	// if content is nil, this means the scraper couldn't extract data - return nil, nil to indicate no data found
+	if content == nil {
+		return nil, nil
+	}
+
 	m, err := marshalScrapedGroups([]scraper.ScrapedContent{content})
 	if err != nil {
 		return nil, err
+	}
+	if len(m) == 0 {
+		return nil, nil
 	}
 
 	return m[0], nil

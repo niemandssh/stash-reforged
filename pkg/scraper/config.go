@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/stashapp/stash/pkg/logger"
 )
 
 type config struct {
@@ -164,7 +166,10 @@ func (c scrapeByURLConfig) validate() error {
 func (c scrapeByURLConfig) matchesURL(url string) bool {
 	for _, thisURL := range c.URL {
 		if strings.Contains(url, thisURL) {
+			logger.Infof("matchesURL: URL '%s' matches pattern '%s'", url, thisURL)
 			return true
+		} else {
+			logger.Infof("matchesURL: URL '%s' does NOT match pattern '%s'", url, thisURL)
 		}
 	}
 
@@ -352,14 +357,18 @@ func (c config) supports(ty ScrapeContentType) bool {
 }
 
 func (c config) matchesURL(url string, ty ScrapeContentType) bool {
+	logger.Infof("config.matchesURL: checking URL '%s' for type %v in scraper '%s'", url, ty, c.Name)
+
 	switch ty {
 	case ScrapeContentTypePerformer:
+		logger.Infof("config.matchesURL: checking %d PerformerByURL configs", len(c.PerformerByURL))
 		for _, scraper := range c.PerformerByURL {
 			if scraper.matchesURL(url) {
 				return true
 			}
 		}
 	case ScrapeContentTypeScene:
+		logger.Infof("config.matchesURL: checking %d SceneByURL configs", len(c.SceneByURL))
 		for _, scraper := range c.SceneByURL {
 			if scraper.matchesURL(url) {
 				return true

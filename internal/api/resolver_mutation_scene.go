@@ -212,6 +212,13 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.EndTime = translator.optionalFloat64(input.EndTime, "end_time")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
+	updatedScene.IsNotBroken = translator.optionalBool(input.IsNotBroken, "is_not_broken")
+
+	// If IsNotBroken is set to true, automatically set IsBroken to false
+	if updatedScene.IsNotBroken.Set && updatedScene.IsNotBroken.Value {
+		updatedScene.IsBroken = models.NewOptionalBool(false)
+	}
+
 	updatedScene.StashIDs = translator.updateStashIDs(input.StashIds, "stash_ids")
 
 	var err error
@@ -390,6 +397,12 @@ func (r *mutationResolver) BulkSceneUpdate(ctx context.Context, input BulkSceneU
 	updatedScene.Rating = translator.optionalInt(input.Rating100, "rating100")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
+	updatedScene.IsNotBroken = translator.optionalBool(input.IsNotBroken, "is_not_broken")
+
+	// If IsNotBroken is set to true, automatically set IsBroken to false
+	if updatedScene.IsNotBroken.Set && updatedScene.IsNotBroken.Value {
+		updatedScene.IsBroken = models.NewOptionalBool(false)
+	}
 
 	updatedScene.Date, err = translator.optionalDate(input.Date, "date")
 	if err != nil {

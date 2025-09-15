@@ -55,11 +55,17 @@ func (s *xpathScraper) scrapeURL(ctx context.Context, url string) (*html.Node, *
 }
 
 func (s *xpathScraper) scrapeByURL(ctx context.Context, url string, ty ScrapeContentType) (ScrapedContent, error) {
+	logger.Infof("xpathScraper.scrapeByURL: starting scrape for URL '%s' with type %v", url, ty)
+
 	u := replaceURL(url, s.scraper) // allow a URL Replace for performer by URL queries
+	logger.Infof("xpathScraper.scrapeByURL: URL after replacement: '%s'", u)
+
 	doc, scraper, err := s.scrapeURL(ctx, u)
 	if err != nil {
+		logger.Errorf("xpathScraper.scrapeByURL: failed to load URL: %v", err)
 		return nil, err
 	}
+	logger.Infof("xpathScraper.scrapeByURL: successfully loaded HTML document")
 
 	q := s.getXPathQuery(doc)
 	// if these just return the return values from scraper.scrape* functions then
@@ -68,14 +74,22 @@ func (s *xpathScraper) scrapeByURL(ctx context.Context, url string, ty ScrapeCon
 	case ScrapeContentTypePerformer:
 		ret, err := scraper.scrapePerformer(ctx, q)
 		if err != nil || ret == nil {
+			logger.Infof("xpathScraper.scrapeByURL: performer scraping returned nil or error: %v", err)
 			return nil, err
 		}
 		return ret, nil
 	case ScrapeContentTypeScene:
+		logger.Infof("xpathScraper.scrapeByURL: attempting to scrape scene data")
 		ret, err := scraper.scrapeScene(ctx, q)
-		if err != nil || ret == nil {
+		if err != nil {
+			logger.Errorf("xpathScraper.scrapeByURL: scene scraping failed with error: %v", err)
 			return nil, err
 		}
+		if ret == nil {
+			logger.Infof("xpathScraper.scrapeByURL: scene scraping returned nil (no data found)")
+			return nil, nil
+		}
+		logger.Infof("xpathScraper.scrapeByURL: scene scraping successful")
 		return ret, nil
 	case ScrapeContentTypeGallery:
 		ret, err := scraper.scrapeGallery(ctx, q)
