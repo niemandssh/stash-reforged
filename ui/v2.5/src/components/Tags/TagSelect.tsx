@@ -3,6 +3,7 @@ import {
   OptionProps,
   components as reactSelectComponents,
   MultiValueGenericProps,
+  MultiValueProps,
   SingleValueProps,
 } from "react-select";
 import cx from "classnames";
@@ -57,6 +58,7 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
 
 const tagSelectSort = PatchFunction("TagSelect.sort", sortTagsByRelevance);
 
+
 export type TagSelectProps = IFilterProps &
   IFilterValueProps<Tag> & {
     hoverPlacement?: Placement;
@@ -66,15 +68,16 @@ export type TagSelectProps = IFilterProps &
 
 const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const [createTag] = useTagCreate();
+  const [currentInputValue, setCurrentInputValue] = useState("");
 
   const { configuration } = React.useContext(ConfigurationContext);
   const intl = useIntl();
   const maxOptionsShown =
     configuration?.ui.maxOptionsShown ?? defaultMaxOptionsShown;
   const defaultCreatable =
-    !configuration?.interface.disableDropdownCreate.tag ?? true;
+    !(configuration?.interface.disableDropdownCreate.tag ?? false);
 
-  const exclude = useMemo(() => props.excludeIds ?? [], [props.excludeIds]);
+  const exclude = useMemo(() => props.excludeIds || [], [props.excludeIds]);
 
   async function loadTags(input: string): Promise<Option[]> {
     const filter = new ListFilterModel(GQL.FilterMode.Tags);
@@ -100,6 +103,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     let thisOptionProps = optionProps;
 
     const { object } = optionProps.data;
+    const { isSelected } = optionProps;
 
     let { name } = object;
 
@@ -111,6 +115,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         a.toLowerCase().includes(inputValue.toLowerCase())
       );
     }
+
 
     thisOptionProps = {
       ...optionProps,
@@ -144,6 +149,25 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     };
 
     return <reactSelectComponents.Option {...thisOptionProps} />;
+  };
+
+  const TagMultiValue: React.FC<
+    MultiValueProps<Option, boolean>
+  > = (optionProps) => {
+    const { object } = optionProps.data;
+    
+    // Проверяем, совпадает ли название тега с поисковым запросом
+    const isHighlighted = currentInputValue && 
+      object.name.toLowerCase().includes(currentInputValue.toLowerCase());
+
+    const highlightedClass = isHighlighted ? "highlighted-tag-chip" : "";
+
+    let thisOptionProps = {
+      ...optionProps,
+      className: `${optionProps.className || ""} ${highlightedClass}`.trim(),
+    };
+
+    return <reactSelectComponents.MultiValue {...thisOptionProps} />;
   };
 
   const TagMultiValueLabel: React.FC<
@@ -222,41 +246,41 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     return true;
   };
 
-  return (
-    <FilterSelectComponent<Tag, boolean>
-      {...props}
-      className={cx(
-        "tag-select",
+  const selectProps = {
+    ...props,
+    className: cx(
+      "tag-select",
+      {
+        "tag-select-active": props.active,
+      },
+      props.className
+    ),
+    loadOptions: loadTags,
+    getNamedObject: getNamedObject,
+    isValidNewOption: isValidNewOption,
+    components: {
+      Option: TagOption,
+      MultiValue: TagMultiValue,
+      MultiValueLabel: TagMultiValueLabel,
+      SingleValue: TagValueLabel,
+    },
+    isMulti: props.isMulti ?? false,
+    creatable: props.creatable ?? defaultCreatable,
+    onCreate: onCreate,
+    onInputChange: (inputValue: string) => setCurrentInputValue(inputValue || ""),
+    placeholder: props.noSelectionString ??
+      intl.formatMessage(
+        { id: "actions.select_entity" },
         {
-          "tag-select-active": props.active,
-        },
-        props.className
-      )}
-      loadOptions={loadTags}
-      getNamedObject={getNamedObject}
-      isValidNewOption={isValidNewOption}
-      components={{
-        Option: TagOption,
-        MultiValueLabel: TagMultiValueLabel,
-        SingleValue: TagValueLabel,
-      }}
-      isMulti={props.isMulti ?? false}
-      creatable={props.creatable ?? defaultCreatable}
-      onCreate={onCreate}
-      placeholder={
-        props.noSelectionString ??
-        intl.formatMessage(
-          { id: "actions.select_entity" },
-          {
-            entityType: intl.formatMessage({
-              id: props.isMulti ? "tags" : "tag",
-            }),
-          }
-        )
-      }
-      closeMenuOnSelect={!props.isMulti}
-    />
-  );
+          entityType: intl.formatMessage({
+            id: props.isMulti ? "tags" : "tag",
+          }),
+        }
+      ),
+    closeMenuOnSelect: !props.isMulti,
+  };
+
+  return <FilterSelectComponent<Tag, boolean> {...selectProps} />;
 };
 
 export const TagSelect = PatchComponent("TagSelect", _TagSelect);

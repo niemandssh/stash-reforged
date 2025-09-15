@@ -26,11 +26,15 @@ This version will be always in develop branch.
 - [x] "Merge from/into other scene..." was added in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
 - [x] Notes block with saving text to file (.stash/notes.txt) - for saving links to scrape videos in future, for example
 - [x] Action for open media file in external player
+- [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
 
 ### TODO
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer
 - [ ] Fix visual bug if I change some data in scene and set rating (selects hides badges, but after save data all is ok)
-- [ ] For global recount suggested scenes task add info about status of handled videos 
+- [ ] For global recount suggested scenes task add info about status of handled videos
+- [ ] Add "Ignore in suggested scenes" property for tags
+- [ ] Copy convertable video to temp folder before file will convert and save correctly (for safe)
+- [ ] Fix scene sprites
 
 ### About Stash
 [Original repository](https://github.com/stashapp/stash)

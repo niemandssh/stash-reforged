@@ -10,7 +10,6 @@ export interface IRatingNumberProps {
   onSetRating?: (value: number | null) => void;
   disabled?: boolean;
   clickToRate?: boolean;
-  // true if we should indicate that this is a rating
   withoutContext?: boolean;
 }
 
@@ -21,10 +20,9 @@ export const RatingNumber = PatchComponent(
     const [, setHoverIsHalf] = useState<boolean>(false);
     const disabled = props.disabled || !props.onSetRating;
 
-    // Конвертируем десятибальный рейтинг (0-100) в звездочный (0-10)
     const rating = props.value ? props.value / 10 : 0;
 
-    const max = 20; // 20 звезд, но визуально отображаются как 10 пар
+    const max = 20;
 
     function setRating(starIndex: number) {
       if (!props.onSetRating) {
@@ -34,14 +32,11 @@ export const RatingNumber = PatchComponent(
       let newRating: number;
       
       if (starIndex % 2 === 0) {
-        // Четные звезды (2, 4, 6...) - полный рейтинг
         newRating = starIndex * 0.5;
       } else {
-        // Нечетные звезды (1, 3, 5...) - половинка рейтинга
         newRating = starIndex * 0.5;
       }
 
-      // Конвертируем обратно в десятибальную систему (0-100)
       const decimalRating = Math.round(newRating * 10);
       props.onSetRating(decimalRating);
     }
@@ -60,7 +55,7 @@ export const RatingNumber = PatchComponent(
     function onFocus(starIndex: number) {
       if (!disabled) {
         setHoverRating(starIndex);
-        setHoverIsHalf(false); // По умолчанию полная звезда при фокусе
+        setHoverIsHalf(false);
       }
     }
 
@@ -73,50 +68,43 @@ export const RatingNumber = PatchComponent(
 
     function getStarFill(starIndex: number) {
       if (hoverRating !== undefined) {
-        // При наведении показываем текущий рейтинг + потенциальный
-        const hoverValue = hoverRating * 0.5; // Конвертируем в 0-10 шкалу
+        const hoverValue = hoverRating * 0.5;
         
         if (starIndex % 2 === 0) {
-          // Четные звезды (2, 4, 6...) - правая половина звезды
-          const pairIndex = starIndex / 2; // Номер пары (1, 2, 3...)
+          const pairIndex = starIndex / 2;
           if (hoverValue >= pairIndex) {
-            return 100; // Полная звезда
+            return 100;
           } else {
-            return 0; // Пустая звезда
+            return 0;
           }
         } else {
-          // Нечетные звезды (1, 3, 5...) - левая половина звезды
-          const pairIndex = (starIndex + 1) / 2; // Номер пары (1, 2, 3...)
+          const pairIndex = (starIndex + 1) / 2;
           if (hoverValue >= pairIndex - 0.5) {
-            return 100; // Полная звезда
+            return 100;
           } else {
-            return 0; // Пустая звезда
+            return 0;
           }
         }
       } else {
-        // Обычное состояние - текущий рейтинг
         if (starIndex % 2 === 0) {
-          // Четные звезды (2, 4, 6...) - правая половина звезды
-          const pairIndex = starIndex / 2; // Номер пары (1, 2, 3...)
+          const pairIndex = starIndex / 2;
           if (rating >= pairIndex) {
-            return 100; // Полная звезда
+            return 100;
           } else {
-            return 0; // Пустая звезда
+            return 0;
           }
         } else {
-          // Нечетные звезды (1, 3, 5...) - левая половина звезды
-          const pairIndex = (starIndex + 1) / 2; // Номер пары (1, 2, 3...)
+          const pairIndex = (starIndex + 1) / 2;
           if (rating >= pairIndex - 0.5) {
-            return 100; // Полная звезда
+            return 100;
           } else {
-            return 0; // Пустая звезда
+            return 0;
           }
         }
       }
     }
 
     function getStarColorClass(starIndex: number) {
-      // При наведении - золотой для всех звезд до hoverRating, иначе - белый для примененного рейтинга
       if (hoverRating !== undefined) {
         if (starIndex <= hoverRating) {
           return 'star-color-gold';
@@ -124,7 +112,6 @@ export const RatingNumber = PatchComponent(
           return 'star-color-white';
         }
       } else {
-        // Примененный рейтинг всегда белый
         return 'star-color-white';
       }
     }
@@ -157,7 +144,6 @@ export const RatingNumber = PatchComponent(
                 onMouseLeave={onMouseOut}
                 onFocus={() => onFocus(starIndex)}
                 onBlur={onMouseOut}
-                title={`${starIndex} звезд${starIndex > 1 ? 'ы' : 'а'}`}
               >
                 <div 
                   className={`filled-star ${getStarColorClass(starIndex)}`}
