@@ -122,7 +122,6 @@ func (r *sceneResolver) IsProbablyBroken(ctx context.Context, obj *models.Scene)
 }
 
 func (r *sceneResolver) Paths(ctx context.Context, obj *models.Scene) (*ScenePathsType, error) {
-	logger.Infof("[DEBUG] Paths resolver called for scene %d", obj.ID)
 	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	config := manager.GetInstance().Config
 	builder := urlbuilders.NewSceneURLBuilder(baseURL, obj)

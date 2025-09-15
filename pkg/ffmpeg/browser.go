@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -99,7 +100,9 @@ func IsHLSVideo(videoCodec string, audioCodec ProbeAudioCodec, container Contain
 // This function should be used when VideoFile with full metadata is available
 func IsHLSVideoWithMetadata(vf *VideoFile) bool {
 	// Basic codec and container check
-	if vf.Container != string(Mp4) || vf.VideoCodec != H264 || vf.AudioCodec != string(Aac) {
+	// Container can be "mp4" or "mov,mp4,m4a,3gp,3g2,mj2" - check if it contains mp4
+	isMP4Container := strings.Contains(strings.ToLower(vf.Container), "mp4")
+	if !isMP4Container || vf.VideoCodec != H264 || vf.AudioCodec != string(Aac) {
 		return false
 	}
 
@@ -161,6 +164,13 @@ func IsHLSVideoWithMetadata(vf *VideoFile) bool {
 		if !isStandardFrameRate {
 			return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
 		}
+
+		// Special case: if basic HLS detection is positive, trust it even with good technical specs
+		// Some HLS videos may have been "fixed" but still have sync issues
+		basicHLSDetection := IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
+		if basicHLSDetection {
+			return true
+		}
 	}
 
 	// Check for suspicious timing patterns in video stream vs container duration
@@ -168,7 +178,21 @@ func IsHLSVideoWithMetadata(vf *VideoFile) bool {
 		durationDiff := math.Abs(vf.VideoStreamDuration - vf.FileDuration)
 		// Significant difference between container and stream duration can indicate HLS issues
 		if durationDiff > 0.1 { // More than 100ms difference
-			return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
+			return true
+		}
+	}
+
+	// Check for audio/video synchronization issues
+	audioStream := vf.getAudioStream()
+	if audioStream != nil && audioStream.Duration != "" {
+		audioDuration, err := strconv.ParseFloat(audioStream.Duration, 64)
+		if err == nil && audioDuration > 0 {
+			// Compare audio duration with video duration
+			audioDiff := math.Abs(vf.FileDuration - audioDuration)
+			// Audio/video duration mismatch > 50ms often indicates sync issues from HLS conversion
+			if audioDiff > 0.05 {
+				return true
+			}
 		}
 	}
 

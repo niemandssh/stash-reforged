@@ -1,6 +1,6 @@
 # Stash: Reforged
 
-This is changed version of Stash App!\
+This is changed version of Stash App (from 0.29-dev)!\
 I changed original repository for my own personal requests so it could be better than original app (but it harder to run server and maybe a little bit unstable).
 
 _**If you want you can suggest some improvements or functionality - you are welcome**_! (Maybe this functionality will appear faster here than original stash app).
