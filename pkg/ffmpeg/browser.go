@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 )
 
 // only support H264 by default, since Safari does not support VP8/VP9
@@ -57,34 +58,122 @@ func IsStreamable(videoCodec string, audioCodec ProbeAudioCodec, container Conta
 	return nil
 }
 
-// IsHLSVideo detects if a video file is likely from HLS based on common characteristics
+// IsHLSVideo detects if a video file is likely from HLS based on comprehensive characteristics
 func IsHLSVideo(videoCodec string, audioCodec ProbeAudioCodec, container Container, duration float64) bool {
-	// HLS videos often have these characteristics:
-	// 1. MP4 container with H.264 video and AAC audio
-	// 2. Duration is often a multiple of 2 seconds (HLS segment length)
-	// 3. May have specific metadata or timing issues
-
-	if container != Mp4 {
+	// Basic codec and container check first
+	if container != Mp4 || videoCodec != H264 || audioCodec != Aac {
 		return false
 	}
 
-	// Check for H.264 video and AAC audio (common HLS combination)
-	if videoCodec != H264 || audioCodec != Aac {
-		return false
-	}
-
-	// Check if duration is a multiple of 2 seconds (typical HLS segment length)
-	// Allow some tolerance for rounding errors
+	// Duration-based heuristic with balanced criteria:
 	if duration > 0 {
 		segmentLength := 2.0
 		remainder := math.Mod(duration, segmentLength)
-		// Consider it HLS if remainder is very close to 0 or very close to segmentLength
-		if remainder < 0.1 || remainder > (segmentLength-0.1) {
-			return true
+
+		// Balanced tolerance for duration check (0.03 instead of 0.01 or 0.1)
+		// This catches more potential HLS cases while still reducing false positives
+		isDurationSuspicious := remainder < 0.03 || remainder > (segmentLength-0.03)
+
+		if isDurationSuspicious {
+			// Additional heuristics to refine detection:
+			// 1. Very short durations (< 30 seconds) are highly likely HLS segments
+			// 2. Exact multiples of segment length are suspicious
+			// 3. Files with "_hls_" in filename hint (will be checked in enhanced version)
+			isVeryShort := duration < 30.0
+			isExactMultiple := math.Abs(remainder) < 0.01 || math.Abs(remainder-segmentLength) < 0.01
+
+			// Consider it HLS if duration is suspicious AND:
+			// - Very short (definite HLS segment) OR
+			// - Exact multiple (likely HLS timing) OR
+			// - Just suspicious duration (let enhanced detection decide)
+			if isVeryShort || isExactMultiple || isDurationSuspicious {
+				return true
+			}
 		}
 	}
 
 	return false
+}
+
+// IsHLSVideoWithMetadata provides enhanced HLS detection using additional metadata
+// This function should be used when VideoFile with full metadata is available
+func IsHLSVideoWithMetadata(vf *VideoFile) bool {
+	// Basic codec and container check
+	if vf.Container != string(Mp4) || vf.VideoCodec != H264 || vf.AudioCodec != string(Aac) {
+		return false
+	}
+
+	// Check for HLS-specific metadata patterns in encoder
+	hasHLSEncoder := false
+	if vf.JSON.Format.Tags.Encoder != "" {
+		encoder := strings.ToLower(vf.JSON.Format.Tags.Encoder)
+		// HLS transcoding tools often leave specific encoder signatures
+		hlsEncoders := []string{"hls", "m3u8", "segmenter", "apple", "darwin"}
+		for _, hlsPattern := range hlsEncoders {
+			if strings.Contains(encoder, hlsPattern) {
+				hasHLSEncoder = true
+				break
+			}
+		}
+	}
+
+	// If we have clear HLS indicators in encoder metadata, consider it HLS
+	if hasHLSEncoder {
+		return true
+	}
+
+	// Check major_brand and compatible_brands for unusual patterns
+	majorBrand := strings.ToLower(vf.JSON.Format.Tags.MajorBrand)
+	compatibleBrands := strings.ToLower(vf.JSON.Format.Tags.CompatibleBrands)
+
+	// Missing brand info can indicate HLS segments or corrupted files
+	if majorBrand == "" || compatibleBrands == "" {
+		return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
+	}
+
+	// Check for frame rate and timing irregularities (key indicator of HLS issues)
+	if vf.FrameRate > 0 && vf.FrameCount > 0 {
+		// Calculate expected frame count based on duration and frame rate
+		expectedFrames := vf.FileDuration * vf.FrameRate
+		actualFrames := float64(vf.FrameCount)
+
+		frameCountDiff := math.Abs(expectedFrames - actualFrames)
+		frameCountErrorRate := frameCountDiff / expectedFrames
+
+		// More sensitive detection for timing issues (3% instead of 5%)
+		// HLS videos often have sync issues that manifest as frame count mismatches
+		if frameCountErrorRate > 0.03 {
+			return true
+		}
+
+		// Check for unusual frame rates that might indicate HLS conversion artifacts
+		// Most normal videos have standard frame rates (23.976, 24, 25, 29.97, 30, 50, 60)
+		standardFrameRates := []float64{23.976, 24.0, 25.0, 29.97, 30.0, 50.0, 60.0}
+		isStandardFrameRate := false
+		for _, standardRate := range standardFrameRates {
+			if math.Abs(vf.FrameRate-standardRate) < 0.1 {
+				isStandardFrameRate = true
+				break
+			}
+		}
+
+		// Non-standard frame rates combined with suspicious duration might indicate HLS
+		if !isStandardFrameRate {
+			return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
+		}
+	}
+
+	// Check for suspicious timing patterns in video stream vs container duration
+	if vf.VideoStreamDuration > 0 && vf.FileDuration > 0 {
+		durationDiff := math.Abs(vf.VideoStreamDuration - vf.FileDuration)
+		// Significant difference between container and stream duration can indicate HLS issues
+		if durationDiff > 0.1 { // More than 100ms difference
+			return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
+		}
+	}
+
+	// Fallback to basic duration-based check with moderate sensitivity
+	return IsHLSVideo(vf.VideoCodec, ProbeAudioCodec(vf.AudioCodec), Mp4, vf.FileDuration)
 }
 
 func isValidCodec(codecName string, supportedCodecs []string) bool {

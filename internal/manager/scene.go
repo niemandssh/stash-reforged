@@ -309,8 +309,32 @@ func IsProbablyBroken(scene *models.Scene) bool {
 	// Check if the video is streamable (both video codec and audio codec must be supported)
 	isStreamable := ffmpeg.IsStreamable(videoCodec, audioCodec, container) == nil
 
-	// Check if it's an HLS video (likely to have sync issues)
-	isHLSVideo := ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration)
+	// Enhanced HLS detection with metadata analysis
+	isHLSVideo := false
+
+	// First, try basic HLS detection
+	basicHLSDetection := ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration)
+
+	// If basic detection flags it as HLS, do enhanced analysis
+	if basicHLSDetection {
+		// Get FFProbe instance to analyze metadata
+		ffprobe := GetInstance().FFProbe
+		if ffprobe != nil {
+			// Probe the file for detailed metadata
+			videoFile, err := ffprobe.NewVideoFile(pf.Path)
+			if err != nil {
+				logger.Warnf("[IsProbablyBroken] Failed to probe video file %s: %v", pf.Path, err)
+				// Fallback to basic detection if probing fails
+				isHLSVideo = basicHLSDetection
+			} else {
+				// Use enhanced HLS detection with metadata
+				isHLSVideo = ffmpeg.IsHLSVideoWithMetadata(videoFile)
+			}
+		} else {
+			// No FFProbe available, use basic detection
+			isHLSVideo = basicHLSDetection
+		}
+	}
 
 	// Video is probably broken if it's not streamable OR if it's an HLS video
 	return !isStreamable || isHLSVideo
