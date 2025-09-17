@@ -7,6 +7,7 @@ type Tag {
   aliases: [String!]!
   ignore_auto_tag: Boolean!
   is_pose_tag: Boolean!
+  ignore_suggestions: Boolean!
   weight: Float!
   color: String
   created_at: Time!
@@ -36,6 +37,7 @@ input TagCreateInput {
   aliases: [String!]
   ignore_auto_tag: Boolean
   is_pose_tag: Boolean
+  ignore_suggestions: Boolean
   favorite: Boolean
   weight: Float
   color: String
@@ -55,6 +57,7 @@ input TagUpdateInput {
   aliases: [String!]
   ignore_auto_tag: Boolean
   is_pose_tag: Boolean
+  ignore_suggestions: Boolean
   favorite: Boolean
   weight: Float
   color: String
@@ -85,6 +88,7 @@ input BulkTagUpdateInput {
   aliases: BulkUpdateStrings
   ignore_auto_tag: Boolean
   is_pose_tag: Boolean
+  ignore_suggestions: Boolean
   favorite: Boolean
   weight: Float
   color: String

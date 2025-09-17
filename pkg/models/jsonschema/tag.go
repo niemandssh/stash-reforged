@@ -10,17 +10,18 @@ import (
 )
 
 type Tag struct {
-	Name          string        `json:"name,omitempty"`
-	SortName      string        `json:"sort_name,omitempty"`
-	Description   string        `json:"description,omitempty"`
-	Favorite      bool          `json:"favorite,omitempty"`
-	Aliases       []string      `json:"aliases,omitempty"`
-	Image         string        `json:"image,omitempty"`
-	Parents       []string      `json:"parents,omitempty"`
-	IgnoreAutoTag bool          `json:"ignore_auto_tag,omitempty"`
-	IsPoseTag     bool          `json:"is_pose_tag,omitempty"`
-	CreatedAt     json.JSONTime `json:"created_at,omitempty"`
-	UpdatedAt     json.JSONTime `json:"updated_at,omitempty"`
+	Name              string        `json:"name,omitempty"`
+	SortName          string        `json:"sort_name,omitempty"`
+	Description       string        `json:"description,omitempty"`
+	Favorite          bool          `json:"favorite,omitempty"`
+	Aliases           []string      `json:"aliases,omitempty"`
+	Image             string        `json:"image,omitempty"`
+	Parents           []string      `json:"parents,omitempty"`
+	IgnoreAutoTag     bool          `json:"ignore_auto_tag,omitempty"`
+	IsPoseTag         bool          `json:"is_pose_tag,omitempty"`
+	IgnoreSuggestions bool          `json:"ignore_suggestions,omitempty"`
+	CreatedAt         json.JSONTime `json:"created_at,omitempty"`
+	UpdatedAt         json.JSONTime `json:"updated_at,omitempty"`
 }
 
 func (s Tag) Filename() string {

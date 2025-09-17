@@ -39,6 +39,7 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input TagCreateInput) 
 	newTag.Description = translator.string(input.Description)
 	newTag.IgnoreAutoTag = translator.bool(input.IgnoreAutoTag)
 	newTag.IsPoseTag = translator.bool(input.IsPoseTag)
+	newTag.IgnoreSuggestions = translator.bool(input.IgnoreSuggestions)
 	newTag.Color = translator.string(input.Color)
 
 	// Debug: log the color value
@@ -116,6 +117,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input TagUpdateInput) 
 	updatedTag.Favorite = translator.optionalBool(input.Favorite, "favorite")
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
 	updatedTag.IsPoseTag = translator.optionalBool(input.IsPoseTag, "is_pose_tag")
+	updatedTag.IgnoreSuggestions = translator.optionalBool(input.IgnoreSuggestions, "ignore_suggestions")
 	updatedTag.Description = translator.optionalString(input.Description, "description")
 	updatedTag.Color = translator.optionalString(input.Color, "color")
 
@@ -192,6 +194,7 @@ func (r *mutationResolver) BulkTagUpdate(ctx context.Context, input BulkTagUpdat
 	updatedTag.Favorite = translator.optionalBool(input.Favorite, "favorite")
 	updatedTag.IgnoreAutoTag = translator.optionalBool(input.IgnoreAutoTag, "ignore_auto_tag")
 	updatedTag.IsPoseTag = translator.optionalBool(input.IsPoseTag, "is_pose_tag")
+	updatedTag.IgnoreSuggestions = translator.optionalBool(input.IgnoreSuggestions, "ignore_suggestions")
 	updatedTag.Color = translator.optionalString(input.Color, "color")
 	updatedTag.Weight = translator.optionalFloat64(input.Weight, "weight")
 

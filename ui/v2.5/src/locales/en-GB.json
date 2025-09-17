@@ -1156,6 +1156,7 @@
   "help": "Help",
   "history": "History",
   "ignore_auto_tag": "Ignore Auto Tag",
+  "ignore_suggestions": "Ignore in Scene Suggestions",
   "is_pose_tag": "Is Pose Tag",
   "image": "Image",
   "image_count": "Image Count",

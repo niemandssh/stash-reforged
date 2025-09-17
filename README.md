@@ -12,9 +12,10 @@ This version will be always in develop branch.
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] Setting for show/hide percent of similarity in suggested scenes
+- [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
-- [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video)
+- [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
@@ -30,11 +31,8 @@ This version will be always in develop branch.
 
 ### TODO
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer
-- [ ] Fix visual bug if I change some data in scene and set rating (selects hides badges, but after save data all is ok)
 - [ ] For global recount suggested scenes task add info about status of handled videos
-- [ ] Add "Ignore in suggested scenes" property for tags
-- [ ] Copy convertable video to temp folder before file will convert and save correctly (for safe)
-- [ ] Fix scene sprites
+- [ ] Fix scene sprites after convert video
 
 ### About Stash
 [Original repository](https://github.com/stashapp/stash)

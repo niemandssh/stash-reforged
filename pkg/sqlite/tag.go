@@ -31,17 +31,18 @@ const (
 )
 
 type tagRow struct {
-	ID            int         `db:"id" goqu:"skipinsert"`
-	Name          null.String `db:"name"` // TODO: make schema non-nullable
-	SortName      zero.String `db:"sort_name"`
-	Favorite      bool        `db:"favorite"`
-	Description   zero.String `db:"description"`
-	IgnoreAutoTag bool        `db:"ignore_auto_tag"`
-	IsPoseTag     bool        `db:"is_pose_tag"`
-	Weight        float64     `db:"weight"`
-	Color         zero.String `db:"color"`
-	CreatedAt     Timestamp   `db:"created_at"`
-	UpdatedAt     Timestamp   `db:"updated_at"`
+	ID                int         `db:"id" goqu:"skipinsert"`
+	Name              null.String `db:"name"` // TODO: make schema non-nullable
+	SortName          zero.String `db:"sort_name"`
+	Favorite          bool        `db:"favorite"`
+	Description       zero.String `db:"description"`
+	IgnoreAutoTag     bool        `db:"ignore_auto_tag"`
+	IsPoseTag         bool        `db:"is_pose_tag"`
+	IgnoreSuggestions bool        `db:"ignore_suggestions"`
+	Weight            float64     `db:"weight"`
+	Color             zero.String `db:"color"`
+	CreatedAt         Timestamp   `db:"created_at"`
+	UpdatedAt         Timestamp   `db:"updated_at"`
 
 	// not used in resolutions or updates
 	ImageBlob zero.String `db:"image_blob"`
@@ -55,6 +56,7 @@ func (r *tagRow) fromTag(o models.Tag) {
 	r.Description = zero.StringFrom(o.Description)
 	r.IgnoreAutoTag = o.IgnoreAutoTag
 	r.IsPoseTag = o.IsPoseTag
+	r.IgnoreSuggestions = o.IgnoreSuggestions
 	r.Weight = o.Weight
 	r.Color = zero.StringFrom(o.Color)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
@@ -63,17 +65,18 @@ func (r *tagRow) fromTag(o models.Tag) {
 
 func (r *tagRow) resolve() *models.Tag {
 	ret := &models.Tag{
-		ID:            r.ID,
-		Name:          r.Name.String,
-		SortName:      r.SortName.String,
-		Favorite:      r.Favorite,
-		Description:   r.Description.String,
-		IgnoreAutoTag: r.IgnoreAutoTag,
-		IsPoseTag:     r.IsPoseTag,
-		Weight:        r.Weight,
-		Color:         r.Color.String,
-		CreatedAt:     r.CreatedAt.Timestamp,
-		UpdatedAt:     r.UpdatedAt.Timestamp,
+		ID:                r.ID,
+		Name:              r.Name.String,
+		SortName:          r.SortName.String,
+		Favorite:          r.Favorite,
+		Description:       r.Description.String,
+		IgnoreAutoTag:     r.IgnoreAutoTag,
+		IsPoseTag:         r.IsPoseTag,
+		IgnoreSuggestions: r.IgnoreSuggestions,
+		Weight:            r.Weight,
+		Color:             r.Color.String,
+		CreatedAt:         r.CreatedAt.Timestamp,
+		UpdatedAt:         r.UpdatedAt.Timestamp,
 	}
 
 	return ret
@@ -104,6 +107,7 @@ func (r *tagRowRecord) fromPartial(o models.TagPartial) {
 	r.setBool("favorite", o.Favorite)
 	r.setBool("ignore_auto_tag", o.IgnoreAutoTag)
 	r.setBool("is_pose_tag", o.IsPoseTag)
+	r.setBool("ignore_suggestions", o.IgnoreSuggestions)
 	r.setFloat64("weight", o.Weight)
 	r.setNullString("color", o.Color)
 	r.setTimestamp("created_at", o.CreatedAt)

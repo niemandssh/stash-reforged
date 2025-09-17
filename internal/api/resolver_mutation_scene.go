@@ -1326,8 +1326,9 @@ func (r *mutationResolver) SceneConvertHLSToMp4(ctx context.Context, id string) 
 		videoCodec = pf.VideoCodec
 	}
 
-	if !ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration) {
-		return "", fmt.Errorf("scene %d is not detected as HLS video", sceneID)
+	// Allow HLS conversion for broken videos regardless of format
+	if !scene.IsBroken && !ffmpeg.IsHLSVideo(videoCodec, audioCodec, container, pf.Duration) {
+		return "", fmt.Errorf("scene %d is not detected as HLS video and is not broken", sceneID)
 	}
 
 	// Create HLS conversion task

@@ -6,17 +6,18 @@ import (
 )
 
 type Tag struct {
-	ID            int       `json:"id"`
-	Name          string    `json:"name"`
-	SortName      string    `json:"sort_name"`
-	Favorite      bool      `json:"favorite"`
-	Description   string    `json:"description"`
-	IgnoreAutoTag bool      `json:"ignore_auto_tag"`
-	IsPoseTag     bool      `json:"is_pose_tag"`
-	Weight        float64   `json:"weight"`
-	Color         string    `json:"color"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID                int       `json:"id"`
+	Name              string    `json:"name"`
+	SortName          string    `json:"sort_name"`
+	Favorite          bool      `json:"favorite"`
+	Description       string    `json:"description"`
+	IgnoreAutoTag     bool      `json:"ignore_auto_tag"`
+	IsPoseTag         bool      `json:"is_pose_tag"`
+	IgnoreSuggestions bool      `json:"ignore_suggestions"`
+	Weight            float64   `json:"weight"`
+	Color             string    `json:"color"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 
 	Aliases   RelatedStrings `json:"aliases"`
 	ParentIDs RelatedIDs     `json:"parent_ids"`
@@ -51,16 +52,17 @@ func (s *Tag) LoadChildIDs(ctx context.Context, l TagRelationLoader) error {
 }
 
 type TagPartial struct {
-	Name          OptionalString
-	SortName      OptionalString
-	Description   OptionalString
-	Favorite      OptionalBool
-	IgnoreAutoTag OptionalBool
-	IsPoseTag     OptionalBool
-	Weight        OptionalFloat64
-	Color         OptionalString
-	CreatedAt     OptionalTime
-	UpdatedAt     OptionalTime
+	Name              OptionalString
+	SortName          OptionalString
+	Description       OptionalString
+	Favorite          OptionalBool
+	IgnoreAutoTag     OptionalBool
+	IsPoseTag         OptionalBool
+	IgnoreSuggestions OptionalBool
+	Weight            OptionalFloat64
+	Color             OptionalString
+	CreatedAt         OptionalTime
+	UpdatedAt         OptionalTime
 
 	Aliases   *UpdateStrings
 	ParentIDs *UpdateIDs

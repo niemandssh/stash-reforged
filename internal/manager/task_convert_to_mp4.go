@@ -87,7 +87,7 @@ func (t *ConvertToMP4Task) Execute(ctx context.Context, progress *job.Progress) 
 
 		// Wrap conversion in transaction
 		conversionErr = t.Repository.WithTxn(ctx, func(ctx context.Context) error {
-			return t.convertToMP4(ctx, f, progress)
+			return t.convertToMP4(ctx, f, progress, done)
 		})
 		if conversionErr != nil {
 			logger.Errorf("[convert] error converting scene %d: %v", t.Scene.ID, conversionErr)
@@ -99,7 +99,7 @@ func (t *ConvertToMP4Task) Execute(ctx context.Context, progress *job.Progress) 
 		taskQueue.Close()
 
 		// Stop monitoring
-		done <- true
+		close(done)
 
 		progress.ExecuteTask("Updating scene metadata", func() {
 			if conversionErr == nil {
@@ -135,6 +135,12 @@ func (t *ConvertToMP4Task) Start(ctx context.Context) {
 }
 
 func (t *ConvertToMP4Task) needsConversion(f *models.VideoFile) bool {
+	// If scene is broken, always allow conversion regardless of format
+	if t.Scene.IsBroken {
+		logger.Infof("[convert] scene is broken, allowing MP4 conversion regardless of current format")
+		return true
+	}
+
 	// Always convert non-MP4 files to MP4 for better performance
 	// This includes: avi, flv, mkv, mov, wmv, webm, etc.
 	if f.Format != "mp4" {
@@ -153,9 +159,27 @@ func (t *ConvertToMP4Task) needsConversion(f *models.VideoFile) bool {
 	return false
 }
 
-func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile, progress *job.Progress) error {
+func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile, progress *job.Progress, done chan bool) error {
 	tempDir := t.Config.GetGeneratedPath()
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("convert_%d_%s.mp4", t.Scene.ID, t.Scene.GetHash(t.FileNamingAlgorithm)))
+
+	// Create independent backup copy in temp directory
+	backupTempDir := t.Config.GetTempPath()
+	logger.Infof("[convert] Creating backup temp directory: %s", backupTempDir)
+	if err := os.MkdirAll(backupTempDir, 0755); err != nil {
+		return fmt.Errorf("failed to create temp backup directory %s: %w", backupTempDir, err)
+	}
+	// Use original filename for backup in temp
+	originalFilename := filepath.Base(f.Path)
+	backupTempFile := filepath.Join(backupTempDir, originalFilename)
+	logger.Infof("[convert] Backup temp file path: %s", backupTempFile)
+
+	// Create backup copy of ORIGINAL file in temp directory BEFORE conversion
+	logger.Infof("[convert] Creating backup copy of original file from %s to %s", f.Path, backupTempFile)
+	if err := t.copyFileContent(f.Path, backupTempFile); err != nil {
+		return fmt.Errorf("failed to create backup copy of original file in temp: %w", err)
+	}
+	logger.Infof("[convert] Successfully created backup copy of original file in temp: %s", backupTempFile)
 
 	// Get original file size for progress tracking
 	originalFileInfo, err := os.Stat(f.Path)
@@ -171,16 +195,26 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		originalSize = originalFileInfo.Size()
 	}
 
-	// Start monitoring file size in a goroutine
-	done := make(chan bool)
+	// Start monitoring file size in a goroutine (using shared done channel)
 	go t.monitorFileSize(tempFile, originalSize, progress, done)
 
 	// Track if conversion was successful
 	conversionSuccessful := false
 
-	// Ensure temp file cleanup on any exit (unless successful)
+	// Always clean up backup temp file at the end
 	defer func() {
-		done <- true // Stop monitoring
+		// Don't close done channel here - it's already closed in Execute method
+
+		// Clean up backup temp file regardless of success/failure
+		if _, err := os.Stat(backupTempFile); err == nil {
+			if err := os.Remove(backupTempFile); err != nil {
+				logger.Warnf("[convert] failed to remove backup temp file %s: %v", backupTempFile, err)
+			} else {
+				logger.Infof("[convert] cleaned up backup temp file: %s", backupTempFile)
+			}
+		}
+
+		// Clean up main temp file only on failure
 		if !conversionSuccessful {
 			if _, err := os.Stat(tempFile); err == nil {
 				if err := os.Remove(tempFile); err != nil {
@@ -201,6 +235,8 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		return fmt.Errorf("converted file validation failed: %w", err)
 	}
 
+	// Backup copy of original file was already created before conversion
+
 	newFile, isUpdated, err := t.createNewVideoFile(ctx, tempFile)
 	if err != nil {
 		return fmt.Errorf("failed to create new video file: %w", err)
@@ -211,13 +247,18 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 	}
 
 	if isUpdated {
-		// File was updated, copy temp file content to existing file
+		// File was updated, check if we need to copy temp file to existing file
 		finalPath := newFile.Base().Path
-		logger.Infof("[convert] copying temp file content to existing file: %s", finalPath)
+		logger.Infof("[convert] checking if temp file needs to be copied to existing file: %s", finalPath)
 
-		// Copy temp file content to the existing file
-		if err := t.copyFileContent(tempFile, finalPath); err != nil {
-			return fmt.Errorf("failed to copy temp file content to existing file: %w", err)
+		// Only copy if paths are different (avoid copying file to itself)
+		if tempFile != finalPath {
+			logger.Infof("[convert] copying temp file content to existing file: %s -> %s", tempFile, finalPath)
+			if err := t.copyFileContent(tempFile, finalPath); err != nil {
+				return fmt.Errorf("failed to copy temp file content to existing file: %w", err)
+			}
+		} else {
+			logger.Infof("[convert] temp file and final path are the same, no copy needed: %s", finalPath)
 		}
 
 		// Validate the updated file
@@ -286,6 +327,13 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		logger.Warnf("[convert] failed to recalculate file hashes: %v", err)
 	} else {
 		logger.Infof("[convert] recalculated file hashes")
+	}
+
+	// Regenerate sprites with new hash after conversion
+	logger.Infof("[convert] regenerating sprites for converted file")
+	if err := t.regenerateSprites(ctx); err != nil {
+		logger.Warnf("[convert] failed to regenerate sprites: %v", err)
+		// Don't fail the conversion if sprite generation fails
 	}
 
 	// Generate VTT file for the new video if it doesn't exist
@@ -771,8 +819,9 @@ func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath stri
 			return nil, false, fmt.Errorf("failed to check file association: %w", err)
 		}
 
-		// Update the existing file with new metadata
-		existingVideoFile.Base().Path = filePath
+		// Update the existing file with new metadata - use final path, not temp path
+		finalPath := t.getFinalPath(existingVideoFile)
+		existingVideoFile.Base().Path = finalPath
 		existingVideoFile.Base().Size = videoFile.Size
 		existingVideoFile.Base().ModTime = time.Now()
 		existingVideoFile.Base().UpdatedAt = time.Now()
@@ -1050,5 +1099,37 @@ func (t *ConvertToMP4Task) copyFileContent(src, dst string) error {
 	}
 
 	logger.Infof("[convert] successfully copied file content from %s to %s", src, dst)
+	return nil
+}
+
+// regenerateSprites regenerates sprites for the scene after conversion
+// NOTE: This function expects to be called within an existing transaction context
+func (t *ConvertToMP4Task) regenerateSprites(ctx context.Context) error {
+	// Get updated scene from database with new hash
+	// Use the existing transaction context instead of creating a new one
+	updatedScene, err := t.Repository.Scene.Find(ctx, t.Scene.ID)
+	if err != nil {
+		return fmt.Errorf("failed to load updated scene: %w", err)
+	}
+
+	if updatedScene != nil {
+		if err := updatedScene.LoadFiles(ctx, t.Repository.Scene); err != nil {
+			return fmt.Errorf("failed to load scene files: %w", err)
+		}
+	}
+
+	if updatedScene == nil {
+		return fmt.Errorf("updated scene not found")
+	}
+
+	spriteTask := GenerateSpriteTask{
+		Scene:               *updatedScene, // Use updated scene with new hash
+		Overwrite:           true,          // Force regeneration with new hash
+		fileNamingAlgorithm: t.FileNamingAlgorithm,
+	}
+
+	// Run sprite generation
+	spriteTask.Start(ctx)
+	logger.Infof("[convert] regenerated sprites for scene %d with updated hash", t.Scene.ID)
 	return nil
 }

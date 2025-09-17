@@ -45,6 +45,7 @@ import { Studio, StudioSelect } from "src/components/Studios/StudioSelect";
 import { Gallery, GallerySelect } from "src/components/Galleries/GallerySelect";
 import { Group } from "src/components/Groups/GroupSelect";
 import { useTagsEdit } from "src/hooks/tagsEdit";
+import { Tag } from "src/components/Tags/TagSelect";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
 
@@ -212,18 +213,16 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }, [scene.tags]);
 
   useEffect(() => {
-    if (allTags.length > 0) {
-      const currentTagIds = formik.values.tag_ids || [];
-      const poseTagIdsFromTags = currentTagIds.filter(tagId => {
-        const tag = allTags.find(t => t.id === tagId);
-        return tag && tag.is_pose_tag;
-      });
+    if (allTags.length > 0 && tags.length > 0) {
+      const poseTagIdsFromTags = tags
+        .filter(tag => tag.is_pose_tag)
+        .map(tag => tag.id);
       
       if (!isEqual(poseTagIdsFromTags.sort(), selectedPoseTagIds.sort())) {
         setSelectedPoseTagIds(poseTagIdsFromTags);
       }
     }
-  }, [formik.values.tag_ids, allTags, selectedPoseTagIds]);
+  }, [tags, allTags, selectedPoseTagIds]);
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
@@ -273,22 +272,18 @@ export const SceneEditPanel: React.FC<IProps> = ({
   function onPoseTagSelectionChange(poseTagIds: string[]) {
     setSelectedPoseTagIds(poseTagIds);
     
-    const currentTagIds = formik.values.tag_ids || [];
+    // Получаем текущие теги из useTagsEdit (включая новосозданные)
+    const currentTags = tags || [];
     
-    const nonPoseTagIds = currentTagIds.filter(tagId => {
-      const tag = allTags.find(t => t.id === tagId);
-      return !tag || !tag.is_pose_tag;
-    });
+    // Фильтруем теги, исключая теги позы
+    const nonPoseTags = currentTags.filter(tag => !tag.is_pose_tag);
     
-    const newTagIds = [...nonPoseTagIds, ...poseTagIds];
+    // Добавляем выбранные теги позы
+    const poseTagObjects = poseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
     
-    if (allTags.length > 0) {
-      const newTags = newTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as typeof tags;
-      
-      onSetTags(newTags);
-    } else {
-      formik.setFieldValue("tag_ids", newTagIds);
-    }
+    const newTags = [...nonPoseTags, ...poseTagObjects];
+    
+    onSetTags(newTags);
   }
 
   useEffect(() => {

@@ -535,7 +535,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
-        {scene.files.length > 0 && scene.files[0]?.video_codec !== "h264" && (
+        {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || (scene.is_broken && !isHLSVideo(scene))) && (
           <Dropdown.Item
             key="convert-to-mp4"
             className="bg-secondary text-white"
@@ -544,7 +544,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.convert_to_mp4" />
           </Dropdown.Item>
         )}
-        {scene.files.length > 0 && isHLSVideo(scene) && (
+        {scene.files.length > 0 && (isHLSVideo(scene) || scene.is_broken) && (
           <Dropdown.Item
             key="convert-hls-to-mp4"
             className="bg-secondary text-white"

@@ -110,6 +110,7 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
   randomRatingThreshold
   randomBestRatingThreshold
   showSimilarityPercent
+  externalVideoPlayer
 }
 
 fragment ConfigDLNAData on ConfigDLNAResult {

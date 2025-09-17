@@ -158,19 +158,49 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		allTags[tagID] = true
 	}
 
-	// Load tag weights from database
+	// Load tag weights from database and filter out ignored tags
 	tagWeights := make(map[int]float64)
+	ignoredTags := make(map[int]bool)
 	for tagID := range allTags {
 		tag, err := c.tagRepo.Find(ctx, tagID)
 		if err != nil {
 			continue
 		}
 		if tag != nil {
+			// Skip tags that are set to ignore suggestions
+			if tag.IgnoreSuggestions {
+				ignoredTags[tagID] = true
+				continue
+			}
 			tagWeights[tagID] = tag.Weight
 		} else {
 			tagWeights[tagID] = 0.5 // Default weight if tag not found
 		}
 	}
+
+	// Filter out ignored tags from both tag lists
+	filteredTags1 := make([]int, 0, len(tags1))
+	for _, tagID := range tags1 {
+		if !ignoredTags[tagID] {
+			filteredTags1 = append(filteredTags1, tagID)
+		}
+	}
+
+	filteredTags2 := make([]int, 0, len(tags2))
+	for _, tagID := range tags2 {
+		if !ignoredTags[tagID] {
+			filteredTags2 = append(filteredTags2, tagID)
+		}
+	}
+
+	// If all tags are filtered out, return 0
+	if len(filteredTags1) == 0 && len(filteredTags2) == 0 {
+		return 0.0, nil
+	}
+
+	// Use filtered tags for similarity calculation
+	tags1 = filteredTags1
+	tags2 = filteredTags2
 
 	// Calculate weighted similarity
 	var weightedShared float64

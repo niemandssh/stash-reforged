@@ -209,6 +209,14 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
           />
         </Form.Group>
 
+        <Form.Group controlId="ignore_suggestions">
+          <IndeterminateCheckbox
+            setChecked={(checked) => setUpdateField({ ignore_suggestions: checked })}
+            checked={updateInput.ignore_suggestions ?? undefined}
+            label={intl.formatMessage({ id: "ignore_suggestions" })}
+          />
+        </Form.Group>
+
         {renderTextField("description", updateInput.description, (v) =>
           setUpdateField({ description: v })
         )}

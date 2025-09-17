@@ -100,7 +100,7 @@ func (t *ConvertHLSToMP4Task) Execute(ctx context.Context, progress *job.Progres
 		taskQueue.Close()
 
 		// Stop monitoring
-		done <- true
+		close(done)
 
 		progress.ExecuteTask("Updating scene metadata", func() {
 			if conversionErr == nil {
@@ -141,6 +141,12 @@ func (t *ConvertHLSToMP4Task) Start(ctx context.Context) {
 }
 
 func (t *ConvertHLSToMP4Task) needsConversion(f *models.VideoFile) bool {
+	// If scene is broken, always allow HLS conversion regardless of format
+	if t.Scene.IsBroken {
+		logger.Infof("[convert] scene is broken, allowing HLS conversion regardless of current format")
+		return true
+	}
+
 	// Check if it's actually an HLS video
 	audioCodec := ffmpeg.MissingUnsupported
 	if f.AudioCodec != "" {
@@ -171,6 +177,24 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 	tempDir := t.Config.GetGeneratedPath()
 	tempFile := filepath.Join(tempDir, fmt.Sprintf("convert_hls_%d_%s.mp4", t.Scene.ID, t.Scene.GetHash(t.FileNamingAlgorithm)))
 
+	// Create independent backup copy in temp directory
+	backupTempDir := t.Config.GetTempPath()
+	logger.Infof("[convert] Creating HLS backup temp directory: %s", backupTempDir)
+	if err := os.MkdirAll(backupTempDir, 0755); err != nil {
+		return fmt.Errorf("failed to create temp backup directory %s: %w", backupTempDir, err)
+	}
+	// Use original filename for backup in temp
+	originalFilename := filepath.Base(f.Path)
+	backupTempFile := filepath.Join(backupTempDir, originalFilename)
+	logger.Infof("[convert] HLS backup temp file path: %s", backupTempFile)
+
+	// Create backup copy of ORIGINAL HLS file in temp directory BEFORE conversion
+	logger.Infof("[convert] Creating backup copy of original HLS file from %s to %s", f.Path, backupTempFile)
+	if err := t.copyFileContent(f.Path, backupTempFile); err != nil {
+		return fmt.Errorf("failed to create backup copy of original HLS file in temp: %w", err)
+	}
+	logger.Infof("[convert] Successfully created backup copy of original HLS file in temp: %s", backupTempFile)
+
 	// Get original file size for progress tracking
 	originalFileInfo, err := os.Stat(f.Path)
 	if err != nil {
@@ -192,9 +216,20 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 	// Track if conversion was successful
 	conversionSuccessful := false
 
-	// Ensure temp file cleanup on any exit (unless successful)
+	// Always clean up backup temp file at the end
 	defer func() {
-		done <- true // Stop monitoring
+		// Don't close done channel here - it's already closed in Execute method
+
+		// Clean up backup temp file regardless of success/failure
+		if _, err := os.Stat(backupTempFile); err == nil {
+			if err := os.Remove(backupTempFile); err != nil {
+				logger.Warnf("[convert] failed to remove backup temp HLS file %s: %v", backupTempFile, err)
+			} else {
+				logger.Infof("[convert] cleaned up backup temp HLS file: %s", backupTempFile)
+			}
+		}
+
+		// Clean up main temp file only on failure
 		if !conversionSuccessful {
 			if _, err := os.Stat(tempFile); err == nil {
 				if err := os.Remove(tempFile); err != nil {
@@ -214,6 +249,8 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 	if err := t.validateConvertedFile(tempFile); err != nil {
 		return fmt.Errorf("converted HLS file validation failed: %w", err)
 	}
+
+	// Backup copy of original HLS file was already created before conversion
 
 	newFile, err := t.createNewVideoFile(ctx, tempFile)
 	if err != nil {
@@ -261,6 +298,13 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 		logger.Warnf("[convert] failed to recalculate HLS file hashes: %v", err)
 	} else {
 		logger.Infof("[convert] recalculated HLS file hashes")
+	}
+
+	// Regenerate sprites with new hash after HLS conversion
+	logger.Infof("[convert] regenerating sprites for converted HLS file")
+	if err := t.regenerateSprites(ctx); err != nil {
+		logger.Warnf("[convert] failed to regenerate HLS sprites: %v", err)
+		// Don't fail the conversion if sprite generation fails
 	}
 
 	// Generate VTT file for the updated video if it doesn't exist
@@ -670,4 +714,67 @@ func (t *ConvertHLSToMP4Task) monitorFileSizeWithQueue(filePath string, original
 			}
 		}
 	}
+}
+
+// copyFileContent copies the content from source to destination file
+func (t *ConvertHLSToMP4Task) copyFileContent(src, dst string) error {
+	// Open source file
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return fmt.Errorf("failed to open source file %s: %w", src, err)
+	}
+	defer srcFile.Close()
+
+	// Create destination file
+	dstFile, err := os.Create(dst)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file %s: %w", dst, err)
+	}
+	defer dstFile.Close()
+
+	// Copy content
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("failed to copy file content from %s to %s: %w", src, dst, err)
+	}
+
+	// Sync to ensure data is written to disk
+	if err := dstFile.Sync(); err != nil {
+		return fmt.Errorf("failed to sync destination file %s: %w", dst, err)
+	}
+
+	logger.Infof("[convert] successfully copied HLS file content from %s to %s", src, dst)
+	return nil
+}
+
+// regenerateSprites regenerates sprites for the scene after HLS conversion
+// NOTE: This function expects to be called within an existing transaction context
+func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context) error {
+	// Get updated scene from database with new hash
+	// Use the existing transaction context instead of creating a new one
+	updatedScene, err := t.Repository.Scene.Find(ctx, t.Scene.ID)
+	if err != nil {
+		return fmt.Errorf("failed to load updated scene: %w", err)
+	}
+
+	if updatedScene != nil {
+		if err := updatedScene.LoadFiles(ctx, t.Repository.Scene); err != nil {
+			return fmt.Errorf("failed to load scene files: %w", err)
+		}
+	}
+
+	if updatedScene == nil {
+		return fmt.Errorf("updated scene not found")
+	}
+
+	spriteTask := GenerateSpriteTask{
+		Scene:               *updatedScene, // Use updated scene with new hash
+		Overwrite:           true,          // Force regeneration with new hash
+		fileNamingAlgorithm: t.FileNamingAlgorithm,
+	}
+
+	// Run sprite generation
+	spriteTask.Start(ctx)
+	logger.Infof("[convert] regenerated sprites for HLS scene %d with updated hash", t.Scene.ID)
+	return nil
 }

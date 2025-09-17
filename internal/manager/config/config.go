@@ -693,6 +693,23 @@ func (i *Config) GetGeneratedPath() string {
 	return i.getString(Generated)
 }
 
+// GetTempPath returns the path to the temp directory within the .stash directory
+func (i *Config) GetTempPath() string {
+	// Always use the same directory as generated path since temp should be in .stash
+	generatedPath := i.GetGeneratedPath()
+	if generatedPath != "" {
+		// Get parent directory of generated path (should be .stash directory)
+		stashDir := filepath.Dir(generatedPath)
+		tempPath := filepath.Join(stashDir, "temp")
+		logger.Debugf("[config] GetTempPath using .stash directory: %s", tempPath)
+		return tempPath
+	}
+	// Ultimate fallback
+	tempPath := filepath.Join(".", "temp")
+	logger.Debugf("[config] GetTempPath using current directory fallback: %s", tempPath)
+	return tempPath
+}
+
 func (i *Config) GetBlobsPath() string {
 	return i.getString(BlobsPath)
 }

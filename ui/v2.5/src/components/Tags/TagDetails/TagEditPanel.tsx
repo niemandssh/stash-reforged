@@ -53,6 +53,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     child_ids: yup.array(yup.string().required()).defined(),
     ignore_auto_tag: yup.boolean().defined(),
     is_pose_tag: yup.boolean().defined(),
+    ignore_suggestions: yup.boolean().defined(),
     weight: yup.number().min(0).max(1).default(0.5),
     color: yup.string().nullable().optional(),
     image: yup.string().nullable().optional(),
@@ -67,6 +68,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     child_ids: (tag?.children ?? []).map((t) => t.id),
     ignore_auto_tag: tag?.ignore_auto_tag ?? false,
     is_pose_tag: tag?.is_pose_tag ?? false,
+    ignore_suggestions: tag?.ignore_suggestions ?? false,
     weight: tag?.weight ?? 0.5,
     color: tag?.color ?? "",
     image: tag?.image_path ?? null,
@@ -132,6 +134,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           child_ids: input.child_ids,
           ignore_auto_tag: input.ignore_auto_tag,
           is_pose_tag: input.is_pose_tag,
+          ignore_suggestions: input.ignore_suggestions,
           weight: input.weight,
           color: input.color || undefined,
           image: input.image || undefined,
@@ -150,6 +153,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           child_ids: input.child_ids,
           ignore_auto_tag: input.ignore_auto_tag,
           is_pose_tag: input.is_pose_tag,
+          ignore_suggestions: input.ignore_suggestions,
           weight: input.weight,
           color: input.color || undefined,
           image: input.image || undefined,
@@ -387,6 +391,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         <hr />
         {renderInputField("ignore_auto_tag", "checkbox")}
         {renderInputField("is_pose_tag", "checkbox")}
+        {renderInputField("ignore_suggestions", "checkbox")}
       </Form>
 
       <DetailsEditNavbar
