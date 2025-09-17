@@ -129,6 +129,15 @@ type Query {
     ids: [ID!]
   ): FindTagsResultType!
 
+  findColorPreset(id: ID!): ColorPreset
+  findColorPresets(
+    filter: FindFilterType
+    ids: [ID!]
+  ): FindColorPresetsResultType!
+
+  "Get all unique colors used in tags"
+  findTagColors: [String!]!
+
   "Retrieve random scene markers for the wall"
   markerWall(q: String): [SceneMarker!]!
   "Retrieve random scenes for the wall"
@@ -406,6 +415,10 @@ type Mutation {
   tagsDestroy(ids: [ID!]!): Boolean!
   tagsMerge(input: TagsMergeInput!): Tag
   bulkTagUpdate(input: BulkTagUpdateInput!): [Tag!]
+
+  colorPresetCreate(input: ColorPresetCreateInput!): ColorPreset
+  colorPresetUpdate(input: ColorPresetUpdateInput!): ColorPreset
+  colorPresetDestroy(input: ColorPresetDestroyInput!): Boolean!
 
   """
   Moves the given files to the given destination. Returns true if successful.

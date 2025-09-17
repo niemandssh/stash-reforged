@@ -1243,3 +1243,59 @@ $sticky-header-height: calc(50px + 3.3rem);
 
   }
 }
+
+// Color Palette Styles
+.color-palette {
+  .color-palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
+    gap: 6px;
+    max-width: 100%;
+  }
+
+  .color-palette-item {
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      z-index: 10;
+
+      .color-tooltip {
+        opacity: 1;
+      }
+    }
+  }
+
+  .color-tooltip {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0,0,0,0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+}
+
+// Color Preset Selector Styles
+.color-preset-selector {
+  .color-presets {
+    .color-preset-item {
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+    }
+  }
+}

@@ -113,6 +113,7 @@
         "running": "running",
         "save": "Save",
         "save_delete_settings": "Use these options by default when deleting",
+        "use": "Use",
         "save_filter": "Save filter",
         "scan": "Scan",
         "scrape": "Scrape",
@@ -195,5 +196,25 @@
         "save": "Save",
         "cancel": "Cancel",
         "placeholder": "Enter your notes..."
+    },
+    "color_preset": {
+        "presets": "Color Presets",
+        "manage": "Manage Presets",
+        "create": "Create Preset",
+        "edit": "Edit Preset",
+        "name": "Name",
+        "color": "Color",
+        "name_placeholder": "Enter preset name",
+        "created": "Preset created",
+        "updated": "Preset updated",
+        "deleted": "Preset deleted",
+        "confirm_delete": "Delete preset \"{name}\"?",
+        "no_presets": "No color presets available"
+    },
+    "color_palette": {
+        "title": "Tag Color Palette",
+        "no_colors": "No colors in tags",
+        "sort_by_count": "By Count",
+        "sort_by_color": "By Color"
     }
 }

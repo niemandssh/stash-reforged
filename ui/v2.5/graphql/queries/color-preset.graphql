@@ -1,0 +1,46 @@
+query FindColorPresets($filter: FindFilterType) {
+  findColorPresets(filter: $filter) {
+    count
+    color_presets {
+      id
+      name
+      color
+      created_at
+      updated_at
+    }
+  }
+}
+
+query FindColorPreset($id: ID!) {
+  findColorPreset(id: $id) {
+    id
+    name
+    color
+    created_at
+    updated_at
+  }
+}
+
+mutation ColorPresetCreate($input: ColorPresetCreateInput!) {
+  colorPresetCreate(input: $input) {
+    id
+    name
+    color
+    created_at
+    updated_at
+  }
+}
+
+mutation ColorPresetUpdate($input: ColorPresetUpdateInput!) {
+  colorPresetUpdate(input: $input) {
+    id
+    name
+    color
+    created_at
+    updated_at
+  }
+}
+
+mutation ColorPresetDestroy($input: ColorPresetDestroyInput!) {
+  colorPresetDestroy(input: $input)
+}

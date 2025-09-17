@@ -422,6 +422,19 @@ export const useFindTags = (filter?: ListFilterModel) =>
     },
   });
 
+export const useFindColorPresets = (filter?: ListFilterModel) =>
+  GQL.useFindColorPresetsQuery({
+    variables: {
+      filter: filter?.makeFindFilter() || {},
+    },
+  });
+
+export const useColorPresetCreate = () => GQL.useColorPresetCreateMutation();
+export const useColorPresetUpdate = () => GQL.useColorPresetUpdateMutation();
+export const useColorPresetDestroy = () => GQL.useColorPresetDestroyMutation();
+
+export const useFindTagColors = () => GQL.useFindTagColorsQuery();
+
 export const queryFindTags = (filter: ListFilterModel) =>
   client.query<GQL.FindTagsQuery>({
     query: GQL.FindTagsDocument,

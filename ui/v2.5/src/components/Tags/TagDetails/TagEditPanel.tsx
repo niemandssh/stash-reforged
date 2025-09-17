@@ -15,6 +15,8 @@ import { handleUnsavedChanges } from "src/utils/navigation";
 import { formikUtils } from "src/utils/form";
 import { yupFormikValidate, yupUniqueAliases } from "src/utils/yup";
 import { Tag, TagSelect } from "../TagSelect";
+import { ColorPresetSelector } from "../../Shared/ColorPresetSelector";
+import { ColorPalette } from "../../Shared/ColorPalette";
 
 interface ITagEditPanel {
   tag: Partial<GQL.TagDataFragment>;
@@ -263,6 +265,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     
     const control = (
       <div>
+        {/* Стандартное поле цвета */}
         <div className="d-flex align-items-center mb-3">
           <Form.Control
             type="color"
@@ -282,9 +285,9 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
             style={{ flex: 1 }}
           />
         </div>
-        
+
         {/* Превью тега */}
-        <div className="tag-preview d-flex align-items-center">
+        <div className="tag-preview d-flex align-items-center mb-3">
           <small className="text-muted mr-3">
             <FormattedMessage id="preview" />:
           </small>
@@ -300,6 +303,22 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           >
             {formik.values.name || intl.formatMessage({ id: "tag" })}
           </div>
+        </div>
+
+        {/* Селектор пресетов цветов */}
+        <ColorPresetSelector
+          selectedColor={formik.values.color || ""}
+          onColorSelect={(color) => formik.setFieldValue("color", color)}
+          onPresetSelect={(preset) => {
+            formik.setFieldValue("color", preset.color);
+          }}
+        />
+
+        {/* Палитра всех цветов тегов */}
+        <div className="mt-2">
+          <ColorPalette
+            onColorSelect={(color) => formik.setFieldValue("color", color)}
+          />
         </div>
       </div>
     );

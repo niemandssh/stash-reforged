@@ -132,5 +132,6 @@ func (db *Database) Repository() models.Repository {
 		Studio:          db.Studio,
 		Tag:             db.Tag,
 		SavedFilter:     db.SavedFilter,
+		ColorPreset:     db.ColorPreset,
 	}
 }

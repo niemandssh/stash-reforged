@@ -1,0 +1,27 @@
+type ColorPreset {
+  id: ID!
+  name: String!
+  color: String!
+  created_at: Time!
+  updated_at: Time!
+}
+
+input ColorPresetCreateInput {
+  name: String!
+  color: String!
+}
+
+input ColorPresetUpdateInput {
+  id: ID!
+  name: String
+  color: String
+}
+
+input ColorPresetDestroyInput {
+  id: ID!
+}
+
+type FindColorPresetsResultType {
+  count: Int!
+  color_presets: [ColorPreset!]!
+}

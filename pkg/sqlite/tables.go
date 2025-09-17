@@ -399,3 +399,14 @@ var (
 		idColumn: goqu.T(savedFilterTable).Col(idColumn),
 	}
 )
+
+const (
+	colorPresetTable = "color_presets"
+)
+
+var (
+	colorPresetTableMgr = &table{
+		table:    goqu.T(colorPresetTable),
+		idColumn: goqu.T(colorPresetTable).Col(idColumn),
+	}
+)

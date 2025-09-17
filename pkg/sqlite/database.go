@@ -34,7 +34,7 @@ const (
 	cacheSizeEnv = "STASH_SQLITE_CACHE_SIZE"
 )
 
-var appSchemaVersion uint = 80
+var appSchemaVersion uint = 81
 
 //go:embed migrations/*.sql
 var migrationsBox embed.FS
@@ -80,6 +80,7 @@ type storeRepository struct {
 	Studio          *StudioStore
 	Tag             *TagStore
 	Group           *GroupStore
+	ColorPreset     *colorPresetRepository
 }
 
 type Database struct {
@@ -119,6 +120,7 @@ func NewDatabase() *Database {
 		Tag:             tagStore,
 		Group:           NewGroupStore(blobStore),
 		SavedFilter:     NewSavedFilterStore(),
+		ColorPreset:     NewColorPresetRepository(nil), // Will be set later
 	}
 
 	ret := &Database{
@@ -270,6 +272,9 @@ func (db *Database) initialise() error {
 	if err := db.openWriteDB(); err != nil {
 		return fmt.Errorf("opening write database: %w", err)
 	}
+
+	// Initialize ColorPreset repository with database
+	db.ColorPreset = NewColorPresetRepository(db.readDB)
 
 	return nil
 }
