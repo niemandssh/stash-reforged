@@ -32,6 +32,12 @@ func (t *GeneratePreviewTask) GetDescription() string {
 func (t *GeneratePreviewTask) Start(ctx context.Context) {
 	videoChecksum := t.Scene.GetHash(t.fileNamingAlgorithm)
 
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(t.Scene.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping preview generation: %s", t.Scene.Path)
+		return
+	}
+
 	if t.videoPreviewRequired() {
 		ffprobe := instance.FFProbe
 		videoFile, err := ffprobe.NewVideoFile(t.Scene.Path)

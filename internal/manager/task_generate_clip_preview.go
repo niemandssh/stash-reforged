@@ -24,8 +24,15 @@ func (t *GenerateClipPreviewTask) Start(ctx context.Context) {
 		return
 	}
 
-	prevPath := GetInstance().Paths.Generated.GetClipPreviewPath(t.Image.Checksum, models.DefaultGthumbWidth)
 	filePath := t.Image.Files.Primary().Base().Path
+
+	// Check if the file still exists before processing
+	if exists, err := fsutil.FileExists(filePath); err != nil || !exists {
+		logger.Warnf("File no longer exists, skipping clip preview generation: %s", filePath)
+		return
+	}
+
+	prevPath := GetInstance().Paths.Generated.GetClipPreviewPath(t.Image.Checksum, models.DefaultGthumbWidth)
 
 	clipPreviewOptions := image.ClipPreviewOptions{
 		InputArgs:  GetInstance().Config.GetTranscodeInputArgs(),

@@ -28,6 +28,7 @@ This version will be always in develop branch.
 - [x] Notes block with saving text to file (.stash/notes.txt) - for saving links to scrape videos in future, for example
 - [x] Action for open media file in external player
 - [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
+- [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
 
 ### TODO
 - [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer

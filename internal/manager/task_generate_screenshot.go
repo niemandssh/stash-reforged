@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/stashapp/stash/pkg/fsutil"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/scene/generate"
@@ -40,6 +41,12 @@ func (t *GenerateCoverTask) Start(ctx context.Context) {
 
 	videoFile := t.Scene.Files.Primary()
 	if videoFile == nil {
+		return
+	}
+
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(videoFile.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping cover generation: %s", videoFile.Path)
 		return
 	}
 

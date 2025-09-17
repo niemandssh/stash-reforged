@@ -6,6 +6,7 @@ import (
 
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/pkg/ffmpeg"
+	"github.com/stashapp/stash/pkg/fsutil"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/scene/generate"
@@ -33,6 +34,12 @@ func (t *GenerateTranscodeTask) Start(ctx context.Context) {
 	}
 
 	f := t.Scene.Files.Primary()
+
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(f.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping transcode generation: %s", f.Path)
+		return
+	}
 
 	ffprobe := instance.FFProbe
 	var container ffmpeg.Container

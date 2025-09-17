@@ -25,9 +25,16 @@ func (t *GenerateImageThumbnailTask) Start(ctx context.Context) {
 		return
 	}
 
-	thumbPath := GetInstance().Paths.Generated.GetThumbnailPath(t.Image.Checksum, models.DefaultGthumbWidth)
 	f := t.Image.Files.Primary()
 	path := f.Base().Path
+
+	// Check if the file still exists before processing
+	if exists, err := fsutil.FileExists(path); err != nil || !exists {
+		logger.Warnf("File no longer exists, skipping thumbnail generation: %s", path)
+		return
+	}
+
+	thumbPath := GetInstance().Paths.Generated.GetThumbnailPath(t.Image.Checksum, models.DefaultGthumbWidth)
 
 	logger.Debugf("Generating thumbnail for %s", path)
 

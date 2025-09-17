@@ -24,6 +24,12 @@ func (t *GenerateSpriteTask) Start(ctx context.Context) {
 		return
 	}
 
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(t.Scene.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping sprite generation: %s", t.Scene.Path)
+		return
+	}
+
 	ffprobe := instance.FFProbe
 	videoFile, err := ffprobe.NewVideoFile(t.Scene.Path)
 	if err != nil {

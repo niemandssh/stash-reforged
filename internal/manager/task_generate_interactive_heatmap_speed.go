@@ -26,6 +26,12 @@ func (t *GenerateInteractiveHeatmapSpeedTask) Start(ctx context.Context) {
 		return
 	}
 
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(t.Scene.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping heatmap generation: %s", t.Scene.Path)
+		return
+	}
+
 	videoChecksum := t.Scene.GetHash(t.fileNamingAlgorithm)
 	funscriptPath := video.GetFunscriptPath(t.Scene.Path)
 	heatmapPath := instance.Paths.Scene.GetInteractiveHeatmapPath(videoChecksum)

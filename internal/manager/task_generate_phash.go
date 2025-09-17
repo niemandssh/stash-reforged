@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/stashapp/stash/pkg/fsutil"
 	"github.com/stashapp/stash/pkg/hash/videophash"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
@@ -22,6 +23,12 @@ func (t *GeneratePhashTask) GetDescription() string {
 
 func (t *GeneratePhashTask) Start(ctx context.Context) {
 	if !t.required() {
+		return
+	}
+
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(t.File.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping phash generation: %s", t.File.Path)
 		return
 	}
 

@@ -65,6 +65,12 @@ func (t *GenerateMarkersTask) Start(ctx context.Context) {
 			return
 		}
 
+		// Check if the video file still exists before processing
+		if exists, err := fsutil.FileExists(videoFile.Path); err != nil || !exists {
+			logger.Warnf("Video file no longer exists, skipping marker generation: %s", videoFile.Path)
+			return
+		}
+
 		t.generateMarker(videoFile, scene, t.Marker)
 	}
 }
@@ -84,6 +90,12 @@ func (t *GenerateMarkersTask) generateSceneMarkers(ctx context.Context) {
 	videoFile := t.Scene.Files.Primary()
 
 	if len(sceneMarkers) == 0 || videoFile == nil {
+		return
+	}
+
+	// Check if the video file still exists before processing
+	if exists, err := fsutil.FileExists(videoFile.Path); err != nil || !exists {
+		logger.Warnf("Video file no longer exists, skipping marker generation: %s", videoFile.Path)
 		return
 	}
 
