@@ -679,14 +679,14 @@ div.dropdown-menu {
 .react-select__multi-value.highlighted-tag-chip {
   background-color: #ffeb3b !important;
   color: #000 !important;
-  
+
   .react-select__multi-value__label {
     color: #000 !important;
   }
-  
+
   .react-select__multi-value__remove {
     color: #000 !important;
-    
+
     &:hover {
       background-color: #f57c00 !important;
       color: #fff !important;
@@ -1431,4 +1431,9 @@ select {
   display: inline-block;
   margin-left: 8px;
   visibility: visible;
+}
+
+// Только центрирование вкладок
+.nav-tabs {
+  justify-content: center !important;
 }
