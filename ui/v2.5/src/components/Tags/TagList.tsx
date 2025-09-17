@@ -26,6 +26,7 @@ import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { TagCardGrid } from "./TagCardGrid";
 import { EditTagsDialog } from "./EditTagsDialog";
 import { View } from "../List/views";
+import { TagColorIndicator } from "./TagColorIndicator";
 
 function getItems(result: GQL.FindTagsQueryResult) {
   return result?.data?.findTags?.tags ?? [];
@@ -219,7 +220,10 @@ export const TagList: React.FC<ITagList> = ({ filterHook, alterQuery }) => {
         const tagElements = result.data.findTags.tags.map((tag) => {
           return (
             <div key={tag.id} className="tag-list-row row">
-              <Link to={`/tags/${tag.id}`}>{tag.name}</Link>
+              <Link to={`/tags/${tag.id}`}>
+                <TagColorIndicator tag={tag} size="sm" />
+                {tag.name}
+              </Link>
 
               <div className="ml-auto">
                 <Button

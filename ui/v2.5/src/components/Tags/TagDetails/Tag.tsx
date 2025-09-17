@@ -31,6 +31,7 @@ import { TagGalleriesPanel } from "./TagGalleriesPanel";
 import { CompressedTagDetailsPanel, TagDetailsPanel } from "./TagDetailsPanel";
 import { TagEditPanel } from "./TagEditPanel";
 import { TagMergeModal } from "./TagMergeDialog";
+import { TagColorIndicator } from "../TagColorIndicator";
 import {
   faSignInAlt,
   faSignOutAlt,
@@ -549,6 +550,7 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
                     title="Tag for sex pose"
                   />
                 )}
+                <TagColorIndicator tag={tag} size="md" />
                 <DetailTitle name={tag.name} classNamePrefix="tag">
                   {!isEditing && (
                     <ExpandCollapseButton

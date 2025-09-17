@@ -3,6 +3,7 @@ import { TagLink } from "src/components/Shared/TagLink";
 import { DetailItem } from "src/components/Shared/DetailItem";
 import * as GQL from "src/core/generated-graphql";
 import { PoseTagIcon } from "src/components/Shared/PoseTagIcon";
+import { TagColorIndicator } from "../TagColorIndicator";
 
 interface ITagDetails {
   tag: GQL.TagDataFragment;
@@ -89,6 +90,7 @@ export const CompressedTagDetailsPanel: React.FC<ITagDetails> = ({ tag }) => {
               title="Tag for sex pose"
             />
           )}
+          <TagColorIndicator tag={tag} size="sm" />
           {tag.name}
         </a>
         {tag.description ? (

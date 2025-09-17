@@ -190,3 +190,28 @@
     flex-direction: column;
   }
 }
+
+// Tag color indicator styles
+.tag-color-indicator {
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  display: inline-block;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+
+  &.tag-color-indicator-sm {
+    height: 12px;
+    width: 12px;
+  }
+
+  &.tag-color-indicator-md {
+    height: 16px;
+    width: 16px;
+  }
+
+  &.tag-color-indicator-lg {
+    height: 20px;
+    width: 20px;
+  }
+}

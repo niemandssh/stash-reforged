@@ -12,6 +12,7 @@ import { Icon } from "../Shared/Icon";
 import { faHeart } from "@fortawesome/free-solid-svg-icons";
 import cx from "classnames";
 import { useTagUpdate } from "src/core/StashService";
+import { TagColorIndicator } from "./TagColorIndicator";
 
 interface IProps {
   tag: GQL.TagDataFragment;
@@ -228,7 +229,12 @@ const TagCardImage: React.FC<IProps> = PatchComponent(
 const TagCardTitle: React.FC<IProps> = PatchComponent(
   "TagCard.Title",
   ({ tag }) => {
-    return <>{tag.name ?? ""}</>;
+    return (
+      <>
+        <TagColorIndicator tag={tag} size="sm" />
+        {tag.name ?? ""}
+      </>
+    );
   }
 );
 
