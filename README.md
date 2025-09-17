@@ -17,9 +17,10 @@ This version will be always in develop branch.
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
+- [x] **O-Count stats and graphics**
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
-- [x] Performer's photo cropper
+- [x] Performer's and tag's photo cropper
 - [x] Broken video status for scene (you can add it manually)
 - [x] 10-stars rating by half star
 - [x] RIP ribbon for death performers 
