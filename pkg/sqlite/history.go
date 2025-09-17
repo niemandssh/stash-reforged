@@ -93,3 +93,7 @@ func (qb *oDateManager) DeleteO(ctx context.Context, id int, dates []time.Time) 
 func (qb *oDateManager) ResetO(ctx context.Context, id int) (int, error) {
 	return qb.tableMgr.deleteAllDates(ctx, id)
 }
+
+func (qb *oDateManager) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.tableMgr.getDatesInRange(ctx, start, end)
+}

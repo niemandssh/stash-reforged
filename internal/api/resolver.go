@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/stashapp/stash/internal/build"
 	"github.com/stashapp/stash/internal/manager"
@@ -282,6 +283,62 @@ func (r *queryResolver) Stats(ctx context.Context) (*StatsResultType, error) {
 			TotalPlayDuration: totalPlayDuration,
 			TotalPlayCount:    totalPlayCount,
 			ScenesPlayed:      uniqueScenePlayCount,
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return &ret, nil
+}
+
+func (r *queryResolver) OCountStats(ctx context.Context) (*OCountStatsResultType, error) {
+	var ret OCountStatsResultType
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		repo := r.repository
+		sceneQB := repo.Scene
+
+		// Get all o-count dates from the last year
+		now := time.Now()
+		oneYearAgo := now.AddDate(-1, 0, 0)
+
+		// Get all o-count dates from scenes_o_dates table
+		oDates, err := sceneQB.GetODatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Group by date
+		dailyCounts := make(map[string]int)
+		for _, oDate := range oDates {
+			dateStr := oDate.Format("2006-01-02")
+			dailyCounts[dateStr]++
+		}
+
+		// Convert to slice and sort by date
+		var dailyStats []*OCountDailyStatsType
+		for date, count := range dailyCounts {
+			// Parse date and format for display
+			parsedDate, err := time.Parse("2006-01-02", date)
+			if err != nil {
+				continue
+			}
+
+			dailyStats = append(dailyStats, &OCountDailyStatsType{
+				Date:        date,
+				DateDisplay: parsedDate.Format("2 Jan"),
+				Count:       count,
+			})
+		}
+
+		// Sort by date
+		sort.Slice(dailyStats, func(i, j int) bool {
+			return dailyStats[i].Date < dailyStats[j].Date
+		})
+
+		ret = OCountStatsResultType{
+			DailyStats: dailyStats,
 		}
 
 		return nil

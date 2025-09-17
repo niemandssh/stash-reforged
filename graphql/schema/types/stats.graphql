@@ -15,3 +15,13 @@ type StatsResultType {
   total_play_count: Int!
   scenes_played: Int!
 }
+
+type OCountDailyStatsType {
+  date: String!
+  date_display: String!
+  count: Int!
+}
+
+type OCountStatsResultType {
+  daily_stats: [OCountDailyStatsType!]!
+}

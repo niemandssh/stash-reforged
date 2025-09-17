@@ -216,5 +216,14 @@
         "no_colors": "No colors in tags",
         "sort_by_count": "By Count",
         "sort_by_color": "By Color"
+    },
+    "o_count_stats": {
+        "title": "O-Count Daily Statistics",
+        "current_month": "This Month",
+        "last_30_days": "Last 30 Days",
+        "y_axis_title": "Count",
+        "no_data": "No data to display",
+        "description": "Chart shows O-Count activity over the past year",
+        "tooltip_times": "{count, plural, =0 {times} =1 {time} one {time} other {times}}"
     }
 }

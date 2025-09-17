@@ -25,6 +25,16 @@ query Stats {
   }
 }
 
+query OCountStats {
+  oCountStats {
+    daily_stats {
+      date
+      date_display
+      count
+    }
+  }
+}
+
 query Logs {
   logs {
     ...LogEntryData

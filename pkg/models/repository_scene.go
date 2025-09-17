@@ -84,6 +84,7 @@ type ODateReader interface {
 	GetAllOCount(ctx context.Context) (int, error)
 	GetODates(ctx context.Context, relatedID int) ([]time.Time, error)
 	GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error)
+	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
 }
 
 // SceneReader provides all methods to read scenes.

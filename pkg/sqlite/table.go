@@ -1122,6 +1122,33 @@ func (t *viewHistoryTable) deleteAllDates(ctx context.Context, id int) (int, err
 	return t.getCount(ctx, id)
 }
 
+func (t *viewHistoryTable) getDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	table := t.table.table
+
+	q := dialect.Select(
+		t.dateColumn,
+	).From(table).Where(
+		t.dateColumn.Gte(UTCTimestamp{Timestamp{start}}),
+		t.dateColumn.Lte(UTCTimestamp{Timestamp{end}}),
+	).Order(t.dateColumn.Asc())
+
+	const single = false
+	var ret []time.Time
+	if err := queryFunc(ctx, q, single, func(rows *sqlx.Rows) error {
+		var date Timestamp
+		if err := rows.Scan(&date); err != nil {
+			return err
+		}
+
+		ret = append(ret, date.Timestamp)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
 type sqler interface {
 	ToSQL() (sql string, params []interface{}, err error)
 }

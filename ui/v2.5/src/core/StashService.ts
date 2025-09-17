@@ -2658,6 +2658,8 @@ export const usePluginTasks = () => GQL.usePluginTasksQuery();
 
 export const useStats = () => GQL.useStatsQuery();
 
+export const useOCountStats = () => GQL.useOCountStatsQuery();
+
 export const useVersion = () => GQL.useVersionQuery();
 
 export const useLatestVersion = () =>

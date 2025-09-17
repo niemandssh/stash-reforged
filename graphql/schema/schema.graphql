@@ -147,6 +147,8 @@ type Query {
   markerStrings(q: String, sort: String): [MarkerStringsResultType]!
   "Get stats"
   stats: StatsResultType!
+  "Get o-count daily statistics"
+  oCountStats: OCountStatsResultType!
   "Organize scene markers by tag for a given scene ID"
   sceneMarkerTags(scene_id: ID!): [SceneMarkerTag!]!
 
