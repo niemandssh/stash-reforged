@@ -402,7 +402,7 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
             <h3
               className={cx("gallery-header", { "no-studio": !gallery.studio })}
             >
-              <TruncatedText lineCount={2} text={title} />
+              {title}
             </h3>
           </div>
 

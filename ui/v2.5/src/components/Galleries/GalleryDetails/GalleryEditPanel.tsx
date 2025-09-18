@@ -10,6 +10,7 @@ import {
   queryScrapeGalleryURL,
   useListGalleryScrapers,
   mutateReloadScrapers,
+  queryFindTags,
 } from "src/core/StashService";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { useToast } from "src/hooks/Toast";
@@ -29,8 +30,11 @@ import {
 import { formikUtils } from "src/utils/form";
 import { Studio, StudioSelect } from "src/components/Studios/StudioSelect";
 import { Scene, SceneSelect } from "src/components/Scenes/SceneSelect";
+import { ListFilterModel } from "src/models/list-filter/filter";
 import { useTagsEdit } from "src/hooks/tagsEdit";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
+import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
+import { Tag } from "src/components/Tags/TagSelect";
 
 interface IProps {
   gallery: Partial<GQL.GalleryDataFragment>;
@@ -51,6 +55,8 @@ export const GalleryEditPanel: React.FC<IProps> = ({
 
   const [performers, setPerformers] = useState<Performer[]>([]);
   const [studio, setStudio] = useState<Studio | null>(null);
+  const [selectedPoseTagIds, setSelectedPoseTagIds] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
 
   const isNew = gallery.id === undefined;
 
@@ -100,7 +106,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
-  const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
+  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } = useTagsEdit(
     gallery.tags,
     (ids) => formik.setFieldValue("tag_ids", ids)
   );
@@ -126,6 +132,23 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     formik.setFieldValue("studio_id", item ? item.id : null);
   }
 
+  function onPoseTagSelectionChange(poseTagIds: string[]) {
+    setSelectedPoseTagIds(poseTagIds);
+    
+    // Получаем текущие теги из useTagsEdit (включая новосозданные)
+    const currentTags = tags || [];
+    
+    // Фильтруем теги, исключая теги позы
+    const nonPoseTags = currentTags.filter(tag => !tag.is_pose_tag);
+    
+    // Добавляем выбранные теги позы
+    const poseTagObjects = poseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
+    
+    const newTags = [...nonPoseTags, ...poseTagObjects];
+    
+    onSetTags(newTags);
+  }
+
   useEffect(() => {
     setPerformers(gallery.performers ?? []);
   }, [gallery.performers]);
@@ -137,6 +160,36 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   useEffect(() => {
     setScenes(gallery.scenes ?? []);
   }, [gallery.scenes]);
+
+  // Загружаем все теги для поз тегов
+  useEffect(() => {
+    const loadAllTags = async () => {
+      try {
+        const filter = new ListFilterModel(GQL.FilterMode.Tags);
+        filter.itemsPerPage = -1;
+        filter.sortBy = "name";
+        filter.sortDirection = GQL.SortDirectionEnum.Asc;
+        
+        const result = await queryFindTags(filter);
+        const loadedTags = result.data.findTags.tags as unknown as Tag[];
+        setAllTags(loadedTags);
+      } catch (error) {
+        console.error("Error loading tags:", error);
+      }
+    };
+
+    loadAllTags();
+  }, []);
+
+  // Инициализируем выбранные поз теги
+  useEffect(() => {
+    if (gallery.tags && allTags.length > 0) {
+      const poseTagIds = gallery.tags
+        .filter(tag => tag.is_pose_tag)
+        .map(tag => tag.id);
+      setSelectedPoseTagIds(poseTagIds);
+    }
+  }, [gallery.tags, allTags]);
 
   useEffect(() => {
     if (isVisible) {
@@ -390,6 +443,16 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     return renderField("tag_ids", title, tagsControl(), fullWidthProps);
   }
 
+  function renderPoseTagsField() {
+    return (
+      <PoseTagSelector
+        selectedTagIds={selectedPoseTagIds}
+        onSelectionChange={onPoseTagSelectionChange}
+        disabled={isLoading}
+      />
+    );
+  }
+
   function renderDetailsField() {
     const props = {
       labelProps: {
@@ -449,17 +512,18 @@ export const GalleryEditPanel: React.FC<IProps> = ({
         <Row className="form-container px-3">
           <Col lg={7} xl={12}>
             {renderInputField("title")}
-            {renderInputField("code", "text", "scene_code")}
 
             {renderURLListField("urls", onScrapeGalleryURL, urlScrapable)}
 
             {renderDateField("date")}
-            {renderInputField("photographer")}
 
+            {renderPerformersField()}
+            {renderPoseTagsField()}
+            {renderTagsField()}
+            {renderInputField("code", "text", "scene_code")}
+            {renderInputField("photographer")}
             {renderScenesField()}
             {renderStudioField()}
-            {renderPerformersField()}
-            {renderTagsField()}
           </Col>
           <Col lg={5} xl={12}>
             {renderDetailsField()}

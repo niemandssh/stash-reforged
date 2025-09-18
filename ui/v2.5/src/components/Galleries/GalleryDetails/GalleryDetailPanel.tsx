@@ -6,6 +6,8 @@ import { TagLink } from "src/components/Shared/TagLink";
 import { PerformerCard } from "src/components/Performers/PerformerCard";
 import { sortPerformers } from "src/core/performers";
 import { PhotographerLink } from "src/components/Shared/Link";
+import { GalleryPoseTagsDisplay } from "./GalleryPoseTagsDisplay";
+import { URLsField } from "src/utils/field";
 
 interface IGalleryDetailProps {
   gallery: GQL.GalleryDataFragment;
@@ -29,18 +31,21 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
   }
 
   function renderTags() {
-    if (gallery.tags.length === 0) return;
-    const tags = gallery.tags.map((tag) => (
-      <TagLink key={tag.id} tag={tag} linkType="gallery" />
+    const regularTags = gallery.tags.filter(tag => !tag.is_pose_tag);
+    if (regularTags.length === 0) return;
+    const tags = regularTags.map((tag) => (
+      <TagLink key={tag.id} tag={tag} linkType="details" />
     ));
     return (
       <>
-        <h6>
-          <FormattedMessage
-            id="countables.tags"
-            values={{ count: gallery.tags.length }}
-          />
-        </h6>
+        <div className="mt-3 mb-3">
+          <h4>
+            <FormattedMessage
+              id="countables.tags"
+              values={{ count: regularTags.length }}
+            />
+          </h4>
+        </div>
         {tags}
       </>
     );
@@ -72,6 +77,7 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
     );
   }
 
+
   // filename should use entire row if there is no studio
   const galleryDetailsWidth = gallery.studio ? "col-9" : "col-12";
 
@@ -79,6 +85,7 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
     <>
       <div className="row">
         <div className={`${galleryDetailsWidth} col-12 gallery-details`}>
+          <URLsField id="urls" urls={gallery.urls} />
           <h6>
             <FormattedMessage id="created_at" />:{" "}
             {TextUtils.formatDateTime(intl, gallery.created_at)}{" "}
@@ -106,6 +113,7 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
       <div className="row">
         <div className="col-12">
           {renderDetails()}
+          <GalleryPoseTagsDisplay gallery={gallery} />
           {renderTags()}
           {renderPerformers()}
         </div>

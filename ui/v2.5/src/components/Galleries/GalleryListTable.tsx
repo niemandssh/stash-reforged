@@ -87,7 +87,7 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     <ul className="comma-list overflowable">
       {gallery.tags.map((tag) => (
         <li key={tag.id}>
-          <Link to={NavUtils.makeTagGalleriesUrl(tag)}>
+          <Link to={NavUtils.makeTagUrl(tag.id)}>
             <span>{tag.name}</span>
           </Link>
         </li>

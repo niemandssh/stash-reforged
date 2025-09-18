@@ -91,7 +91,7 @@ const GalleryCardPopovers = PatchComponent(
       if (props.gallery.tags.length <= 0) return;
 
       const popoverContent = props.gallery.tags.map((tag) => (
-        <TagLink key={tag.id} tag={tag} linkType="gallery" />
+        <TagLink key={tag.id} tag={tag} linkType="details" />
       ));
 
       return (
