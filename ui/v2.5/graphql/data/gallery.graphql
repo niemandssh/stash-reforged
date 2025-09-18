@@ -10,6 +10,8 @@ fragment GalleryData on Gallery {
   photographer
   rating100
   organized
+  o_counter
+  o_history
   display_mode
 
   paths {

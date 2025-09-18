@@ -258,7 +258,11 @@ func (r *queryResolver) Stats(ctx context.Context) (*StatsResultType, error) {
 		if err != nil {
 			return err
 		}
-		totalOCount := scenesTotalOCount + imagesTotalOCount
+		galleriesTotalOCount, err := galleryQB.OCount(ctx)
+		if err != nil {
+			return err
+		}
+		totalOCount := scenesTotalOCount + imagesTotalOCount + galleriesTotalOCount
 
 		totalPlayDuration, err := sceneQB.PlayDuration(ctx)
 		if err != nil {
@@ -306,20 +310,38 @@ func (r *queryResolver) OCountStats(ctx context.Context) (*OCountStatsResultType
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		repo := r.repository
 		sceneQB := repo.Scene
+		imageQB := repo.Image
+		galleryQB := repo.Gallery
 
 		// Get all o-count dates from the last year
 		now := time.Now()
 		oneYearAgo := now.AddDate(-1, 0, 0)
 
 		// Get all o-count dates from scenes_o_dates table
-		oDates, err := sceneQB.GetODatesInRange(ctx, oneYearAgo, now)
+		sceneODates, err := sceneQB.GetODatesInRange(ctx, oneYearAgo, now)
 		if err != nil {
 			return err
 		}
 
+		// Get all o-count dates from images_o_dates table
+		imageODates, err := imageQB.GetODatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Get all o-count dates from galleries_o_dates table
+		galleryODates, err := galleryQB.GetODatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Combine all o-dates
+		allODates := append(sceneODates, imageODates...)
+		allODates = append(allODates, galleryODates...)
+
 		// Group by date
 		dailyCounts := make(map[string]int)
-		for _, oDate := range oDates {
+		for _, oDate := range allODates {
 			dateStr := oDate.Format("2006-01-02")
 			dailyCounts[dateStr]++
 		}

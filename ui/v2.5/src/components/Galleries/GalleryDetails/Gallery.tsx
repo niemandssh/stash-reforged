@@ -14,6 +14,7 @@ import {
   mutateResetGalleryCover,
   useFindGallery,
   useGalleryUpdate,
+  useGalleryIncrementO,
 } from "src/core/StashService";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -37,12 +38,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { galleryPath, galleryTitle } from "src/core/galleries";
 import { GalleryChapterPanel } from "./GalleryChaptersPanel";
+import { GalleryHistoryPanel } from "./GalleryHistoryPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import cx from "classnames";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ConfigurationContext } from "src/hooks/Config";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
+import { OCounterButton } from "src/components/Scenes/SceneDetails/OCounterButton";
 
 interface IProps {
   gallery: GQL.GalleryDataFragment;
@@ -113,6 +116,17 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
       setOrganizedLoading(false);
     }
   };
+
+  const [incrementO] = useGalleryIncrementO(gallery.id);
+
+  const onIncrementOClick = async () => {
+    try {
+      await incrementO();
+    } catch (e) {
+      Toast.error(e);
+    }
+  };
+
 
   function getCollapseButtonIcon() {
     return collapsed ? faChevronRight : faChevronLeft;
@@ -263,6 +277,11 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
+              <Nav.Link eventKey="gallery-history-panel">
+                <FormattedMessage id="history" />
+              </Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
               <Nav.Link eventKey="gallery-edit-panel">
                 <FormattedMessage id="actions.edit" />
               </Nav.Link>
@@ -286,6 +305,9 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
               onClickChapter={onClickChapter}
               isVisible={activeTabKey === "gallery-chapter-panel"}
             />
+          </Tab.Pane>
+          <Tab.Pane eventKey="gallery-history-panel">
+            <GalleryHistoryPanel gallery={gallery} />
           </Tab.Pane>
           <Tab.Pane eventKey="gallery-edit-panel" mountOnEnter>
             <GalleryEditPanel
@@ -364,15 +386,21 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
   useEffect(() => {
     Mousetrap.bind("a", () => setActiveTabKey("gallery-details-panel"));
     Mousetrap.bind("c", () => setActiveTabKey("gallery-chapter-panel"));
+    Mousetrap.bind("h", () => setActiveTabKey("gallery-history-panel"));
     Mousetrap.bind("e", () => setActiveTabKey("gallery-edit-panel"));
     Mousetrap.bind("f", () => setActiveTabKey("gallery-file-info-panel"));
+    Mousetrap.bind("o", () => {
+      onIncrementOClick();
+    });
     Mousetrap.bind(",", () => setCollapsed(!collapsed));
 
     return () => {
       Mousetrap.unbind("a");
       Mousetrap.unbind("c");
+      Mousetrap.unbind("h");
       Mousetrap.unbind("e");
       Mousetrap.unbind("f");
+      Mousetrap.unbind("o");
       Mousetrap.unbind(",");
     };
   });
@@ -428,6 +456,12 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
               />
             </span>
             <span className="gallery-toolbar-group">
+              <span>
+                <OCounterButton
+                  value={gallery.o_counter ?? 0}
+                  onIncrement={() => onIncrementOClick()}
+                />
+              </span>
               <span>
                 <OrganizedButton
                   loading={organizedLoading}

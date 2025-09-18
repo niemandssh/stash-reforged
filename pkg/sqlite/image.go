@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/stashapp/stash/pkg/models"
@@ -771,6 +772,12 @@ func (qb *ImageStore) Size(ctx context.Context) (float64, error) {
 
 func (qb *ImageStore) All(ctx context.Context) ([]*models.Image, error) {
 	return qb.getMany(ctx, qb.selectDataset())
+}
+
+func (qb *ImageStore) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	// Images don't have o-dates table like scenes and galleries
+	// They only have o_counter field, so we return empty slice
+	return []time.Time{}, nil
 }
 
 func (qb *ImageStore) makeQuery(ctx context.Context, imageFilter *models.ImageFilterType, findFilter *models.FindFilterType) (*queryBuilder, error) {

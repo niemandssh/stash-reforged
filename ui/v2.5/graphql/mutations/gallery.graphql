@@ -53,3 +53,29 @@ mutation SetGalleryCover($gallery_id: ID!, $cover_image_id: ID!) {
 mutation ResetGalleryCover($gallery_id: ID!) {
   resetGalleryCover(input: { gallery_id: $gallery_id })
 }
+
+mutation GalleryIncrementO($id: ID!) {
+  galleryIncrementO(id: $id)
+}
+
+mutation GalleryDecrementO($id: ID!) {
+  galleryDecrementO(id: $id)
+}
+
+mutation GalleryResetO($id: ID!) {
+  galleryResetO(id: $id)
+}
+
+mutation GalleryAddO($id: ID!, $times: [Timestamp!]) {
+  galleryAddO(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GalleryDeleteO($id: ID!, $times: [Timestamp!]) {
+  galleryDeleteO(id: $id, times: $times) {
+    count
+    history
+  }
+}

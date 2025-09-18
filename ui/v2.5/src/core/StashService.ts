@@ -1761,6 +1761,166 @@ export const useGalleryCreate = () =>
     },
   });
 
+export const useGalleryIncrementO = (id: string) =>
+  GQL.useGalleryAddOMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result, { variables }) {
+      const at = new Date().toISOString();
+
+      const mutationResult = result.data?.galleryAddO;
+      if (!mutationResult || !variables) return;
+
+      const { history, count } = mutationResult;
+      const { times } = variables;
+      const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
+      const countChange = !times ? 1 : timeArray.length;
+
+      const gallery = cache.readFragment<GQL.GalleryDataFragment>({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fragment: GQL.GalleryDataFragmentDoc,
+        fragmentName: "GalleryData",
+      });
+
+      if (gallery) {
+        // if we have the gallery, update performer o_counters manually
+        for (const performer of gallery.performers) {
+          cache.modify({
+            id: cache.identify(performer),
+            fields: {
+              o_counter(value) {
+                return value + countChange;
+              },
+            },
+          });
+        }
+      } else {
+        // else refresh all performer o_counters
+        evictTypeFields(cache, {
+          Performer: ["o_counter"],
+        });
+      }
+
+      updateStats(cache, "total_o_count", countChange);
+
+      // Try using writeFragment to force a complete update
+      if (gallery) {
+        cache.writeFragment({
+          id: cache.identify({ __typename: "Gallery", id }),
+          fragment: GQL.GalleryDataFragmentDoc,
+          fragmentName: "GalleryData",
+          data: {
+            ...gallery,
+            o_counter: count,
+            o_history: history,
+          },
+        });
+      }
+    },
+  });
+export const useGalleryDecrementO = (id: string) =>
+  GQL.useGalleryDeleteOMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result, { variables }) {
+      const mutationResult = result.data?.galleryDeleteO;
+      if (!mutationResult || !variables) return;
+
+      const { history, count } = mutationResult;
+      const { times } = variables;
+      const timeArray = !times ? [1] : Array.isArray(times) ? times : [times];
+      const countChange = !times ? 1 : timeArray.length;
+
+      const gallery = cache.readFragment<GQL.GalleryDataFragment>({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fragment: GQL.GalleryDataFragmentDoc,
+        fragmentName: "GalleryData",
+      });
+
+      if (gallery) {
+        // if we have the gallery, update performer o_counters manually
+        for (const performer of gallery.performers) {
+          cache.modify({
+            id: cache.identify(performer),
+            fields: {
+              o_counter(value) {
+                return Math.max(0, value - countChange);
+              },
+            },
+          });
+        }
+      } else {
+        // else refresh all performer o_counters
+        evictTypeFields(cache, {
+          Performer: ["o_counter"],
+        });
+      }
+
+      updateStats(cache, "total_o_count", -countChange);
+
+      // Try using writeFragment to force a complete update
+      if (gallery) {
+        cache.writeFragment({
+          id: cache.identify({ __typename: "Gallery", id }),
+          fragment: GQL.GalleryDataFragmentDoc,
+          fragmentName: "GalleryData",
+          data: {
+            ...gallery,
+            o_counter: count,
+            o_history: history,
+          },
+        });
+      }
+    },
+  });
+export const useGalleryResetO = (id: string) =>
+  GQL.useGalleryResetOMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result, { variables }) {
+      const gallery = cache.readFragment<GQL.GalleryDataFragment>({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fragment: GQL.GalleryDataFragmentDoc,
+        fragmentName: "GalleryData",
+      });
+
+      if (gallery) {
+        // if we have the gallery, update performer o_counters manually
+        for (const performer of gallery.performers) {
+          cache.modify({
+            id: cache.identify(performer),
+            fields: {
+              o_counter() {
+                return 0;
+              },
+            },
+          });
+        }
+      } else {
+        // else refresh all performer o_counters
+        evictTypeFields(cache, {
+          Performer: ["o_counter"],
+        });
+      }
+
+      updateStats(cache, "total_o_count", -gallery?.o_counter || 0);
+
+      // Try using writeFragment to force a complete update
+      if (gallery) {
+        cache.writeFragment({
+          id: cache.identify({ __typename: "Gallery", id }),
+          fragment: GQL.GalleryDataFragmentDoc,
+          fragmentName: "GalleryData",
+          data: {
+            ...gallery,
+            o_counter: 0,
+            o_history: [],
+          },
+        });
+      }
+    },
+  });
+
 export const useGalleryUpdate = () =>
   GQL.useGalleryUpdateMutation({
     update(cache, result, { variables }) {

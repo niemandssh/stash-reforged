@@ -16,6 +16,8 @@ type Gallery {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!
+  o_counter: Int!
+  o_history: [Time!]!
   display_mode: Int!
   created_at: Time!
   updated_at: Time!

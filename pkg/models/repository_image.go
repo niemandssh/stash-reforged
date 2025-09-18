@@ -1,6 +1,9 @@
 package models
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // ImageGetter provides methods to get images by ID.
 type ImageGetter interface {
@@ -38,6 +41,7 @@ type ImageCounter interface {
 	CountByGalleryID(ctx context.Context, galleryID int) (int, error)
 	OCount(ctx context.Context) (int, error)
 	OCountByPerformerID(ctx context.Context, performerID int) (int, error)
+	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
 }
 
 // ImageCreator provides methods to create images.

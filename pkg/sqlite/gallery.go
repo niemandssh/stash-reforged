@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
@@ -39,6 +40,7 @@ type galleryRow struct {
 	// expressed as 1-100
 	Rating      null.Int  `db:"rating"`
 	Organized   bool      `db:"organized"`
+	OCounter    int       `db:"o_counter"`
 	DisplayMode null.Int  `db:"display_mode"`
 	StudioID    null.Int  `db:"studio_id,omitempty"`
 	FolderID    null.Int  `db:"folder_id,omitempty"`
@@ -55,6 +57,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Photographer = zero.StringFrom(o.Photographer)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.OCounter = o.OCounter
 	r.DisplayMode = intFromValue(o.DisplayMode)
 	r.StudioID = intFromPtr(o.StudioID)
 	r.FolderID = nullIntFromFolderIDPtr(o.FolderID)
@@ -81,6 +84,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Photographer:  r.Photographer.String,
 		Rating:        nullIntPtr(r.Rating),
 		Organized:     r.Organized,
+		OCounter:      r.OCounter,
 		DisplayMode:   int(r.DisplayMode.Int64),
 		StudioID:      nullIntPtr(r.StudioID),
 		FolderID:      nullIntFolderIDPtr(r.FolderID),
@@ -110,6 +114,7 @@ func (r *galleryRowRecord) fromPartial(o models.GalleryPartial) {
 	r.setNullString("photographer", o.Photographer)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
+	r.setInt("o_counter", o.OCounter)
 	r.setNullInt("display_mode", o.DisplayMode)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
@@ -904,4 +909,138 @@ func (qb *GalleryStore) ResetCover(ctx context.Context, galleryID int) error {
 
 func (qb *GalleryStore) GetSceneIDs(ctx context.Context, id int) ([]int, error) {
 	return galleryRepository.scenes.getIDs(ctx, id)
+}
+
+// O-Counter methods
+func (qb *GalleryStore) IncrementOCounter(ctx context.Context, id int) (int, error) {
+	oCounterMgr := &oCounterManager{tableMgr: qb.tableMgr}
+	return oCounterMgr.IncrementOCounter(ctx, id)
+}
+
+func (qb *GalleryStore) DecrementOCounter(ctx context.Context, id int) (int, error) {
+	oCounterMgr := &oCounterManager{tableMgr: qb.tableMgr}
+	return oCounterMgr.DecrementOCounter(ctx, id)
+}
+
+func (qb *GalleryStore) ResetOCounter(ctx context.Context, id int) (int, error) {
+	oCounterMgr := &oCounterManager{tableMgr: qb.tableMgr}
+	return oCounterMgr.ResetOCounter(ctx, id)
+}
+
+// O-Dates methods (similar to scenes)
+func (qb *GalleryStore) AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.AddO(ctx, id, dates)
+}
+
+func (qb *GalleryStore) DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.DeleteO(ctx, id, dates)
+}
+
+func (qb *GalleryStore) ResetO(ctx context.Context, id int) (int, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.ResetO(ctx, id)
+}
+
+// O-Count statistics methods
+func (qb *GalleryStore) OCount(ctx context.Context) (int, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.GetAllOCount(ctx)
+}
+
+func (qb *GalleryStore) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.GetODatesInRange(ctx, start, end)
+}
+
+func (qb *GalleryStore) OCountByPerformerID(ctx context.Context, performerID int) (int, error) {
+	// Get all galleries for this performer
+	galleries, err := qb.FindByPerformerID(ctx, performerID)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(galleries) == 0 {
+		return 0, nil
+	}
+
+	// Get o-count for all galleries
+	var totalOCount int
+	for _, gallery := range galleries {
+		oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+			table: table{
+				table:    goqu.T("galleries_o_dates"),
+				idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+			},
+			dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+		}}
+		count, err := oDateMgr.GetOCount(ctx, gallery.ID)
+		if err != nil {
+			return 0, err
+		}
+		totalOCount += count
+	}
+
+	return totalOCount, nil
+}
+
+func (qb *GalleryStore) FindByPerformerID(ctx context.Context, performerID int) ([]*models.Gallery, error) {
+	table := qb.table()
+	joinTable := performersGalleriesJoinTable
+	q := qb.selectDataset().InnerJoin(joinTable, goqu.On(table.Col(idColumn).Eq(joinTable.Col(galleryIDColumn)))).Where(joinTable.Col(performerIDColumn).Eq(performerID))
+
+	return qb.getMany(ctx, q)
+}
+
+func (qb *GalleryStore) GetManyOCount(ctx context.Context, ids []int) ([]int, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.GetManyOCount(ctx, ids)
+}
+
+func (qb *GalleryStore) GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	oDateMgr := &oDateManager{tableMgr: &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_o_dates"),
+			idColumn: goqu.T("galleries_o_dates").Col("gallery_id"),
+		},
+		dateColumn: goqu.T("galleries_o_dates").Col("o_date"),
+	}}
+	return oDateMgr.GetManyODates(ctx, ids)
 }

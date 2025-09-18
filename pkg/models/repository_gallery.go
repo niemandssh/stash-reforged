@@ -1,6 +1,9 @@
 package models
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // GalleryGetter provides methods to get galleries by ID.
 type GalleryGetter interface {
@@ -74,11 +77,27 @@ type GalleryReader interface {
 	All(ctx context.Context) ([]*Gallery, error)
 }
 
+// GalleryOCounter provides methods to manage o-counter for galleries.
+type GalleryOCounter interface {
+	IncrementOCounter(ctx context.Context, id int) (int, error)
+	DecrementOCounter(ctx context.Context, id int) (int, error)
+	ResetOCounter(ctx context.Context, id int) (int, error)
+	AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	ResetO(ctx context.Context, id int) (int, error)
+	OCount(ctx context.Context) (int, error)
+	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
+	OCountByPerformerID(ctx context.Context, performerID int) (int, error)
+	GetManyOCount(ctx context.Context, ids []int) ([]int, error)
+	GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error)
+}
+
 // GalleryWriter provides all methods to modify galleries.
 type GalleryWriter interface {
 	GalleryCreator
 	GalleryUpdater
 	GalleryDestroyer
+	GalleryOCounter
 
 	AddFileID(ctx context.Context, id int, fileID FileID) error
 	AddImages(ctx context.Context, galleryID int, imageIDs ...int) error

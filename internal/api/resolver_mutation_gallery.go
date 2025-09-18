@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/pkg/file"
@@ -14,6 +15,7 @@ import (
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/plugin"
 	"github.com/stashapp/stash/pkg/plugin/hook"
+	"github.com/stashapp/stash/pkg/sliceutil"
 	"github.com/stashapp/stash/pkg/sliceutil/stringslice"
 	"github.com/stashapp/stash/pkg/utils"
 )
@@ -672,4 +674,140 @@ func (r *mutationResolver) GalleryChapterDestroy(ctx context.Context, id string)
 	r.hookExecutor.ExecutePostHooks(ctx, chapterID, hook.GalleryChapterDestroyPost, id, nil)
 
 	return true, nil
+}
+
+func (r *mutationResolver) GalleryAddO(ctx context.Context, id string, times []*time.Time) (*HistoryMutationResult, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var timeTimes []time.Time
+
+	// convert time.Time to local time
+	for _, t := range times {
+		if t != nil {
+			timeTimes = append(timeTimes, t.Local())
+		}
+	}
+
+	var updatedTimes []time.Time
+
+	var oCounter int
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		updatedTimes, err = qb.AddO(ctx, galleryID, timeTimes)
+		if err != nil {
+			return err
+		}
+
+		// Update o_counter in galleries table
+		oCounter, err = qb.IncrementOCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   oCounter,
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
+func (r *mutationResolver) GalleryDecrementO(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.DecrementOCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) GalleryDeleteO(ctx context.Context, id string, times []*time.Time) (*HistoryMutationResult, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var timeTimes []time.Time
+
+	// convert time.Time to local time
+	for _, t := range times {
+		if t != nil {
+			timeTimes = append(timeTimes, t.Local())
+		}
+	}
+
+	var updatedTimes []time.Time
+	var oCounter int
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		updatedTimes, err = qb.DeleteO(ctx, galleryID, timeTimes)
+		if err != nil {
+			return err
+		}
+
+		// Update o_counter in galleries table
+		oCounter, err = qb.DecrementOCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   oCounter,
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
+func (r *mutationResolver) GalleryIncrementO(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.IncrementOCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) GalleryResetO(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.ResetOCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
 }

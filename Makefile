@@ -355,7 +355,7 @@ ifdef STASH_SOURCEMAPS
 endif
 
 .PHONY: ui
-ui: ui-only generate-login-locale
+ui: generate ui-only generate-login-locale
 
 .PHONY: ui-only
 ui-only: ui-env

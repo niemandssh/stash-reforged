@@ -9,7 +9,7 @@ This version will be always in develop branch.
 
 ### Some new features
 
-- [x] **Trimmed segments** - allows you to skip start and end of the video with intro and advertise (without trim original video)
+- [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] Setting for show/hide percent of similarity in suggested scenes
 - [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
@@ -17,6 +17,7 @@ This version will be always in develop branch.
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
+- [x] **O-Count for galleries!** - now you can add count of times for your comics ;) 
 - [x] **O-Count stats and graphics**
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
@@ -38,8 +39,8 @@ This version will be always in develop branch.
 - [x] Show mode saves in DB table for each gallery
 
 ### TODO
-- [ ] For global recount suggested scenes task add info about status of handled videos
-- [ ] Fix scene sprites after convert video
+- [ ] Add info about status of handled videos for global recount suggested scenes task
+- [ ] Fix scene sprites after convert video (don't run generate manually)
 
 ### About Stash
 [Original repository](https://github.com/stashapp/stash)

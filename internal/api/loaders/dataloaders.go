@@ -20,6 +20,8 @@
 //go:generate go run github.com/vektah/dataloaden SceneOHistoryLoader int []time.Time
 //go:generate go run github.com/vektah/dataloaden ScenePlayHistoryLoader int []time.Time
 //go:generate go run github.com/vektah/dataloaden SceneLastPlayedLoader int *time.Time
+//go:generate go run github.com/vektah/dataloaden GalleryOCountLoader int int
+//go:generate go run github.com/vektah/dataloaden GalleryOHistoryLoader int []time.Time
 package loaders
 
 import (
@@ -53,8 +55,10 @@ type Loaders struct {
 	ImageFiles   *ImageFileIDsLoader
 	GalleryFiles *GalleryFileIDsLoader
 
-	GalleryByID *GalleryLoader
-	ImageByID   *ImageLoader
+	GalleryByID     *GalleryLoader
+	GalleryOCount   *GalleryOCountLoader
+	GalleryOHistory *GalleryOHistoryLoader
+	ImageByID       *ImageLoader
 
 	PerformerByID         *PerformerLoader
 	PerformerCustomFields *CustomFieldsLoader
@@ -83,6 +87,16 @@ func (m Middleware) Middleware(next http.Handler) http.Handler {
 				wait:     wait,
 				maxBatch: maxBatch,
 				fetch:    m.fetchGalleries(ctx),
+			},
+			GalleryOCount: &GalleryOCountLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGalleriesOCount(ctx),
+			},
+			GalleryOHistory: &GalleryOHistoryLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGalleriesOHistory(ctx),
 			},
 			ImageByID: &ImageLoader{
 				wait:     wait,
@@ -379,6 +393,28 @@ func (m Middleware) fetchScenesLastPlayed(ctx context.Context) func(keys []int) 
 		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
 			var err error
 			ret, err = m.Repository.Scene.GetManyLastViewed(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGalleriesOCount(ctx context.Context) func(keys []int) ([]int, []error) {
+	return func(keys []int) (ret []int, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Gallery.GetManyOCount(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGalleriesOHistory(ctx context.Context) func(keys []int) ([][]time.Time, []error) {
+	return func(keys []int) (ret [][]time.Time, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Gallery.GetManyODates(ctx, keys)
 			return err
 		})
 		return ret, toErrorSlice(err)

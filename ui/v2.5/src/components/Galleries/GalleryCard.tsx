@@ -11,6 +11,7 @@ import { PopoverCountButton } from "../Shared/PopoverCountButton";
 import NavUtils from "src/utils/navigation";
 import { RatingBanner } from "../Shared/RatingBanner";
 import { faBox, faPlayCircle, faTag } from "@fortawesome/free-solid-svg-icons";
+import { SweatDrops } from "src/components/Shared/SweatDrops";
 import { galleryTitle } from "src/core/galleries";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 import { GalleryPreviewScrubber } from "./GalleryPreviewScrubber";
@@ -132,6 +133,21 @@ const GalleryCardPopovers = PatchComponent(
       );
     }
 
+    function maybeRenderOCounter() {
+      if (props.gallery?.o_counter) {
+        return (
+          <div className="o-count">
+            <Button className="minimal">
+              <span className="fa-icon">
+                <SweatDrops />
+              </span>
+              <span>{props.gallery.o_counter}</span>
+            </Button>
+          </div>
+        );
+      }
+    }
+
     function maybeRenderOrganized() {
       if (props.gallery.organized) {
         return (
@@ -155,7 +171,8 @@ const GalleryCardPopovers = PatchComponent(
         props.gallery.performers.length > 0 ||
         props.gallery.tags.length > 0 ||
         props.gallery.organized ||
-        props.gallery.image_count > 0
+        props.gallery.image_count > 0 ||
+        props.gallery?.o_counter
       ) {
         return (
           <>
@@ -165,6 +182,7 @@ const GalleryCardPopovers = PatchComponent(
               {maybeRenderTagPopoverButton()}
               {maybeRenderPerformerPopoverButton()}
               {maybeRenderScenePopoverButton()}
+              {maybeRenderOCounter()}
               {maybeRenderOrganized()}
             </ButtonGroup>
           </>

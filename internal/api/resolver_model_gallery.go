@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/stashapp/stash/internal/api/loaders"
 	"github.com/stashapp/stash/internal/api/urlbuilders"
@@ -219,4 +220,29 @@ func (r *galleryResolver) Image(ctx context.Context, obj *models.Gallery, index 
 
 func (r *galleryResolver) DisplayMode(ctx context.Context, obj *models.Gallery) (int, error) {
 	return int(obj.DisplayMode), nil
+}
+
+func (r *galleryResolver) OCounter(ctx context.Context, obj *models.Gallery) (*int, error) {
+	ret, err := loaders.From(ctx).GalleryOCount.Load(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ret, nil
+}
+
+func (r *galleryResolver) OHistory(ctx context.Context, obj *models.Gallery) ([]*time.Time, error) {
+	ret, err := loaders.From(ctx).GalleryOHistory.Load(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert to pointer slice
+	ptrRet := make([]*time.Time, len(ret))
+	for i, t := range ret {
+		tt := t
+		ptrRet[i] = &tt
+	}
+
+	return ptrRet, nil
 }
