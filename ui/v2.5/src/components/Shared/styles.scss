@@ -1,10 +1,10 @@
 // Image Cropper Styles
 .image-cropper-container {
-  .cropper-view-box img { 
-    transition: none; 
+  .cropper-view-box img {
+    transition: none;
   }
-  
-  .detail-header-image { 
+
+  .detail-header-image {
     flex-direction: column;
     padding: 0; // Убираем отступы слева и справа
   }
@@ -14,13 +14,13 @@
     margin-top: 10px;
     padding-left: 0;
     text-align: left;
-    
+
     .crop-start {
       display: inline-block;
       margin-right: 0.5rem;
       margin-top: 10px;
     }
-    
+
     .crop-accept,
     .crop-cancel {
       box-sizing: border-box;
@@ -28,15 +28,15 @@
       margin-top: 10px;
       width: calc(50% - 2.5px);
     }
-    
+
     .crop-cancel {
       margin-right: 5px;
     }
-    
+
     .crop-accept {
       margin-left: 0;
     }
-    
+
     p {
       color: #666;
       display: block;
@@ -1016,7 +1016,7 @@ $sticky-header-height: calc(50px + 3.3rem);
     border-right: 20px solid transparent;
     border-top: 20px solid #000;
 
-    .death-ribbon-inner {
+    .death-ribbon__inner {
       align-items: center;
       display: flex;
       height: 20px;
@@ -1027,7 +1027,7 @@ $sticky-header-height: calc(50px + 3.3rem);
       width: 40px;
     }
 
-    .death-ribbon-text {
+    .death-ribbon__text {
       color: #fff;
       font-size: 8px;
       font-weight: bold;
@@ -1043,7 +1043,7 @@ $sticky-header-height: calc(50px + 3.3rem);
     border-right: 40px solid transparent;
     border-top: 40px solid #000;
 
-    .death-ribbon-inner {
+    .death-ribbon__inner {
       align-items: center;
       display: flex;
       height: 40px;
@@ -1054,7 +1054,7 @@ $sticky-header-height: calc(50px + 3.3rem);
       width: 80px;
     }
 
-    .death-ribbon-text {
+    .death-ribbon__text {
       color: #fff;
       font-size: 14px;
       font-weight: bold;
@@ -1084,7 +1084,7 @@ $sticky-header-height: calc(50px + 3.3rem);
 // Pose Tag Selector Styles
 .pose-tag-selector {
   margin-bottom: 1rem;
-  
+
   .pose-tag-list {
     background-color: $body-bg;
     border: 1px solid $secondary;
@@ -1154,7 +1154,7 @@ $sticky-header-height: calc(50px + 3.3rem);
       text-overflow: ellipsis;
       text-transform: lowercase;
       white-space: nowrap;
-      
+
       &::first-letter {
         text-transform: uppercase;
       }
@@ -1235,7 +1235,7 @@ $sticky-header-height: calc(50px + 3.3rem);
       text-overflow: ellipsis;
       text-transform: lowercase;
       white-space: nowrap;
-      
+
       &::first-letter {
         text-transform: uppercase;
       }
