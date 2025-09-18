@@ -147,7 +147,7 @@ const SceneCardPopovers = PatchComponent(
       if (props.scene.tags.length <= 0) return;
 
       const popoverContent = props.scene.tags.map((tag) => (
-        <TagLink key={tag.id} tag={tag} />
+        <TagLink key={tag.id} tag={tag} linkType="details" />
       ));
 
       return (

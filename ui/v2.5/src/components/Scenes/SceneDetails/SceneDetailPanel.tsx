@@ -33,7 +33,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     const regularTags = props.scene.tags.filter(tag => !tag.is_pose_tag);
     if (regularTags.length === 0) return;
     const tags = regularTags.map((tag) => (
-      <TagLink key={tag.id} tag={tag} />
+      <TagLink key={tag.id} tag={tag} linkType="details" />
     ));
     return (
       <>

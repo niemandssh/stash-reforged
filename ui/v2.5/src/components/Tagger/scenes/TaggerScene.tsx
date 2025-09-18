@@ -70,7 +70,7 @@ const TaggerSceneDetails: React.FC<ITaggerSceneDetails> = ({ scene }) => {
             </div>
             <div>
               {scene.tags.map((tag) => (
-                <TagLink key={tag.id} tag={tag} />
+                <TagLink key={tag.id} tag={tag} linkType="details" />
               ))}
             </div>
           </div>
