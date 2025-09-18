@@ -5,6 +5,7 @@ import { faPlay, faPause, faChevronLeft, faChevronRight, faExpand } from "@forta
 import * as GQL from "src/core/generated-graphql";
 import { objectTitle } from "src/core/files";
 import Mousetrap from "mousetrap";
+import { PageNavigationInput } from "./PageNavigationInput";
 
 interface IImageSlideshowProps {
   images: GQL.SlimImageDataFragment[];
@@ -31,6 +32,12 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
 
   const goToNext = useCallback(() => {
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  }, [images.length]);
+
+  const goToSlide = useCallback((index: number) => {
+    if (index >= 0 && index < images.length) {
+      setCurrentIndex(index);
+    }
   }, [images.length]);
 
   const togglePlayPause = useCallback(() => {
@@ -138,9 +145,12 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
           </Button>
         </div>
         
-        <div className="image-slideshow-counter">
-          {currentIndex + 1} / {images.length}
-        </div>
+        <PageNavigationInput
+          currentPage={currentIndex}
+          totalPages={images.length}
+          onPageChange={goToSlide}
+          className="image-slideshow-page-navigation"
+        />
         
         {currentImage.title && (
           <div className="image-slideshow-info">

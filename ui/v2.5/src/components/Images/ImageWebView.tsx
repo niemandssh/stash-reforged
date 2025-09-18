@@ -4,6 +4,7 @@ import { objectTitle } from "src/core/files";
 import { WebDisplayMode } from "src/models/list-filter/types";
 import { WebDisplayModeToggle } from "./WebDisplayModeToggle";
 import { useIntersectionObserver } from "src/hooks/useIntersectionObserver";
+import { PageNavigationInput } from "./PageNavigationInput";
 
 interface IImageWebViewProps {
   images: GQL.SlimImageDataFragment[];
@@ -68,6 +69,15 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     }));
   }, []);
 
+  const scrollToImage = useCallback((index: number) => {
+    if (index >= 0 && index < images.length && imageRefs.current[index]) {
+      imageRefs.current[index]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [images.length]);
+
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [interfaceHeight, setInterfaceHeight] = useState(280);
@@ -116,6 +126,18 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
         const availableHeight = windowHeight - interfaceHeight;
         const availableWidth = windowWidth - 40;
         
+        // Если изображение помещается на экран, используем его реальные размеры
+        if (imageSize.height <= availableHeight && imageSize.width <= availableWidth) {
+          return {
+            height: `${imageSize.height}px`,
+            width: `${imageSize.width}px`,
+            objectFit: 'contain' as const,
+            display: 'block',
+            margin: '0 auto'
+          };
+        }
+        
+        // Иначе масштабируем для вписывания в экран
         const aspectRatio = imageSize.width / imageSize.height;
         
         const heightByHeight = availableHeight;
@@ -167,9 +189,12 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   return (
     <div className={containerClass}>
       <div className="image-web-sticky-controls">
-        <div className="image-web-counter">
-          {images.length > 0 ? `${currentImageIndex + 1} / ${images.length}` : '0 / 0'}
-        </div>
+        <PageNavigationInput
+          currentPage={currentImageIndex}
+          totalPages={images.length}
+          onPageChange={scrollToImage}
+          className="image-web-page-navigation"
+        />
         
         {onDisplayModeChange && (
           <div className="web-mode-controls">

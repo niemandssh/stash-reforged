@@ -438,6 +438,12 @@ export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
       result.displayMode = currentDisplayMode;
     }
     
+    // Для режимов Web и Slideshow загружаем все изображения сразу
+    if (result.displayMode === DisplayMode.Web || result.displayMode === DisplayMode.Slideshow) {
+      result = result.clone();
+      result.itemsPerPage = -1;
+    }
+    
     return result;
   }, [filterHook, currentDisplayMode]);
 

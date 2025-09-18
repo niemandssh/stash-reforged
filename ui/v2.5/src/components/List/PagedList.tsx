@@ -95,7 +95,7 @@ export const PagedList: React.FC<
     return (
       <LoadedContent loading={result.loading} error={result.error}>
         {children}
-        {!!pages && (
+        {!!pages && !hidePaginationIndex && (
           <>
             {paginationIndex}
             {pagination}
@@ -110,12 +110,13 @@ export const PagedList: React.FC<
     children,
     pagination,
     paginationIndex,
+    hidePaginationIndex,
   ]);
 
   return (
     <>
-      {pagination}
-      {paginationIndex}
+      {!hidePaginationIndex && pagination}
+      {!hidePaginationIndex && paginationIndex}
       {content}
     </>
   );
