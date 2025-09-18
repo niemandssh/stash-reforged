@@ -49,6 +49,7 @@ type Scene struct {
 
 	URLs      []string `json:"urls,omitempty"`
 	Date      string   `json:"date,omitempty"`
+	ShootDate string   `json:"shoot_date,omitempty"`
 	Rating    int      `json:"rating,omitempty"`
 	Organized bool     `json:"organized,omitempty"`
 

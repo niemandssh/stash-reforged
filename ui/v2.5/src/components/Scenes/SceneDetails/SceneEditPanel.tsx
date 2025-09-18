@@ -122,6 +122,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     code: yup.string().ensure(),
     urls: yupUniqueStringList(intl),
     date: yupDateString(intl),
+    shoot_date: yupDateString(intl),
     director: yup.string().ensure(),
     gallery_ids: yup.array(yup.string().required()).defined(),
     studio_id: yup.string().required().nullable(),
@@ -150,6 +151,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       code: scene.code ?? "",
       urls: scene.urls ?? [],
       date: scene.date ?? "",
+      shoot_date: scene.shoot_date ?? "",
       director: scene.director ?? "",
       gallery_ids: (scene.galleries ?? []).map((g) => g.id),
       studio_id: scene.studio?.id ?? null,
@@ -890,7 +892,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
 
-            {renderDateField("date")}
+            {renderDateField("date", "release_date")}
+            {renderDateField("shoot_date")}
 
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}

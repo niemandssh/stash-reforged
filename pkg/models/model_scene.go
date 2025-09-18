@@ -10,12 +10,13 @@ import (
 
 // Scene stores the metadata for a single video scene.
 type Scene struct {
-	ID       int    `json:"id"`
-	Title    string `json:"title"`
-	Code     string `json:"code"`
-	Details  string `json:"details"`
-	Director string `json:"director"`
-	Date     *Date  `json:"date"`
+	ID        int    `json:"id"`
+	Title     string `json:"title"`
+	Code      string `json:"code"`
+	Details   string `json:"details"`
+	Director  string `json:"director"`
+	Date      *Date  `json:"date"`       // Date of release
+	ShootDate *Date  `json:"shoot_date"` // Date of filming/shooting
 	// Rating expressed in 1-100 scale
 	Rating      *int `json:"rating"`
 	Organized   bool `json:"organized"`
@@ -66,11 +67,12 @@ func NewScene() Scene {
 // ScenePartial represents part of a Scene object. It is used to update
 // the database entry.
 type ScenePartial struct {
-	Title    OptionalString
-	Code     OptionalString
-	Details  OptionalString
-	Director OptionalString
-	Date     OptionalDate
+	Title     OptionalString
+	Code      OptionalString
+	Details   OptionalString
+	Director  OptionalString
+	Date      OptionalDate
+	ShootDate OptionalDate
 	// Rating expressed in 1-100 scale
 	Rating       OptionalInt
 	Organized    OptionalBool

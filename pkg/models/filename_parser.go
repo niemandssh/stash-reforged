@@ -15,6 +15,7 @@ type SceneParserResult struct {
 	Director     *string         `json:"director"`
 	URL          *string         `json:"url"`
 	Date         *string         `json:"date"`
+	ShootDate    *string         `json:"shoot_date"`
 	Rating       *int            `json:"rating"`
 	Rating100    *int            `json:"rating100"`
 	StudioID     *string         `json:"studio_id"`

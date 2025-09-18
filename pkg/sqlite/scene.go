@@ -78,12 +78,13 @@ ORDER BY files.size DESC;
 `
 
 type sceneRow struct {
-	ID       int         `db:"id" goqu:"skipinsert"`
-	Title    zero.String `db:"title"`
-	Code     zero.String `db:"code"`
-	Details  zero.String `db:"details"`
-	Director zero.String `db:"director"`
-	Date     NullDate    `db:"date"`
+	ID        int         `db:"id" goqu:"skipinsert"`
+	Title     zero.String `db:"title"`
+	Code      zero.String `db:"code"`
+	Details   zero.String `db:"details"`
+	Director  zero.String `db:"director"`
+	Date      NullDate    `db:"date"`
+	ShootDate NullDate    `db:"shoot_date"`
 	// expressed as 1-100
 	Rating          null.Int    `db:"rating"`
 	Organized       bool        `db:"organized"`
@@ -110,6 +111,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.Details = zero.StringFrom(o.Details)
 	r.Director = zero.StringFrom(o.Director)
 	r.Date = NullDateFromDatePtr(o.Date)
+	r.ShootDate = NullDateFromDatePtr(o.ShootDate)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
 	r.IsBroken = o.IsBroken
@@ -152,6 +154,7 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		Details:     r.Details.String,
 		Director:    r.Director.String,
 		Date:        r.Date.DatePtr(),
+		ShootDate:   r.ShootDate.DatePtr(),
 		Rating:      nullIntPtr(r.Rating),
 		Organized:   r.Organized,
 		IsBroken:    r.IsBroken,

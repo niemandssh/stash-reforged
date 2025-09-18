@@ -82,7 +82,8 @@ type Scene {
   director: String
   url: String @deprecated(reason: "Use urls")
   urls: [String!]!
-  date: String
+  date: String # Release date
+  shoot_date: String # Filming/shooting date
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!
@@ -160,6 +161,7 @@ input SceneCreateInput {
   url: String @deprecated(reason: "Use urls")
   urls: [String!]
   date: String
+  shoot_date: String
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
@@ -192,6 +194,7 @@ input SceneUpdateInput {
   url: String @deprecated(reason: "Use urls")
   urls: [String!]
   date: String
+  shoot_date: String
   # rating expressed as 1-100
   rating100: Int
   o_counter: Int
@@ -253,6 +256,7 @@ input BulkSceneUpdateInput {
   url: String @deprecated(reason: "Use urls")
   urls: BulkUpdateStrings
   date: String
+  shoot_date: String
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
@@ -307,6 +311,7 @@ type SceneParserResult {
   director: String
   url: String
   date: String
+  shoot_date: String
   # rating expressed as 1-5
   rating: Int @deprecated(reason: "Use 1-100 range with rating100")
   # rating expressed as 1-100

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Tabs, Tab, Col, Row } from "react-bootstrap";
 import { useIntl } from "react-intl";
 import { useHistory, Redirect, RouteComponentProps } from "react-router-dom";
@@ -217,14 +217,23 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
     ({ encodingImage, activeImage, performer, isEditing }) => {
       const hasProfileImages = performer.profile_images && performer.profile_images.length > 0;
       
-      // Debug logging
-      console.log('PerformerHeaderImage:', {
-        performerId: performer.id,
-        hasProfileImages,
-        profileImagesLength: performer.profile_images?.length || 0,
-        profileImages: performer.profile_images,
-        isEditing
-      });
+      const handleSetPrimary = useCallback((imageId: string, index: number) => {
+        // Update the primary image path when an image is set as primary
+        const primaryImage = performer.profile_images.find(img => img.id === imageId);
+        if (primaryImage) {
+          // Update the performer's primary_image_path
+          performer.primary_image_path = primaryImage.image_path;
+        }
+      }, [performer.profile_images, performer.primary_image_path]);
+      
+      const handleImageChange = useCallback(() => {
+        // No-op function for image change
+      }, []);
+      
+      const handleSave = useCallback(() => {
+        // No-op function for save
+      }, []);
+      
       
       return (
         <HeaderImage encodingImage={encodingImage}>
@@ -233,14 +242,7 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
               profileImages={performer.profile_images}
               isEditing={isEditing}
               performerId={parseInt(performer.id, 10)}
-              onSetPrimary={(imageId, index) => {
-                // Update the primary image path when an image is set as primary
-                const primaryImage = performer.profile_images.find(img => img.id === imageId);
-                if (primaryImage) {
-                  // Update the performer's primary_image_path
-                  performer.primary_image_path = primaryImage.image_path;
-                }
-              }}
+              onSetPrimary={handleSetPrimary}
             />
           ) : isEditing ? (
             // In edit mode, always show slider interface for managing profile images
@@ -410,6 +412,14 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       }
     }
 
+    const handleSave = useCallback(() => {
+      // No-op function for save
+    }, []);
+
+    const handleImageChange = useCallback(() => {
+      // No-op function for image change
+    }, []);
+
     if (isDestroying)
       return (
         <LoadingIndicator
@@ -501,8 +511,8 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                         autoTagDisabled={performer.ignore_auto_tag}
                         isNew={false}
                         isEditing={false}
-                        onSave={() => {}}
-                        onImageChange={() => {}}
+                        onSave={handleSave}
+                        onImageChange={handleImageChange}
                         classNames="mb-2"
                         customButtons={
                           <div>

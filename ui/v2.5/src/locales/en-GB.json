@@ -899,7 +899,9 @@
     "title": "Custom Fields",
     "value": "Value"
   },
-  "date": "Date",
+  "date": "Release Date",
+  "shoot_date": "Filming Date",
+  "release_date": "Release Date",
   "date_format": "YYYY-MM-DD",
   "datetime_format": "YYYY-MM-DD HH:MM",
   "death_date": "Death Date",

@@ -88,7 +88,7 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
         />
         <>
           <dt>
-            <FormattedMessage id="actions" defaultMessage="Actions" />:
+            <FormattedMessage id="actions_name" defaultMessage="Actions" />:
           </dt>
           <dd>
             <Button

@@ -590,7 +590,12 @@ export const MainNavbar: React.FC = () => {
 
         <Navbar.Brand as="div" onClick={handleDismiss}>
           <Link to="/">
-            <Button className="minimal brand-link d-inline-block">Stash</Button>
+            <Button className="minimal brand-link d-inline-block">
+              <div className="text-left" style={{ marginTop: '-6px' }}>
+                Stash: <strong><i>Reforged</i></strong>
+                <small style={{ fontSize: '0.75em', lineHeight: '1', display: 'block' }}>by niemandssh</small>
+              </div>
+            </Button>
           </Link>
         </Navbar.Brand>
 
@@ -642,7 +647,7 @@ export const MainNavbar: React.FC = () => {
           </Navbar.Toggle>
         </Nav>
       </Navbar>
-      
+
       <NotesModal
         show={showNotesModal}
         onHide={() => setShowNotesModal(false)}
