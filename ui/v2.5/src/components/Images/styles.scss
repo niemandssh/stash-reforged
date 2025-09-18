@@ -199,11 +199,11 @@ $imageTabWidth: 450px;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100vh - 200px); // Максимальная высота по странице
+  height: calc(100vh - 200px);
   background-color: var(--bs-body-bg);
   padding: 0;
   outline: none; // Убираем стандартный outline при фокусе
-  
+
   &:focus {
     outline: none; // Убираем outline при фокусе
   }
@@ -353,7 +353,7 @@ $imageTabWidth: 450px;
   &.image-web-container-sticky {
     position: sticky;
     top: 0;
-    height: 100vh;
+    height: calc(100vh - 200px);
     overflow-y: auto;
   }
 }
@@ -443,7 +443,7 @@ $imageTabWidth: 450px;
 .web-display-mode-toggle {
   display: flex;
   gap: 0.5rem;
-  
+
   .web-display-mode-btn {
     display: flex;
     align-items: center;

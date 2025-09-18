@@ -1,8 +1,9 @@
-import React, { useCallback, MouseEvent, useEffect, useState } from "react";
+import React, { useCallback, MouseEvent, useEffect, useState, useRef } from "react";
 import * as GQL from "src/core/generated-graphql";
 import { objectTitle } from "src/core/files";
 import { WebDisplayMode } from "src/models/list-filter/types";
 import { WebDisplayModeToggle } from "./WebDisplayModeToggle";
+import { useIntersectionObserver } from "src/hooks/useIntersectionObserver";
 
 interface IImageWebViewProps {
   images: GQL.SlimImageDataFragment[];
@@ -18,7 +19,39 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   onDisplayModeChange,
 }) => {
   const [imageSizes, setImageSizes] = useState<{ [key: string]: { width: number; height: number } }>({});
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  const { observe, unobserve, activeIndex } = useIntersectionObserver({
+    threshold: 0.5,
+    rootMargin: '-20% 0px -20% 0px'
+  });
 
+  useEffect(() => {
+    if (activeIndex >= 0 && activeIndex < images.length) {
+      setCurrentImageIndex(activeIndex);
+    }
+  }, [activeIndex, images.length]);
+
+  useEffect(() => {
+    imageRefs.current = imageRefs.current.slice(0, images.length);
+  }, [images.length]);
+
+  useEffect(() => {
+    imageRefs.current.forEach((ref, index) => {
+      if (ref) {
+        observe(ref);
+      }
+    });
+
+    return () => {
+      imageRefs.current.forEach((ref) => {
+        if (ref) {
+          unobserve(ref);
+        }
+      });
+    };
+  }, [images.length, observe, unobserve]);
 
   const handleImageClick = useCallback(
     (index: number) => (event: MouseEvent) => {
@@ -135,7 +168,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     <div className={containerClass}>
       <div className="image-web-sticky-controls">
         <div className="image-web-counter">
-          {images.length > 0 ? `1 / ${images.length}` : '0 / 0'}
+          {images.length > 0 ? `${currentImageIndex + 1} / ${images.length}` : '0 / 0'}
         </div>
         
         {onDisplayModeChange && (
@@ -150,7 +183,13 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
       
       <div className="image-web-list">
         {images.map((image, index) => (
-          <div key={image.id} className="image-web-item">
+          <div 
+            key={image.id} 
+            className="image-web-item"
+            ref={(el) => {
+              imageRefs.current[index] = el;
+            }}
+          >
             <img
               src={image.paths.image || image.paths.preview || image.paths.thumbnail || ""}
               alt={objectTitle(image)}
