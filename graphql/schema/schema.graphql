@@ -383,6 +383,10 @@ type Mutation {
   performersDestroy(ids: [ID!]!): Boolean!
   bulkPerformerUpdate(input: BulkPerformerUpdateInput!): [Performer!]
 
+  performerProfileImageCreate(input: PerformerProfileImageCreateInput!): PerformerProfileImage
+  performerProfileImageUpdate(input: PerformerProfileImageUpdateInput!): PerformerProfileImage
+  performerProfileImageDestroy(input: PerformerProfileImageDestroyInput!): Boolean!
+
   studioCreate(input: StudioCreateInput!): Studio
   studioUpdate(input: StudioUpdateInput!): Studio
   studioDestroy(input: StudioDestroyInput!): Boolean!

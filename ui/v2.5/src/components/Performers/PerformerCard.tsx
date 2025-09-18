@@ -273,7 +273,7 @@ const PerformerCardImage: React.FC<IPerformerCardProps> = PatchComponent(
           loading="lazy"
           className={`performer-card-image ${performer.death_date ? 'deceased' : ''}`}
           alt={performer.name ?? ""}
-          src={performer.image_path ?? ""}
+          src={performer.primary_image_path ?? performer.image_path ?? ""}
         />
       </>
     );

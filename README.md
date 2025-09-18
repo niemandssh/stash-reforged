@@ -18,6 +18,7 @@ This version will be always in develop branch.
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
 - [x] **O-Count stats and graphics**
+- [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's and tag's photo cropper
@@ -32,7 +33,6 @@ This version will be always in develop branch.
 - [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
 
 ### TODO
-- [ ] Gallery for Performer page - sometimes I want to add 2-3 the best photos for performer
 - [ ] For global recount suggested scenes task add info about status of handled videos
 - [ ] Fix scene sprites after convert video
 

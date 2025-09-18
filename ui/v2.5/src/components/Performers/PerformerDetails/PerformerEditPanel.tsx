@@ -9,6 +9,7 @@ import {
   queryScrapePerformer,
   mutateReloadScrapers,
   queryScrapePerformerURL,
+  usePerformerProfileImageCreate,
 } from "src/core/StashService";
 import { Icon } from "src/components/Shared/Icon";
 import { ImageInput } from "src/components/Shared/ImageInput";
@@ -94,6 +95,8 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
   const Scrapers = useListPerformerScrapers();
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
+  
+  const [createProfileImage] = usePerformerProfileImageCreate();
 
   const [scrapedPerformer, setScrapedPerformer] =
     useState<GQL.ScrapedPerformer>();
@@ -334,8 +337,55 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     setEncodingImage(encodingImage);
   }, [setEncodingImage, encodingImage]);
 
-  function onImageLoad(imageData: string | null) {
-    formik.setFieldValue("image", imageData);
+  async function onImageLoad(imageData: string | null) {
+    if (!imageData) {
+      formik.setFieldValue("image", null);
+      return;
+    }
+
+    // If this is a new performer, just set the image field for now
+    if (isNew) {
+      formik.setFieldValue("image", imageData);
+      return;
+    }
+
+    try {
+      // Create a new profile image
+      const profileImages = performer.profile_images || [];
+      const result = await createProfileImage({
+        variables: {
+          input: {
+            performer_id: performer.id,
+            image: imageData,
+            is_primary: profileImages.length === 0, // First image becomes primary
+            position: profileImages.length,
+          },
+        },
+      });
+
+      if (result.data?.performerProfileImageCreate) {
+        Toast.success(
+          intl.formatMessage({ 
+            id: "toast.created_entity",
+            defaultMessage: "Added image to performer profile",
+          })
+        );
+        
+        // Also set the legacy image field for backward compatibility
+        formik.setFieldValue("image", imageData);
+      }
+    } catch (error) {
+      console.error("Error creating profile image:", error);
+      Toast.error(
+        intl.formatMessage({ 
+          id: "toast.upload_failed",
+          defaultMessage: "Failed to add image" 
+        })
+      );
+      
+      // Fallback to legacy behavior
+      formik.setFieldValue("image", imageData);
+    }
   }
 
   function onImageChange(event: React.FormEvent<HTMLInputElement>) {
@@ -545,7 +595,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
     const currentPerformer = {
       ...formik.values,
-      image: formik.values.image ?? performer.image_path,
+      image: formik.values.image ?? performer.primary_image_path ?? performer.image_path,
     };
 
     return (

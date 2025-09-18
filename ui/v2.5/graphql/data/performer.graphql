@@ -20,6 +20,10 @@ fragment PerformerData on Performer {
   favorite
   ignore_auto_tag
   image_path
+  profile_images {
+    ...PerformerProfileImageData
+  }
+  primary_image_path
   scene_count
   image_count
   gallery_count

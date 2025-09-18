@@ -2108,6 +2108,21 @@ export const usePerformersDestroy = (
     },
   });
 
+export const usePerformerProfileImageCreate = () =>
+  GQL.usePerformerProfileImageCreateMutation({
+    refetchQueries: performerMutationImpactedQueries,
+  });
+
+export const usePerformerProfileImageUpdate = () =>
+  GQL.usePerformerProfileImageUpdateMutation({
+    refetchQueries: performerMutationImpactedQueries,
+  });
+
+export const usePerformerProfileImageDestroy = () =>
+  GQL.usePerformerProfileImageDestroyMutation({
+    refetchQueries: performerMutationImpactedQueries,
+  });
+
 const studioMutationImpactedTypeFields = {
   Studio: ["child_studios"],
 };

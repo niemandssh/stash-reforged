@@ -1,0 +1,29 @@
+type PerformerProfileImage {
+  id: ID!
+  performer_id: ID!
+  is_primary: Boolean!
+  position: Int!
+  image_path: String # Resolver
+  created_at: Time!
+  updated_at: Time!
+}
+
+input PerformerProfileImageCreateInput {
+  performer_id: ID!
+  "This should be a URL or a base64 encoded data URL"
+  image: String!
+  is_primary: Boolean
+  position: Int
+}
+
+input PerformerProfileImageUpdateInput {
+  id: ID!
+  "This should be a URL or a base64 encoded data URL"
+  image: String
+  is_primary: Boolean
+  position: Int
+}
+
+input PerformerProfileImageDestroyInput {
+  id: ID!
+}

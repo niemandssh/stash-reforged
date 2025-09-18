@@ -70,7 +70,7 @@ export const PerformerListTable: React.FC<IPerformerListTableProps> = (
         loading="lazy"
         className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
         alt={performer.name ?? ""}
-        src={performer.image_path ?? ""}
+        src={performer.primary_image_path ?? performer.image_path ?? ""}
       />
       {performer.death_date && <DeathRibbon />}
     </Link>

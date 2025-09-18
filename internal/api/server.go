@@ -35,6 +35,7 @@ import (
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/pkg/fsutil"
 	"github.com/stashapp/stash/pkg/logger"
+	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/plugin"
 	"github.com/stashapp/stash/pkg/utils"
 	"github.com/stashapp/stash/ui"
@@ -317,11 +318,49 @@ func (s *Server) Shutdown() {
 	}
 }
 
+type performerFinderWrapper struct {
+	performer             models.PerformerReaderWriter
+	performerProfileImage models.PerformerProfileImageReaderWriter
+}
+
+func (w *performerFinderWrapper) Find(ctx context.Context, id int) (*models.Performer, error) {
+	return w.performer.Find(ctx, id)
+}
+
+func (w *performerFinderWrapper) FindMany(ctx context.Context, ids []int) ([]*models.Performer, error) {
+	return w.performer.FindMany(ctx, ids)
+}
+
+func (w *performerFinderWrapper) GetImage(ctx context.Context, performerID int) ([]byte, error) {
+	return w.performer.GetImage(ctx, performerID)
+}
+
+func (w *performerFinderWrapper) GetProfileImage(ctx context.Context, performerID int, imageID int) ([]byte, error) {
+	// Get the image data from PerformerProfileImageStore
+	return w.performerProfileImage.GetImage(ctx, imageID)
+}
+
+func (w *performerFinderWrapper) FindProfileImage(ctx context.Context, performerID int, imageID int) (*models.PerformerProfileImage, error) {
+	// Find the profile image and verify it belongs to the performer
+	profileImage, err := w.performerProfileImage.Find(ctx, imageID)
+	if err != nil {
+		return nil, err
+	}
+	if profileImage == nil || profileImage.PerformerID != performerID {
+		return nil, nil
+	}
+
+	return profileImage, nil
+}
+
 func (s *Server) getPerformerRoutes() chi.Router {
 	repo := s.manager.Repository
 	return performerRoutes{
-		routes:          routes{txnManager: repo.TxnManager},
-		performerFinder: repo.Performer,
+		routes: routes{txnManager: repo.TxnManager},
+		performerFinder: &performerFinderWrapper{
+			performer:             repo.Performer,
+			performerProfileImage: repo.PerformerProfileImage,
+		},
 	}.Routes()
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stashapp/stash/internal/api/urlbuilders"
 	"github.com/stashapp/stash/pkg/gallery"
 	"github.com/stashapp/stash/pkg/image"
+	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/performer"
 )
@@ -284,4 +285,78 @@ func (r *performerResolver) CustomFields(ctx context.Context, obj *models.Perfor
 // deprecated
 func (r *performerResolver) Movies(ctx context.Context, obj *models.Performer) (ret []*models.Group, err error) {
 	return r.Groups(ctx, obj)
+}
+
+func (r *performerResolver) ProfileImages(ctx context.Context, obj *models.Performer) (ret []*models.PerformerProfileImage, err error) {
+	logger.Debugf("ProfileImages resolver called for performer %d", obj.ID)
+
+	// Direct call to PerformerProfileImageStore since PerformerStore doesn't have access
+	var images []*models.PerformerProfileImage
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		images, err = r.repository.PerformerProfileImage.FindByPerformerID(ctx, obj.ID)
+		return err
+	}); err != nil {
+		logger.Errorf("Error loading profile images: %v", err)
+		return nil, err
+	}
+
+	logger.Debugf("Found %d profile images for performer %d", len(images), obj.ID)
+	return images, nil
+}
+
+func (r *performerResolver) PrimaryImagePath(ctx context.Context, obj *models.Performer) (*string, error) {
+	// Direct call to PerformerProfileImageStore
+	var profileImages []*models.PerformerProfileImage
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		profileImages, err = r.repository.PerformerProfileImage.FindByPerformerID(ctx, obj.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	if len(profileImages) == 0 {
+		// Fallback to old image system
+		return r.ImagePath(ctx, obj)
+	}
+
+	// Find primary image
+	var primary *models.PerformerProfileImage
+	for _, img := range profileImages {
+		if img.IsPrimary {
+			primary = img
+			break
+		}
+	}
+
+	// If no primary, use first image
+	if primary == nil && len(profileImages) > 0 {
+		primary = profileImages[0]
+	}
+
+	if primary == nil {
+		// No images found, fallback to old image system
+		return r.ImagePath(ctx, obj)
+	}
+
+	// Check if the image exists
+	var hasImage bool
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		hasImage, err = r.repository.PerformerProfileImage.HasImage(ctx, primary.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	if hasImage {
+		baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
+		urlBuilder := urlbuilders.NewPerformerURLBuilder(baseURL, obj)
+		imagePath := urlBuilder.GetPerformerProfileImageURL(primary.ID, primary.UpdatedAt.Unix())
+		return &imagePath, nil
+	}
+
+	// No image found, fallback to old image system
+	return r.ImagePath(ctx, obj)
 }

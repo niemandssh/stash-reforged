@@ -67,6 +67,10 @@ type URLLoader interface {
 	GetURLs(ctx context.Context, relatedID int) ([]string, error)
 }
 
+type PerformerProfileImageLoader interface {
+	GetPerformerProfileImages(ctx context.Context, performerID int) ([]PerformerProfileImage, error)
+}
+
 // RelatedIDs represents a list of related IDs.
 // TODO - this can be made generic
 type RelatedIDs struct {
@@ -564,6 +568,82 @@ func (r *RelatedStrings) load(fn func() ([]string, error)) error {
 
 	if values == nil {
 		values = []string{}
+	}
+
+	r.list = values
+
+	return nil
+}
+
+// RelatedPerformerProfileImages represents a list of related performer profile images.
+type RelatedPerformerProfileImages struct {
+	list []PerformerProfileImage
+}
+
+// NewRelatedPerformerProfileImages returns a loaded RelatedPerformerProfileImages object with the provided values.
+// Loaded will return true when called on the returned object if the provided slice is not nil.
+func NewRelatedPerformerProfileImages(values []PerformerProfileImage) RelatedPerformerProfileImages {
+	return RelatedPerformerProfileImages{
+		list: values,
+	}
+}
+
+// Loaded returns true if the related profile images have been loaded.
+func (r RelatedPerformerProfileImages) Loaded() bool {
+	return r.list != nil
+}
+
+func (r RelatedPerformerProfileImages) mustLoaded() {
+	if !r.Loaded() {
+		panic("list has not been loaded")
+	}
+}
+
+// List returns the related profile images. Panics if the relationship has not been loaded.
+func (r RelatedPerformerProfileImages) List() []PerformerProfileImage {
+	r.mustLoaded()
+
+	return r.list
+}
+
+// Add adds the provided profile images to the list. Panics if the relationship has not been loaded.
+func (r *RelatedPerformerProfileImages) Add(values ...PerformerProfileImage) {
+	r.mustLoaded()
+
+	r.list = append(r.list, values...)
+}
+
+// Primary returns the primary profile image (the first one marked as primary).
+// Returns empty PerformerProfileImage if no primary image found.
+func (r RelatedPerformerProfileImages) Primary() PerformerProfileImage {
+	r.mustLoaded()
+
+	for _, img := range r.list {
+		if img.IsPrimary {
+			return img
+		}
+	}
+
+	// If no primary found, return the first image if any exist
+	if len(r.list) > 0 {
+		return r.list[0]
+	}
+
+	return PerformerProfileImage{}
+}
+
+func (r *RelatedPerformerProfileImages) load(fn func() ([]PerformerProfileImage, error)) error {
+	if r.Loaded() {
+		return nil
+	}
+
+	values, err := fn()
+	if err != nil {
+		return err
+	}
+
+	if values == nil {
+		values = []PerformerProfileImage{}
 	}
 
 	r.list = values

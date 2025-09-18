@@ -19,6 +19,9 @@ export const useLightbox = (
       pageSize: state.pageSize,
       slideshowEnabled: state.slideshowEnabled,
       onClose: state.onClose,
+      hideGallery: state.hideGallery,
+      hideRating: state.hideRating,
+      hideOCounter: state.hideOCounter,
     });
   }, [
     setLightboxState,
@@ -30,6 +33,9 @@ export const useLightbox = (
     state.pageSize,
     state.slideshowEnabled,
     state.onClose,
+    state.hideGallery,
+    state.hideRating,
+    state.hideOCounter,
   ]);
 
   const show = useCallback(

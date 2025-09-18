@@ -40,6 +40,7 @@ fragment SelectPerformerData on Performer {
   disambiguation
   alias_list
   image_path
+  primary_image_path
   birthdate
   death_date
 }

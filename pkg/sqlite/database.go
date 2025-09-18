@@ -34,7 +34,7 @@ const (
 	cacheSizeEnv = "STASH_SQLITE_CACHE_SIZE"
 )
 
-var appSchemaVersion uint = 81
+var appSchemaVersion uint = 82
 
 //go:embed migrations/*.sql
 var migrationsBox embed.FS
@@ -66,21 +66,22 @@ func (e *MismatchedSchemaVersionError) Error() string {
 }
 
 type storeRepository struct {
-	Blobs           *BlobStore
-	File            *FileStore
-	Folder          *FolderStore
-	Image           *ImageStore
-	Gallery         *GalleryStore
-	GalleryChapter  *GalleryChapterStore
-	Scene           *SceneStore
-	SceneMarker     *SceneMarkerStore
-	SceneSimilarity *SceneSimilarityStore
-	Performer       *PerformerStore
-	SavedFilter     *SavedFilterStore
-	Studio          *StudioStore
-	Tag             *TagStore
-	Group           *GroupStore
-	ColorPreset     *colorPresetRepository
+	Blobs                 *BlobStore
+	File                  *FileStore
+	Folder                *FolderStore
+	Image                 *ImageStore
+	Gallery               *GalleryStore
+	GalleryChapter        *GalleryChapterStore
+	Scene                 *SceneStore
+	SceneMarker           *SceneMarkerStore
+	SceneSimilarity       *SceneSimilarityStore
+	Performer             *PerformerStore
+	PerformerProfileImage *PerformerProfileImageStore
+	SavedFilter           *SavedFilterStore
+	Studio                *StudioStore
+	Tag                   *TagStore
+	Group                 *GroupStore
+	ColorPreset           *colorPresetRepository
 }
 
 type Database struct {
@@ -106,21 +107,22 @@ func NewDatabase() *Database {
 
 	r := &storeRepository{}
 	*r = storeRepository{
-		Blobs:           blobStore,
-		File:            fileStore,
-		Folder:          folderStore,
-		Scene:           NewSceneStore(r, blobStore),
-		SceneMarker:     NewSceneMarkerStore(),
-		SceneSimilarity: NewSceneSimilarityStore(),
-		Image:           NewImageStore(r),
-		Gallery:         galleryStore,
-		GalleryChapter:  NewGalleryChapterStore(),
-		Performer:       performerStore,
-		Studio:          studioStore,
-		Tag:             tagStore,
-		Group:           NewGroupStore(blobStore),
-		SavedFilter:     NewSavedFilterStore(),
-		ColorPreset:     NewColorPresetRepository(nil), // Will be set later
+		Blobs:                 blobStore,
+		File:                  fileStore,
+		Folder:                folderStore,
+		Scene:                 NewSceneStore(r, blobStore),
+		SceneMarker:           NewSceneMarkerStore(),
+		SceneSimilarity:       NewSceneSimilarityStore(),
+		Image:                 NewImageStore(r),
+		Gallery:               galleryStore,
+		GalleryChapter:        NewGalleryChapterStore(),
+		Performer:             performerStore,
+		PerformerProfileImage: NewPerformerProfileImageStore(blobStore),
+		Studio:                studioStore,
+		Tag:                   tagStore,
+		Group:                 NewGroupStore(blobStore),
+		SavedFilter:           NewSavedFilterStore(),
+		ColorPreset:           NewColorPresetRepository(nil), // Will be set later
 	}
 
 	ret := &Database{

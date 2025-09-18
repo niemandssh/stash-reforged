@@ -79,6 +79,7 @@ type PerformerReader interface {
 	StashIDLoader
 	TagIDLoader
 	URLLoader
+	PerformerProfileImageLoader
 
 	CustomFieldsReader
 

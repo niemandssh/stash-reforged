@@ -31,6 +31,7 @@ import { PerformerEditPanel } from "./PerformerEditPanel";
 import { PerformerSubmitButton } from "./PerformerSubmitButton";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ImageCropper } from "src/components/Shared/ImageCropper";
+import { ProfileImageSlider } from "./ProfileImageSlider";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
 import { ExternalLinkButtons } from "src/components/Shared/ExternalLinksButton";
@@ -207,19 +208,64 @@ interface IPerformerHeaderImageProps {
   encodingImage: boolean;
   lightboxImages: ILightboxImage[];
   performer: GQL.PerformerDataFragment;
+  isEditing: boolean;
 }
 
 const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
   PatchComponent(
     "PerformerHeaderImage",
-    ({ encodingImage, activeImage, performer }) => {
+    ({ encodingImage, activeImage, performer, isEditing }) => {
+      const hasProfileImages = performer.profile_images && performer.profile_images.length > 0;
+      
+      // Debug logging
+      console.log('PerformerHeaderImage:', {
+        performerId: performer.id,
+        hasProfileImages,
+        profileImagesLength: performer.profile_images?.length || 0,
+        profileImages: performer.profile_images,
+        isEditing
+      });
+      
       return (
         <HeaderImage encodingImage={encodingImage}>
-          {!!activeImage && (
-            <ImageCropper
-              imageSrc={activeImage}
-              performerId={performer.id}
+          {hasProfileImages ? (
+            <ProfileImageSlider
+              profileImages={performer.profile_images}
+              isEditing={isEditing}
+              performerId={parseInt(performer.id, 10)}
+              onSetPrimary={(imageId, index) => {
+                // Update the primary image path when an image is set as primary
+                const primaryImage = performer.profile_images.find(img => img.id === imageId);
+                if (primaryImage) {
+                  // Update the performer's primary_image_path
+                  performer.primary_image_path = primaryImage.image_path;
+                }
+              }}
             />
+          ) : isEditing ? (
+            // In edit mode, always show slider interface for managing profile images
+            <div className="profile-image-slider">
+              <div className="image-container">
+                {!!activeImage && (
+                  <ImageCropper
+                    imageSrc={activeImage}
+                    performerId={performer.id}
+                  />
+                )}
+              </div>
+              <div className="slider-controls">
+                <div className="no-images-message">
+                  No profile images yet. Use "Set photo..." to add images.
+                </div>
+              </div>
+            </div>
+          ) : (
+            !!activeImage && (
+              <ImageCropper
+                imageSrc={activeImage}
+                performerId={performer.id}
+              />
+            )
           )}
         </HeaderImage>
       );
@@ -249,7 +295,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const loadStickyHeader = useLoadStickyHeader();
 
     const activeImage = useMemo(() => {
-      const performerImage = performer.image_path;
+      const performerImage = performer.primary_image_path || performer.image_path;
       if (isEditing) {
         if (image === null && performerImage) {
           const performerImageURL = new URL(performerImage);
@@ -260,7 +306,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
         }
       }
       return performerImage;
-    }, [image, isEditing, performer.image_path]);
+    }, [image, isEditing, performer.primary_image_path, performer.image_path]);
 
     const lightboxImages = useMemo(
       () => [{ paths: { thumbnail: activeImage, image: activeImage } }],
@@ -395,6 +441,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
               encodingImage={encodingImage}
               lightboxImages={lightboxImages}
               performer={performer}
+              isEditing={isEditing}
             />
             <div className="row">
               <div className="performer-head col">

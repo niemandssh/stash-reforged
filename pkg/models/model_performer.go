@@ -33,10 +33,11 @@ type Performer struct {
 	Weight        *int   `json:"weight"`
 	IgnoreAutoTag bool   `json:"ignore_auto_tag"`
 
-	Aliases  RelatedStrings  `json:"aliases"`
-	URLs     RelatedStrings  `json:"urls"`
-	TagIDs   RelatedIDs      `json:"tag_ids"`
-	StashIDs RelatedStashIDs `json:"stash_ids"`
+	Aliases       RelatedStrings                `json:"aliases"`
+	URLs          RelatedStrings                `json:"urls"`
+	TagIDs        RelatedIDs                    `json:"tag_ids"`
+	StashIDs      RelatedStashIDs               `json:"stash_ids"`
+	ProfileImages RelatedPerformerProfileImages `json:"profile_images"`
 }
 
 type CreatePerformerInput struct {
@@ -127,6 +128,12 @@ func (s *Performer) LoadStashIDs(ctx context.Context, l StashIDLoader) error {
 	})
 }
 
+func (s *Performer) LoadProfileImages(ctx context.Context, l PerformerProfileImageLoader) error {
+	return s.ProfileImages.load(func() ([]PerformerProfileImage, error) {
+		return l.GetPerformerProfileImages(ctx, s.ID)
+	})
+}
+
 func (s *Performer) LoadRelationships(ctx context.Context, l PerformerReader) error {
 	if err := s.LoadAliases(ctx, l); err != nil {
 		return err
@@ -137,6 +144,14 @@ func (s *Performer) LoadRelationships(ctx context.Context, l PerformerReader) er
 	}
 
 	if err := s.LoadStashIDs(ctx, l); err != nil {
+		return err
+	}
+
+	if err := s.LoadURLs(ctx, l); err != nil {
+		return err
+	}
+
+	if err := s.LoadProfileImages(ctx, l); err != nil {
 		return err
 	}
 

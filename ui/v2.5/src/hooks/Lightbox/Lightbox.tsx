@@ -95,6 +95,10 @@ interface IProps {
   pageCallback?: (props: { direction?: number; page?: number }) => void;
   chapters?: IChapter[];
   hide: () => void;
+  // Options to hide specific UI elements
+  hideGallery?: boolean;
+  hideRating?: boolean;
+  hideOCounter?: boolean;
 }
 
 export const LightboxComponent: React.FC<IProps> = ({
@@ -110,6 +114,9 @@ export const LightboxComponent: React.FC<IProps> = ({
   pageCallback,
   chapters = [],
   hide,
+  hideGallery = false,
+  hideRating = false,
+  hideOCounter = false,
 }) => {
   const [updateImage] = useImageUpdate();
 
@@ -920,20 +927,24 @@ export const LightboxComponent: React.FC<IProps> = ({
           <div className={CLASSNAME_FOOTER_LEFT}>
             {currentImage?.id !== undefined && (
               <>
-                <div>
-                  <OCounterButton
-                    onDecrement={onDecrementClick}
-                    onIncrement={onIncrementClick}
-                    onReset={onResetClick}
-                    value={currentImage?.o_counter ?? 0}
+                {!hideOCounter && (
+                  <div>
+                    <OCounterButton
+                      onDecrement={onDecrementClick}
+                      onIncrement={onIncrementClick}
+                      onReset={onResetClick}
+                      value={currentImage?.o_counter ?? 0}
+                    />
+                  </div>
+                )}
+                {!hideRating && (
+                  <RatingSystem
+                    value={currentImage?.rating100}
+                    onSetRating={(v) => setRating(v)}
+                    clickToRate
+                    withoutContext
                   />
-                </div>
-                <RatingSystem
-                  value={currentImage?.rating100}
-                  onSetRating={(v) => setRating(v)}
-                  clickToRate
-                  withoutContext
-                />
+                )}
               </>
             )}
           </div>
@@ -947,7 +958,7 @@ export const LightboxComponent: React.FC<IProps> = ({
                 >
                   {title ?? ""}
                 </Link>
-                {currentImage.galleries?.length ? (
+                {!hideGallery && currentImage.galleries?.length ? (
                   <Link
                     className="image-gallery-link"
                     to={`/galleries/${currentImage.galleries[0].id}`}

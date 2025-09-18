@@ -39,6 +39,8 @@ type Performer {
   ignore_auto_tag: Boolean!
 
   image_path: String # Resolver
+  profile_images: [PerformerProfileImage!]! # Resolver
+  primary_image_path: String # Resolver
   scene_count: Int! # Resolver
   image_count: Int! # Resolver
   gallery_count: Int! # Resolver

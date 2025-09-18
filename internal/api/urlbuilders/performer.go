@@ -27,3 +27,7 @@ func (b PerformerURLBuilder) GetPerformerImageURL(hasImage bool) string {
 	}
 	return url
 }
+
+func (b PerformerURLBuilder) GetPerformerProfileImageURL(imageID int, updatedAt int64) string {
+	return b.BaseURL + "/performer/" + b.PerformerID + "/profile_image/" + strconv.Itoa(imageID) + "?t=" + strconv.FormatInt(updatedAt, 10)
+}

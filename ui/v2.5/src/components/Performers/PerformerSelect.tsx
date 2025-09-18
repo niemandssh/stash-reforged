@@ -47,6 +47,7 @@ export type Performer = Pick<
   | "alias_list"
   | "disambiguation"
   | "image_path"
+  | "primary_image_path"
   | "birthdate"
   | "death_date"
 >;
@@ -158,7 +159,7 @@ const _PerformerSelect: React.FC<
             >
               <img
                 className={`performer-select-image ${object.death_date ? 'deceased' : ''}`}
-                src={object.image_path ?? ""}
+                src={object.primary_image_path ?? object.image_path ?? ""}
                 loading="lazy"
               />
               {object.death_date && <DeathRibbon />}

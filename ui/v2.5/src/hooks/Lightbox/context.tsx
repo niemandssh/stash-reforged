@@ -17,6 +17,10 @@ export interface IState {
   pageSize?: number;
   slideshowEnabled: boolean;
   onClose?: () => void;
+  // Options to hide specific UI elements
+  hideGallery?: boolean;
+  hideRating?: boolean;
+  hideOCounter?: boolean;
 }
 interface IContext {
   lightboxState: IState;
@@ -68,7 +72,13 @@ export const LightboxProvider: React.FC = ({ children }) => {
       {children}
       <Suspense fallback={<></>}>
         {lightboxState.isVisible && (
-          <LightboxComponent {...lightboxState} hide={onHide} />
+          <LightboxComponent 
+            {...lightboxState} 
+            hide={onHide}
+            hideGallery={lightboxState.hideGallery}
+            hideRating={lightboxState.hideRating}
+            hideOCounter={lightboxState.hideOCounter}
+          />
         )}
       </Suspense>
     </LightboxContext.Provider>
