@@ -224,7 +224,7 @@ export const GalleryCard = PatchComponent(
     return (
       <GridCard
         className={`gallery-card zoom-${props.zoomIndex}`}
-        url={`/galleries/${props.gallery.id}`}
+        url={NavUtils.makeGalleryUrl(props.gallery)}
         width={props.cardWidth}
         title={galleryTitle(props.gallery)}
         linkClassName="gallery-card-header"

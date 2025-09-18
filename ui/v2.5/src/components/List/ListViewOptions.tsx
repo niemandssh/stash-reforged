@@ -10,6 +10,8 @@ import {
   faSquare,
   faTags,
   faThLarge,
+  faImages,
+  faGlobe,
 } from "@fortawesome/free-solid-svg-icons";
 import { ZoomSelect } from "./ZoomSlider";
 
@@ -31,6 +33,10 @@ function getIcon(option: DisplayMode) {
       return faSquare;
     case DisplayMode.Tagger:
       return faTags;
+    case DisplayMode.Slideshow:
+      return faImages;
+    case DisplayMode.Web:
+      return faGlobe;
   }
 }
 
@@ -48,6 +54,12 @@ function getLabelId(option: DisplayMode) {
       break;
     case DisplayMode.Tagger:
       displayModeId = "tagger";
+      break;
+    case DisplayMode.Slideshow:
+      displayModeId = "slideshow";
+      break;
+    case DisplayMode.Web:
+      displayModeId = "web";
       break;
   }
   return `display_mode.${displayModeId}`;
@@ -84,11 +96,23 @@ export const ListViewOptions: React.FC<IListViewOptionsProps> = ({
         onSetDisplayMode(DisplayMode.Wall);
       }
     });
+    Mousetrap.bind("v s", () => {
+      if (displayModeOptions.includes(DisplayMode.Slideshow)) {
+        onSetDisplayMode(DisplayMode.Slideshow);
+      }
+    });
+    Mousetrap.bind("v e", () => {
+      if (displayModeOptions.includes(DisplayMode.Web)) {
+        onSetDisplayMode(DisplayMode.Web);
+      }
+    });
 
     return () => {
       Mousetrap.unbind("v g");
       Mousetrap.unbind("v l");
       Mousetrap.unbind("v w");
+      Mousetrap.unbind("v s");
+      Mousetrap.unbind("v e");
     };
   });
 

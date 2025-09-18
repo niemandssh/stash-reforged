@@ -40,6 +40,7 @@ export const PagedList: React.FC<
     totalCount: number;
     onChangePage: (page: number) => void;
     metadataByline?: React.ReactNode;
+    hidePaginationIndex?: boolean;
   }>
 > = ({
   result,
@@ -48,6 +49,7 @@ export const PagedList: React.FC<
   totalCount,
   onChangePage,
   metadataByline,
+  hidePaginationIndex = false,
   children,
 }) => {
   const pages = Math.ceil(totalCount / filter.itemsPerPage);
@@ -71,7 +73,7 @@ export const PagedList: React.FC<
   ]);
 
   const paginationIndex = useMemo(() => {
-    if (cachedResult.loading) return;
+    if (cachedResult.loading || hidePaginationIndex) return;
     return (
       <PaginationIndex
         itemsPerPage={filter.itemsPerPage}
@@ -82,6 +84,7 @@ export const PagedList: React.FC<
     );
   }, [
     cachedResult.loading,
+    hidePaginationIndex,
     filter.itemsPerPage,
     filter.currentPage,
     totalCount,

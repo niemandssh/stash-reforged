@@ -355,6 +355,17 @@ const makeGalleryImagesUrl = (
   return `/images?${filter.makeQueryParameters()}`;
 };
 
+const makeGalleryUrl = (
+  gallery: Partial<GQL.GalleryDataFragment | GQL.SlimGalleryDataFragment>
+) => {
+  if (!gallery.id) return "#";
+  let url = `/galleries/${gallery.id}`;
+  if (gallery.display_mode !== undefined && gallery.display_mode !== 0) {
+    url += `?disp=${gallery.display_mode}`;
+  }
+  return url;
+};
+
 function stringEqualsCriterion(option: ModifierCriterionOption, value: string) {
   const criterion = new StringCriterion(option);
   criterion.modifier = GQL.CriterionModifier.Equals;
@@ -496,6 +507,7 @@ const NavUtils = {
   makeGroupScenesUrl,
   makeChildStudiosUrl,
   makeGalleryImagesUrl,
+  makeGalleryUrl,
   makeDirectorScenesUrl,
   makePhotographerGalleriesUrl,
   makePhotographerImagesUrl,

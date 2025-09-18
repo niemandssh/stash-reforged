@@ -41,6 +41,8 @@ const displayModeOptions = [
   DisplayMode.Grid,
   DisplayMode.List,
   DisplayMode.Wall,
+  DisplayMode.Slideshow,
+  DisplayMode.Web,
 ];
 
 const criterionOptions = [

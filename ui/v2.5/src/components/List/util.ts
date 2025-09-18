@@ -219,6 +219,7 @@ export function useListKeyboardShortcuts(props: {
   pages?: number;
   onSelectAll?: () => void;
   onSelectNone?: () => void;
+  displayMode?: DisplayMode;
 }) {
   const {
     currentPage,
@@ -227,6 +228,7 @@ export function useListKeyboardShortcuts(props: {
     pages = 0,
     onSelectAll,
     onSelectNone,
+    displayMode,
   } = props;
 
   // set up hotkeys
@@ -248,6 +250,9 @@ export function useListKeyboardShortcuts(props: {
 
   useEffect(() => {
     if (!currentPage || !changePage || !pages) return;
+    
+    // Не привязываем обработчики стрелок в режиме Slideshow
+    if (displayMode === DisplayMode.Slideshow) return;
 
     function changePage(page: number) {
       if (!currentPage || !onChangePage || !pages) return;
@@ -283,7 +288,7 @@ export function useListKeyboardShortcuts(props: {
       Mousetrap.unbind("ctrl+end");
       Mousetrap.unbind("ctrl+home");
     };
-  }, [currentPage, onChangePage, pages]);
+  }, [currentPage, onChangePage, pages, displayMode]);
 
   useEffect(() => {
     Mousetrap.bind("s a", () => onSelectAll?.());

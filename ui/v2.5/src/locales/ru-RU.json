@@ -974,9 +974,15 @@
     "display_mode": {
         "grid": "Сетка",
         "list": "Список",
+        "slideshow": "Слайдшоу",
         "tagger": "Теггер",
         "unknown": "Неизвестный",
-        "wall": "Стена"
+        "wall": "Стена",
+        "web": "Веб"
+    },
+    "web_display_mode": {
+        "full_size": "Полный размер",
+        "fit_to_screen": "По размеру экрана"
     },
     "donate": "Пожертвование",
     "dupe_check": {

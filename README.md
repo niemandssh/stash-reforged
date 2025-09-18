@@ -19,6 +19,7 @@ This version will be always in develop branch.
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
 - [x] **O-Count stats and graphics**
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
+- [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's and tag's photo cropper
@@ -32,8 +33,9 @@ This version will be always in develop branch.
 - [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
 - [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
 - [x] Open tag page instead of filter by tag when click on tag from scene page (because tag page have scenes by this tag already, anf it's more comfortable to edit tag by click on it)
-- [x] Filters saves for each scene now and keeps after reload page
+- [x] Video Filters saves for each scene now and keeps after reload page
 - [x] Separate release date and filming date for scenes
+- [x] Show mode saves in DB table for each gallery
 
 ### TODO
 - [ ] For global recount suggested scenes task add info about status of handled videos

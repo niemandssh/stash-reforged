@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { QueryResult } from "@apollo/client";
 import { ListFilterModel } from "src/models/list-filter/filter";
+import { DisplayMode } from "src/models/list-filter/types";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { ListFilter } from "./ListFilter";
 import { ListViewOptions } from "./ListViewOptions";
@@ -43,6 +44,7 @@ export interface IFilteredListToolbar {
   onDelete?: () => void;
   operations?: IListFilterOperation[];
   zoomable?: boolean;
+  customSetDisplayMode?: (displayMode: DisplayMode) => void;
   onToggleSidebar?: () => void;
 }
 
@@ -57,13 +59,22 @@ export const FilteredListToolbar: React.FC<IFilteredListToolbar> = ({
   operations,
   zoomable = false,
   onToggleSidebar,
+  customSetDisplayMode,
 }) => {
   const intl = useIntl();
   const filterOptions = filter.options;
-  const { setDisplayMode, setZoom } = useFilterOperations({
+  const { setDisplayMode: defaultSetDisplayMode, setZoom } = useFilterOperations({
     filter,
     setFilter,
   });
+  
+  const setDisplayMode = useCallback((displayMode: DisplayMode) => {
+    defaultSetDisplayMode(displayMode);
+    if (customSetDisplayMode) {
+      customSetDisplayMode(displayMode);
+    }
+  }, [defaultSetDisplayMode, customSetDisplayMode]);
+  
   const { selectedIds, onSelectAll, onSelectNone } = listSelect;
 
   return (

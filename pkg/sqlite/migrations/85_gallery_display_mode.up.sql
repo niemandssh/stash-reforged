@@ -1,0 +1,1 @@
+ALTER TABLE galleries ADD COLUMN display_mode INTEGER DEFAULT 0;

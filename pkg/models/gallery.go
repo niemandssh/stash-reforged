@@ -76,6 +76,7 @@ type GalleryUpdateInput struct {
 	Photographer     *string  `json:"photographer"`
 	Rating100        *int     `json:"rating100"`
 	Organized        *bool    `json:"organized"`
+	DisplayMode      *int     `json:"display_mode"`
 	SceneIds         []string `json:"scene_ids"`
 	StudioID         *string  `json:"studio_id"`
 	TagIds           []string `json:"tag_ids"`

@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import * as GQL from "src/core/generated-graphql";
 import { GalleriesCriterion } from "src/models/list-filter/criteria/galleries";
 import { ListFilterModel } from "src/models/list-filter/filter";
-import { ImageList } from "src/components/Images/ImageList";
+import { GalleryImagesList } from "../GalleryImagesList";
 import {
   mutateRemoveGalleryImages,
   mutateSetGalleryCover,
@@ -16,6 +16,8 @@ import { useIntl } from "react-intl";
 import { faMinus } from "@fortawesome/free-solid-svg-icons";
 import { galleryTitle } from "src/core/galleries";
 import { View } from "src/components/List/views";
+import { useGalleryDisplayMode } from "src/hooks/useGalleryDisplayMode";
+import { DisplayMode } from "src/models/list-filter/types";
 
 interface IGalleryDetailsProps {
   active: boolean;
@@ -28,6 +30,11 @@ export const GalleryImagesPanel: React.FC<IGalleryDetailsProps> = ({
 }) => {
   const intl = useIntl();
   const Toast = useToast();
+  const { setDisplayMode: setDisplayModeInDB } = useGalleryDisplayMode(gallery.id!, gallery.display_mode ?? 0);
+
+  const setDisplayMode = useCallback(async (newDisplayMode: DisplayMode) => {
+    await setDisplayModeInDB(newDisplayMode);
+  }, [setDisplayModeInDB]);
 
   function filterHook(filter: ListFilterModel) {
     const galleryValue = {
@@ -135,13 +142,17 @@ export const GalleryImagesPanel: React.FC<IGalleryDetailsProps> = ({
     },
   ];
 
+  const displayMode = (gallery.display_mode ?? 0) as DisplayMode;
+
   return (
-    <ImageList
+    <GalleryImagesList
       filterHook={filterHook}
       alterQuery={active}
       extraOperations={otherOperations}
       view={View.GalleryImages}
       chapters={gallery.chapters}
+      onDisplayModeChange={setDisplayMode}
+      currentDisplayMode={displayMode}
     />
   );
 };

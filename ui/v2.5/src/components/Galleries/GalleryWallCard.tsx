@@ -9,6 +9,7 @@ import { galleryTitle } from "src/core/galleries";
 import { RatingSystem } from "../Shared/Rating/RatingSystem";
 import { GalleryPreviewScrubber } from "./GalleryPreviewScrubber";
 import cx from "classnames";
+import NavUtils from "src/utils/navigation";
 
 const CLASSNAME = "GalleryWallCard";
 const CLASSNAME_FOOTER = `${CLASSNAME}-footer`;
@@ -90,7 +91,7 @@ const GalleryWallCard: React.FC<IProps> = ({ gallery }) => {
         <div className="lineargradient">
           <footer className={CLASSNAME_FOOTER}>
             <Link
-              to={`/galleries/${gallery.id}`}
+              to={NavUtils.makeGalleryUrl(gallery)}
               onClick={(e) => e.stopPropagation()}
             >
               {title && (

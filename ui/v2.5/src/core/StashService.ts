@@ -1778,6 +1778,18 @@ export const useGalleryUpdate = () =>
         });
       }
 
+      // Update the specific gallery's display_mode field in cache
+      if (variables.input.display_mode !== undefined) {
+        cache.modify({
+          id: cache.identify({ __typename: "Gallery", id: variables.input.id }),
+          fields: {
+            display_mode() {
+              return variables.input.display_mode ?? null;
+            },
+          },
+        });
+      }
+
       evictTypeFields(cache, galleryMutationImpactedTypeFields);
       evictQueries(cache, galleryMutationImpactedQueries);
     },

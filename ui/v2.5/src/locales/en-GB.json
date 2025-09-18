@@ -1029,9 +1029,15 @@
     "grid": "Grid",
     "label_current": "Display Mode: {current}",
     "list": "List",
+    "slideshow": "Slideshow",
     "tagger": "Tagger",
     "unknown": "Unknown",
-    "wall": "Wall"
+    "wall": "Wall",
+    "web": "Web"
+  },
+  "web_display_mode": {
+    "full_size": "Full Size",
+    "fit_to_screen": "Fit to Screen"
   },
   "distance": "Distance",
   "donate": "Donate",

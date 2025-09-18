@@ -190,6 +190,7 @@ func (r *mutationResolver) galleryUpdate(ctx context.Context, input models.Galle
 	updatedGallery.Photographer = translator.optionalString(input.Photographer, "photographer")
 	updatedGallery.Rating = translator.optionalInt(input.Rating100, "rating100")
 	updatedGallery.Organized = translator.optionalBool(input.Organized, "organized")
+	updatedGallery.DisplayMode = translator.optionalInt(input.DisplayMode, "display_mode")
 
 	updatedGallery.Date, err = translator.optionalDate(input.Date, "date")
 	if err != nil {

@@ -216,3 +216,7 @@ func (r *galleryResolver) Image(ctx context.Context, obj *models.Gallery, index 
 
 	return
 }
+
+func (r *galleryResolver) DisplayMode(ctx context.Context, obj *models.Gallery) (int, error) {
+	return int(obj.DisplayMode), nil
+}

@@ -10,6 +10,7 @@ import * as GQL from "src/core/generated-graphql";
 import { QueryResult } from "@apollo/client";
 import { Criterion } from "src/models/list-filter/criteria/criterion";
 import { ListFilterModel } from "src/models/list-filter/filter";
+import { DisplayMode } from "src/models/list-filter/types";
 import {
   EditFilterDialog,
   useShowEditFilter,
@@ -78,8 +79,8 @@ export function useFilteredItemList<
   const { showModal, closeModal } = modalState;
 
   // Utility hooks
-  const { setPage } = useFilterOperations({ filter, setFilter });
-
+  const { setPage, setDisplayMode: defaultSetDisplayMode } = useFilterOperations({ filter, setFilter });
+  
   // scroll to the top of the page when the page changes
   useScrollToTopOnPageChange(filter.currentPage, result.loading);
 
@@ -100,6 +101,7 @@ export function useFilteredItemList<
     onSelectNone,
     pages,
     showEditFilter,
+    displayMode: filter.displayMode,
   });
 
   return {
@@ -138,6 +140,7 @@ interface IItemListProps<T extends QueryResult, E extends IHasID> {
     selectedIds: Set<string>
   ) => () => void;
   renderToolbar?: (props: IFilteredListToolbar) => React.ReactNode;
+  customSetDisplayMode?: (displayMode: DisplayMode) => void;
 }
 
 export const ItemList = <T extends QueryResult, E extends IHasID>(
@@ -153,6 +156,7 @@ export const ItemList = <T extends QueryResult, E extends IHasID>(
     renderMetadataByline,
     addKeybinds,
     renderToolbar: providedToolbar,
+    customSetDisplayMode,
   } = props;
 
   const { filter, setFilter: updateFilter } = useFilter();
@@ -215,6 +219,7 @@ export const ItemList = <T extends QueryResult, E extends IHasID>(
     onSelectNone,
     pages,
     showEditFilter,
+    displayMode: filter.displayMode,
   });
 
   useEffect(() => {
@@ -322,6 +327,7 @@ export const ItemList = <T extends QueryResult, E extends IHasID>(
     zoomable: zoomable,
     onEdit: renderEditDialog ? onEdit : undefined,
     onDelete: renderDeleteDialog ? onDelete : undefined,
+    customSetDisplayMode: customSetDisplayMode,
   };
 
   return (
@@ -346,6 +352,7 @@ export const ItemList = <T extends QueryResult, E extends IHasID>(
         totalCount={totalCount}
         onChangePage={onChangePage}
         metadataByline={metadataByline}
+        hidePaginationIndex={filter.displayMode === DisplayMode.Slideshow || filter.displayMode === DisplayMode.Web}
       >
         {renderContent(
           result,

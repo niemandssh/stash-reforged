@@ -9,6 +9,7 @@ import {
 } from "./generated-graphql";
 import { View } from "src/components/List/views";
 import { ITaggerConfig } from "src/components/Tagger/constants";
+import { DisplayMode } from "src/models/list-filter/types";
 
 // NOTE: double capitals aren't converted correctly in the backend
 
@@ -105,6 +106,9 @@ export interface IUIConfig {
 
   // Записи пользователя
   notes?: string;
+
+  // Настройки отображения для конкретных галерей
+  galleryDisplayModes?: Record<string, DisplayMode>;
 }
 
 export function getFrontPageContent(

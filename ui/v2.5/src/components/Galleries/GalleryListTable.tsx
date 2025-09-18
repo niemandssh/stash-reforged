@@ -42,7 +42,7 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     const title = galleryTitle(gallery);
 
     return (
-      <Link to={`/galleries/${gallery.id}`}>
+      <Link to={NavUtils.makeGalleryUrl(gallery)}>
         <img
           loading="lazy"
           alt={title}
@@ -57,7 +57,7 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     const title = galleryTitle(gallery);
 
     return (
-      <Link to={`/galleries/${gallery.id}`}>
+      <Link to={NavUtils.makeGalleryUrl(gallery)}>
         <span className="ellips-data">{title}</span>
       </Link>
     );

@@ -15,6 +15,10 @@ func intFromPtr(i *int) null.Int {
 	return null.IntFrom(int64(*i))
 }
 
+func intFromValue(i int) null.Int {
+	return null.IntFrom(int64(i))
+}
+
 func nullIntPtr(i null.Int) *int {
 	if !i.Valid {
 		return nil

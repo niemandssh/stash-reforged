@@ -10,6 +10,7 @@ fragment GalleryData on Gallery {
   photographer
   rating100
   organized
+  display_mode
 
   paths {
     cover

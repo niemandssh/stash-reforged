@@ -37,12 +37,13 @@ type galleryRow struct {
 	Details      zero.String `db:"details"`
 	Photographer zero.String `db:"photographer"`
 	// expressed as 1-100
-	Rating    null.Int  `db:"rating"`
-	Organized bool      `db:"organized"`
-	StudioID  null.Int  `db:"studio_id,omitempty"`
-	FolderID  null.Int  `db:"folder_id,omitempty"`
-	CreatedAt Timestamp `db:"created_at"`
-	UpdatedAt Timestamp `db:"updated_at"`
+	Rating      null.Int  `db:"rating"`
+	Organized   bool      `db:"organized"`
+	DisplayMode null.Int  `db:"display_mode"`
+	StudioID    null.Int  `db:"studio_id,omitempty"`
+	FolderID    null.Int  `db:"folder_id,omitempty"`
+	CreatedAt   Timestamp `db:"created_at"`
+	UpdatedAt   Timestamp `db:"updated_at"`
 }
 
 func (r *galleryRow) fromGallery(o models.Gallery) {
@@ -54,6 +55,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Photographer = zero.StringFrom(o.Photographer)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.DisplayMode = intFromValue(o.DisplayMode)
 	r.StudioID = intFromPtr(o.StudioID)
 	r.FolderID = nullIntFromFolderIDPtr(o.FolderID)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
@@ -79,6 +81,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Photographer:  r.Photographer.String,
 		Rating:        nullIntPtr(r.Rating),
 		Organized:     r.Organized,
+		DisplayMode:   int(r.DisplayMode.Int64),
 		StudioID:      nullIntPtr(r.StudioID),
 		FolderID:      nullIntFolderIDPtr(r.FolderID),
 		PrimaryFileID: nullIntFileIDPtr(r.PrimaryFileID),
@@ -107,6 +110,7 @@ func (r *galleryRowRecord) fromPartial(o models.GalleryPartial) {
 	r.setNullString("photographer", o.Photographer)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
+	r.setNullInt("display_mode", o.DisplayMode)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)

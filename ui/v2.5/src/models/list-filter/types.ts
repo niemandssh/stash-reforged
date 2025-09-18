@@ -16,6 +16,13 @@ export enum DisplayMode {
   List,
   Wall,
   Tagger,
+  Slideshow,
+  Web,
+}
+
+export enum WebDisplayMode {
+  FullSize,
+  FitToScreen,
 }
 
 export interface ILabeledId {

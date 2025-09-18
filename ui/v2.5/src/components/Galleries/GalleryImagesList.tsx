@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useState,
-  useMemo,
-  MouseEvent,
-  useContext,
-} from "react";
+import React, { useCallback, useState, useMemo, MouseEvent, useContext } from "react";
 import { FormattedNumber, useIntl } from "react-intl";
 import cloneDeep from "lodash-es/cloneDeep";
 import { useHistory } from "react-router-dom";
@@ -14,21 +8,22 @@ import { queryFindImages, useFindImages } from "src/core/StashService";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
 import { useLightbox } from "src/hooks/Lightbox/hooks";
 import { ListFilterModel } from "src/models/list-filter/filter";
-import { DisplayMode } from "src/models/list-filter/types";
+import { DisplayMode, WebDisplayMode } from "src/models/list-filter/types";
 
-import { ImageWallItem } from "./ImageWallItem";
-import { EditImagesDialog } from "./EditImagesDialog";
-import { DeleteImagesDialog } from "./DeleteImagesDialog";
+import { ImageWallItem } from "../Images/ImageWallItem";
+import { EditImagesDialog } from "../Images/EditImagesDialog";
+import { DeleteImagesDialog } from "../Images/DeleteImagesDialog";
 import "flexbin/flexbin.css";
 import Gallery from "react-photo-gallery";
 import { ExportDialog } from "../Shared/ExportDialog";
 import { objectTitle } from "src/core/files";
 import { ConfigurationContext } from "src/hooks/Config";
-import { ImageGridCard } from "./ImageGridCard";
-import { ImageSlideshow } from "./ImageSlideshow";
+import { ImageGridCard } from "../Images/ImageGridCard";
+import { ImageSlideshow } from "../Images/ImageSlideshow";
+import { ImageWebView } from "../Images/ImageWebView";
+import { WebDisplayModeToggle } from "../Images/WebDisplayModeToggle";
 import { View } from "../List/views";
 import { IItemListOperation } from "../List/FilteredListToolbar";
-import { FileSize } from "../Shared/FileSize";
 
 interface IImageWallProps {
   images: GQL.SlimImageDataFragment[];
@@ -145,6 +140,7 @@ const ImageListImages: React.FC<IImageListImages> = ({
   setSlideshowRunning,
   chapters = [],
 }) => {
+  const [webDisplayMode, setWebDisplayMode] = React.useState<WebDisplayMode>(WebDisplayMode.FitToScreen);
   const handleLightBoxPage = useCallback(
     (props: { direction?: number; page?: number }) => {
       const { direction, page: newPage } = props;
@@ -158,7 +154,6 @@ const ImageListImages: React.FC<IImageListImages> = ({
           }
         } else if (direction > 0) {
           if (filter.currentPage === pageCount) {
-            // return to the first page
             onChangePage(1);
           } else {
             onChangePage(filter.currentPage + direction);
@@ -205,7 +200,7 @@ const ImageListImages: React.FC<IImageListImages> = ({
   );
 
   const handleImageOpen = useCallback(
-    (index) => {
+    (index: number) => {
       setSlideshowRunning(true);
       showLightbox({ initialIndex: index, slideshowEnabled: true });
     },
@@ -250,8 +245,17 @@ const ImageListImages: React.FC<IImageListImages> = ({
       />
     );
   }
+  if (filter.displayMode === DisplayMode.Web) {
+    return (
+      <ImageWebView
+        images={images}
+        onImageClick={handleImageOpen}
+        webDisplayMode={webDisplayMode}
+        onDisplayModeChange={(mode) => setWebDisplayMode(mode)}
+      />
+    );
+  }
 
-  // should not happen
   return <></>;
 };
 
@@ -263,51 +267,24 @@ function getCount(result: GQL.FindImagesQueryResult) {
   return result?.data?.findImages?.count ?? 0;
 }
 
-function renderMetadataByline(result: GQL.FindImagesQueryResult) {
-  const megapixels = result?.data?.findImages?.megapixels;
-  const size = result?.data?.findImages?.filesize;
-
-  if (!megapixels && !size) {
-    return;
-  }
-
-  const separator = megapixels && size ? " - " : "";
-
-  return (
-    <span className="images-stats">
-      &nbsp;(
-      {megapixels ? (
-        <span className="images-megapixels">
-          <FormattedNumber value={megapixels} /> Megapixels
-        </span>
-      ) : undefined}
-      {separator}
-      {size ? (
-        <span className="images-size">
-          <FileSize size={size} />
-        </span>
-      ) : undefined}
-      )
-    </span>
-  );
-}
-
-interface IImageList {
+interface IGalleryImagesList {
   filterHook?: (filter: ListFilterModel) => ListFilterModel;
   view?: View;
   alterQuery?: boolean;
   extraOperations?: IItemListOperation<GQL.FindImagesQueryResult>[];
   chapters?: GQL.GalleryChapterDataFragment[];
   onDisplayModeChange?: (displayMode: DisplayMode) => void;
+  currentDisplayMode?: DisplayMode;
 }
 
-export const ImageList: React.FC<IImageList> = ({
+export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
   filterHook,
   view,
   alterQuery,
   extraOperations,
   chapters = [],
   onDisplayModeChange,
+  currentDisplayMode,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -351,7 +328,6 @@ export const ImageList: React.FC<IImageList> = ({
     result: GQL.FindImagesQueryResult,
     filter: ListFilterModel
   ) {
-    // query for a random image
     if (result.data?.findImages) {
       const { count } = result.data.findImages;
 
@@ -362,7 +338,6 @@ export const ImageList: React.FC<IImageList> = ({
       const singleResult = await queryFindImages(filterCopy);
       if (singleResult.data.findImages.images.length === 1) {
         const { id } = singleResult.data.findImages.images[0];
-        // navigate to the image player page
         history.push(`/images/${id}`);
       }
     }
@@ -407,12 +382,12 @@ export const ImageList: React.FC<IImageList> = ({
 
       return (
         <ImageListImages
-          filter={filter}
           images={result.data.findImages.images}
-          onChangePage={onChangePage}
-          onSelectChange={onSelectChange}
-          pageCount={pageCount}
+          filter={filter}
           selectedIds={selectedIds}
+          onChangePage={onChangePage}
+          pageCount={pageCount}
+          onSelectChange={onSelectChange}
           slideshowRunning={slideshowRunning}
           setSlideshowRunning={setSlideshowRunning}
           chapters={chapters}
@@ -442,6 +417,32 @@ export const ImageList: React.FC<IImageList> = ({
     return <DeleteImagesDialog selected={selectedImages} onClose={onClose} />;
   }
 
+  const setDisplayMode = useCallback(
+    (displayMode: DisplayMode) => {
+      if (onDisplayModeChange) {
+        onDisplayModeChange(displayMode);
+      }
+    },
+    [onDisplayModeChange]
+  );
+
+  const customFilterHook = useCallback((filter: ListFilterModel) => {
+    let result = filter;
+
+    if (filterHook) {
+      result = filterHook(filter);
+    }
+
+    if (currentDisplayMode !== undefined && result.displayMode !== currentDisplayMode) {
+      result = result.clone();
+      result.displayMode = currentDisplayMode;
+    }
+    
+    return result;
+  }, [filterHook, currentDisplayMode]);
+
+
+
   return (
     <ItemListContext
       filterMode={filterMode}
@@ -449,7 +450,7 @@ export const ImageList: React.FC<IImageList> = ({
       getItems={getItems}
       getCount={getCount}
       alterQuery={alterQuery}
-      filterHook={filterHook}
+      filterHook={customFilterHook}
       view={view}
       selectable
     >
@@ -461,7 +462,7 @@ export const ImageList: React.FC<IImageList> = ({
         renderContent={renderContent}
         renderEditDialog={renderEditDialog}
         renderDeleteDialog={renderDeleteDialog}
-        renderMetadataByline={renderMetadataByline}
+        customSetDisplayMode={setDisplayMode}
       />
     </ItemListContext>
   );
