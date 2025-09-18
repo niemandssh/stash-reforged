@@ -36,6 +36,44 @@ type VideoCaption {
   caption_type: String!
 }
 
+type VideoFilters {
+  contrast: Int
+  brightness: Int
+  gamma: Int
+  saturate: Int
+  hue_rotate: Int
+  white_balance: Int
+  red: Int
+  green: Int
+  blue: Int
+  blur: Int
+}
+
+type VideoTransforms {
+  rotate: Int
+  scale: Int
+  aspect_ratio: Int
+}
+
+input VideoFiltersInput {
+  contrast: Int
+  brightness: Int
+  gamma: Int
+  saturate: Int
+  hue_rotate: Int
+  white_balance: Int
+  red: Int
+  green: Int
+  blue: Int
+  blur: Int
+}
+
+input VideoTransformsInput {
+  rotate: Int
+  scale: Int
+  aspect_ratio: Int
+}
+
 type Scene {
   id: ID!
   title: String
@@ -70,6 +108,11 @@ type Scene {
   start_time: Float
   "Video trimming - end time in seconds"
   end_time: Float
+
+  "Video filters applied to the scene"
+  video_filters: VideoFilters
+  "Video transformations applied to the scene"
+  video_transforms: VideoTransforms
 
   "Times a scene was played"
   play_history: [Time!]!
@@ -180,6 +223,11 @@ input SceneUpdateInput {
   start_time: Float
   "Video trimming - end time in seconds"
   end_time: Float
+
+  "Video filters applied to the scene"
+  video_filters: VideoFiltersInput
+  "Video transformations applied to the scene"
+  video_transforms: VideoTransformsInput
 
   primary_file_id: ID
 }

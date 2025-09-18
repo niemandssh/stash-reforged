@@ -3,6 +3,7 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -84,17 +85,19 @@ type sceneRow struct {
 	Director zero.String `db:"director"`
 	Date     NullDate    `db:"date"`
 	// expressed as 1-100
-	Rating       null.Int   `db:"rating"`
-	Organized    bool       `db:"organized"`
-	IsBroken     bool       `db:"is_broken"`
-	IsNotBroken  bool       `db:"is_not_broken"`
-	StudioID     null.Int   `db:"studio_id,omitempty"`
-	CreatedAt    Timestamp  `db:"created_at"`
-	UpdatedAt    Timestamp  `db:"updated_at"`
-	ResumeTime   float64    `db:"resume_time"`
-	PlayDuration float64    `db:"play_duration"`
-	StartTime    null.Float `db:"start_time"`
-	EndTime      null.Float `db:"end_time"`
+	Rating          null.Int    `db:"rating"`
+	Organized       bool        `db:"organized"`
+	IsBroken        bool        `db:"is_broken"`
+	IsNotBroken     bool        `db:"is_not_broken"`
+	StudioID        null.Int    `db:"studio_id,omitempty"`
+	CreatedAt       Timestamp   `db:"created_at"`
+	UpdatedAt       Timestamp   `db:"updated_at"`
+	ResumeTime      float64     `db:"resume_time"`
+	PlayDuration    float64     `db:"play_duration"`
+	StartTime       null.Float  `db:"start_time"`
+	EndTime         null.Float  `db:"end_time"`
+	VideoFilters    zero.String `db:"video_filters"`
+	VideoTransforms zero.String `db:"video_transforms"`
 
 	// not used in resolutions or updates
 	CoverBlob zero.String `db:"cover_blob"`
@@ -118,6 +121,18 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.PlayDuration = o.PlayDuration
 	r.StartTime = float64FromPtr(o.StartTime)
 	r.EndTime = float64FromPtr(o.EndTime)
+
+	// Video filters and transforms
+	if o.VideoFilters != nil {
+		if data, err := json.Marshal(o.VideoFilters); err == nil {
+			r.VideoFilters = zero.StringFrom(string(data))
+		}
+	}
+	if o.VideoTransforms != nil {
+		if data, err := json.Marshal(o.VideoTransforms); err == nil {
+			r.VideoTransforms = zero.StringFrom(string(data))
+		}
+	}
 }
 
 type sceneQueryRow struct {
@@ -156,6 +171,20 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		EndTime:      nullFloatPtr(r.EndTime),
 	}
 
+	// Deserialize video filters and transforms from JSON
+	if r.VideoFilters.Valid && r.VideoFilters.String != "" {
+		var filters models.VideoFilters
+		if err := json.Unmarshal([]byte(r.VideoFilters.String), &filters); err == nil {
+			ret.VideoFilters = &filters
+		}
+	}
+	if r.VideoTransforms.Valid && r.VideoTransforms.String != "" {
+		var transforms models.VideoTransforms
+		if err := json.Unmarshal([]byte(r.VideoTransforms.String), &transforms); err == nil {
+			ret.VideoTransforms = &transforms
+		}
+	}
+
 	if r.PrimaryFileFolderPath.Valid && r.PrimaryFileBasename.Valid {
 		ret.Path = filepath.Join(r.PrimaryFileFolderPath.String, r.PrimaryFileBasename.String)
 	}
@@ -184,6 +213,18 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setFloat64("play_duration", o.PlayDuration)
 	r.setNullFloat64("start_time", o.StartTime)
 	r.setNullFloat64("end_time", o.EndTime)
+
+	// Video filters and transforms
+	if o.VideoFilters != nil {
+		if data, err := json.Marshal(o.VideoFilters); err == nil {
+			r.set("video_filters", string(data))
+		}
+	}
+	if o.VideoTransforms != nil {
+		if data, err := json.Marshal(o.VideoTransforms); err == nil {
+			r.set("video_transforms", string(data))
+		}
+	}
 }
 
 type sceneRepositoryType struct {

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button, Form } from "react-bootstrap";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { VIDEO_PLAYER_ID } from "src/components/ScenePlayer/util";
+import { useSceneUpdate } from "src/core/StashService";
+import { useToast } from "src/hooks/Toast";
 import * as GQL from "src/core/generated-graphql";
 
 interface ISceneVideoFilterPanelProps {
@@ -128,26 +130,102 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   };
 
   const intl = useIntl();
+  const [sceneUpdate] = useSceneUpdate();
+  const Toast = useToast();
 
-  const [contrastValue, setContrastValue] = useState(contrastRange.default);
-  const [brightnessValue, setBrightnessValue] = useState(
-    brightnessRange.default
+  // Initialize state from saved filters
+  const [contrastValue, setContrastValue] = useState(() => 
+    props.scene.video_filters?.contrast ?? contrastRange.default
   );
-  const [gammaValue, setGammaValue] = useState(gammaRange.default);
-  const [saturateValue, setSaturateValue] = useState(saturateRange.default);
-  const [hueRotateValue, setHueRotateValue] = useState(hueRotateRange.default);
-  const [whiteBalanceValue, setWhiteBalanceValue] = useState(
-    whiteBalanceRange.default
+  const [brightnessValue, setBrightnessValue] = useState(() =>
+    props.scene.video_filters?.brightness ?? brightnessRange.default
   );
-  const [redValue, setRedValue] = useState(colourRange.default);
-  const [greenValue, setGreenValue] = useState(colourRange.default);
-  const [blueValue, setBlueValue] = useState(colourRange.default);
-  const [blurValue, setBlurValue] = useState(blurRange.default);
-  const [rotateValue, setRotateValue] = useState(rotateRange.default);
-  const [scaleValue, setScaleValue] = useState(scaleRange.default);
-  const [aspectRatioValue, setAspectRatioValue] = useState(
-    aspectRatioRange.default
+  const [gammaValue, setGammaValue] = useState(() =>
+    props.scene.video_filters?.gamma ?? gammaRange.default
   );
+  const [saturateValue, setSaturateValue] = useState(() =>
+    props.scene.video_filters?.saturate ?? saturateRange.default
+  );
+  const [hueRotateValue, setHueRotateValue] = useState(() =>
+    props.scene.video_filters?.hue_rotate ?? hueRotateRange.default
+  );
+  const [whiteBalanceValue, setWhiteBalanceValue] = useState(() =>
+    props.scene.video_filters?.white_balance ?? whiteBalanceRange.default
+  );
+  const [redValue, setRedValue] = useState(() =>
+    props.scene.video_filters?.red ?? colourRange.default
+  );
+  const [greenValue, setGreenValue] = useState(() =>
+    props.scene.video_filters?.green ?? colourRange.default
+  );
+  const [blueValue, setBlueValue] = useState(() =>
+    props.scene.video_filters?.blue ?? colourRange.default
+  );
+  const [blurValue, setBlurValue] = useState(() =>
+    props.scene.video_filters?.blur ?? blurRange.default
+  );
+  const [rotateValue, setRotateValue] = useState(() =>
+    props.scene.video_transforms?.rotate ?? rotateRange.default
+  );
+  const [scaleValue, setScaleValue] = useState(() =>
+    props.scene.video_transforms?.scale ?? scaleRange.default
+  );
+  const [aspectRatioValue, setAspectRatioValue] = useState(() =>
+    props.scene.video_transforms?.aspect_ratio ?? aspectRatioRange.default
+  );
+
+  // Apply filters and transforms when values change
+  useEffect(() => {
+    updateVideoFilters();
+    updateVideoStyle();
+  }, [
+    contrastValue,
+    brightnessValue,
+    gammaValue,
+    saturateValue,
+    hueRotateValue,
+    whiteBalanceValue,
+    redValue,
+    greenValue,
+    blueValue,
+    blurValue,
+    rotateValue,
+    scaleValue,
+    aspectRatioValue,
+  ]);
+
+  // Apply filters on component mount
+  useEffect(() => {
+    // Small delay to ensure video element is ready
+    const timer = setTimeout(() => {
+      updateVideoFilters();
+      updateVideoStyle();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Update state when scene changes (e.g., when navigating to different scene)
+  useEffect(() => {
+    if (props.scene.video_filters) {
+      setContrastValue(props.scene.video_filters.contrast ?? contrastRange.default);
+      setBrightnessValue(props.scene.video_filters.brightness ?? brightnessRange.default);
+      setGammaValue(props.scene.video_filters.gamma ?? gammaRange.default);
+      setSaturateValue(props.scene.video_filters.saturate ?? saturateRange.default);
+      setHueRotateValue(props.scene.video_filters.hue_rotate ?? hueRotateRange.default);
+      setWhiteBalanceValue(props.scene.video_filters.white_balance ?? whiteBalanceRange.default);
+      setRedValue(props.scene.video_filters.red ?? colourRange.default);
+      setGreenValue(props.scene.video_filters.green ?? colourRange.default);
+      setBlueValue(props.scene.video_filters.blue ?? colourRange.default);
+      setBlurValue(props.scene.video_filters.blur ?? blurRange.default);
+    }
+    
+    if (props.scene.video_transforms) {
+      setRotateValue(props.scene.video_transforms.rotate ?? rotateRange.default);
+      setScaleValue(props.scene.video_transforms.scale ?? scaleRange.default);
+      setAspectRatioValue(props.scene.video_transforms.aspect_ratio ?? aspectRatioRange.default);
+    }
+  }, [props.scene.id]);
 
   // eslint-disable-next-line
   function getVideoElement(playerVideoContainer: any) {
@@ -208,10 +286,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         styleString += ` blur(${blurValue / blurRange.divider}px)`;
       }
 
-      styleString += "; transform:";
+      let transformString = "";
 
       if (rotateValue !== rotateRange.default) {
-        styleString += ` rotate(${
+        transformString += ` rotate(${
           (rotateValue - rotateRange.default) / rotateRange.divider
         }deg)`;
       }
@@ -237,7 +315,11 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
             aspectRatioRange.divider;
         }
 
-        styleString += ` scale(${xScale},${yScale})`;
+        transformString += ` scale(${xScale},${yScale})`;
+      }
+
+      if (transformString) {
+        styleString += `; transform:${transformString}`;
       }
 
       if (playerVideoElement.tagName == "CANVAS") {
@@ -416,32 +498,60 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       scaleFactor = playerWidth / scaledVideoHeight;
     }
 
-    setScaleValue(scaleFactor * 100);
+    const newRotateValue = direction === 0 ? 1 : 3;
+    const newScaleValue = Math.round(scaleFactor * 100);
+    
+    // Update state first
+    setRotateValue(newRotateValue);
+    setScaleValue(newScaleValue);
+    
+    // Save transforms to database immediately
+    const videoTransforms: GQL.VideoTransforms = {
+      rotate: newRotateValue !== rotateRange.default ? newRotateValue : null,
+      scale: newScaleValue !== scaleRange.default ? newScaleValue : null,
+      aspect_ratio: aspectRatioValue !== aspectRatioRange.default ? aspectRatioValue : null,
+    };
+
+
+    sceneUpdate({
+      variables: {
+        input: {
+          id: props.scene.id,
+          video_transforms: videoTransforms,
+        },
+      },
+    });
+
+    Toast.success(
+      intl.formatMessage({ id: "toast.filters_for_scene_saved" })
+    );
   }
 
   function renderRotateAndScale() {
     return (
-      <div className="row form-group">
-        <span className="col-6">
+      <div className="row form-group no-gutters">
+        <div className="col-6 pr-2">
           <Button
             id="rotateAndScaleLeft"
             variant="primary"
             type="button"
+            className="w-100"
             onClick={() => onRotateAndScale(0)}
           >
             <FormattedMessage id="effect_filters.rotate_left_and_scale" />
           </Button>
-        </span>
-        <span className="col-6">
+        </div>
+        <div className="col-6 pl-2">
           <Button
             id="rotateAndScaleRight"
             variant="primary"
             type="button"
+            className="w-100"
             onClick={() => onRotateAndScale(1)}
           >
             <FormattedMessage id="effect_filters.rotate_right_and_scale" />
           </Button>
-        </span>
+        </div>
       </div>
     );
   }
@@ -457,43 +567,145 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     setGreenValue(colourRange.default);
     setBlueValue(colourRange.default);
     setBlurValue(blurRange.default);
+
+    // Immediately save to database
+    const videoFilters: GQL.VideoFilters = {
+      contrast: null,
+      brightness: null,
+      gamma: null,
+      saturate: null,
+      hue_rotate: null,
+      white_balance: null,
+      red: null,
+      green: null,
+      blue: null,
+      blur: null,
+    };
+
+    sceneUpdate({
+      variables: {
+        input: {
+          id: props.scene.id,
+          video_filters: videoFilters,
+        },
+      },
+    });
+
+    Toast.success(
+      intl.formatMessage({ id: "toast.filters_reset" })
+    );
   }
 
   function onResetTransforms() {
     setScaleValue(scaleRange.default);
     setRotateValue(rotateRange.default);
     setAspectRatioValue(aspectRatioRange.default);
+
+    // Immediately save to database
+    const videoTransforms: GQL.VideoTransforms = {
+      rotate: null,
+      scale: null,
+      aspect_ratio: null,
+    };
+
+    sceneUpdate({
+      variables: {
+        input: {
+          id: props.scene.id,
+          video_transforms: videoTransforms,
+        },
+      },
+    });
+
+    Toast.success(
+      intl.formatMessage({ id: "toast.transforms_reset" })
+    );
+  }
+
+  function onSaveFilters() {
+    const videoFilters: GQL.VideoFilters = {
+      contrast: contrastValue !== contrastRange.default ? contrastValue : null,
+      brightness: brightnessValue !== brightnessRange.default ? brightnessValue : null,
+      gamma: gammaValue !== gammaRange.default ? gammaValue : null,
+      saturate: saturateValue !== saturateRange.default ? saturateValue : null,
+      hue_rotate: hueRotateValue !== hueRotateRange.default ? hueRotateValue : null,
+      white_balance: whiteBalanceValue !== whiteBalanceRange.default ? whiteBalanceValue : null,
+      red: redValue !== colourRange.default ? redValue : null,
+      green: greenValue !== colourRange.default ? greenValue : null,
+      blue: blueValue !== colourRange.default ? blueValue : null,
+      blur: blurValue !== blurRange.default ? blurValue : null,
+    };
+
+    const videoTransforms: GQL.VideoTransforms = {
+      rotate: rotateValue !== rotateRange.default ? rotateValue : null,
+      scale: scaleValue !== scaleRange.default ? Math.round(scaleValue) : null,
+      aspect_ratio: aspectRatioValue !== aspectRatioRange.default ? Math.round(aspectRatioValue) : null,
+    };
+
+    sceneUpdate({
+      variables: {
+        input: {
+          id: props.scene.id,
+          video_filters: videoFilters,
+          video_transforms: videoTransforms,
+        },
+      },
+    });
+
+    Toast.success(
+      intl.formatMessage({ id: "toast.filters_for_scene_saved" })
+    );
   }
 
   function renderResetButton() {
     return (
-      <div className="row form-group">
-        <span className="col-6">
+      <div className="row form-group no-gutters">
+        <div className="col-6 pr-2">
           <Button
             id="resetFilters"
-            variant="primary"
+            variant="danger"
             type="button"
+            className="w-100"
             onClick={() => onResetFilters()}
           >
             <FormattedMessage id="effect_filters.reset_filters" />
           </Button>
-        </span>
-        <span className="col-6">
+        </div>
+        <div className="col-6 pl-2">
           <Button
             id="resetTransforms"
-            variant="secondary"
+            variant="danger"
             type="button"
+            className="w-100"
             onClick={() => onResetTransforms()}
           >
             <FormattedMessage id="effect_filters.reset_transforms" />
           </Button>
-        </span>
+        </div>
+      </div>
+    );
+  }
+
+  function renderSaveButton() {
+    return (
+      <div className="row form-group mt-5">
+        <div className="col-12">
+          <Button
+            id="saveFilters"
+            variant="success"
+            type="button"
+            className="w-100"
+            onClick={() => onSaveFilters()}
+          >
+            <FormattedMessage id="actions.save" />
+          </Button>
+        </div>
       </div>
     );
   }
 
   function renderFilterContainer() {
-    return <div id="video-filter-container" />;
+    return <div id="video-filter-container" style={{ display: 'none' }} />;
   }
 
   // On render update video style.
@@ -635,6 +847,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         </span>
       </div>
       {renderRotateAndScale()}
+      {renderSaveButton()}
       {renderResetButton()}
       {renderFilterContainer()}
     </div>

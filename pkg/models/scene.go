@@ -196,14 +196,16 @@ type SceneUpdateInput struct {
 	Groups           []SceneGroupInput `json:"groups"`
 	TagIds           []string          `json:"tag_ids"`
 	// This should be a URL or a base64 encoded data URL
-	CoverImage    *string        `json:"cover_image"`
-	StashIds      []StashIDInput `json:"stash_ids"`
-	ResumeTime    *float64       `json:"resume_time"`
-	PlayDuration  *float64       `json:"play_duration"`
-	PlayCount     *int           `json:"play_count"`
-	StartTime     *float64       `json:"start_time"`
-	EndTime       *float64       `json:"end_time"`
-	PrimaryFileID *string        `json:"primary_file_id"`
+	CoverImage      *string          `json:"cover_image"`
+	StashIds        []StashIDInput   `json:"stash_ids"`
+	ResumeTime      *float64         `json:"resume_time"`
+	PlayDuration    *float64         `json:"play_duration"`
+	PlayCount       *int             `json:"play_count"`
+	StartTime       *float64         `json:"start_time"`
+	EndTime         *float64         `json:"end_time"`
+	VideoFilters    *VideoFilters    `json:"video_filters"`
+	VideoTransforms *VideoTransforms `json:"video_transforms"`
+	PrimaryFileID   *string          `json:"primary_file_id"`
 }
 
 type SceneDestroyInput struct {

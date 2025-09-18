@@ -499,3 +499,11 @@ func (r *sceneResolver) StartTime(ctx context.Context, obj *models.Scene) (*floa
 func (r *sceneResolver) EndTime(ctx context.Context, obj *models.Scene) (*float64, error) {
 	return obj.EndTime, nil
 }
+
+func (r *sceneResolver) VideoFilters(ctx context.Context, obj *models.Scene) (*models.VideoFilters, error) {
+	return obj.VideoFilters, nil
+}
+
+func (r *sceneResolver) VideoTransforms(ctx context.Context, obj *models.Scene) (*models.VideoTransforms, error) {
+	return obj.VideoTransforms, nil
+}

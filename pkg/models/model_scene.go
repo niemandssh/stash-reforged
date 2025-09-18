@@ -43,6 +43,10 @@ type Scene struct {
 	StartTime *float64 `json:"start_time"`
 	EndTime   *float64 `json:"end_time"`
 
+	// Video filters and transformations
+	VideoFilters    *VideoFilters    `json:"video_filters"`
+	VideoTransforms *VideoTransforms `json:"video_transforms"`
+
 	URLs         RelatedStrings  `json:"urls"`
 	GalleryIDs   RelatedIDs      `json:"gallery_ids"`
 	TagIDs       RelatedIDs      `json:"tag_ids"`
@@ -79,6 +83,9 @@ type ScenePartial struct {
 	PlayDuration OptionalFloat64
 	StartTime    OptionalFloat64
 	EndTime      OptionalFloat64
+
+	VideoFilters    *VideoFilters
+	VideoTransforms *VideoTransforms
 
 	URLs          *UpdateStrings
 	GalleryIDs    *UpdateIDs
@@ -289,4 +296,25 @@ func (c VideoCaption) Path(filePath string) string {
 type SimilarScene struct {
 	Scene           *Scene  `json:"scene"`
 	SimilarityScore float64 `json:"similarity_score"`
+}
+
+// VideoFilters represents video filter settings for a scene
+type VideoFilters struct {
+	Contrast     *int `json:"contrast"`
+	Brightness   *int `json:"brightness"`
+	Gamma        *int `json:"gamma"`
+	Saturate     *int `json:"saturate"`
+	HueRotate    *int `json:"hue_rotate"`
+	WhiteBalance *int `json:"white_balance"`
+	Red          *int `json:"red"`
+	Green        *int `json:"green"`
+	Blue         *int `json:"blue"`
+	Blur         *int `json:"blur"`
+}
+
+// VideoTransforms represents video transformation settings for a scene
+type VideoTransforms struct {
+	Rotate      *int `json:"rotate"`
+	Scale       *int `json:"scale"`
+	AspectRatio *int `json:"aspect_ratio"`
 }

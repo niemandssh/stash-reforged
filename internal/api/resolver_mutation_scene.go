@@ -211,6 +211,10 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.StartTime = translator.optionalFloat64(input.StartTime, "start_time")
 	updatedScene.EndTime = translator.optionalFloat64(input.EndTime, "end_time")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
+
+	// Video filters and transforms
+	updatedScene.VideoFilters = input.VideoFilters
+	updatedScene.VideoTransforms = input.VideoTransforms
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
 	updatedScene.IsNotBroken = translator.optionalBool(input.IsNotBroken, "is_not_broken")
 

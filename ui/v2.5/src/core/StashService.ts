@@ -1109,6 +1109,7 @@ export const useSceneIncrementPlayCount = () =>
 
       evictQueries(cache, [
         GQL.FindScenesDocument, // filter by play count
+        GQL.FindSceneDocument, // individual scene page
       ]);
     },
   });
@@ -1167,6 +1168,7 @@ export const useSceneDecrementPlayCount = () =>
 
       evictQueries(cache, [
         GQL.FindScenesDocument, // filter by play count
+        GQL.FindSceneDocument, // individual scene page
       ]);
     },
   });
@@ -1203,6 +1205,7 @@ export const useSceneResetPlayCount = () =>
 
       evictQueries(cache, [
         GQL.FindScenesDocument, // filter by play count
+        GQL.FindSceneDocument, // individual scene page
       ]);
     },
   });

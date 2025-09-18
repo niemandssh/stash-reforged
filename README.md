@@ -32,6 +32,7 @@ This version will be always in develop branch.
 - [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
 - [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
 - [x] Open tag page instead of filter by tag when click on tag from scene page (because tag page have scenes by this tag already, anf it's more comfortable to edit tag by click on it)
+- [x] Filters saves for each scene now and keeps after reload page
 
 ### TODO
 - [ ] For global recount suggested scenes task add info about status of handled videos
