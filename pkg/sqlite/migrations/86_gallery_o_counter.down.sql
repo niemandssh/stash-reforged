@@ -61,3 +61,4 @@ ALTER TABLE `galleries_new` rename to `galleries`;
 CREATE INDEX `index_galleries_on_studio_id` on `galleries` (`studio_id`);
 
 PRAGMA foreign_keys=ON;
+

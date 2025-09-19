@@ -14,3 +14,4 @@ CREATE TABLE `galleries_o_dates` (
 CREATE INDEX `index_galleries_o_dates` ON `galleries_o_dates` (`gallery_id`);
 
 PRAGMA foreign_keys=ON;
+
