@@ -25,9 +25,15 @@ export function useIntersectionObserver(
         let maxIndex = 0;
         
         observedEntries.forEach((entry, index) => {
-          if (entry.isIntersecting && entry.intersectionRatio > maxIntersectionRatio) {
-            maxIntersectionRatio = entry.intersectionRatio;
-            maxIndex = elementsRef.current.indexOf(entry.target);
+          if (entry.isIntersecting) {
+            // Get the index from data-index attribute
+            const dataIndex = parseInt((entry.target as HTMLElement).getAttribute('data-index') || '0', 10);
+            // Find the element with the highest intersection ratio that's closest to center
+            const centerRatio = entry.intersectionRatio * (1 - Math.abs(entry.boundingClientRect.top - window.innerHeight / 2) / window.innerHeight);
+            if (centerRatio > maxIntersectionRatio) {
+              maxIntersectionRatio = centerRatio;
+              maxIndex = dataIndex;
+            }
           }
         });
         

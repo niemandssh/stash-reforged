@@ -71,7 +71,7 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
   if (totalPages <= 1) {
     return (
       <div className={`page-counter-static ${className}`}>
-        {currentPage + 1} / {totalPages}
+        {currentPage} / {totalPages}
       </div>
     );
   }
@@ -83,7 +83,7 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
         onClick={toggleVisibility}
         title="Кликните для перехода к странице"
       >
-        {currentPage + 1} / {totalPages}
+        {currentPage} / {totalPages}
         <Icon icon={faChevronDown} className="dropdown-arrow" />
       </div>
       

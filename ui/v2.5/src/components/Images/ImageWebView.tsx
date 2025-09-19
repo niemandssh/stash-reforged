@@ -30,6 +30,13 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     rootMargin: '-40% 0px -40% 0px'
   });
 
+  // Initialize currentImageIndex to 0 when images change
+  useEffect(() => {
+    if (images.length > 0) {
+      setCurrentImageIndex(0);
+    }
+  }, [images.length]);
+
   useEffect(() => {
     if (activeIndex >= 0 && activeIndex < images.length && !isModeSwitching.current) {
       setCurrentImageIndex(activeIndex);
@@ -73,22 +80,27 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   }, []);
 
   const scrollToImage = useCallback((index: number) => {
-    if (index >= 0 && index < images.length && imageRefs.current[index]) {
-      imageRefs.current[index]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
+    if (index >= 0 && index < images.length) {
+      // Find the spacer element with the matching data-index
+      const spacerElement = document.querySelector(`[data-index="${index}"]`);
+      if (spacerElement) {
+        // Disable intersection observer temporarily
+        isModeSwitching.current = true;
+        
+        spacerElement.scrollIntoView({
+          behavior: 'instant',
+          block: 'center'
+        });
+        
+        // Force update currentImageIndex after scroll
+        setTimeout(() => {
+          setCurrentImageIndex(index);
+          isModeSwitching.current = false;
+        }, 100);
+      }
     }
   }, [images.length]);
 
-  const scrollToSpacer = useCallback((index: number) => {
-    if (index >= 0 && index < images.length && spacerRefs.current[index]) {
-      spacerRefs.current[index]?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-    }
-  }, [images.length]);
 
   // Sync scroll position when switching display modes
   useEffect(() => {
@@ -96,7 +108,13 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     
     const timeoutId = setTimeout(() => {
       if (currentImageIndex >= 0 && currentImageIndex < images.length) {
-        scrollToSpacer(currentImageIndex);
+        const spacerElement = document.querySelector(`[data-index="${currentImageIndex}"]`);
+        if (spacerElement) {
+          spacerElement.scrollIntoView({
+            behavior: 'instant',
+            block: 'center'
+          });
+        }
       }
       isModeSwitching.current = false;
     }, 100);
@@ -105,7 +123,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
       clearTimeout(timeoutId);
       isModeSwitching.current = false;
     };
-  }, [webDisplayMode, scrollToSpacer, images.length]);
+  }, [webDisplayMode, images.length]);
 
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -219,7 +237,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     <div className={containerClass}>
       <div className="image-web-sticky-controls">
         <PageNavigationInput
-          currentPage={currentImageIndex}
+          currentPage={currentImageIndex + 1}
           totalPages={images.length}
           onPageChange={scrollToImage}
           className="image-web-page-navigation"
@@ -247,6 +265,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
             >
               <div
                 className="image-web-spacer"
+                data-index={index}
                 ref={(el) => {
                   spacerRefs.current[index] = el;
                 }}
