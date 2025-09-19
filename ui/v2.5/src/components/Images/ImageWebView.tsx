@@ -22,10 +22,11 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   const [imageSizes, setImageSizes] = useState<{ [key: string]: { width: number; height: number } }>({});
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  
+  const spacerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const { observe, unobserve, activeIndex } = useIntersectionObserver({
     threshold: 0.5,
-    rootMargin: '-20% 0px -20% 0px'
+    rootMargin: '-40% 0px -40% 0px'
   });
 
   useEffect(() => {
@@ -36,17 +37,18 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
 
   useEffect(() => {
     imageRefs.current = imageRefs.current.slice(0, images.length);
+    spacerRefs.current = spacerRefs.current.slice(0, images.length);
   }, [images.length]);
 
   useEffect(() => {
-    imageRefs.current.forEach((ref, index) => {
+    spacerRefs.current.forEach((ref, index) => {
       if (ref) {
         observe(ref);
       }
     });
 
     return () => {
-      imageRefs.current.forEach((ref) => {
+      spacerRefs.current.forEach((ref) => {
         if (ref) {
           unobserve(ref);
         }
@@ -98,19 +100,19 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
       const tabs = document.querySelector('.nav-tabs') || document.querySelector('[role="tablist"]');
       const toolbar = document.querySelector('.toolbar') || document.querySelector('.filtered-list-toolbar');
       const webControls = document.querySelector('.web-mode-controls');
-      
+
       let totalHeight = 0;
       if (header) totalHeight += header.getBoundingClientRect().height;
       if (tabs) totalHeight += tabs.getBoundingClientRect().height;
       if (toolbar) totalHeight += toolbar.getBoundingClientRect().height;
       if (webControls) totalHeight += webControls.getBoundingClientRect().height;
-      
+
       totalHeight += 50;
-      
+
       setInterfaceHeight(Math.max(totalHeight, 200));
     };
     calculateInterfaceHeight();
-    
+
     const handleResize = () => {
       calculateInterfaceHeight();
     };
@@ -125,7 +127,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
       if (imageSize) {
         const availableHeight = windowHeight - interfaceHeight;
         const availableWidth = windowWidth - 40;
-        
+
         // Если изображение помещается на экран, используем его реальные размеры
         if (imageSize.height <= availableHeight && imageSize.width <= availableWidth) {
           return {
@@ -136,18 +138,18 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
             margin: '0 auto'
           };
         }
-        
+
         // Иначе масштабируем для вписывания в экран
         const aspectRatio = imageSize.width / imageSize.height;
-        
+
         const heightByHeight = availableHeight;
         const widthByHeight = heightByHeight * aspectRatio;
-        
+
         const widthByWidth = availableWidth;
         const heightByWidth = widthByWidth / aspectRatio;
-        
+
         let finalHeight, finalWidth;
-        
+
         if (heightByWidth <= availableHeight) {
           finalWidth = widthByWidth;
           finalHeight = heightByWidth;
@@ -155,7 +157,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
           finalHeight = heightByHeight;
           finalWidth = widthByHeight;
         }
-        
+
         return {
           height: `${finalHeight}px`,
           width: `${finalWidth}px`,
@@ -178,12 +180,12 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     );
   }
 
-  const containerClass = webDisplayMode === WebDisplayMode.FitToScreen 
-    ? "image-web-container image-web-container-fit image-web-container-sticky" 
+  const containerClass = webDisplayMode === WebDisplayMode.FitToScreen
+    ? "image-web-container image-web-container-fit image-web-container-sticky"
     : "image-web-container image-web-container-sticky";
-  
-  const imageClass = webDisplayMode === WebDisplayMode.FitToScreen 
-    ? "image-web-image image-web-image-fit" 
+
+  const imageClass = webDisplayMode === WebDisplayMode.FitToScreen
+    ? "image-web-image image-web-image-fit"
     : "image-web-image";
 
   return (
@@ -195,7 +197,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
           onPageChange={scrollToImage}
           className="image-web-page-navigation"
         />
-        
+
         {onDisplayModeChange && (
           <div className="web-mode-controls">
             <WebDisplayModeToggle
@@ -205,34 +207,52 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
           </div>
         )}
       </div>
-      
+
       <div className="image-web-list">
         {images.map((image, index) => (
-          <div 
-            key={image.id} 
-            className="image-web-item"
-            ref={(el) => {
-              imageRefs.current[index] = el;
-            }}
-          >
-            <img
-              src={image.paths.image || image.paths.preview || image.paths.thumbnail || ""}
-              alt={objectTitle(image)}
-              className={imageClass}
-              style={getImageStyle(image)}
-              onClick={handleImageClick(index)}
-              onLoad={(e) => {
-                const img = e.target as HTMLImageElement;
-                handleImageLoad(image.id, img.naturalWidth, img.naturalHeight);
+          <React.Fragment key={image.id}>
+            <div
+              className="image-web-item"
+              ref={(el) => {
+                imageRefs.current[index] = el;
               }}
-              loading="lazy"
-            />
-            {image.title && (
-              <div className="image-web-title">
-                {image.title}
-              </div>
-            )}
-          </div>
+              style={{ position: 'relative' }}
+            >
+              <div
+                className="image-web-spacer"
+                ref={(el) => {
+                  spacerRefs.current[index] = el;
+                }}
+                style={{
+                  height: '1px',
+                  width: '100%',
+                  position: 'absolute',
+                  top: '50%',
+                  left: 0,
+                  pointerEvents: 'none',
+                  visibility: 'hidden',
+                  zIndex: 1
+                }}
+              />
+              <img
+                src={image.paths.image || image.paths.preview || image.paths.thumbnail || ""}
+                alt={objectTitle(image)}
+                className={imageClass}
+                style={getImageStyle(image)}
+                onClick={handleImageClick(index)}
+                onLoad={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  handleImageLoad(image.id, img.naturalWidth, img.naturalHeight);
+                }}
+                loading="lazy"
+              />
+              {image.title && (
+                <div className="image-web-title">
+                  {image.title}
+                </div>
+              )}
+            </div>
+          </React.Fragment>
         ))}
       </div>
     </div>
