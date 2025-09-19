@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"slices"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
@@ -27,6 +28,8 @@ const (
 	galleryIDColumn          = "gallery_id"
 	galleriesURLsTable       = "gallery_urls"
 	galleriesURLColumn       = "url"
+	galleriesODatesTable     = "galleries_o_dates"
+	galleryODateColumn       = "o_date"
 )
 
 type galleryRow struct {
@@ -39,6 +42,7 @@ type galleryRow struct {
 	// expressed as 1-100
 	Rating      null.Int  `db:"rating"`
 	Organized   bool      `db:"organized"`
+	OCounter    int       `db:"o_counter"`
 	DisplayMode null.Int  `db:"display_mode"`
 	StudioID    null.Int  `db:"studio_id,omitempty"`
 	FolderID    null.Int  `db:"folder_id,omitempty"`
@@ -55,6 +59,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Photographer = zero.StringFrom(o.Photographer)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.OCounter = o.OCounter
 	r.DisplayMode = intFromValue(o.DisplayMode)
 	r.StudioID = intFromPtr(o.StudioID)
 	r.FolderID = nullIntFromFolderIDPtr(o.FolderID)
@@ -81,6 +86,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Photographer:  r.Photographer.String,
 		Rating:        nullIntPtr(r.Rating),
 		Organized:     r.Organized,
+		OCounter:      r.OCounter,
 		DisplayMode:   int(r.DisplayMode.Int64),
 		StudioID:      nullIntPtr(r.StudioID),
 		FolderID:      nullIntFolderIDPtr(r.FolderID),
@@ -186,6 +192,8 @@ var (
 
 type GalleryStore struct {
 	tableMgr *table
+	oDateManager
+	oCounterManager
 
 	fileStore   *FileStore
 	folderStore *FolderStore
@@ -193,9 +201,11 @@ type GalleryStore struct {
 
 func NewGalleryStore(fileStore *FileStore, folderStore *FolderStore) *GalleryStore {
 	return &GalleryStore{
-		tableMgr:    galleryTableMgr,
-		fileStore:   fileStore,
-		folderStore: folderStore,
+		tableMgr:        galleryTableMgr,
+		oDateManager:    oDateManager{galleriesOTableMgr},
+		oCounterManager: oCounterManager{galleryTableMgr},
+		fileStore:       fileStore,
+		folderStore:     folderStore,
 	}
 }
 
@@ -904,4 +914,71 @@ func (qb *GalleryStore) ResetCover(ctx context.Context, galleryID int) error {
 
 func (qb *GalleryStore) GetSceneIDs(ctx context.Context, id int) ([]int, error) {
 	return galleryRepository.scenes.getIDs(ctx, id)
+}
+
+// O-counter methods - these delegate to the embedded managers
+
+func (qb *GalleryStore) IncrementOCounter(ctx context.Context, id int) (int, error) {
+	return qb.oCounterManager.IncrementOCounter(ctx, id)
+}
+
+func (qb *GalleryStore) DecrementOCounter(ctx context.Context, id int) (int, error) {
+	return qb.oCounterManager.DecrementOCounter(ctx, id)
+}
+
+func (qb *GalleryStore) ResetOCounter(ctx context.Context, id int) (int, error) {
+	return qb.oCounterManager.ResetOCounter(ctx, id)
+}
+
+func (qb *GalleryStore) AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.oDateManager.AddO(ctx, id, dates)
+}
+
+func (qb *GalleryStore) DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.oDateManager.DeleteO(ctx, id, dates)
+}
+
+func (qb *GalleryStore) ResetO(ctx context.Context, id int) (int, error) {
+	return qb.oDateManager.ResetO(ctx, id)
+}
+
+func (qb *GalleryStore) OCount(ctx context.Context) (int, error) {
+	return qb.oDateManager.GetOCount(ctx, 0) // 0 means get all count
+}
+
+func (qb *GalleryStore) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.oDateManager.GetODatesInRange(ctx, start, end)
+}
+
+func (qb *GalleryStore) OCountByPerformerID(ctx context.Context, performerID int) (int, error) {
+	// This method needs to be implemented specifically for galleries
+	// It should count galleries that have O-dates and are associated with the performer
+	table := qb.table()
+	joinTable := performersGalleriesJoinTable
+	oHistoryTable := galleriesODatesJoinTable
+
+	q := dialect.Select(goqu.COUNT("*")).From(table).InnerJoin(
+		oHistoryTable,
+		goqu.On(table.Col(idColumn).Eq(oHistoryTable.Col(galleryIDColumn))),
+	).InnerJoin(
+		joinTable,
+		goqu.On(
+			table.Col(idColumn).Eq(joinTable.Col(galleryIDColumn)),
+		),
+	).Where(joinTable.Col(performerIDColumn).Eq(performerID))
+
+	var ret int
+	if err := querySimple(ctx, q, &ret); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (qb *GalleryStore) GetManyOCount(ctx context.Context, ids []int) ([]int, error) {
+	return qb.oDateManager.GetManyOCount(ctx, ids)
+}
+
+func (qb *GalleryStore) GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	return qb.oDateManager.GetManyODates(ctx, ids)
 }
