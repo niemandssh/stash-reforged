@@ -23,6 +23,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const spacerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isModeSwitching = useRef<boolean>(false);
 
   const { observe, unobserve, activeIndex } = useIntersectionObserver({
     threshold: 0.5,
@@ -30,7 +31,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   });
 
   useEffect(() => {
-    if (activeIndex >= 0 && activeIndex < images.length) {
+    if (activeIndex >= 0 && activeIndex < images.length && !isModeSwitching.current) {
       setCurrentImageIndex(activeIndex);
     }
   }, [activeIndex, images.length]);
@@ -80,6 +81,32 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
     }
   }, [images.length]);
 
+  const scrollToSpacer = useCallback((index: number) => {
+    if (index >= 0 && index < images.length && spacerRefs.current[index]) {
+      spacerRefs.current[index]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
+  }, [images.length]);
+
+  // Sync scroll position when switching display modes
+  useEffect(() => {
+    isModeSwitching.current = true;
+    
+    const timeoutId = setTimeout(() => {
+      if (currentImageIndex >= 0 && currentImageIndex < images.length) {
+        scrollToSpacer(currentImageIndex);
+      }
+      isModeSwitching.current = false;
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      isModeSwitching.current = false;
+    };
+  }, [webDisplayMode, scrollToSpacer, images.length]);
+
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [interfaceHeight, setInterfaceHeight] = useState(280);
@@ -128,7 +155,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
         const availableHeight = windowHeight - interfaceHeight;
         const availableWidth = windowWidth - 40;
 
-        // Если изображение помещается на экран, используем его реальные размеры
+        // If image fits on screen, use its real dimensions
         if (imageSize.height <= availableHeight && imageSize.width <= availableWidth) {
           return {
             height: `${imageSize.height}px`,
@@ -139,7 +166,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
           };
         }
 
-        // Иначе масштабируем для вписывания в экран
+        // Otherwise scale to fit screen
         const aspectRatio = imageSize.width / imageSize.height;
 
         const heightByHeight = availableHeight;
