@@ -38,6 +38,7 @@ This version will be always in develop branch.
 - [x] Separate release date and filming date for scenes
 - [x] Show mode saves in DB table for each gallery
 - [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
+- [x] Settings page opens in the new tab
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

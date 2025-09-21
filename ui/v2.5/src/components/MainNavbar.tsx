@@ -523,14 +523,15 @@ export const MainNavbar: React.FC = () => {
             <Icon icon={faChartColumn} />
           </Button>
         </NavLink>
-        <NavLink
+        <a
           className="nav-utility"
-          exact
-          to="/settings"
+          href="/settings"
+          target="_blank"
+          rel="noopener noreferrer"
           onClick={handleDismiss}
         >
           <SettingsButton />
-        </NavLink>
+        </a>
         <Button
           className="nav-utility minimal"
           onClick={() => openManual()}
