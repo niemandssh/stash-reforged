@@ -23,7 +23,7 @@ This version will be always in develop branch.
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
-- [x] Performer's and tag's photo cropper
+- [x] Performer's, Studio's and tag's photo cropper
 - [x] Broken video status for scene (you can add it manually)
 - [x] 10-stars rating by half star
 - [x] RIP ribbon for death performers 

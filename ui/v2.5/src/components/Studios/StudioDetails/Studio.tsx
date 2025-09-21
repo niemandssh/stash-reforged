@@ -42,6 +42,7 @@ import {
   useTabKey,
 } from "src/components/Shared/DetailsPage/Tabs";
 import { DetailTitle } from "src/components/Shared/DetailsPage/DetailTitle";
+import { StudioImageCropper } from "src/components/Shared/StudioImageCropper";
 import { ExpandCollapseButton } from "src/components/Shared/CollapseButton";
 import { FavoriteIcon } from "src/components/Shared/FavoriteIcon";
 import { ExternalLinkButtons } from "src/components/Shared/ExternalLinksButton";
@@ -448,12 +449,17 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
         />
         <div className="detail-container">
           <HeaderImage encodingImage={encodingImage}>
-            {studioImage && (
-              <DetailImage
-                className="logo"
-                alt={studio.name}
-                src={studioImage}
+            {studioImage && !isEditing && !studioImage.includes('default=true') && (
+              <StudioImageCropper
+                imageSrc={studioImage}
+                studioId={studio.id}
               />
+            )}
+            {studioImage && !isEditing && studioImage.includes('default=true') && (
+              <DetailImage className="logo" alt={studio.name} src={studioImage} />
+            )}
+            {studioImage && isEditing && (
+              <DetailImage className="logo" alt={studio.name} src={studioImage} />
             )}
           </HeaderImage>
           <div className="row">

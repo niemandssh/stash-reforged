@@ -51,3 +51,12 @@
   }
   /* stylelint-enable selector-class-pattern */
 }
+
+// Crop image button styles
+.image-cropper-container {
+  .detail-header-image {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+  }
+}
