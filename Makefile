@@ -425,6 +425,7 @@ remove-compiler-container:
 	docker rm -f -v build
 
 dev:
+start:
 	make server-start
 
 fdev:
@@ -432,3 +433,6 @@ fdev:
 
 compile:
 	make generate && make ui
+
+prepare:
+	make pre-ui && make compile

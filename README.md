@@ -37,6 +37,7 @@ This version will be always in develop branch.
 - [x] Video Filters saves for each scene now and keeps after reload page
 - [x] Separate release date and filming date for scenes
 - [x] Show mode saves in DB table for each gallery
+- [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
@@ -60,4 +61,14 @@ For further information you can consult the [documentation](https://docs.stashap
 
 # How to install reforged version
 
-// TODO: add description how to run server
+**For Linux users:**
+1. Install `go nodejs bun gcc make ffmpeg`
+2. Run `make prepare` for the first time
+3. Run `make start` to run server
+4. Open http://localhost:9999
+
+\
+**For Windows users:**\
+Cry)))
+
+_// TODO: add description how to run server for WIN users_ 
