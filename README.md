@@ -11,8 +11,6 @@ This version will be always in develop branch.
 
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
-- [x] Setting for show/hide percent of similarity in suggested scenes
-- [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
@@ -21,28 +19,8 @@ This version will be always in develop branch.
 - [x] **O-Count stats and graphics**
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
-- [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
-- [x] Tag weights - some tags matter than other (for recommendations)
-- [x] Performer's, Studio's and tag's photo cropper
-- [x] Broken video status for scene (you can add it manually)
-- [x] 10-stars rating by half star
-- [x] RIP ribbon for death performers 
-- [x] Reorder fields of scene edit (for more comfortable filling)
-- [x] "Merge from/into other scene..." was added in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
-- [x] Notes block with saving text to file (.stash/notes.txt) - for saving links to scrape videos in future, for example
-- [x] Action for open media file in external player
-- [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
-- [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
-- [x] Open tag page instead of filter by tag when click on tag from scene page (because tag page have scenes by this tag already, anf it's more comfortable to edit tag by click on it)
-- [x] Video Filters saves for each scene now and keeps after reload page
-- [x] Separate release date and filming date for scenes
-- [x] Show mode saves in DB table for each gallery
-- [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
-- [x] Settings page opens in the new tab
 
-### TODO
-- [ ] Add info about status of handled videos for global recount suggested scenes task
-- [ ] Fix scene sprites after convert video (don't run generate manually)
+**And a lot of other improvements! You can view the full list [in this page](IMPROVEMENTS.md).**
 
 ### About Stash
 [Original repository](https://github.com/stashapp/stash)
