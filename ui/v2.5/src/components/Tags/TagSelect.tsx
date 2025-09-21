@@ -30,6 +30,7 @@ import { TagPopover } from "./TagPopover";
 import { Placement } from "react-bootstrap/esm/Overlay";
 import { sortByRelevance } from "src/utils/query";
 import { PatchComponent, PatchFunction } from "src/patch";
+import { generateSearchVariants, translateRussianToEnglish, translateEnglishToRussian } from "src/utils/keyboardLayout";
 
 export type SelectObject = {
   id: string;
@@ -80,19 +81,27 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const exclude = useMemo(() => props.excludeIds || [], [props.excludeIds]);
 
   async function loadTags(input: string): Promise<Option[]> {
-    const filter = new ListFilterModel(GQL.FilterMode.Tags);
-    filter.searchTerm = input;
-    filter.currentPage = 1;
-    filter.itemsPerPage = maxOptionsShown;
-    filter.sortBy = "name";
-    filter.sortDirection = GQL.SortDirectionEnum.Asc;
-    const query = await queryFindTagsForSelect(filter);
-    let ret = query.data.findTags.tags.filter((tag) => {
-      // HACK - we should probably exclude these in the backend query, but
-      // this will do in the short-term
-      return !exclude.includes(tag.id.toString());
-    });
-
+    const searchVariants = generateSearchVariants(input);
+    const allResults = new Map<string, FindTagsResult[0]>();
+    
+    for (const searchTerm of searchVariants) {
+      const filter = new ListFilterModel(GQL.FilterMode.Tags);
+      filter.searchTerm = searchTerm;
+      filter.currentPage = 1;
+      filter.itemsPerPage = maxOptionsShown;
+      filter.sortBy = "name";
+      filter.sortDirection = GQL.SortDirectionEnum.Asc;
+      const query = await queryFindTagsForSelect(filter);
+      const tags = query.data.findTags.tags.filter((tag) => {
+        return !exclude.includes(tag.id.toString());
+      });
+      
+      tags.forEach(tag => {
+        allResults.set(tag.id, tag);
+      });
+    }
+    
+    const ret = Array.from(allResults.values());
     return tagSelectSort(input, ret).map((tag) => ({
       value: tag.id,
       object: tag,
@@ -107,7 +116,6 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
 
     let { name } = object;
 
-    // if name does not match the input value but an alias does, show the alias
     const { inputValue } = optionProps.selectProps;
     let alias: string | undefined = "";
     if (!name.toLowerCase().includes(inputValue.toLowerCase())) {
@@ -116,31 +124,11 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       );
     }
 
-
     thisOptionProps = {
       ...optionProps,
       children: (
         <TagPopover id={object.id} placement={props.hoverPlacement ?? "right"}>
           <span className="react-select-image-option">
-            {/* the following code causes re-rendering issues when selecting tags */}
-            {/* <TagPopover
-              id={object.id}
-              placement={props.hoverPlacement}
-              target={targetRef}
-            >
-              <a
-                href={`/tags/${object.id}`}
-                target="_blank"
-                rel="noreferrer"
-                className="tag-select-image-link"
-              >
-                <img
-                  className="tag-select-image"
-                  src={object.image_path ?? ""}
-                  loading="lazy"
-                />
-              </a>
-            </TagPopover> */}
             <span>{name}</span>
             {alias && <span className="alias">&nbsp;({alias})</span>}
           </span>
@@ -156,11 +144,24 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   > = (optionProps) => {
     const { object } = optionProps.data;
     
-    // Проверяем, совпадает ли название тега с поисковым запросом
-    const isHighlighted = currentInputValue && 
-      object.name.toLowerCase().includes(currentInputValue.toLowerCase());
+    const isHighlighted = () => {
+      if (!currentInputValue) return false;
+      
+      const directMatch = object.name.toLowerCase().includes(currentInputValue.toLowerCase());
+      if (directMatch) return true;
+      
+      const englishTranslation = translateRussianToEnglish(currentInputValue);
+      const russianTranslation = translateEnglishToRussian(currentInputValue);
+      
+      return object.name.toLowerCase().includes(englishTranslation.toLowerCase()) ||
+             object.name.toLowerCase().includes(russianTranslation.toLowerCase()) ||
+             object.aliases?.some(a => 
+               a.toLowerCase().includes(englishTranslation.toLowerCase()) ||
+               a.toLowerCase().includes(russianTranslation.toLowerCase())
+             );
+    };
 
-    const highlightedClass = isHighlighted ? "highlighted-tag-chip" : "";
+    const highlightedClass = isHighlighted() ? "highlighted-tag-chip" : "";
 
     let thisOptionProps = {
       ...optionProps,
