@@ -294,10 +294,16 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [image, setImage] = useState<string | null>();
     const [encodingImage, setEncodingImage] = useState<boolean>(false);
+    const [currentPerformer, setCurrentPerformer] = useState<GQL.PerformerDataFragment>(performer);
     const loadStickyHeader = useLoadStickyHeader();
 
+    // Update currentPerformer when performer prop changes
+    useEffect(() => {
+      setCurrentPerformer(performer);
+    }, [performer]);
+
     const activeImage = useMemo(() => {
-      const performerImage = performer.primary_image_path || performer.image_path;
+      const performerImage = currentPerformer.primary_image_path || currentPerformer.image_path;
       if (isEditing) {
         if (image === null && performerImage) {
           const performerImageURL = new URL(performerImage);
@@ -308,7 +314,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
         }
       }
       return performerImage;
-    }, [image, isEditing, performer.primary_image_path, performer.image_path]);
+    }, [image, isEditing, currentPerformer.primary_image_path, currentPerformer.image_path]);
 
     const lightboxImages = useMemo(
       () => [{ paths: { thumbnail: activeImage, image: activeImage } }],
@@ -320,7 +326,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
 
     async function onAutoTag() {
       try {
-        await mutateMetadataAutoTag({ performers: [performer.id] });
+        await mutateMetadataAutoTag({ performers: [currentPerformer.id] });
         Toast.success(intl.formatMessage({ id: "toast.started_auto_tagging" }));
       } catch (e) {
         Toast.error(e);
@@ -336,7 +342,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     // set up hotkeys
     useEffect(() => {
       Mousetrap.bind("e", () => toggleEditing());
-      Mousetrap.bind("f", () => setFavorite(!performer.favorite));
+      Mousetrap.bind("f", () => setFavorite(!currentPerformer.favorite));
       Mousetrap.bind(",", () => setCollapsed(!collapsed));
 
       return () => {
@@ -350,7 +356,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       await updatePerformer({
         variables: {
           input: {
-            id: performer.id,
+            id: currentPerformer.id,
             ...input,
           },
         },
@@ -391,7 +397,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
         updatePerformer({
           variables: {
             input: {
-              id: performer.id,
+              id: currentPerformer.id,
               favorite: v,
             },
           },
@@ -404,7 +410,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
         updatePerformer({
           variables: {
             input: {
-              id: performer.id,
+              id: currentPerformer.id,
               rating100: v,
             },
           },
@@ -423,7 +429,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     if (isDestroying)
       return (
         <LoadingIndicator
-          message={`Deleting performer ${performer.id}: ${performer.name}`}
+          message={`Deleting performer ${currentPerformer.id}: ${currentPerformer.name}`}
         />
       );
 
@@ -436,7 +442,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     return (
       <div id="performer-page" className="row">
         <Helmet>
-          <title>{performer.name}</title>
+          <title>{currentPerformer.name}</title>
         </Helmet>
 
         <div className={headerClassName}>
@@ -456,8 +462,8 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
             <div className="row">
               <div className="performer-head col">
                 <DetailTitle
-                  name={performer.name}
-                  disambiguation={performer.disambiguation ?? undefined}
+                  name={currentPerformer.name}
+                  disambiguation={currentPerformer.disambiguation ?? undefined}
                   classNamePrefix="performer"
                 >
                   {!isEditing && (
@@ -468,15 +474,15 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                   )}
                   <span className="name-icons">
                     <FavoriteIcon
-                      favorite={performer.favorite}
+                      favorite={currentPerformer.favorite}
                       onToggleFavorite={(v) => setFavorite(v)}
                     />
-                    <ExternalLinkButtons urls={performer.urls ?? undefined} />
+                    <ExternalLinkButtons urls={currentPerformer.urls ?? undefined} />
                   </span>
                 </DetailTitle>
-                <AliasList aliases={performer.alias_list} />
+                <AliasList aliases={currentPerformer.alias_list} />
                 <RatingSystem
-                  value={performer.rating100}
+                  value={currentPerformer.rating100}
                   onSetRating={(value) => setRating(value)}
                   clickToRate
                   withoutContext
@@ -496,6 +502,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                     onCancel={() => toggleEditing()}
                     setImage={setImage}
                     setEncodingImage={setEncodingImage}
+                    onPerformerUpdate={setCurrentPerformer}
                   />
                 ) : (
                   <Col>
@@ -508,7 +515,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                         onToggleEdit={() => toggleEditing()}
                         onDelete={onDelete}
                         onAutoTag={onAutoTag}
-                        autoTagDisabled={performer.ignore_auto_tag}
+                        autoTagDisabled={currentPerformer.ignore_auto_tag}
                         isNew={false}
                         isEditing={false}
                         onSave={handleSave}
@@ -538,7 +545,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
               {!isEditing && (
                 <PerformerTabs
                   tabKey={tabKey}
-                  performer={performer}
+                  performer={currentPerformer}
                   abbreviateCounter={abbreviateCounter}
                 />
               )}

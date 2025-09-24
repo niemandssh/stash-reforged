@@ -380,6 +380,64 @@ dd {
   border-radius: 0.5rem;
 }
 
+#performer-page .detail-header-image {
+  position: relative;
+  overflow: hidden;
+  
+  .profile-image-slider {
+    position: relative;
+    
+    .performer-image-container {
+      position: relative;
+      overflow: hidden;
+      
+      .image-container {
+        height: calc(412px + 60px);
+        position: relative;
+
+        .detail-header-image {
+          height: 412px;
+          flex-shrink: 0;
+          border-radius: 8px;
+        }
+      }
+    }
+  }
+
+  .image-cropper-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .image-cropper-container .detail-header-image {
+    position: relative;
+    
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+    
+    > *:not(.background-image) {
+      position: relative;
+      z-index: 2;
+    }
+  }
+}
+
 #tag-page {
   .full-width .detail-header-image img {
     max-width: 22rem;

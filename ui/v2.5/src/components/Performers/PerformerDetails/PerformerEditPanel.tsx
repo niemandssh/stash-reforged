@@ -62,6 +62,7 @@ interface IPerformerDetails {
   onCancel?: () => void;
   setImage: (image?: string | null) => void;
   setEncodingImage: (loading: boolean) => void;
+  onPerformerUpdate?: (updatedPerformer: Partial<GQL.PerformerDataFragment>) => void;
 }
 
 function customFieldInput(isNew: boolean, input: {}) {
@@ -81,6 +82,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
   onCancel,
   setImage,
   setEncodingImage,
+  onPerformerUpdate,
 }) => {
   const Toast = useToast();
 
@@ -370,6 +372,16 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
             defaultMessage: "Added image to performer profile",
           })
         );
+        
+        // Update performer with new profile image
+        const newProfileImage = result.data.performerProfileImageCreate;
+        const updatedProfileImages = [...(performer.profile_images || []), newProfileImage];
+        const updatedPerformer = {
+          ...performer,
+          profile_images: updatedProfileImages,
+          primary_image_path: newProfileImage.is_primary ? newProfileImage.image_path : performer.primary_image_path,
+        };
+        onPerformerUpdate?.(updatedPerformer);
         
         // Also set the legacy image field for backward compatibility
         formik.setFieldValue("image", imageData);

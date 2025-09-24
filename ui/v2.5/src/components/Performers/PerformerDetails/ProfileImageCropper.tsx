@@ -126,6 +126,19 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
   return (
     <div className="image-cropper-container" style={{ pointerEvents: 'auto' }}>
       <div className="detail-header-image" style={{ flexDirection: "column", pointerEvents: 'auto' }}>
+        {/* Фоновая размытая картинка */}
+        <div 
+          className="background-image"
+          style={{
+            backgroundImage: `url(${imageSrc})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: 'blur(10px)',
+            transform: 'scale(1.1)'
+          }}
+        />
+        
         <img
           ref={imageRef}
           src={imageSrc}

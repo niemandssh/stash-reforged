@@ -370,23 +370,25 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   return (
     <div className={`profile-image-slider ${isEditing ? 'editing' : ''}`}>
-      <div 
-        className={`image-container ${isDragging ? 'dragging' : ''}`}
-        onTouchStart={isCropping ? undefined : handleTouchStart}
-        onTouchMove={isCropping ? undefined : handleTouchMove}
-        onTouchEnd={isCropping ? undefined : handleTouchEnd}
-        onMouseDown={isCropping ? undefined : handleMouseDown}
-        onMouseMove={isCropping ? undefined : handleMouseMove}
-        onMouseUp={isCropping ? undefined : handleMouseUp}
-        onClick={isCropping ? undefined : handleImageClick}
-        onDragStart={(e) => e.preventDefault()}
-        style={{ 
-          userSelect: 'none', 
-          WebkitUserSelect: 'none', 
-          cursor: isCropping ? 'default' : 'pointer',
-          pointerEvents: isCropping ? 'none' : 'auto'
-        }}
-      >
+      <div className="performer-image-container">      
+        {/* Основная картинка */}
+        <div 
+          className={`image-container ${isDragging ? 'dragging' : ''}`}
+          onTouchStart={isCropping ? undefined : handleTouchStart}
+          onTouchMove={isCropping ? undefined : handleTouchMove}
+          onTouchEnd={isCropping ? undefined : handleTouchEnd}
+          onMouseDown={isCropping ? undefined : handleMouseDown}
+          onMouseMove={isCropping ? undefined : handleMouseMove}
+          onMouseUp={isCropping ? undefined : handleMouseUp}
+          onClick={isCropping ? undefined : handleImageClick}
+          onDragStart={(e) => e.preventDefault()}
+          style={{ 
+            userSelect: 'none', 
+            WebkitUserSelect: 'none', 
+            cursor: isCropping ? 'default' : 'pointer',
+            pointerEvents: isCropping ? 'none' : 'auto'
+          }}
+        >
         {currentImage?.image_path && (
           <ProfileImageCropper
             imageSrc={currentImage.image_path}
@@ -486,7 +488,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
           </div>
         </div>
       )}
-
+      </div>
     </div>
   );
 };
