@@ -4,7 +4,7 @@
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] Setting for show/hide percent of similarity in suggested scenes
 - [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
-- [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)
+- [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag), these tags is sorting by popularity (using in scenes)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
@@ -30,7 +30,9 @@
 - [x] Show mode saves in DB table for each gallery
 - [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
 - [x] Settings page opens in the new tab
+- [x] Tag pages now opens in the new tab by clicking on the tag badge
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
 - [ ] Fix scene sprites after convert video (don't run generate manually)
+- [ ] Handle encrypted archives (safe scanning and using info - previews and meta must be encrypted too; open scene/gallery by typing password)
