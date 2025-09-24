@@ -105,7 +105,7 @@ const SortNameLinkComponent: React.FC<ISortNameLinkProps> = ({
       variant="secondary"
       style={style}
     >
-      <Link to={link}>{children}</Link>
+      <Link to={link} target="_blank" rel="noopener noreferrer">{children}</Link>
     </Badge>
   );
 };

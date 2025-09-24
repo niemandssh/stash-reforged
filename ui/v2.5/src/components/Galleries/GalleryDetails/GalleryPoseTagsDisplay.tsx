@@ -1,6 +1,5 @@
 import React from "react";
 import { FormattedMessage } from "react-intl";
-import { useHistory } from "react-router-dom";
 import * as GQL from "src/core/generated-graphql";
 import { PoseTagIcon } from "src/components/Shared/PoseTagIcon";
 
@@ -9,16 +8,21 @@ interface IGalleryPoseTagsDisplayProps {
 }
 
 export const GalleryPoseTagsDisplay: React.FC<IGalleryPoseTagsDisplayProps> = ({ gallery }) => {
-  const history = useHistory();
 
-  const poseTags = gallery.tags.filter(tag => tag.is_pose_tag);
+  const poseTags = [...gallery.tags]
+    .filter(tag => tag.is_pose_tag)
+    .sort((a, b) => {
+      const aCount = a.scene_count || 0;
+      const bCount = b.scene_count || 0;
+      return bCount - aCount;
+    });
 
   if (poseTags.length === 0) {
     return null;
   }
 
   const handlePoseTagClick = (tagId: string) => {
-    history.push(`/tags/${tagId}`);
+    window.open(`/tags/${tagId}`, '_blank');
   };
 
   const handleImageClick = (e: React.MouseEvent, tagId: string) => {

@@ -29,11 +29,10 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
       try {
         setLoading(true);
         const filter = new ListFilterModel(GQL.FilterMode.Tags);
-        filter.itemsPerPage = -1; // Получить все теги поз
+        filter.itemsPerPage = -1;
         filter.sortBy = "name";
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
         
-        // Фильтр по is_pose_tag: true
         const criterion = filter.makeCriterion("is_pose_tag");
         criterion.setFromSavedCriterion({ 
           modifier: GQL.CriterionModifier.Equals,
@@ -43,7 +42,14 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
 
         const result = await queryFindTags(filter);
         const loadedPoseTags = result.data.findTags.tags as unknown as GQL.Tag[];
-        setPoseTags(loadedPoseTags);
+        
+        const sortedPoseTags = [...loadedPoseTags].sort((a, b) => {
+          const aCount = a.scene_count || 0;
+          const bCount = b.scene_count || 0;
+          return bCount - aCount;
+        });
+        
+        setPoseTags(sortedPoseTags);
       } catch (error) {
         console.error("Error loading pose tags:", error);
       } finally {

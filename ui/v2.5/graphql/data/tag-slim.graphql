@@ -8,4 +8,5 @@ fragment SlimTagData on Tag {
   parent_count
   child_count
   is_pose_tag
+  scene_count
 }
