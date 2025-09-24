@@ -30,7 +30,7 @@
 - [x] Show mode saves in DB table for each gallery
 - [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
 - [x] Settings page opens in the new tab
-- [x] Tag pages now opens in the new tab by clicking on the tag badge
+- [x] Tag links and performer card links now opens in the new tab in scene
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
