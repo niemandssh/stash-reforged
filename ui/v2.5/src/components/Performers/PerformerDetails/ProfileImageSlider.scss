@@ -2,7 +2,6 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 300px;
 
   .detail-header-image {
     width: 100%;
@@ -12,12 +11,12 @@
     justify-content: center;
 
     img {
-      max-width: 22rem !important;
-      max-height: calc(100vh - 6rem) !important;
-      width: auto !important;
-      height: auto !important;
-      min-width: 200px !important;
       object-fit: contain;
+
+      &.performer {
+        width: 100% !important;
+        height: 100% !important;
+      }
     }
   }
 
@@ -34,6 +33,16 @@
     -ms-user-select: none;
     cursor: grab;
     z-index: 1;
+
+    .image-wrapper {
+      width: 308px;
+      height: 412px;
+      margin: 0 auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
     &.dragging {
       cursor: grabbing;
@@ -53,33 +62,31 @@
       position: relative;
       z-index: 15;
       pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
 
       .detail-header-image {
-        width: 100%;
-        height: 100%;
+        width: 308px;
+        height: 412px;
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 20;
         position: relative;
+        overflow: visible;
 
         .performer {
-          max-width: 22rem !important;
-          max-height: calc(100vh - 6rem) !important;
-          width: auto !important;
-          height: auto !important;
-          min-width: 200px !important;
-          object-fit: contain;
+          width: auto;
+          height: auto;
+          max-width: none;
+          max-height: none;
         }
       }
     }
 
     img {
-      max-width: 22rem !important;
-      max-height: calc(100vh - 6rem) !important;
-      width: auto !important;
-      height: auto !important;
-      min-width: 200px !important;
       object-fit: contain;
       border-radius: 0.5rem;
       user-select: none;
@@ -91,11 +98,21 @@
       -moz-user-drag: none;
       -o-user-drag: none;
       user-drag: none;
+
+      &.performer {
+        width: 100% !important;
+        height: 100% !important;
+      }
     }
 
     .crop-btn-container {
       z-index: 10;
-      position: relative;
+      position: absolute;
+      bottom: -50px;
+
+      &.is-cropping {
+        bottom: -90px;
+      }
     }
 
     .primary-indicator {

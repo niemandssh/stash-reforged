@@ -383,16 +383,16 @@ dd {
 #performer-page .detail-header-image {
   position: relative;
   overflow: hidden;
-  
+
   .profile-image-slider {
     position: relative;
-    
+
     .performer-image-container {
       position: relative;
       overflow: hidden;
-      
+
       .image-container {
-        height: calc(412px + 60px);
+        height: calc(412px + 80px);
         position: relative;
 
         .detail-header-image {
@@ -408,10 +408,10 @@ dd {
     display: flex;
     flex-direction: column;
   }
-  
+
   .image-cropper-container .detail-header-image {
     position: relative;
-    
+
     .background-image {
       position: absolute;
       top: 0;
@@ -419,7 +419,7 @@ dd {
       right: 0;
       bottom: 0;
       z-index: 1;
-      
+
       &::after {
         content: '';
         position: absolute;
@@ -430,7 +430,7 @@ dd {
         background: rgba(0, 0, 0, 0.3);
       }
     }
-    
+
     > *:not(.background-image) {
       position: relative;
       z-index: 2;

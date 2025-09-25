@@ -51,7 +51,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
 
     const cropperOptions: Record<string, unknown> = {
       viewMode: 1,
-      initialAspectRatio: 2 / 3,
+      initialAspectRatio: 308 / 412,
       movable: false,
       rotatable: false,
       scalable: false,
@@ -149,7 +149,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
         />
       </div>
 
-      <div className="crop-btn-container">
+      <div className={`crop-btn-container ${cropping ? 'is-cropping' : ''}`}>
         <Button
           className="crop-start"
           variant="secondary"

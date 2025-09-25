@@ -389,14 +389,16 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
             pointerEvents: isCropping ? 'none' : 'auto'
           }}
         >
-        {currentImage?.image_path && (
-          <ProfileImageCropper
-            imageSrc={currentImage.image_path}
-            profileImageId={parseInt(currentImage.id, 10)}
-            performerId={performerId.toString()}
-            onCroppingChange={setIsCropping}
-          />
-        )}
+        <div className="image-wrapper">
+          {currentImage?.image_path && (
+            <ProfileImageCropper
+              imageSrc={currentImage.image_path}
+              profileImageId={parseInt(currentImage.id, 10)}
+              performerId={performerId.toString()}
+              onCroppingChange={setIsCropping}
+            />
+          )}
+        </div>
 
                 {/* Primary indicator */}
                 {currentImage?.is_primary && (
