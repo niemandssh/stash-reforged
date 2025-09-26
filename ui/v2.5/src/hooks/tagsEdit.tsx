@@ -8,10 +8,12 @@ import { Badge, Button } from "react-bootstrap";
 import { Icon } from "src/components/Shared/Icon";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { CollapseButton } from "src/components/Shared/CollapseButton";
+import { useTagsHistory } from "./tagsHistory";
 
 export function useTagsEdit(
   srcTags: Tag[] | undefined,
-  setFieldValue: (ids: string[]) => void
+  setFieldValue: (ids: string[]) => void,
+  sceneId?: string
 ) {
   const intl = useIntl();
   const Toast = useToast();
@@ -20,9 +22,35 @@ export function useTagsEdit(
   const [tags, setTags] = useState<Tag[]>([]);
   const [newTags, setNewTags] = useState<GQL.ScrapedTag[]>();
 
+  const {
+    addToHistory,
+    undo,
+    redo,
+    clearHistory,
+    canUndo,
+    canRedo
+  } = useTagsHistory(sceneId);
+
   function onSetTags(items: Tag[]) {
     setTags(items);
     setFieldValue(items.map((item) => item.id));
+    addToHistory(items);
+  }
+
+  function undoTags() {
+    const previousTags = undo();
+    if (previousTags) {
+      setTags(previousTags);
+      setFieldValue(previousTags.map((item) => item.id));
+    }
+  }
+
+  function redoTags() {
+    const nextTags = redo();
+    if (nextTags) {
+      setTags(nextTags);
+      setFieldValue(nextTags.map((item) => item.id));
+    }
   }
 
   useEffect(() => {
@@ -152,5 +180,10 @@ export function useTagsEdit(
     onSetTags,
     tagsControl,
     updateTagsStateFromScraper,
+    undoTags,
+    redoTags,
+    clearHistory,
+    canUndo,
+    canRedo,
   };
 }

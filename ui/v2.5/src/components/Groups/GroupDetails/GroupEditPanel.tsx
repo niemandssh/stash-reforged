@@ -112,7 +112,8 @@ export const GroupEditPanel: React.FC<IGroupEditPanel> = ({
 
   const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
     group.tags,
-    (ids) => formik.setFieldValue("tag_ids", ids)
+    (ids) => formik.setFieldValue("tag_ids", ids),
+    group.id
   );
 
   const containingGroupEntries = useMemo(() => {

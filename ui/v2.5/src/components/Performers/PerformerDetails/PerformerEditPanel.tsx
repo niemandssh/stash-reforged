@@ -188,7 +188,8 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
   const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
     performer.tags,
-    (ids) => formik.setFieldValue("tag_ids", ids)
+    (ids) => formik.setFieldValue("tag_ids", ids),
+    performer.id
   );
 
   const [primaryTag, setPrimaryTag] = useState<Tag | undefined>(

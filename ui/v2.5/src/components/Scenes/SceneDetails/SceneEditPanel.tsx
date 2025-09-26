@@ -180,9 +180,10 @@ export const SceneEditPanel: React.FC<IProps> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
-  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } = useTagsEdit(
+  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags, undoTags, redoTags, clearHistory } = useTagsEdit(
     scene.tags,
-    (ids) => formik.setFieldValue("tag_ids", ids)
+    (ids) => formik.setFieldValue("tag_ids", ids),
+    scene.id
   );
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
@@ -301,9 +302,24 @@ export const SceneEditPanel: React.FC<IProps> = ({
         }
       });
 
+      const handleGlobalKeyDown = (e: KeyboardEvent) => {
+        if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (e.shiftKey) {
+            redoTags();
+          } else {
+            undoTags();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleGlobalKeyDown, true);
+
       return () => {
         Mousetrap.unbind("s s");
         Mousetrap.unbind("d d");
+        document.removeEventListener('keydown', handleGlobalKeyDown, true);
       };
     }
   });
@@ -347,6 +363,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     try {
       await onSubmit(input);
       formik.resetForm();
+      clearHistory();
     } catch (e) {
       Toast.error(e);
     }

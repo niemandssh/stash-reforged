@@ -79,7 +79,8 @@ export const StudioEditPanel: React.FC<IStudioEditPanel> = ({
   });
 
   const { tagsControl } = useTagsEdit(studio.tags, (ids) =>
-    formik.setFieldValue("tag_ids", ids)
+    formik.setFieldValue("tag_ids", ids),
+    studio.id
   );
 
   function onSetParentStudio(item: Studio | null) {

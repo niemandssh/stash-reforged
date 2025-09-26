@@ -35,6 +35,7 @@
 - [x] Settings page opens in the new tab
 - [x] Tag links and performer card links now opens in the new tab in scene
 - [x] Setting for redirect to /scenes from main page if it is turned on
+- [x] Undo/redo for tags field (you can type Ctrl+Z for return accidentally deleted tag)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

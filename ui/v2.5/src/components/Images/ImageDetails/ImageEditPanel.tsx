@@ -112,7 +112,8 @@ export const ImageEditPanel: React.FC<IProps> = ({
 
   const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
     image.tags,
-    (ids) => formik.setFieldValue("tag_ids", ids)
+    (ids) => formik.setFieldValue("tag_ids", ids),
+    image.id
   );
 
   function onSetGalleries(items: Gallery[]) {

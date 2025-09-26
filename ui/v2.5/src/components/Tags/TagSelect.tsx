@@ -5,6 +5,8 @@ import {
   MultiValueGenericProps,
   MultiValueProps,
   SingleValueProps,
+  InputProps,
+  GroupBase,
 } from "react-select";
 import cx from "classnames";
 
@@ -67,6 +69,17 @@ export type TagSelectProps = IFilterProps &
     excludeIds?: string[];
   };
 
+const CustomInput = (inputProps: InputProps<{value: string; object: Tag}, boolean, GroupBase<{value: string; object: Tag}>>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+      e.stopPropagation();
+    }
+    inputProps.onKeyDown?.(e);
+  };
+
+  return <reactSelectComponents.Input {...inputProps} onKeyDown={handleKeyDown} />;
+};
+
 const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const [createTag] = useTagCreate();
   const [currentInputValue, setCurrentInputValue] = useState("");
@@ -83,7 +96,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   async function loadTags(input: string): Promise<Option[]> {
     const searchVariants = generateSearchVariants(input);
     const allResults = new Map<string, FindTagsResult[0]>();
-    
+
     for (const searchTerm of searchVariants) {
       const filter = new ListFilterModel(GQL.FilterMode.Tags);
       filter.searchTerm = searchTerm;
@@ -95,12 +108,12 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       const tags = query.data.findTags.tags.filter((tag) => {
         return !exclude.includes(tag.id.toString());
       });
-      
+
       tags.forEach(tag => {
         allResults.set(tag.id, tag);
       });
     }
-    
+
     const ret = Array.from(allResults.values());
     return tagSelectSort(input, ret).map((tag) => ({
       value: tag.id,
@@ -109,10 +122,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   }
 
   const TagOption: React.FC<OptionProps<Option, boolean>> = (optionProps) => {
-    let thisOptionProps = optionProps;
-
     const { object } = optionProps.data;
-    const { isSelected } = optionProps;
 
     let { name } = object;
 
@@ -124,7 +134,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       );
     }
 
-    thisOptionProps = {
+    let thisOptionProps = {
       ...optionProps,
       children: (
         <TagPopover id={object.id} placement={props.hoverPlacement ?? "right"}>
@@ -143,19 +153,19 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     MultiValueProps<Option, boolean>
   > = (optionProps) => {
     const { object } = optionProps.data;
-    
+
     const isHighlighted = () => {
       if (!currentInputValue) return false;
-      
+
       const directMatch = object.name.toLowerCase().includes(currentInputValue.toLowerCase());
       if (directMatch) return true;
-      
+
       const englishTranslation = translateRussianToEnglish(currentInputValue);
       const russianTranslation = translateEnglishToRussian(currentInputValue);
-      
+
       return object.name.toLowerCase().includes(englishTranslation.toLowerCase()) ||
              object.name.toLowerCase().includes(russianTranslation.toLowerCase()) ||
-             object.aliases?.some(a => 
+             object.aliases?.some(a =>
                a.toLowerCase().includes(englishTranslation.toLowerCase()) ||
                a.toLowerCase().includes(russianTranslation.toLowerCase())
              );
@@ -174,11 +184,9 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const TagMultiValueLabel: React.FC<
     MultiValueGenericProps<Option, boolean>
   > = (optionProps) => {
-    let thisOptionProps = optionProps;
-
     const { object } = optionProps.data;
 
-    thisOptionProps = {
+    const thisOptionProps = {
       ...optionProps,
       children: (
         <TagPopover
@@ -196,11 +204,9 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const TagValueLabel: React.FC<SingleValueProps<Option, boolean>> = (
     optionProps
   ) => {
-    let thisOptionProps = optionProps;
-
     const { object } = optionProps.data;
 
-    thisOptionProps = {
+    const thisOptionProps = {
       ...optionProps,
       children: <>{object.name}</>,
     };
@@ -233,18 +239,12 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       return false;
     }
 
-    if (
-      options.some((o) => {
-        return (
-          o.name.toLowerCase() === inputValue.toLowerCase() ||
-          o.aliases?.some((a) => a.toLowerCase() === inputValue.toLowerCase())
-        );
-      })
-    ) {
-      return false;
-    }
-
-    return true;
+    return !options.some((o) => {
+      return (
+        o.name.toLowerCase() === inputValue.toLowerCase() ||
+        o.aliases?.some((a) => a.toLowerCase() === inputValue.toLowerCase())
+      );
+    });
   };
 
   const selectProps = {
@@ -264,6 +264,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       MultiValue: TagMultiValue,
       MultiValueLabel: TagMultiValueLabel,
       SingleValue: TagValueLabel,
+      Input: CustomInput,
     },
     isMulti: props.isMulti ?? false,
     creatable: props.creatable ?? defaultCreatable,
