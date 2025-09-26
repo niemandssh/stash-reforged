@@ -1,5 +1,6 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
+import { Link } from "react-router-dom";
 import * as GQL from "src/core/generated-graphql";
 import TextUtils from "src/utils/text";
 import { TagLink } from "src/components/Shared/TagLink";
@@ -9,6 +10,7 @@ import { DirectorLink } from "src/components/Shared/Link";
 import { SimilarScenes } from "./SimilarScenes";
 import { URLsField } from "src/utils/field";
 import { PoseTagsDisplay } from "./PoseTagsDisplay";
+import GenderIcon from "src/components/Performers/GenderIcon";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -52,14 +54,76 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
   function renderPerformers() {
     if (props.scene.performers.length === 0) return;
-    const performers = sortPerformers(props.scene.performers);
-    const cards = performers.map((performer) => (
+
+    // Separate performers into two groups
+    const mainPerformers = props.scene.performers.filter(p => !p.small_role);
+    const smallRolePerformers = props.scene.performers.filter(p => p.small_role);
+
+    // Sort main performers
+    const sortedMainPerformers = sortPerformers(mainPerformers);
+
+    // Create cards for main performers
+    const mainCards = sortedMainPerformers.map((performer) => (
       <PerformerCard
         key={performer.id}
         performer={performer}
         ageFromDate={props.scene.date ?? undefined}
       />
     ));
+
+    // Create list for performers with small role
+    const smallRoleList = smallRolePerformers.length > 0 ? (
+      <div className="mt-3">
+        <h6 className="scene-performers-small-role-header">
+          <FormattedMessage id="scene_performers.small_role" defaultMessage="Also starring:" />
+        </h6>
+        <div className="scene-performers-small-role">
+          {smallRolePerformers.map((performer) => {
+            const currentAge = TextUtils.age(
+              performer.birthdate,
+              performer.death_date
+            );
+            const productionAge = TextUtils.age(
+              performer.birthdate,
+              props.scene.date ?? undefined
+            );
+            const intl = useIntl();
+            const ageShortString = intl.formatMessage({
+              id: "years_old_short",
+              defaultMessage: "yo",
+            });
+            const atProductionString = intl.formatMessage({
+              id: "at_production",
+              defaultMessage: "at production",
+            });
+
+            const currentAgeString = currentAge > 0 ? `${currentAge} ${ageShortString}` : "";
+            const productionAgeString = productionAge > 0 ? `${productionAge} ${ageShortString} ${atProductionString}` : "";
+
+            return (
+              <Link
+                key={performer.id}
+                to={`/performers/${performer.id}`}
+                className="scene-performer-small-role-tag"
+              >
+                <div className="performer-info">
+                  <div className="performer-header">
+                    <GenderIcon gender={performer.gender} className="gender-icon-small" />
+                    <span className="performer-name">{performer.name}</span>
+                    {currentAgeString && (
+                      <span className="performer-age-small">({currentAgeString})</span>
+                    )}
+                  </div>
+                  {productionAgeString && (
+                    <div className="performer-age-at-production">{productionAgeString}</div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    ) : null;
 
     return (
       <>
@@ -72,8 +136,9 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
           </h4>
         </div>
         <div className="row justify-content-center scene-performers">
-          {cards}
+          {mainCards}
         </div>
+        {smallRoleList}
       </>
     );
   }

@@ -1168,6 +1168,10 @@
   "history": "History",
   "ignore_auto_tag": "Ignore Auto Tag",
   "ignore_suggestions": "Ignore in Scene Suggestions",
+  "scene_performers": {
+    "small_role": "Also starring:"
+  },
+  "small_role": "Small role",
   "is_pose_tag": "Is Pose Tag",
   "image": "Image",
   "image_count": "Image Count",
@@ -1596,5 +1600,8 @@
   "weight": "Weight",
   "weight_kg": "Weight (kg)",
   "years_old": "years old",
+  "years_old_short": "yo",
+  "at_production": "at production",
+  "dead_at": "Dead at",
   "zip_file_count": "Zip File Count"
 }

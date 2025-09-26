@@ -64,6 +64,7 @@ type performerRow struct {
 	HairColor     zero.String `db:"hair_color"`
 	Weight        null.Int    `db:"weight"`
 	IgnoreAutoTag bool        `db:"ignore_auto_tag"`
+	SmallRole     bool        `db:"small_role"`
 	PrimaryTagID  null.Int    `db:"primary_tag_id"`
 
 	// not used in resolution or updates
@@ -100,6 +101,7 @@ func (r *performerRow) fromPerformer(o models.Performer) {
 	r.HairColor = zero.StringFrom(o.HairColor)
 	r.Weight = intFromPtr(o.Weight)
 	r.IgnoreAutoTag = o.IgnoreAutoTag
+	r.SmallRole = o.SmallRole
 	r.PrimaryTagID = intFromPtr(o.PrimaryTagID)
 }
 
@@ -129,6 +131,7 @@ func (r *performerRow) resolve() *models.Performer {
 		HairColor:     r.HairColor.String,
 		Weight:        nullIntPtr(r.Weight),
 		IgnoreAutoTag: r.IgnoreAutoTag,
+		SmallRole:     r.SmallRole,
 		PrimaryTagID:  nullIntPtr(r.PrimaryTagID),
 	}
 
@@ -174,6 +177,7 @@ func (r *performerRowRecord) fromPartial(o models.PerformerPartial) {
 	r.setNullString("hair_color", o.HairColor)
 	r.setNullInt("weight", o.Weight)
 	r.setBool("ignore_auto_tag", o.IgnoreAutoTag)
+	r.setBool("small_role", o.SmallRole)
 	r.setNullInt("primary_tag_id", o.PrimaryTagID)
 }
 

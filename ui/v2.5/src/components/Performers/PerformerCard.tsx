@@ -176,8 +176,9 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
 
 const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Overlays",
-  ({ performer }) => {
+  ({ performer, ageFromDate }) => {
     const [updatePerformer] = usePerformerUpdate();
+    const intl = useIntl();
 
     function onToggleFavorite(v: boolean) {
       if (performer.id) {
@@ -216,6 +217,62 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
       }
     }
 
+    function maybeRenderCurrentAgeChip() {
+      // Current age (or age at death) - shown as white chip at bottom
+      const currentAge = TextUtils.age(
+        performer.birthdate,
+        performer.death_date
+      );
+
+      if (currentAge <= 0 || !ageFromDate) {
+        return null;
+      }
+
+      const productionAge = TextUtils.age(
+        performer.birthdate,
+        ageFromDate
+      );
+
+      // Only show if different from production age
+      if (currentAge === productionAge) {
+        return null;
+      }
+
+      // If performer is dead, show "Dead at X yo" instead of current age
+      const isDead = !!performer.death_date;
+      let chipText = "";
+
+      if (isDead) {
+        // Show "Dead at X yo" for deceased performers
+        const deadAtString = intl.formatMessage({
+          id: "dead_at",
+          defaultMessage: "Dead at",
+        });
+        const ageShortString = intl.formatMessage({
+          id: "years_old_short",
+          defaultMessage: "yo",
+        });
+        chipText = `${deadAtString} ${currentAge} ${ageShortString}`;
+      } else {
+        // Show normal current age for living performers
+        const ageL10String = intl.formatMessage({
+          id: "years_old",
+          defaultMessage: "years old",
+        });
+
+        chipText = intl.formatMessage(
+          { id: "media_info.performer_card.age" },
+          { age: currentAge, years_old: ageL10String }
+        );
+      }
+
+      return (
+        <div className="performer-card__current-age-chip">
+          {chipText}
+        </div>
+      );
+    }
+
     return (
       <>
         <FavoriteIcon
@@ -226,6 +283,7 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
         />
         {maybeRenderRatingBanner()}
         {maybeRenderFlag()}
+        {maybeRenderCurrentAgeChip()}
         {performer.death_date && <DeathRibbon size="large" />}
       </>
     );
@@ -240,21 +298,44 @@ const PerformerCardDetails: React.FC<IPerformerCardProps> = PatchComponent(
       performer.birthdate,
       ageFromDate ?? performer.death_date
     );
-    const ageL10nId = ageFromDate
-      ? "media_info.performer_card.age_context"
-      : "media_info.performer_card.age";
-    const ageL10String = intl.formatMessage({
-      id: "years_old",
-      defaultMessage: "years old",
-    });
-    const ageString = intl.formatMessage(
-      { id: ageL10nId },
-      { age, years_old: ageL10String }
-    );
+
+    // If performer is dead and we're not showing age at production, show "Dead at X yo"
+    const isDead = !!performer.death_date;
+    const showDeadText = isDead && !ageFromDate;
+
+    let ageString = "";
+    if (showDeadText) {
+      // Show "Dead at X yo" for deceased performers
+      const deathAge = TextUtils.age(performer.birthdate, performer.death_date);
+      if (deathAge > 0) {
+        const deadAtString = intl.formatMessage({
+          id: "dead_at",
+          defaultMessage: "Dead at",
+        });
+        const ageShortString = intl.formatMessage({
+          id: "years_old_short",
+          defaultMessage: "yo",
+        });
+        ageString = `${deadAtString} ${deathAge} ${ageShortString}`;
+      }
+    } else if (age > 0) {
+      // Normal age display
+      const ageL10nId = ageFromDate
+        ? "media_info.performer_card.age_context"
+        : "media_info.performer_card.age";
+      const ageL10String = intl.formatMessage({
+        id: "years_old",
+        defaultMessage: "years old",
+      });
+      ageString = intl.formatMessage(
+        { id: ageL10nId },
+        { age, years_old: ageL10String }
+      );
+    }
 
     return (
       <>
-        {age !== 0 ? (
+        {ageString ? (
           <div className="performer-card__age">{ageString}</div>
         ) : (
           ""

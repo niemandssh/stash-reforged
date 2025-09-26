@@ -37,6 +37,7 @@ type Performer {
   favorite: Boolean!
   tags: [Tag!]!
   ignore_auto_tag: Boolean!
+  small_role: Boolean!
   primary_tag: Tag # Resolver
 
   image_path: String # Resolver
@@ -99,6 +100,7 @@ input PerformerCreateInput {
   hair_color: String
   weight: Int
   ignore_auto_tag: Boolean
+  small_role: Boolean
 
   custom_fields: Map
 }
@@ -138,6 +140,7 @@ input PerformerUpdateInput {
   hair_color: String
   weight: Int
   ignore_auto_tag: Boolean
+  small_role: Boolean
 
   custom_fields: CustomFieldsInput
 }

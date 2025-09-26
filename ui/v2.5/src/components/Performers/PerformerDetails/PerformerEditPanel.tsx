@@ -131,6 +131,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     details: yup.string().ensure(),
     tag_ids: yup.array(yup.string().required()).defined(),
     ignore_auto_tag: yup.boolean().defined(),
+    small_role: yup.boolean().defined(),
     stash_ids: yup.mixed<GQL.StashIdInput[]>().defined(),
     image: yup.string().nullable().optional(),
     custom_fields: yup.object().required().defined(),
@@ -161,6 +162,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     tag_ids: (performer.tags ?? []).map((t) => t.id),
     primary_tag_id: performer.primary_tag?.id ?? null,
     ignore_auto_tag: performer.ignore_auto_tag ?? false,
+    small_role: performer.small_role ?? false,
     stash_ids: getStashIDs(performer.stash_ids),
     custom_fields: cloneDeep(performer.custom_fields ?? {}),
   };
@@ -809,6 +811,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         <hr />
 
         {renderInputField("ignore_auto_tag", "checkbox")}
+        {renderInputField("small_role", "checkbox")}
 
         <hr />
 
