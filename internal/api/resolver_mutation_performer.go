@@ -91,6 +91,12 @@ func (r *mutationResolver) PerformerCreate(ctx context.Context, input models.Per
 		return nil, fmt.Errorf("converting tag ids: %w", err)
 	}
 
+	primaryTagID, err := translator.optionalIntFromString(input.PrimaryTagID, "primary_tag_id")
+	if err != nil {
+		return nil, fmt.Errorf("converting primary tag id: %w", err)
+	}
+	newPerformer.PrimaryTagID = primaryTagID.Ptr()
+
 	// Process the base 64 encoded image string
 	var imageData []byte
 	if input.Image != nil {
@@ -294,6 +300,14 @@ func (r *mutationResolver) PerformerUpdate(ctx context.Context, input models.Per
 	updatedPerformer.TagIDs, err = translator.updateIds(input.TagIds, "tag_ids")
 	if err != nil {
 		return nil, fmt.Errorf("converting tag ids: %w", err)
+	}
+
+	if translator.hasField("primary_tag_id") {
+		primaryTagID, err := translator.optionalIntFromString(input.PrimaryTagID, "primary_tag_id")
+		if err != nil {
+			return nil, fmt.Errorf("converting primary tag id: %w", err)
+		}
+		updatedPerformer.PrimaryTagID = primaryTagID
 	}
 
 	updatedPerformer.CustomFields = input.CustomFields

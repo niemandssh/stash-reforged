@@ -5,10 +5,11 @@ export const DetailTitle: React.FC<
     name: string;
     disambiguation?: string;
     classNamePrefix: string;
+    className?: string;
   }>
-> = ({ name, disambiguation, classNamePrefix, children }) => {
+> = ({ name, disambiguation, classNamePrefix, className, children }) => {
   return (
-    <h2>
+    <h2 className={className}>
       <span className={`${classNamePrefix}-name`}>{name}</span>
       {disambiguation && (
         <span className={`${classNamePrefix}-disambiguation`}>

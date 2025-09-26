@@ -43,6 +43,7 @@ import {
 import { DetailTitle } from "src/components/Shared/DetailsPage/DetailTitle";
 import { ExpandCollapseButton } from "src/components/Shared/CollapseButton";
 import { FavoriteIcon } from "src/components/Shared/FavoriteIcon";
+import { TagLink } from "src/components/Shared/TagLink";
 import { AliasList } from "src/components/Shared/DetailsPage/AliasList";
 import { HeaderImage } from "src/components/Shared/DetailsPage/HeaderImage";
 import { PatchComponent } from "src/patch";
@@ -466,6 +467,13 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                   disambiguation={currentPerformer.disambiguation ?? undefined}
                   classNamePrefix="performer"
                 >
+                  {currentPerformer.primary_tag && (
+                    <TagLink
+                      tag={currentPerformer.primary_tag}
+                      linkType="performer"
+                      className="performer-primary-tag"
+                    />
+                  )}
                   {!isEditing && (
                     <ExpandCollapseButton
                       collapsed={collapsed}

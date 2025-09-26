@@ -12,6 +12,7 @@
 - [x] **O-Count stats and graphics**
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
+- [x] **Primary tag for performer** (will show after name)
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's, Studio's and tag's photo cropper

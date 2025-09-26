@@ -37,6 +37,7 @@ type Performer {
   favorite: Boolean!
   tags: [Tag!]!
   ignore_auto_tag: Boolean!
+  primary_tag: Tag # Resolver
 
   image_path: String # Resolver
   profile_images: [PerformerProfileImage!]! # Resolver
@@ -87,6 +88,7 @@ input PerformerCreateInput {
   instagram: String @deprecated(reason: "Use urls")
   favorite: Boolean
   tag_ids: [ID!]
+  primary_tag_id: ID
   "This should be a URL or a base64 encoded data URL"
   image: String
   stash_ids: [StashIDInput!]
@@ -125,6 +127,7 @@ input PerformerUpdateInput {
   instagram: String @deprecated(reason: "Use urls")
   favorite: Boolean
   tag_ids: [ID!]
+  primary_tag_id: ID
   "This should be a URL or a base64 encoded data URL"
   image: String
   stash_ids: [StashIDInput!]

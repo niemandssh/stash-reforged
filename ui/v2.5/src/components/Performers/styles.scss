@@ -32,6 +32,19 @@
       }
     }
 
+    .performer-primary-tag {
+      margin-left: 8px;
+      margin-top: 0;
+      margin-right: 0;
+      margin-bottom: 0;
+    }
+
+    h2 {
+      margin-bottom: 0;
+      display: inline-flex;
+      align-items: center;
+    }
+
     .rating-number .form-control {
       width: inherit;
     }
@@ -213,6 +226,29 @@
 
 .performer-table .age-data span {
   border-bottom: 1px dotted #f5f8fa;
+}
+
+.performer-title-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  .performer-name {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .performer-primary-tag {
+    margin-left: 8px;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+
+  .performer-disambiguation {
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 .performer-result .performer-details > span {

@@ -284,8 +284,15 @@ const PerformerCardTitle: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Title",
   ({ performer }) => {
     return (
-      <div>
+      <div className="performer-title-container">
         <span className="performer-name">{performer.name}</span>
+        {performer.primary_tag && (
+          <TagLink
+            tag={performer.primary_tag}
+            linkType="performer"
+            className="performer-primary-tag"
+          />
+        )}
         {performer.disambiguation && (
           <span className="performer-disambiguation">
             {` (${performer.disambiguation})`}

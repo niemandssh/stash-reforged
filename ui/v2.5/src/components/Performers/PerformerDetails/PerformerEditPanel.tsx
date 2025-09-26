@@ -48,6 +48,7 @@ import {
   yupUniqueStringList,
 } from "src/utils/yup";
 import { useTagsEdit } from "src/hooks/tagsEdit";
+import { TagSelect, Tag } from "src/components/Tags/TagSelect";
 import { CustomFieldsInput } from "src/components/Shared/CustomFields";
 import { cloneDeep } from "@apollo/client/utilities";
 
@@ -158,6 +159,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     urls: performer.urls ?? [],
     details: performer.details ?? "",
     tag_ids: (performer.tags ?? []).map((t) => t.id),
+    primary_tag_id: performer.primary_tag?.id ?? null,
     ignore_auto_tag: performer.ignore_auto_tag ?? false,
     stash_ids: getStashIDs(performer.stash_ids),
     custom_fields: cloneDeep(performer.custom_fields ?? {}),
@@ -186,6 +188,32 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     performer.tags,
     (ids) => formik.setFieldValue("tag_ids", ids)
   );
+
+  const [primaryTag, setPrimaryTag] = useState<Tag | undefined>(
+    performer.primary_tag ? {
+      id: performer.primary_tag.id,
+      name: performer.primary_tag.name,
+      aliases: performer.primary_tag.aliases,
+      is_pose_tag: false,
+    } : undefined
+  );
+
+  useEffect(() => {
+    setPrimaryTag(
+      performer.primary_tag ? {
+        id: performer.primary_tag.id,
+        name: performer.primary_tag.name,
+        aliases: performer.primary_tag.aliases,
+        is_pose_tag: false,
+      } : undefined
+    );
+    formik.setFieldValue("primary_tag_id", performer.primary_tag?.id ?? null);
+  }, [performer.primary_tag, formik.setFieldValue]);
+
+  function onSetPrimaryTag(tag: Tag | undefined) {
+    setPrimaryTag(tag);
+    formik.setFieldValue("primary_tag_id", tag?.id || null);
+  }
 
   function translateScrapedGender(scrapedGender?: string) {
     if (!scrapedGender) {
@@ -717,6 +745,18 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     return renderField("tag_ids", title, tagsControl());
   }
 
+  function renderPrimaryTagField() {
+    const title = intl.formatMessage({ id: "primary_tag" });
+
+    return renderField("primary_tag_id", title, (
+      <TagSelect
+        isMulti={false}
+        onSelect={(tags) => onSetPrimaryTag(tags.length > 0 ? tags[0] : undefined)}
+        values={primaryTag ? [primaryTag] : []}
+      />
+    ));
+  }
+
   return (
     <>
       {renderScrapeModal()}
@@ -761,6 +801,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         {renderURLListField("urls", onScrapePerformerURL, urlScrapable)}
 
         {renderInputField("details", "textarea")}
+        {renderPrimaryTagField()}
         {renderTagsField()}
 
         {renderStashIDsField("stash_ids", "performers")}

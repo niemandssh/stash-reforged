@@ -230,6 +230,7 @@ type PerformerCreateInput struct {
 	Instagram      *string         `json:"instagram"` // deprecated
 	Favorite       *bool           `json:"favorite"`
 	TagIds         []string        `json:"tag_ids"`
+	PrimaryTagID   *string         `json:"primary_tag_id"`
 	// This should be a URL or a base64 encoded data URL
 	Image         *string        `json:"image"`
 	StashIds      []StashIDInput `json:"stash_ids"`
@@ -269,6 +270,7 @@ type PerformerUpdateInput struct {
 	Instagram      *string         `json:"instagram"` // deprecated
 	Favorite       *bool           `json:"favorite"`
 	TagIds         []string        `json:"tag_ids"`
+	PrimaryTagID   *string         `json:"primary_tag_id"`
 	// This should be a URL or a base64 encoded data URL
 	Image         *string        `json:"image"`
 	StashIds      []StashIDInput `json:"stash_ids"`

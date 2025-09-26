@@ -85,6 +85,10 @@ const messages = defineMessages({
     id: "tags",
     defaultMessage: "Tags",
   },
+  primary_tag: {
+    id: "primary_tag",
+    defaultMessage: "Primary Tag",
+  },
   galleries: {
     id: "galleries",
     defaultMessage: "Galleries",

@@ -35,6 +35,10 @@ fragment PerformerData on Performer {
     ...SlimTagData
   }
 
+  primary_tag {
+    ...SlimTagData
+  }
+
   stash_ids {
     stash_id
     endpoint

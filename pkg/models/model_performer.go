@@ -38,6 +38,7 @@ type Performer struct {
 	TagIDs        RelatedIDs                    `json:"tag_ids"`
 	StashIDs      RelatedStashIDs               `json:"stash_ids"`
 	ProfileImages RelatedPerformerProfileImages `json:"profile_images"`
+	PrimaryTagID  *int                          `json:"primary_tag_id"`
 }
 
 type CreatePerformerInput struct {
@@ -90,9 +91,10 @@ type PerformerPartial struct {
 	Weight        OptionalInt
 	IgnoreAutoTag OptionalBool
 
-	Aliases  *UpdateStrings
-	TagIDs   *UpdateIDs
-	StashIDs *UpdateStashIDs
+	Aliases      *UpdateStrings
+	TagIDs       *UpdateIDs
+	StashIDs     *UpdateStashIDs
+	PrimaryTagID OptionalInt
 
 	CustomFields CustomFieldsInput
 }
