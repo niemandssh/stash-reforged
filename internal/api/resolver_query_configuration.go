@@ -163,6 +163,7 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 	randomBestRatingThreshold := config.GetRandomBestRatingThreshold()
 	showSimilarityPercent := config.GetShowSimilarityPercent()
 	externalVideoPlayer := config.GetExternalVideoPlayer()
+	redirectHomeToScenes := config.GetRedirectHomeToScenes()
 	imageLightboxOptions := config.GetImageLightboxOptions()
 	disableDropdownCreate := config.GetDisableDropdownCreate()
 
@@ -199,6 +200,7 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 		RandomBestRatingThreshold: &randomBestRatingThreshold,
 		ShowSimilarityPercent:     &showSimilarityPercent,
 		ExternalVideoPlayer:       &externalVideoPlayer,
+		RedirectHomeToScenes:      &redirectHomeToScenes,
 	}
 }
 

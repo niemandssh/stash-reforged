@@ -234,6 +234,9 @@ const (
 	// External video player
 	ExternalVideoPlayer = "external_video_player"
 
+	// Redirect home page to scenes
+	RedirectHomeToScenes = "redirect_home_to_scenes"
+
 	DrawFunscriptHeatmapRange        = "draw_funscript_heatmap_range"
 	drawFunscriptHeatmapRangeDefault = true
 
@@ -1507,6 +1510,10 @@ func (i *Config) GetShowSimilarityPercent() bool {
 
 func (i *Config) GetExternalVideoPlayer() string {
 	return i.getString(ExternalVideoPlayer)
+}
+
+func (i *Config) GetRedirectHomeToScenes() bool {
+	return i.getBool(RedirectHomeToScenes)
 }
 
 func (i *Config) GetDeleteFileDefault() bool {

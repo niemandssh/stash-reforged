@@ -111,6 +111,7 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
   randomBestRatingThreshold
   showSimilarityPercent
   externalVideoPlayer
+  redirectHomeToScenes
 }
 
 fragment ConfigDLNAData on ConfigDLNAResult {

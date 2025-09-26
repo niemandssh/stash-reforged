@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useConfigureUI } from "src/core/StashService";
 import { LoadingIndicator } from "../Shared/LoadingIndicator";
@@ -18,6 +19,7 @@ import { PatchComponent } from "src/patch";
 const FrontPage: React.FC = PatchComponent("FrontPage", () => {
   const intl = useIntl();
   const Toast = useToast();
+  const history = useHistory();
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -25,6 +27,14 @@ const FrontPage: React.FC = PatchComponent("FrontPage", () => {
   const [saveUI] = useConfigureUI();
 
   const { configuration, loading } = React.useContext(ConfigurationContext);
+
+  // Redirect to scenes if setting is enabled
+  useEffect(() => {
+    const interfaceConfig = configuration?.interface;
+    if (interfaceConfig?.redirectHomeToScenes) {
+      history.replace("/scenes");
+    }
+  }, [configuration, history]);
 
   useScrollToTopOnMount();
 

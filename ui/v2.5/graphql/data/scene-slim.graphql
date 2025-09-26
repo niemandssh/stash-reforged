@@ -82,6 +82,7 @@ fragment SlimSceneData on Scene {
     gender
     favorite
     image_path
+    primary_image_path
     death_date
   }
 

@@ -407,6 +407,9 @@ input ConfigInterfaceInput {
 
   "External video player command"
   externalVideoPlayer: String
+
+  "Redirect home page to scenes page"
+  redirectHomeToScenes: Boolean
 }
 
 type ConfigDisableDropdownCreate {
@@ -483,6 +486,9 @@ type ConfigInterfaceResult {
 
   "External video player command"
   externalVideoPlayer: String
+
+  "Redirect home page to scenes page"
+  redirectHomeToScenes: Boolean
 }
 
 input ConfigDLNAInput {

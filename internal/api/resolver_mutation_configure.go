@@ -516,6 +516,7 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input ConfigI
 	r.setConfigBool(config.ShowSimilarityPercent, input.ShowSimilarityPercent)
 
 	r.setConfigString(config.ExternalVideoPlayer, input.ExternalVideoPlayer)
+	r.setConfigBool(config.RedirectHomeToScenes, input.RedirectHomeToScenes)
 
 	if err := c.Write(); err != nil {
 		return makeConfigInterfaceResult(), err

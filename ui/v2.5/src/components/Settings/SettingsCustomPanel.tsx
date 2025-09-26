@@ -30,7 +30,7 @@ export const SettingsCustomPanel: React.FC = () => {
           id="show-similarity-percent"
           headingID="config.custom.show_similarity_percent"
           subHeadingID="config.custom.show_similarity_percent_desc"
-          checked={iface.showSimilarityPercent !== undefined ? iface.showSimilarityPercent : true}
+          checked={iface.showSimilarityPercent ?? true}
           onChange={(v) => saveInterface({ showSimilarityPercent: v })}
         />
       </SettingSection>
@@ -42,6 +42,16 @@ export const SettingsCustomPanel: React.FC = () => {
           subHeadingID="config.custom.external_video_player_desc"
           value={iface.externalVideoPlayer ?? ""}
           onChange={(v) => saveInterface({ externalVideoPlayer: v })}
+        />
+      </SettingSection>
+
+      <SettingSection headingID="config.custom.redirect">
+        <BooleanSetting
+          id="redirect-home-to-scenes"
+          headingID="config.custom.redirect_home_to_scenes"
+          subHeadingID="config.custom.redirect_home_to_scenes_desc"
+          checked={iface.redirectHomeToScenes ?? false}
+          onChange={(v) => saveInterface({ redirectHomeToScenes: v })}
         />
       </SettingSection>
       </div>

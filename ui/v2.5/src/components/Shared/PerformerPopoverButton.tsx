@@ -12,7 +12,7 @@ import { DeathRibbon } from "./DeathRibbon";
 interface IProps {
   performers: Pick<
     GQL.Performer,
-    "id" | "name" | "image_path" | "disambiguation" | "gender" | "death_date"
+    "id" | "name" | "image_path" | "primary_image_path" | "disambiguation" | "gender" | "death_date"
   >[];
   linkType?: PerformerLinkType;
 }
@@ -31,7 +31,7 @@ export const PerformerPopoverButton: React.FC<IProps> = ({
         <img
           className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
           alt={performer.name ?? ""}
-          src={performer.image_path ?? ""}
+          src={performer.primary_image_path ?? performer.image_path ?? ""}
         />
         {performer.death_date && <DeathRibbon />}
       </Link>

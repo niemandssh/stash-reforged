@@ -31,6 +31,7 @@
 - [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
 - [x] Settings page opens in the new tab
 - [x] Tag links and performer card links now opens in the new tab in scene
+- [x] Setting for redirect to /scenes from main page if it is turned on
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
