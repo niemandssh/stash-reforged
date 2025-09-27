@@ -1565,5 +1565,9 @@
         "no_data": "Нет данных для отображения",
         "description": "График показывает активность O-Count за последний год",
         "tooltip_times": "{count, plural, =0 {раз} =1 {раз} one {раз} few {раза} many {раз} other {раз}}"
-    }
+    },
+    "no_scenes_to_review": "Нет сцен без рейтинга, без тегов или неорганизованных сцен для рецензирования",
+    "no_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
+    "no_best_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
+    "review_unrated_video_title": "Рецензировать видео без рейтинга, без тегов или неорганизованное видео"
 }

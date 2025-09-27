@@ -252,5 +252,9 @@
         "similarity_recalculation_failed": "Similarity recalculation failed for scene {sceneId}",
         "filters_reset": "Filters have been reset",
         "transforms_reset": "Transforms have been reset"
-    }
+    },
+    "no_scenes_to_review": "No scenes without rating, without tags, or unorganized scenes to review",
+    "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
+    "no_best_scenes_available": "No scenes with rating >= {ratingThreshold}",
+    "review_unrated_video_title": "Review unrated video, video without tags, or unorganized video"
 }

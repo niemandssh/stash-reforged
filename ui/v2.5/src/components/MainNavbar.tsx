@@ -171,18 +171,15 @@ const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
 
-// Функция для получения случайной сцены для рецензирования
-// Приоритет: сначала сцены без рейтинга, затем сцены без тегов
 const getRandomUnratedScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
 
-    // Сначала пытаемся найти сцены без рейтинга (приоритет)
     const unratedCountResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
-          per_page: 0, // Только количество
+          per_page: 0,
         },
         scene_filter: {
           rating100: {
@@ -195,7 +192,6 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
 
     const unratedCount = unratedCountResult.data?.findScenes?.count || 0;
     if (unratedCount > 0) {
-      // Выбираем случайную страницу из сцен без рейтинга
       const randomPage = Math.floor(Math.random() * unratedCount) + 1;
 
       const result = await client.query<GQL.FindScenesQuery>({
@@ -220,12 +216,11 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       }
     }
 
-    // Если нет сцен без рейтинга, ищем сцены без тегов (резерв)
     const untaggedCountResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
-          per_page: 0, // Только количество
+          per_page: 0,
         },
         scene_filter: {
           tag_count: {
@@ -238,7 +233,6 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
 
     const untaggedCount = untaggedCountResult.data?.findScenes?.count || 0;
     if (untaggedCount > 0) {
-      // Выбираем случайную страницу из сцен без тегов
       const randomPage = Math.floor(Math.random() * untaggedCount) + 1;
 
       const result = await client.query<GQL.FindScenesQuery>({
@@ -263,14 +257,49 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       }
     }
 
+    const unorganizedCountResult = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 0,
+        },
+        scene_filter: {
+          organized: false,
+        },
+      },
+    });
+
+    const unorganizedCount = unorganizedCountResult.data?.findScenes?.count || 0;
+    if (unorganizedCount > 0) {
+      const randomPage = Math.floor(Math.random() * unorganizedCount) + 1;
+
+      const result = await client.query<GQL.FindScenesQuery>({
+        query: GQL.FindScenesDocument,
+        variables: {
+          filter: {
+            per_page: 1,
+            page: randomPage,
+          },
+          scene_filter: {
+            organized: false,
+          },
+        },
+      });
+
+      const scenes = result.data?.findScenes?.scenes || [];
+      if (scenes.length > 0) {
+        return scenes[0]?.id || null;
+      }
+    }
+
     return null;
   } catch (error) {
-    console.error("Ошибка при получении случайной сцены:", error);
+    console.error("Error getting random scene:", error);
     return null;
   }
 };
 
-// Функция для получения случайной сцены с настраиваемым рейтингом
+
 const getRandomScene = async (ratingThreshold: number = 55): Promise<string | null> => {
   try {
     const client = getClient();
@@ -279,7 +308,7 @@ const getRandomScene = async (ratingThreshold: number = 55): Promise<string | nu
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
-          per_page: 0, // Только количество
+          per_page: 0,
         },
         scene_filter: {
           rating100: {
@@ -297,7 +326,6 @@ const getRandomScene = async (ratingThreshold: number = 55): Promise<string | nu
 
     const randomPage = Math.floor(Math.random() * totalCount) + 1;
 
-    // Получаем сцену с этой страницы
     const result = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
@@ -322,12 +350,11 @@ const getRandomScene = async (ratingThreshold: number = 55): Promise<string | nu
 
     return scenes[0]?.id || null;
   } catch (error) {
-    console.error("Ошибка при получении случайной сцены:", error);
+    console.error("Error getting random scene:", error);
     return null;
   }
 };
 
-// Функция для получения случайной сцены с настраиваемым рейтингом (для Random Best)
 const getRandomBestScene = async (ratingThreshold: number = 90): Promise<string | null> => {
   return getRandomScene(ratingThreshold);
 };
@@ -419,10 +446,9 @@ export const MainNavbar: React.FC = () => {
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      // Показываем уведомление, если нет сцен для рецензирования
       alert(intl.formatMessage({
         id: "no_scenes_to_review",
-        defaultMessage: "Нет сцен без рейтинга или без тегов для рецензирования"
+        defaultMessage: "No scenes without rating, without tags, or unorganized scenes to review"
       }));
     }
   }, [history, intl]);
@@ -433,10 +459,9 @@ export const MainNavbar: React.FC = () => {
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      // Показываем уведомление, если нет сцен
       alert(intl.formatMessage({
         id: "no_scenes_available",
-        defaultMessage: `Нет сцен с рейтингом >= ${ratingThreshold}`
+        defaultMessage: `No scenes with rating >= ${ratingThreshold}`
       }));
     }
   }, [history, intl, configuration]);
@@ -447,10 +472,9 @@ export const MainNavbar: React.FC = () => {
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      // Показываем уведомление, если нет сцен с высоким рейтингом
       alert(intl.formatMessage({
         id: "no_best_scenes_available",
-        defaultMessage: `Нет сцен с рейтингом >= ${ratingThreshold}`
+        defaultMessage: `No scenes with rating >= ${ratingThreshold}`
       }));
     }
   }, [history, intl, configuration]);
@@ -622,7 +646,10 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary review-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleReviewClick}
-            title="Review unrated video or video without tags"
+            title={intl.formatMessage({
+              id: "review_unrated_video_title",
+              defaultMessage: "Review unrated video, video without tags, or unorganized video"
+            })}
           >
             <Icon icon={faStarHalfStroke} className="mr-1" />
             Review

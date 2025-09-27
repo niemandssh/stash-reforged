@@ -6,6 +6,7 @@
 - [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag), these tags is sorting by popularity (using in scenes)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
+- [x] **"Review" button** - fore review unorganised scenes without tags or rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
 - [x] **O-Count for galleries!** - now you can add count of times for your comics ;)

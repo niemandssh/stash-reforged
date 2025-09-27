@@ -201,18 +201,9 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 	// Track if conversion was successful
 	conversionSuccessful := false
 
-	// Always clean up backup temp file at the end
+	// Clean up temp files at the end
 	defer func() {
 		// Don't close done channel here - it's already closed in Execute method
-
-		// Clean up backup temp file regardless of success/failure
-		if _, err := os.Stat(backupTempFile); err == nil {
-			if err := os.Remove(backupTempFile); err != nil {
-				logger.Warnf("[convert] failed to remove backup temp file %s: %v", backupTempFile, err)
-			} else {
-				logger.Infof("[convert] cleaned up backup temp file: %s", backupTempFile)
-			}
-		}
 
 		// Clean up main temp file only on failure
 		if !conversionSuccessful {
@@ -278,8 +269,17 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 			return fmt.Errorf("temp file does not exist: %w", err)
 		}
 
-		if err := os.Rename(tempFile, finalPath); err != nil {
-			return fmt.Errorf("failed to move converted file to final location: %w", err)
+		// Copy temp file to final location (works across different filesystems)
+		logger.Infof("[convert] copying temp file to final location: %s -> %s", tempFile, finalPath)
+		if err := t.copyFileContent(tempFile, finalPath); err != nil {
+			return fmt.Errorf("failed to copy converted file to final location: %w", err)
+		}
+
+		// Remove temp file after successful copy
+		if err := os.Remove(tempFile); err != nil {
+			logger.Warnf("[convert] failed to remove temp file %s: %v", tempFile, err)
+		} else {
+			logger.Infof("[convert] removed temp file: %s", tempFile)
 		}
 
 		// Verify the file was moved successfully
@@ -341,6 +341,15 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		logger.Warnf("[convert] failed to generate VTT file: %v", err)
 	} else {
 		logger.Infof("[convert] generated VTT file")
+	}
+
+	// Clean up backup temp file only after all operations are successful
+	if _, err := os.Stat(backupTempFile); err == nil {
+		if err := os.Remove(backupTempFile); err != nil {
+			logger.Warnf("[convert] failed to remove backup temp file %s: %v", backupTempFile, err)
+		} else {
+			logger.Infof("[convert] cleaned up backup temp file: %s", backupTempFile)
+		}
 	}
 
 	// Mark conversion as successful - temp file will be moved, not deleted
@@ -1013,8 +1022,25 @@ func (t *ConvertToMP4Task) recalculateFileHashes(ctx context.Context, file *mode
 }
 
 func (t *ConvertToMP4Task) generateVTTFile(ctx context.Context, file *models.VideoFile, filePath string) error {
+	// Get updated scene from database with new hash
+	// Use the existing transaction context instead of creating a new one
+	updatedScene, err := t.Repository.Scene.Find(ctx, t.Scene.ID)
+	if err != nil {
+		return fmt.Errorf("failed to load updated scene: %w", err)
+	}
+
+	if updatedScene != nil {
+		if err := updatedScene.LoadFiles(ctx, t.Repository.Scene); err != nil {
+			return fmt.Errorf("failed to load scene files: %w", err)
+		}
+	}
+
+	if updatedScene == nil {
+		return fmt.Errorf("updated scene not found")
+	}
+
 	// Check if VTT file already exists
-	sceneHash := t.Scene.GetHash(t.FileNamingAlgorithm)
+	sceneHash := updatedScene.GetHash(t.FileNamingAlgorithm)
 	vttPath := t.Paths.Scene.GetSpriteVttFilePath(sceneHash)
 
 	if _, err := os.Stat(vttPath); err == nil {
