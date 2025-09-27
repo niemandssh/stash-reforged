@@ -9,6 +9,7 @@ This version will be always in develop branch.
 
 ### Some new features
 
+- [x] **HLS correction** - special checkbox in Scene filters tab that correct sound in HLS MP4 direct stream (these videos is broken but this mode can fix it, buffering delay only on start of play. Original transcodes was very laggy for me)
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag)

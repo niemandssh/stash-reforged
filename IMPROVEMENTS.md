@@ -1,5 +1,6 @@
 # Improvements of "Stash: Reforged" version
 
+- [x] **HLS correction** - special checkbox in Scene filters tab that correct sound in HLS MP4 direct stream (these videos is broken but this mode can fix it, buffering delay only on start of play. Original transcodes was very laggy for me)
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] Setting for show/hide percent of similarity in suggested scenes
