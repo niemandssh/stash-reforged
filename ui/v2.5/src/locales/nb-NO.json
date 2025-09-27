@@ -140,7 +140,7 @@
         "reshuffle": "Stokk om",
         "rename_gen_files": "Gi nytt navn til genererte filer",
         "selective_auto_tag": "Selektiv Automatisk Tagging",
-        "set_image": "Velg bilde…",
+        "set_image": "Add image…",
         "selective_clean": "Selektiv Rens"
     },
     "component_tagger": {

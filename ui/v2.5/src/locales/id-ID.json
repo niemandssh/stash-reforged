@@ -136,7 +136,7 @@
         "scrape_query": "Kueri penggali data",
         "scrape_scene_fragment": "Gali data dengan fragmen",
         "scrape_with": "Gali data dengan…",
-        "set_image": "Tetapkan gambar…",
+        "set_image": "Add image…",
         "tasks": {
             "dry_mode_selected": "Mode Kering dipilih. Tidak ada penghapusan riil yang akan dilakukan, hanya pencatatan.",
             "clean_confirm_message": "Apakah Anda yakin ingin Membersihkan? Ini akan menghapus informasi pangkalan data dan konten yang dihasilkan untuk semua adegan dan galeri yang tidak lagi ditemukan di berkas sistem.",

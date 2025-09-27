@@ -210,12 +210,13 @@ interface IPerformerHeaderImageProps {
   lightboxImages: ILightboxImage[];
   performer: GQL.PerformerDataFragment;
   isEditing: boolean;
+  onImageUpdate?: () => Promise<void>;
 }
 
 const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
   PatchComponent(
     "PerformerHeaderImage",
-    ({ encodingImage, activeImage, performer, isEditing }) => {
+    ({ encodingImage, activeImage, performer, isEditing, onImageUpdate: onImageUpdateProp }) => {
       const hasProfileImages = performer.profile_images && performer.profile_images.length > 0;
       
       const handleSetPrimary = useCallback((imageId: string, index: number) => {
@@ -227,15 +228,15 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
         }
       }, [performer.profile_images, performer.primary_image_path]);
       
-      const handleImageChange = useCallback(() => {
-        // No-op function for image change
-      }, []);
-      
-      const handleSave = useCallback(() => {
-        // No-op function for save
-      }, []);
-      
-      
+    const handleImageChange = useCallback(() => {
+      // No-op function for image change
+    }, []);
+
+    const handleSave = useCallback(() => {
+      // No-op function for save
+    }, []);
+
+
       return (
         <HeaderImage encodingImage={encodingImage}>
           {hasProfileImages ? (
@@ -244,6 +245,7 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
               isEditing={isEditing}
               performerId={parseInt(performer.id, 10)}
               onSetPrimary={handleSetPrimary}
+              onImageUpdate={onImageUpdateProp}
             />
           ) : isEditing ? (
             // In edit mode, always show slider interface for managing profile images
@@ -298,10 +300,25 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const [currentPerformer, setCurrentPerformer] = useState<GQL.PerformerDataFragment>(performer);
     const loadStickyHeader = useLoadStickyHeader();
 
+    // Refetch performer data hook
+    const { refetch: refetchPerformer } = useFindPerformer(performer.id);
+
     // Update currentPerformer when performer prop changes
     useEffect(() => {
       setCurrentPerformer(performer);
     }, [performer]);
+
+    const onImageUpdate = useCallback(async () => {
+      try {
+        // Refetch performer data to update the image after cropping
+        const result = await refetchPerformer();
+        if (result.data?.findPerformer) {
+          setCurrentPerformer(result.data.findPerformer);
+        }
+      } catch (error) {
+        console.error("Error refetching performer data:", error);
+      }
+    }, [refetchPerformer]);
 
     const activeImage = useMemo(() => {
       const performerImage = currentPerformer.primary_image_path || currentPerformer.image_path;
@@ -457,8 +474,9 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
               collapsed={collapsed}
               encodingImage={encodingImage}
               lightboxImages={lightboxImages}
-              performer={performer}
+              performer={currentPerformer}
               isEditing={isEditing}
+              onImageUpdate={onImageUpdate}
             />
             <div className="row">
               <div className="performer-head col">
@@ -510,7 +528,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                     onCancel={() => toggleEditing()}
                     setImage={setImage}
                     setEncodingImage={setEncodingImage}
-                    onPerformerUpdate={setCurrentPerformer}
+                    onPerformerUpdate={(updatedPerformer) => setCurrentPerformer(prev => ({ ...prev, ...updatedPerformer }))}
                   />
                 ) : (
                   <Col>

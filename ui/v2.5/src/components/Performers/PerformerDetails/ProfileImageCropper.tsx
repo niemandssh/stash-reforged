@@ -11,6 +11,7 @@ interface IProfileImageCropperProps {
   profileImageId: number;
   performerId: string;
   onCroppingChange?: (cropping: boolean) => void;
+  onImageUpdate?: () => void;
 }
 
 export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
@@ -18,6 +19,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
   profileImageId,
   performerId,
   onCroppingChange,
+  onImageUpdate,
 }) => {
   const imageRef = useRef<HTMLImageElement>(null);
   const cropperRef = useRef<Cropper | null>(null);
@@ -95,6 +97,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
 
       if (result.data?.performerProfileImageUpdate) {
         Toast.success("Image cropped successfully");
+        onImageUpdate?.();
       }
     } catch (error) {
       console.error("Error cropping image:", error);
@@ -127,7 +130,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     <div className="image-cropper-container" style={{ pointerEvents: 'auto' }}>
       <div className="detail-header-image" style={{ flexDirection: "column", pointerEvents: 'auto' }}>
         {/* Фоновая размытая картинка */}
-        <div 
+        <div
           className="background-image"
           style={{
             backgroundImage: `url(${imageSrc})`,
@@ -138,7 +141,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
             transform: 'scale(1.1)'
           }}
         />
-        
+
         <img
           ref={imageRef}
           src={imageSrc}

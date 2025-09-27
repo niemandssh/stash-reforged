@@ -130,6 +130,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     urls: yupUniqueStringList(intl),
     details: yup.string().ensure(),
     tag_ids: yup.array(yup.string().required()).defined(),
+    primary_tag_id: yup.string().nullable().optional(),
     ignore_auto_tag: yup.boolean().defined(),
     small_role: yup.boolean().defined(),
     stash_ids: yup.mixed<GQL.StashIdInput[]>().defined(),
@@ -388,7 +389,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
       const result = await createProfileImage({
         variables: {
           input: {
-            performer_id: performer.id,
+            performer_id: performer.id!,
             image: imageData,
             is_primary: profileImages.length === 0, // First image becomes primary
             position: profileImages.length,
@@ -397,11 +398,14 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
       });
 
       if (result.data?.performerProfileImageCreate) {
+        const newImageIndex = (performer.profile_images || []).length + 1;
         Toast.success(
-          intl.formatMessage({ 
-            id: "toast.created_entity",
-            defaultMessage: "Added image to performer profile",
-          })
+          intl.formatMessage(
+            { id: "toast.created_entity" },
+            {
+              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+            }
+          )
         );
         
         // Update performer with new profile image

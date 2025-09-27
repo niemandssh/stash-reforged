@@ -3,6 +3,7 @@ import { Button, Form } from "react-bootstrap";
 import { useIntl } from "react-intl";
 import { Icon } from "src/components/Shared/Icon";
 import { ImageInput } from "src/components/Shared/ImageInput";
+import ImageUtils from "src/utils/image";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { ProfileImageSlider } from "./ProfileImageSlider";
@@ -35,6 +36,10 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
 
   const profileImages = performer.profile_images || [];
 
+  function onImageChange(event: React.FormEvent<HTMLInputElement>) {
+    ImageUtils.onImageChange(event, handleImageUpload);
+  }
+
   const handleImageUpload = async (imageData: string | null) => {
     if (!imageData) return;
 
@@ -53,8 +58,14 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
 
       if (result.data?.performerProfileImageCreate) {
         const createdImage = result.data.performerProfileImageCreate;
+        const newImageIndex = profileImages.length + 1; // +1 because image is added to array after this
         Toast.success(
-          `Image #${createdImage.id} created`
+          intl.formatMessage(
+            { id: "toast.created_entity" },
+            {
+              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+            }
+          )
         );
         
         // Update the images list and set current index to the new image
@@ -185,7 +196,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
             onImageChange={setCurrentImageIndex}
             onDeleteImage={handleDeleteImage}
             onSetPrimary={handleSetPrimary}
-            performerId={performer.id}
+            performerId={parseInt(performer.id!, 10)}
           />
         </div>
       )}
@@ -200,7 +211,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
         </Form.Label>
         <ImageInput
           isEditing={true}
-          onImageChange={handleImageUpload}
+          onImageChange={onImageChange}
         >
           <Button variant="secondary" disabled={isUploading}>
             <Icon icon={faPlus} className="me-2" />

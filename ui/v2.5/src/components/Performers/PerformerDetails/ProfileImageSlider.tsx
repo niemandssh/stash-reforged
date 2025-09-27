@@ -17,6 +17,7 @@ interface IProfileImageSliderProps {
   onImageChange?: (index: number) => void;
   onDeleteImage?: (imageId: string, index: number) => void;
   onSetPrimary?: (imageId: string, index: number) => void;
+  onImageUpdate?: () => void;
   performerId: number;
 }
 
@@ -27,6 +28,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   onImageChange,
   onDeleteImage,
   onSetPrimary,
+  onImageUpdate,
   performerId,
 }) => {
   // Early return before any hooks
@@ -42,7 +44,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [hasSwiped, setHasSwiped] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
-  
+
   const [updateProfileImage] = usePerformerProfileImageUpdate();
   const [destroyProfileImage] = usePerformerProfileImageDestroy();
 
@@ -396,6 +398,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
               profileImageId={parseInt(currentImage.id, 10)}
               performerId={performerId.toString()}
               onCroppingChange={setIsCropping}
+              onImageUpdate={onImageUpdate}
             />
           )}
         </div>
@@ -449,45 +452,42 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         </div>
       )}
 
-      {/* Slider controls (only in edit mode) */}
+      {/* Action buttons (only in edit mode) */}
       {isEditing && (
-        <div className="slider-controls">
-          {/* Action buttons */}
-          <div className="action-buttons">
-            {!currentImage?.is_primary && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSetPrimary}
-                title={intl.formatMessage({ 
-                  id: "actions.set_as_primary", 
-                  defaultMessage: "Set as primary" 
-                })}
-              >
-                <Icon icon={faStar} className="mr-2" />
-                {intl.formatMessage({ 
-                  id: "actions.set_primary", 
-                  defaultMessage: "Set Primary" 
-                })}
-              </Button>
-            )}
-            
+        <div className="image-action-buttons">
+          {!currentImage?.is_primary && (
             <Button
-              variant="danger"
+              variant="secondary"
               size="sm"
-              onClick={handleDeleteImage}
-              title={intl.formatMessage({ 
-                id: "actions.delete_entity", 
-                defaultMessage: "Delete {entityType}",
-              }, { entityType: intl.formatMessage({ id: "image" }) })}
+              onClick={handleSetPrimary}
+              title={intl.formatMessage({
+                id: "actions.set_as_primary",
+                defaultMessage: "Set as primary"
+              })}
             >
-              <Icon icon={faTrash} className="mr-2" />
-              {intl.formatMessage({ 
-                id: "actions.delete_entity", 
-                defaultMessage: "Delete {entityType}",
-              }, { entityType: intl.formatMessage({ id: "image" }) })}
+              <Icon icon={faStar} className="mr-2" />
+              {intl.formatMessage({
+                id: "actions.set_primary",
+                defaultMessage: "Set Primary"
+              })} {activeIndex + 1}
             </Button>
-          </div>
+          )}
+
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteImage}
+            title={intl.formatMessage({
+              id: "actions.delete_entity",
+              defaultMessage: "Delete {entityType}",
+            }, { entityType: intl.formatMessage({ id: "image" }) })}
+          >
+            <Icon icon={faTrash} className="mr-2" />
+            {intl.formatMessage({
+              id: "actions.delete_entity",
+              defaultMessage: "Delete {entityType}",
+            }, { entityType: intl.formatMessage({ id: "image" }) })} {activeIndex + 1}
+          </Button>
         </div>
       )}
       </div>

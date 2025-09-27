@@ -3,6 +3,12 @@
   width: 100%;
   height: 100%;
 
+  &.editing {
+    .dots-indicator {
+      bottom: 96px;
+    }
+  }
+
   .detail-header-image {
     width: 100%;
     height: 100%;
@@ -111,7 +117,17 @@
       bottom: -50px;
 
       &.is-cropping {
-        bottom: -90px;
+        bottom: -48px;
+        width: 100%;
+        display: flex;
+
+        .crop-cancel, .crop-accept {
+          width: 100%;
+        }
+
+        p {
+          display: none;
+        }
       }
     }
 
@@ -182,9 +198,22 @@
     }
   }
 
+  .image-action-buttons {
+    margin-top: -16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+  }
+
       .dots-indicator {
         position: absolute;
-        bottom: 70px;
+        bottom: 84px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 25;
@@ -265,6 +294,13 @@
         flex-direction: column;
         align-items: center;
       }
+    }
+
+    .image-action-buttons {
+      margin-top: 10px;
+
+      flex-direction: column;
+      align-items: center;
     }
 
         .dots-indicator {
