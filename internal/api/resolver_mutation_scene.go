@@ -38,11 +38,28 @@ func (r *mutationResolver) getScene(ctx context.Context, id int) (ret *models.Sc
 
 // scheduleSimilarityRecalculation schedules similarity recalculation for a scene in the background
 func (r *mutationResolver) scheduleSimilarityRecalculation(ctx context.Context, sceneID int) {
-	// Create similarity job for the specific scene
-	job := manager.NewSimilarityJob(r.repository, &sceneID)
+	// Check if a similarity job for this scene is already queued or running
+	mgr := manager.GetInstance()
+	if mgr.JobManager.HasQueuedOrRunningSimilarityJob(sceneID) {
+		return // Skip if already processing
+	}
 
-	// Add the job to the job manager
-	manager.GetInstance().JobManager.Add(ctx, job.GetDescription(), job)
+	// Delay similarity recalculation to avoid overwhelming the system
+	// This helps prevent database lock issues when multiple scenes are updated rapidly
+	go func() {
+		time.Sleep(2 * time.Second) // Wait 2 seconds before starting
+
+		// Double-check after delay in case another job was queued
+		if mgr.JobManager.HasQueuedOrRunningSimilarityJob(sceneID) {
+			return
+		}
+
+		// Create similarity job for the specific scene
+		job := manager.NewSimilarityJob(r.repository, &sceneID)
+
+		// Add the job to the job manager
+		mgr.JobManager.Add(ctx, job.GetDescription(), job)
+	}()
 }
 
 func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCreateInput) (ret *models.Scene, err error) {

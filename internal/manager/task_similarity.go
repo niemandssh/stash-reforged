@@ -28,6 +28,9 @@ func (j *SimilarityJob) Execute(ctx context.Context, progress *job.Progress) err
 		weights,
 	)
 
+	// Get transaction manager from repository
+	txnManager := repo.TxnManager
+
 	if j.sceneID != nil {
 		// Recalculate similarities for a specific scene
 		logger.Infof("Recalculating similarities for scene %d", *j.sceneID)
@@ -56,10 +59,8 @@ func (j *SimilarityJob) Execute(ctx context.Context, progress *job.Progress) err
 			return fmt.Errorf("finding all scenes: %w", err)
 		}
 
-		// Calculate similarities with transaction for write operations
-		err = repo.WithTxn(dbCtx, func(ctx context.Context) error {
-			return calculator.RecalculateSceneSimilarities(ctx, *j.sceneID, scenes)
-		})
+		// Calculate similarities using database context (individual transactions for each operation)
+		err = calculator.RecalculateSceneSimilarities(dbCtx, *j.sceneID, scenes, txnManager)
 		if err != nil {
 			return fmt.Errorf("recalculating similarities for scene %d: %w", *j.sceneID, err)
 		}
@@ -85,10 +86,8 @@ func (j *SimilarityJob) Execute(ctx context.Context, progress *job.Progress) err
 		progress.SetTotal(len(scenes))
 		progress.SetProcessed(0)
 
-		// Calculate similarities with transaction for write operations
-		err = repo.WithTxn(dbCtx, func(ctx context.Context) error {
-			return calculator.RecalculateAllSimilarities(ctx, scenes)
-		})
+		// Calculate similarities using individual transactions for each operation
+		err = calculator.RecalculateAllSimilarities(dbCtx, scenes, txnManager)
 		if err != nil {
 			return fmt.Errorf("recalculating all similarities: %w", err)
 		}

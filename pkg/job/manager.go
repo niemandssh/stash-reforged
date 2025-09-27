@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -411,4 +412,23 @@ func (u *updater) updateProgress(progress float64, details []string) {
 	} else {
 		u.notifyUpdate()
 	}
+}
+
+// HasQueuedOrRunningSimilarityJob checks if there is already a queued or running similarity job for the given scene ID
+func (m *Manager) HasQueuedOrRunningSimilarityJob(sceneID int) bool {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	expectedDesc := fmt.Sprintf("Recalculating similarities for scene %d", sceneID)
+
+	// Check active jobs in queue
+	for _, j := range m.queue {
+		if j.Status == StatusReady || j.Status == StatusRunning {
+			if j.Description == expectedDesc {
+				return true
+			}
+		}
+	}
+
+	return false
 }

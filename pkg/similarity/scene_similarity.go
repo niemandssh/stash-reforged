@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/stashapp/stash/pkg/models"
+	"github.com/stashapp/stash/pkg/txn"
 )
 
 // SimilarityWeights defines the weights for different similarity factors
@@ -405,7 +406,7 @@ func (c *SceneSimilarityCalculator) CalculateAndStoreSimilarity(ctx context.Cont
 }
 
 // RecalculateSceneSimilarities recalculates similarities for a specific scene
-func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Context, sceneID int, allScenes []*models.Scene) error {
+func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Context, sceneID int, allScenes []*models.Scene, txnManager models.TxnManager) error {
 	// Get the scene
 	scene, err := c.sceneRepo.Find(ctx, sceneID)
 	if err != nil {
@@ -417,12 +418,18 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 		return fmt.Errorf("loading relationships for scene %d: %w", sceneID, err)
 	}
 
-	// Delete existing similarities for this scene
-	if err := c.repository.DeleteByScene(ctx, sceneID); err != nil {
+	// Delete existing similarities for this scene in a transaction
+	if err := txn.WithTxn(ctx, txnManager, func(ctx context.Context) error {
+		return c.repository.DeleteByScene(ctx, sceneID)
+	}); err != nil {
 		return fmt.Errorf("deleting existing similarities for scene %d: %w", sceneID, err)
 	}
 
 	// Calculate similarities with all other scenes
+	// Process in batches to avoid long-running transactions
+	const batchSize = 50
+	similarities := make([]models.SceneSimilarity, 0, batchSize)
+
 	for _, otherScene := range allScenes {
 		if otherScene.ID == sceneID {
 			continue
@@ -434,7 +441,7 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 			continue
 		}
 
-		// Calculate similarity without storing first
+		// Calculate similarity
 		score, err := c.CalculateSimilarity(ctx, scene, otherScene)
 		if err != nil {
 			fmt.Printf("Error calculating similarity between scenes %d and %d: %v\n", sceneID, otherScene.ID, err)
@@ -446,7 +453,7 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 			continue
 		}
 
-		// Store the similarity
+		// Create similarity record
 		similarity := models.SceneSimilarity{
 			SceneID:         scene.ID,
 			SimilarSceneID:  otherScene.ID,
@@ -458,20 +465,47 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 		similarity.CreatedAt = partial.CreatedAt.Value
 		similarity.UpdatedAt = partial.UpdatedAt.Value
 
-		if err := c.repository.Upsert(ctx, similarity); err != nil {
-			fmt.Printf("Error storing similarity between scenes %d and %d: %v\n", sceneID, otherScene.ID, err)
+		similarities = append(similarities, similarity)
+
+		// Insert batch when it reaches the limit
+		if len(similarities) >= batchSize {
+			if err := c.insertSimilarityBatch(ctx, similarities, txnManager); err != nil {
+				return fmt.Errorf("inserting similarity batch: %w", err)
+			}
+			similarities = similarities[:0] // reset slice
+		}
+	}
+
+	// Insert remaining similarities
+	if len(similarities) > 0 {
+		if err := c.insertSimilarityBatch(ctx, similarities, txnManager); err != nil {
+			return fmt.Errorf("inserting final similarity batch: %w", err)
 		}
 	}
 
 	return nil
 }
 
+// insertSimilarityBatch inserts a batch of similarities using individual transactions
+func (c *SceneSimilarityCalculator) insertSimilarityBatch(ctx context.Context, similarities []models.SceneSimilarity, txnManager models.TxnManager) error {
+	for _, similarity := range similarities {
+		if err := txn.WithTxn(ctx, txnManager, func(ctx context.Context) error {
+			return c.repository.Upsert(ctx, similarity)
+		}); err != nil {
+			return fmt.Errorf("storing similarity between scenes %d and %d: %w", similarity.SceneID, similarity.SimilarSceneID, err)
+		}
+	}
+	return nil
+}
+
 // RecalculateAllSimilarities recalculates similarities for all scenes
-func (c *SceneSimilarityCalculator) RecalculateAllSimilarities(ctx context.Context, scenes []*models.Scene) error {
+func (c *SceneSimilarityCalculator) RecalculateAllSimilarities(ctx context.Context, scenes []*models.Scene, txnManager models.TxnManager) error {
 	// Clear all existing similarities
 	// Note: This is a simple approach. In production, you might want to do this more efficiently
 	for _, scene := range scenes {
-		if err := c.repository.DeleteByScene(ctx, scene.ID); err != nil {
+		if err := txn.WithTxn(ctx, txnManager, func(ctx context.Context) error {
+			return c.repository.DeleteByScene(ctx, scene.ID)
+		}); err != nil {
 			return fmt.Errorf("deleting similarities for scene %d: %w", scene.ID, err)
 		}
 	}
@@ -481,7 +515,9 @@ func (c *SceneSimilarityCalculator) RecalculateAllSimilarities(ctx context.Conte
 		for j := i + 1; j < len(scenes); j++ {
 			scene2 := scenes[j]
 
-			if err := c.CalculateAndStoreSimilarity(ctx, scene1, scene2); err != nil {
+			if err := txn.WithTxn(ctx, txnManager, func(ctx context.Context) error {
+				return c.CalculateAndStoreSimilarity(ctx, scene1, scene2)
+			}); err != nil {
 				// Log error but continue
 				fmt.Printf("Error calculating similarity between scenes %d and %d: %v\n", scene1.ID, scene2.ID, err)
 			}
