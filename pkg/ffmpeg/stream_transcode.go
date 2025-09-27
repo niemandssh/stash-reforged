@@ -3,6 +3,7 @@ package ffmpeg
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os/exec"
@@ -13,6 +14,20 @@ import (
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 )
+
+// Global variables to pass audio settings to stream types
+var globalAudioOffsetMs int
+var globalAudioPlaybackSpeed float64
+
+// SetGlobalAudioOffsetMs sets the global audio offset for sync correction
+func SetGlobalAudioOffsetMs(offset int) {
+	globalAudioOffsetMs = offset
+}
+
+// SetGlobalAudioPlaybackSpeed sets the global audio playback speed
+func SetGlobalAudioPlaybackSpeed(speed float64) {
+	globalAudioPlaybackSpeed = speed
+}
 
 type StreamFormat struct {
 	MimeType string
@@ -103,6 +118,25 @@ var (
 				args = args.SkipAudio()
 			} else {
 				args = append(args, "-ac", "2")
+
+				var filters []string
+				if globalAudioOffsetMs != 0 {
+					// Use adelay for both positive and negative offsets
+					// Positive values delay audio (fixes early audio), negative values advance audio (fixes late audio)
+					filters = append(filters, fmt.Sprintf("adelay=%d|%d", globalAudioOffsetMs, globalAudioOffsetMs))
+					fmt.Printf("DEBUG: Applying audio offset %d ms\n", globalAudioOffsetMs)
+				}
+				if globalAudioPlaybackSpeed != 0 && globalAudioPlaybackSpeed != 1.0 {
+					filters = append(filters, fmt.Sprintf("atempo=%.3f", globalAudioPlaybackSpeed))
+					fmt.Printf("DEBUG: Applying audio speed %.3f\n", globalAudioPlaybackSpeed)
+				}
+				if len(filters) > 0 {
+					fmt.Printf("DEBUG: Applied filters: %s\n", strings.Join(filters, ","))
+				}
+
+				if len(filters) > 0 {
+					args = append(args, "-af", strings.Join(filters, ","))
+				}
 			}
 			args = args.Format(FormatMP4)
 			return
@@ -117,6 +151,25 @@ var (
 				args = args.SkipAudio()
 			} else {
 				args = append(args, "-ac", "2")
+
+				var filters []string
+				if globalAudioOffsetMs != 0 {
+					// Use adelay for both positive and negative offsets
+					// Positive values delay audio (fixes early audio), negative values advance audio (fixes late audio)
+					filters = append(filters, fmt.Sprintf("adelay=%d|%d", globalAudioOffsetMs, globalAudioOffsetMs))
+					fmt.Printf("DEBUG: Applying audio offset %d ms\n", globalAudioOffsetMs)
+				}
+				if globalAudioPlaybackSpeed != 0 && globalAudioPlaybackSpeed != 1.0 {
+					filters = append(filters, fmt.Sprintf("atempo=%.3f", globalAudioPlaybackSpeed))
+					fmt.Printf("DEBUG: Applying audio speed %.3f\n", globalAudioPlaybackSpeed)
+				}
+				if len(filters) > 0 {
+					fmt.Printf("DEBUG: Applied filters: %s\n", strings.Join(filters, ","))
+				}
+
+				if len(filters) > 0 {
+					args = append(args, "-af", strings.Join(filters, ","))
+				}
 			}
 			args = args.Format(FormatWebm)
 			return
@@ -135,7 +188,80 @@ var (
 					"-vbr", "on",
 					"-ac", "2",
 				)
+
+				var filters []string
+				if globalAudioOffsetMs != 0 {
+					// Use adelay for both positive and negative offsets
+					// Positive values delay audio (fixes early audio), negative values advance audio (fixes late audio)
+					filters = append(filters, fmt.Sprintf("adelay=%d|%d", globalAudioOffsetMs, globalAudioOffsetMs))
+					fmt.Printf("DEBUG: Applying audio offset %d ms\n", globalAudioOffsetMs)
+				}
+				if globalAudioPlaybackSpeed != 0 && globalAudioPlaybackSpeed != 1.0 {
+					filters = append(filters, fmt.Sprintf("atempo=%.3f", globalAudioPlaybackSpeed))
+					fmt.Printf("DEBUG: Applying audio speed %.3f\n", globalAudioPlaybackSpeed)
+				}
+				if len(filters) > 0 {
+					fmt.Printf("DEBUG: Applied filters: %s\n", strings.Join(filters, ","))
+				}
+
+				if len(filters) > 0 {
+					args = append(args, "-af", strings.Join(filters, ","))
+				}
 			}
+			args = args.Format(FormatMatroska)
+			return
+		},
+	}
+	StreamTypeDirectSync = StreamFormat{
+		MimeType: MimeMkvVideo,
+		Args: func(codec VideoCodec, videoFilter VideoFilter, videoOnly bool) (args Args) {
+			// VLC-style HLS processing - exact replication of VLC's HLS demux approach
+			// videoFilter is ignored since we're using copy
+
+			// VLC uses these input options for HLS/fragmented content
+			args = append(args,
+				"-fflags", "+discardcorrupt+genpts+igndts+nobuffer+flush_packets",
+				"-avoid_negative_ts", "make_zero",
+				"-start_at_zero",
+				"-copyts",
+				"-correct_ts_overflow", "0",
+				"-max_delay", "500000", // VLC-style max delay
+				"-reorder_queue_size", "0", // Disable reordering like VLC
+			)
+
+			args = append(args, "-c:v", "copy")
+			if videoOnly {
+				args = args.SkipAudio()
+			} else {
+				args = append(args,
+					"-c:a", "aac", // Re-encode audio to apply filters
+					"-ac", "2",
+					"-ar", "44100",
+					"-b:a", "128k",
+					"-strict", "-2",
+				)
+
+				var filters []string
+				if globalAudioOffsetMs != 0 {
+					// Use adelay for both positive and negative offsets
+					// Positive values delay audio (fixes early audio), negative values advance audio (fixes late audio)
+					filters = append(filters, fmt.Sprintf("adelay=%d|%d", globalAudioOffsetMs, globalAudioOffsetMs))
+					fmt.Printf("DEBUG: Applying audio offset %d ms\n", globalAudioOffsetMs)
+				}
+				if globalAudioPlaybackSpeed != 0 && globalAudioPlaybackSpeed != 1.0 {
+					filters = append(filters, fmt.Sprintf("atempo=%.3f", globalAudioPlaybackSpeed))
+					fmt.Printf("DEBUG: Applying audio speed %.3f\n", globalAudioPlaybackSpeed)
+				}
+				if len(filters) > 0 {
+					fmt.Printf("DEBUG: Applied filters: %s\n", strings.Join(filters, ","))
+				}
+
+				if len(filters) > 0 {
+					args = append(args, "-af", strings.Join(filters, ","))
+				}
+			}
+
+			// Use Matroska format for pipe output (supports all codecs)
 			args = args.Format(FormatMatroska)
 			return
 		},
@@ -143,10 +269,11 @@ var (
 )
 
 type TranscodeOptions struct {
-	StreamType StreamFormat
-	VideoFile  *models.VideoFile
-	Resolution string
-	StartTime  float64
+	StreamType    StreamFormat
+	VideoFile     *models.VideoFile
+	Resolution    string
+	StartTime     float64
+	AudioOffsetMs int
 }
 
 func (o TranscodeOptions) FileGetCodec(sm *StreamManager, maxTranscodeSize int) (codec VideoCodec) {

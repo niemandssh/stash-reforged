@@ -17,6 +17,9 @@ fragment SceneData on Scene {
   }
   is_broken
   is_not_broken
+  audio_offset_ms
+  audio_playback_speed
+  force_hls
   is_probably_broken
   created_at
   updated_at

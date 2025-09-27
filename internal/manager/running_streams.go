@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/internal/static"
@@ -44,6 +45,58 @@ func (s *SceneServer) StreamSceneDirect(scene *models.Scene, w http.ResponseWrit
 		return
 	}
 
+	pf := scene.Files.Primary()
+	if pf == nil {
+		http.Error(w, http.StatusText(404), 404)
+		return
+	}
+
+	if scene.ForceHLS {
+		logger.Infof("[stream] Streaming scene %d with force_hls: %t", scene.ID, scene.ForceHLS)
+
+		// Always use HLS stream for force_hls scenes, even with range requests
+		// (seeking will be limited but corrections will work)
+		rangeHeader := r.Header.Get("Range")
+		if rangeHeader != "" {
+			logger.Infof("[stream] Range request detected: %s - using HLS stream anyway (seeking limited)", rangeHeader)
+		}
+
+		// Apply audio corrections for scenes with force_hls enabled
+		logger.Infof("[stream] Force HLS enabled for scene %d, applying audio corrections", scene.ID)
+
+		streamManager := GetInstance().StreamManager
+		if streamManager == nil {
+			http.Error(w, "Streaming disabled", http.StatusServiceUnavailable)
+			return
+		}
+
+		if err := r.ParseForm(); err != nil {
+			logger.Warnf("[stream] error parsing query form: %v", err)
+		}
+
+		startTime := r.Form.Get("start")
+		ss, _ := strconv.ParseFloat(startTime, 64)
+
+		logger.Infof("[stream] StartTime requested: %s (parsed: %.2f)", startTime, ss)
+
+		// Set global audio settings for correction
+		ffmpeg.SetGlobalAudioOffsetMs(scene.AudioOffsetMs)
+		ffmpeg.SetGlobalAudioPlaybackSpeed(scene.AudioPlaybackSpeed)
+		logger.Infof("[stream] Audio corrections - offset: %d ms, speed: %.3f", scene.AudioOffsetMs, scene.AudioPlaybackSpeed)
+
+		options := ffmpeg.TranscodeOptions{
+			StreamType: ffmpeg.StreamTypeDirectSync, // Direct stream with sync correction
+			VideoFile:  pf,
+			Resolution: r.Form.Get("resolution"),
+			StartTime:  ss, // Use requested start time for seeking
+		}
+
+		logger.Infof("[stream] streaming force-HLS scene %d from %.2fs", scene.ID, ss)
+		streamManager.ServeTranscode(w, r, options)
+		return
+	}
+
+	// For regular videos, serve directly as before
 	sceneHash := scene.GetHash(config.GetInstance().GetVideoFileNamingAlgorithm())
 
 	filepath := GetInstance().Paths.Scene.GetStreamPath(scene.Path, sceneHash)

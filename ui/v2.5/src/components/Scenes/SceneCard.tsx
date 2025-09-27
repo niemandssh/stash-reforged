@@ -32,6 +32,7 @@ import { GroupTag } from "../Groups/GroupTag";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
+import { HLSBadge } from "../Shared/HLSBadge";
 
 interface IScenePreviewProps {
   isPortrait: boolean;
@@ -350,15 +351,20 @@ const SceneCardOverlays = PatchComponent(
     return (
       <>
         <StudioOverlay studio={props.scene.studio} />
-        {props.scene.is_broken && !props.scene.is_not_broken && (
+        {props.scene.force_hls ? (
+          <div className="hls-badge-overlay">
+            <HLSBadge />
+          </div>
+        ) : props.scene.is_broken && !props.scene.is_not_broken ? (
           <div className="broken-badge-overlay">
             <BrokenBadge />
           </div>
-        )}
-        {!props.scene.is_broken && props.scene.is_probably_broken && !props.scene.is_not_broken && (
-          <div className="probably-broken-badge-overlay">
-            <ProbablyBrokenBadge />
-          </div>
+        ) : (
+          !props.scene.is_broken && props.scene.is_probably_broken && !props.scene.is_not_broken && (
+            <div className="probably-broken-badge-overlay">
+              <ProbablyBrokenBadge />
+            </div>
+          )
         )}
       </>
     );

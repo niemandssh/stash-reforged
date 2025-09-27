@@ -18,11 +18,14 @@ type Scene struct {
 	Date      *Date  `json:"date"`       // Date of release
 	ShootDate *Date  `json:"shoot_date"` // Date of filming/shooting
 	// Rating expressed in 1-100 scale
-	Rating      *int `json:"rating"`
-	Organized   bool `json:"organized"`
-	IsBroken    bool `json:"is_broken"`
-	IsNotBroken bool `json:"is_not_broken"`
-	StudioID    *int `json:"studio_id"`
+	Rating             *int    `json:"rating"`
+	Organized          bool    `json:"organized"`
+	IsBroken           bool    `json:"is_broken"`
+	IsNotBroken        bool    `json:"is_not_broken"`
+	AudioOffsetMs      int     `json:"audio_offset_ms"`
+	AudioPlaybackSpeed float64 `json:"audio_playback_speed"`
+	ForceHLS           bool    `json:"force_hls"`
+	StudioID           *int    `json:"studio_id"`
 
 	// transient - not persisted
 	Files         RelatedVideoFiles
@@ -74,17 +77,20 @@ type ScenePartial struct {
 	Date      OptionalDate
 	ShootDate OptionalDate
 	// Rating expressed in 1-100 scale
-	Rating       OptionalInt
-	Organized    OptionalBool
-	IsBroken     OptionalBool
-	IsNotBroken  OptionalBool
-	StudioID     OptionalInt
-	CreatedAt    OptionalTime
-	UpdatedAt    OptionalTime
-	ResumeTime   OptionalFloat64
-	PlayDuration OptionalFloat64
-	StartTime    OptionalFloat64
-	EndTime      OptionalFloat64
+	Rating             OptionalInt
+	Organized          OptionalBool
+	IsBroken           OptionalBool
+	IsNotBroken        OptionalBool
+	AudioOffsetMs      OptionalInt
+	AudioPlaybackSpeed OptionalFloat64
+	ForceHLS           OptionalBool
+	StudioID           OptionalInt
+	CreatedAt          OptionalTime
+	UpdatedAt          OptionalTime
+	ResumeTime         OptionalFloat64
+	PlayDuration       OptionalFloat64
+	StartTime          OptionalFloat64
+	EndTime            OptionalFloat64
 
 	VideoFilters    *VideoFilters
 	VideoTransforms *VideoTransforms

@@ -173,6 +173,21 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const [aspectRatioValue, setAspectRatioValue] = useState(() =>
     props.scene.video_transforms?.aspect_ratio ?? aspectRatioRange.default
   );
+  const [audioOffsetValue, setAudioOffsetValue] = useState(() =>
+    props.scene.audio_offset_ms ?? 0
+  );
+  const [audioOffsetText, setAudioOffsetText] = useState(() =>
+    String(props.scene.audio_offset_ms ?? 0)
+  );
+  const [audioPlaybackSpeedValue, setAudioPlaybackSpeedValue] = useState(() =>
+    props.scene.audio_playback_speed ?? 1.0
+  );
+  const [audioPlaybackSpeedText, setAudioPlaybackSpeedText] = useState(() =>
+    String(props.scene.audio_playback_speed ?? 1.0)
+  );
+  const [forceHLSValue, setForceHLSValue] = useState(() =>
+    props.scene.force_hls ?? false
+  );
 
   // Apply filters and transforms when values change
   useEffect(() => {
@@ -225,7 +240,22 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       setScaleValue(props.scene.video_transforms.scale ?? scaleRange.default);
       setAspectRatioValue(props.scene.video_transforms.aspect_ratio ?? aspectRatioRange.default);
     }
-  }, [props.scene.id]);
+
+    setAudioOffsetValue(props.scene.audio_offset_ms ?? 0);
+    setAudioOffsetText(String(props.scene.audio_offset_ms ?? 0));
+    setAudioPlaybackSpeedValue(props.scene.audio_playback_speed ?? 1.0);
+    setAudioPlaybackSpeedText(String(props.scene.audio_playback_speed ?? 1.0));
+    setForceHLSValue(props.scene.force_hls ?? false);
+  }, [props.scene.id, props.scene.audio_offset_ms, props.scene.audio_playback_speed, props.scene.force_hls]);
+
+  // Sync text and numeric values
+  useEffect(() => {
+    setAudioOffsetText(String(audioOffsetValue));
+  }, [audioOffsetValue]);
+
+  useEffect(() => {
+    setAudioPlaybackSpeedText(String(audioPlaybackSpeedValue));
+  }, [audioPlaybackSpeedValue]);
 
   // eslint-disable-next-line
   function getVideoElement(playerVideoContainer: any) {
@@ -648,6 +678,9 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
           id: props.scene.id,
           video_filters: videoFilters,
           video_transforms: videoTransforms,
+          audio_offset_ms: audioOffsetValue,
+          audio_playback_speed: audioPlaybackSpeedValue,
+          force_hls: forceHLSValue,
         },
       },
     });
@@ -839,6 +872,94 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
           aspectRatioRange.divider
         }`}
       />
+
+      <div className="row form-group">
+        <span className="col-12">
+          <h5>
+            Audio
+          </h5>
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3">Audio Offset (ms)</span>
+        <span className="col-sm-9">
+          <small className="text-muted">
+            Negative values slow down audio, positive values speed up audio for lip-sync correction
+          </small>
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3"></span>
+        <span className="col-sm-7">
+          <Form.Control
+            className="text-input"
+            type="text"
+            value={audioOffsetText}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setAudioOffsetText(e.target.value);
+            }}
+            onBlur={() => {
+              const parsed = parseInt(audioOffsetText);
+              if (!isNaN(parsed)) {
+                setAudioOffsetValue(parsed);
+                setAudioOffsetText(String(parsed));
+              } else {
+                setAudioOffsetValue(0);
+                setAudioOffsetText('0');
+              }
+            }}
+          />
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3">Audio Playback Speed</span>
+        <span className="col-sm-9">
+          <small className="text-muted">
+            Values less than 1.0 slow down audio, values greater than 1.0 speed up audio relative to video
+          </small>
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3"></span>
+        <span className="col-sm-7">
+          <Form.Control
+            className="text-input"
+            type="text"
+            value={audioPlaybackSpeedText}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setAudioPlaybackSpeedText(e.target.value);
+            }}
+            onBlur={() => {
+              const parsed = parseFloat(audioPlaybackSpeedText);
+              if (!isNaN(parsed) && parsed > 0) {
+                setAudioPlaybackSpeedValue(parsed);
+                setAudioPlaybackSpeedText(String(parsed));
+              } else {
+                setAudioPlaybackSpeedValue(1.0);
+                setAudioPlaybackSpeedText('1.0');
+              }
+            }}
+          />
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3"></span>
+        <span className="col-sm-9">
+          <Form.Check
+            type="checkbox"
+            id="forceHLS"
+            label={intl.formatMessage({ id: "scene_gen.force_hls" })}
+            checked={forceHLSValue}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setForceHLSValue(e.target.checked);
+            }}
+          />
+          <small className="text-muted">
+            <FormattedMessage id="scene_gen.force_hls_tooltip" />
+          </small>
+        </span>
+      </div>
+
       <div className="row form-group">
         <span className="col-12">
           <h5>

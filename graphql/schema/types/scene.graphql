@@ -93,6 +93,9 @@ type Scene {
   captions: [VideoCaption!]
   is_broken: Boolean!
   is_not_broken: Boolean!
+  audio_offset_ms: Int!
+  audio_playback_speed: Float!
+  force_hls: Boolean!
   is_probably_broken: Boolean! # Resolver
   created_at: Time!
   updated_at: Time!
@@ -202,6 +205,9 @@ input SceneUpdateInput {
   organized: Boolean
   is_broken: Boolean
   is_not_broken: Boolean
+  audio_offset_ms: Int
+  audio_playback_speed: Float
+  force_hls: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!]

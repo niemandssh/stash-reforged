@@ -200,10 +200,28 @@ textarea.scene-description {
   z-index: 10;
 }
 
+.hls-badge-overlay {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  z-index: 10;
+}
+
 .probably-broken-badge {
   background-color: #ff6b35;
   border-radius: 4px;
   color: white;
+  font-size: 0.75em;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+.hls-badge {
+  background-color: #ffc107;
+  border-radius: 4px;
+  color: black;
   font-size: 0.75em;
   font-weight: bold;
   letter-spacing: 0.5px;
@@ -965,7 +983,7 @@ input[type="range"].blue-slider {
 
 .scene-list.hide-sidebar .sidebar-toggle-button {
   transition-delay: 0.1s;
-  transition-duration: 0;
+  transition-duration: 0s;
   transition-property: opacity;
 }
 

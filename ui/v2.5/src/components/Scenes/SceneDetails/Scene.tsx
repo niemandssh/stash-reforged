@@ -30,6 +30,7 @@ import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import { BrokenBadge } from "src/components/Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "src/components/Shared/ProbablyBrokenBadge";
+import { HLSBadge } from "src/components/Shared/HLSBadge";
 import { useToast } from "src/hooks/Toast";
 import SceneQueue, { QueuedScene } from "src/models/sceneQueue";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -767,8 +768,13 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               </h1>
             )}
             <div className="scene-header">
-              {scene.is_broken && !scene.is_not_broken && <BrokenBadge />}
-              {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge />}
+              {scene.force_hls ? (
+                <HLSBadge />
+              ) : scene.is_broken && !scene.is_not_broken ? (
+                <BrokenBadge />
+              ) : (
+                !scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge />
+              )}
               <h3 className={cx({ "no-studio": !scene.studio })}>
                 {title}
               </h3>

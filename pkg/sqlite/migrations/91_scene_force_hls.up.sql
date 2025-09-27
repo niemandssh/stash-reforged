@@ -1,0 +1,1 @@
+ALTER TABLE `scenes` ADD COLUMN `force_hls` BOOLEAN DEFAULT 0;

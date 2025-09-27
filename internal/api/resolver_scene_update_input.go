@@ -42,3 +42,18 @@ func (r *sceneUpdateInputResolver) VideoTransforms(ctx context.Context, obj *mod
 
 	return nil
 }
+
+func (r *sceneUpdateInputResolver) AudioOffsetMs(ctx context.Context, obj *models.SceneUpdateInput, data *int) error {
+	obj.AudioOffsetMs = data
+	return nil
+}
+
+func (r *sceneUpdateInputResolver) AudioPlaybackSpeed(ctx context.Context, obj *models.SceneUpdateInput, data *float64) error {
+	obj.AudioPlaybackSpeed = data
+	return nil
+}
+
+func (r *sceneUpdateInputResolver) ForceHLS(ctx context.Context, obj *models.SceneUpdateInput, data *bool) error {
+	obj.ForceHLS = data
+	return nil
+}

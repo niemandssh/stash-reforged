@@ -86,19 +86,22 @@ type sceneRow struct {
 	Date      NullDate    `db:"date"`
 	ShootDate NullDate    `db:"shoot_date"`
 	// expressed as 1-100
-	Rating          null.Int    `db:"rating"`
-	Organized       bool        `db:"organized"`
-	IsBroken        bool        `db:"is_broken"`
-	IsNotBroken     bool        `db:"is_not_broken"`
-	StudioID        null.Int    `db:"studio_id,omitempty"`
-	CreatedAt       Timestamp   `db:"created_at"`
-	UpdatedAt       Timestamp   `db:"updated_at"`
-	ResumeTime      float64     `db:"resume_time"`
-	PlayDuration    float64     `db:"play_duration"`
-	StartTime       null.Float  `db:"start_time"`
-	EndTime         null.Float  `db:"end_time"`
-	VideoFilters    zero.String `db:"video_filters"`
-	VideoTransforms zero.String `db:"video_transforms"`
+	Rating             null.Int    `db:"rating"`
+	Organized          bool        `db:"organized"`
+	IsBroken           bool        `db:"is_broken"`
+	IsNotBroken        bool        `db:"is_not_broken"`
+	AudioOffsetMs      int         `db:"audio_offset_ms"`
+	AudioPlaybackSpeed float64     `db:"audio_playback_speed"`
+	ForceHLS           bool        `db:"force_hls"`
+	StudioID           null.Int    `db:"studio_id,omitempty"`
+	CreatedAt          Timestamp   `db:"created_at"`
+	UpdatedAt          Timestamp   `db:"updated_at"`
+	ResumeTime         float64     `db:"resume_time"`
+	PlayDuration       float64     `db:"play_duration"`
+	StartTime          null.Float  `db:"start_time"`
+	EndTime            null.Float  `db:"end_time"`
+	VideoFilters       zero.String `db:"video_filters"`
+	VideoTransforms    zero.String `db:"video_transforms"`
 
 	// not used in resolutions or updates
 	CoverBlob zero.String `db:"cover_blob"`
@@ -116,6 +119,9 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.Organized = o.Organized
 	r.IsBroken = o.IsBroken
 	r.IsNotBroken = o.IsNotBroken
+	r.AudioOffsetMs = o.AudioOffsetMs
+	r.AudioPlaybackSpeed = o.AudioPlaybackSpeed
+	r.ForceHLS = o.ForceHLS
 	r.StudioID = intFromPtr(o.StudioID)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
@@ -148,18 +154,21 @@ type sceneQueryRow struct {
 
 func (r *sceneQueryRow) resolve() *models.Scene {
 	ret := &models.Scene{
-		ID:          r.ID,
-		Title:       r.Title.String,
-		Code:        r.Code.String,
-		Details:     r.Details.String,
-		Director:    r.Director.String,
-		Date:        r.Date.DatePtr(),
-		ShootDate:   r.ShootDate.DatePtr(),
-		Rating:      nullIntPtr(r.Rating),
-		Organized:   r.Organized,
-		IsBroken:    r.IsBroken,
-		IsNotBroken: r.IsNotBroken,
-		StudioID:    nullIntPtr(r.StudioID),
+		ID:                 r.ID,
+		Title:              r.Title.String,
+		Code:               r.Code.String,
+		Details:            r.Details.String,
+		Director:           r.Director.String,
+		Date:               r.Date.DatePtr(),
+		ShootDate:          r.ShootDate.DatePtr(),
+		Rating:             nullIntPtr(r.Rating),
+		Organized:          r.Organized,
+		IsBroken:           r.IsBroken,
+		IsNotBroken:        r.IsNotBroken,
+		AudioOffsetMs:      r.AudioOffsetMs,
+		AudioPlaybackSpeed: r.AudioPlaybackSpeed,
+		ForceHLS:           r.ForceHLS,
+		StudioID:           nullIntPtr(r.StudioID),
 
 		PrimaryFileID: nullIntFileIDPtr(r.PrimaryFileID),
 		OSHash:        r.PrimaryFileOshash.String,
@@ -209,6 +218,9 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setBool("organized", o.Organized)
 	r.setBool("is_broken", o.IsBroken)
 	r.setBool("is_not_broken", o.IsNotBroken)
+	r.setInt("audio_offset_ms", o.AudioOffsetMs)
+	r.setFloat64("audio_playback_speed", o.AudioPlaybackSpeed)
+	r.setBool("force_hls", o.ForceHLS)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)
