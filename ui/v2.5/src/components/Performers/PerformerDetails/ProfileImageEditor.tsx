@@ -205,8 +205,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
       <Form.Group className="mb-3">
         <Form.Label>
           {intl.formatMessage({ 
-            id: "actions.set_photo",
-            defaultMessage: "Set photo..." 
+            id: "actions.set_photo"
           })}
         </Form.Label>
         <ImageInput

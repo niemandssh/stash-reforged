@@ -675,11 +675,6 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
           </Button>
         ) : null}
         {renderScraperMenu()}
-        <ImageInput
-          isEditing
-          onImageChange={onImageChange}
-          onImageURL={onImageLoad}
-        />
         <div>
           <Button
             className="mr-2"

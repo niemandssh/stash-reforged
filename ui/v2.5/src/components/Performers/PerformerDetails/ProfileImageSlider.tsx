@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Button } from "react-bootstrap";
 import { useIntl } from "react-intl";
 import { Icon } from "src/components/Shared/Icon";
-import { faTrash, faStar, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
+import { faStar, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { ProfileImageCropper } from "./ProfileImageCropper";
-import { usePerformerProfileImageUpdate, usePerformerProfileImageDestroy } from "src/core/StashService";
+import ImageUtils from "src/utils/image";
+import { usePerformerProfileImageUpdate, usePerformerProfileImageDestroy, usePerformerProfileImageCreate } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import { useLightbox } from "src/hooks/Lightbox/hooks";
 import "./ProfileImageSlider.scss";
@@ -17,8 +18,15 @@ interface IProfileImageSliderProps {
   onImageChange?: (index: number) => void;
   onDeleteImage?: (imageId: string, index: number) => void;
   onSetPrimary?: (imageId: string, index: number) => void;
-  onImageUpdate?: () => void;
+  onImageUpdate?: () => Promise<void>;
+  onAddImage?: () => void;
   performerId: number;
+  isNew?: boolean;
+  activeImage?: string | null;
+  encodingImage?: boolean;
+  setImage?: (image?: string | null) => void;
+  setEncodingImage?: (loading: boolean) => void;
+  onPerformerUpdate?: (updatedPerformer: Partial<any>) => void;
 }
 
 export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
@@ -29,12 +37,16 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   onDeleteImage,
   onSetPrimary,
   onImageUpdate,
+  onAddImage,
   performerId,
+  isNew = false,
+  activeImage,
+  encodingImage = false,
+  setImage,
+  setEncodingImage,
+  onPerformerUpdate,
 }) => {
-  // Early return before any hooks
-  if (!profileImages || profileImages.length === 0) {
-    return null;
-  }
+  // Allow rendering when no images for add image button
 
   const intl = useIntl();
   const Toast = useToast();
@@ -47,9 +59,10 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   const [updateProfileImage] = usePerformerProfileImageUpdate();
   const [destroyProfileImage] = usePerformerProfileImageDestroy();
+  const [createProfileImage] = usePerformerProfileImageCreate();
 
   const prevCurrentImageIndex = useRef(currentImageIndex);
-  
+
   useEffect(() => {
     if (currentImageIndex !== prevCurrentImageIndex.current) {
       setActiveIndex(currentImageIndex);
@@ -57,8 +70,10 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     }
   }, [currentImageIndex]);
 
+
   // Sort images: primary first, then by position
   const sortedImages = useMemo(() => {
+    if (!profileImages || profileImages.length === 0) return [];
     return [...profileImages].sort((a, b) => {
       if (a.is_primary && !b.is_primary) return -1;
       if (!a.is_primary && b.is_primary) return 1;
@@ -105,9 +120,10 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     e.preventDefault();
     showLightbox({ initialIndex: activeIndex });
   }, [isDragging, touchStart, hasSwiped, isCropping, showLightbox, activeIndex]);
-  
-  const currentImage = sortedImages[activeIndex];
+
+  const currentImage = sortedImages.length > 0 ? sortedImages[activeIndex] : null;
   const hasMultipleImages = sortedImages.length > 1;
+  const hasNoImages = sortedImages.length === 0;
 
   const goToPrevious = useCallback(() => {
     const newIndex = activeIndex > 0 ? activeIndex - 1 : sortedImages.length - 1;
@@ -125,7 +141,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (hasMultipleImages) {
       e.preventDefault();
       setIsDragging(true);
@@ -137,7 +153,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (isDragging && hasMultipleImages) {
       e.preventDefault();
       setTouchEnd(e.targetTouches[0].clientX);
@@ -147,11 +163,11 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (isDragging && hasMultipleImages) {
       e.preventDefault();
       setIsDragging(false);
-      
+
       if (touchStart && touchEnd) {
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > 50;
@@ -169,7 +185,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         }
       }
     }
-    
+
     setTouchStart(null);
     setTouchEnd(null);
   }, [isCropping, isDragging, hasMultipleImages, touchStart, touchEnd, goToNext, goToPrevious]);
@@ -178,7 +194,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (hasMultipleImages) {
       e.preventDefault();
       setIsDragging(true);
@@ -190,7 +206,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (isDragging && hasMultipleImages) {
       e.preventDefault();
       setTouchEnd(e.clientX);
@@ -200,11 +216,11 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     // Don't handle swipe if cropping is active
     if (isCropping) return;
-    
+
     if (isDragging && hasMultipleImages) {
       e.preventDefault();
       setIsDragging(false);
-      
+
       if (touchStart && touchEnd) {
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > 50;
@@ -222,10 +238,10 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         }
       }
     }
-    
+
     setTouchStart(null);
     setTouchEnd(null);
-    
+
     // Small delay to prevent click after drag
     setTimeout(() => {
       setIsDragging(false);
@@ -234,14 +250,14 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   const handleDeleteImage = async () => {
     if (!currentImage) return;
-    
+
     const confirmDelete = window.confirm(
-      intl.formatMessage({ 
-        id: "dialogs.delete_confirm", 
-        defaultMessage: "Are you sure you want to delete this image?" 
+      intl.formatMessage({
+        id: "dialogs.delete_confirm",
+        defaultMessage: "Are you sure you want to delete this image?"
       })
     );
-    
+
     if (!confirmDelete) return;
 
     try {
@@ -252,7 +268,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       });
 
       Toast.success(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.deleted_entity",
           defaultMessage: "Deleted {entityType}",
         }, { entityType: intl.formatMessage({ id: "image" }) })
@@ -265,9 +281,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     } catch (error) {
       console.error("Error deleting profile image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.delete_failed",
-          defaultMessage: "Delete failed" 
+          defaultMessage: "Delete failed"
         })
       );
     }
@@ -296,7 +312,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       await Promise.all(
         profileImages
           .filter(img => img.id !== currentImage.id && img.is_primary)
-          .map(img => 
+          .map(img =>
             updateProfileImage({
               variables: {
                 input: {
@@ -309,26 +325,25 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       );
 
       Toast.success(
-        intl.formatMessage({ 
-          id: "toast.set_primary_success",
-          defaultMessage: "Set as primary image" 
+        intl.formatMessage({
+          id: "toast.set_primary_success"
         })
       );
-      
+
       // Update the current image in the sorted array
-      const updatedImages = profileImages.map(img => 
-        img.id === currentImage.id 
+      const updatedImages = profileImages.map(img =>
+        img.id === currentImage.id
           ? { ...img, is_primary: true }
           : { ...img, is_primary: false }
       );
-      
+
       // Re-sort images with primary first
       const newSortedImages = [...updatedImages].sort((a, b) => {
         if (a.is_primary && !b.is_primary) return -1;
         if (!a.is_primary && b.is_primary) return 1;
         return (a.position || 0) - (b.position || 0);
       });
-      
+
       // Find new index of the primary image
       const newIndex = newSortedImages.findIndex(img => img.id === currentImage.id);
       if (newIndex !== -1) {
@@ -338,9 +353,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     } catch (error) {
       console.error("Error setting primary image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.set_primary_failed",
-          defaultMessage: "Failed to set as primary" 
+          defaultMessage: "Failed to set as primary"
         })
       );
     }
@@ -348,6 +363,101 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     // Also call prop handler if provided
     if (onSetPrimary) {
       onSetPrimary(currentImage.id, activeIndex);
+    }
+  };
+
+  const handleImageUpload = async (imageData: string | null) => {
+    if (!imageData) {
+      setImage?.(null);
+      return;
+    }
+
+    // If this is a new performer, just set the image field for now
+    if (isNew) {
+      setImage?.(imageData);
+      return;
+    }
+
+    try {
+      setEncodingImage?.(true);
+
+      // Create a new profile image
+      const result = await createProfileImage({
+        variables: {
+          input: {
+            performer_id: performerId.toString(),
+            image: imageData,
+            is_primary: profileImages.length === 0, // First image becomes primary
+            position: profileImages.length,
+          },
+        },
+      });
+
+      if (result.data?.performerProfileImageCreate) {
+        const newImageIndex = profileImages.length + 1;
+        Toast.success(
+          intl.formatMessage(
+            { id: "toast.created_entity" },
+            {
+              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+            }
+          )
+        );
+
+        // Update performer with new profile image
+        const newProfileImage = result.data.performerProfileImageCreate;
+        const updatedProfileImages = [...profileImages, newProfileImage];
+        const updatedPerformer = {
+          profile_images: updatedProfileImages,
+          primary_image_path: newProfileImage.is_primary ? newProfileImage.image_path : undefined,
+        };
+        onPerformerUpdate?.(updatedPerformer);
+
+        // Also set the legacy image field for backward compatibility
+        setImage?.(imageData);
+
+        // Trigger image update to refresh the UI and wait for completion
+        await onImageUpdate?.();
+
+        // Switch to the newly uploaded image after data update
+        const uploadedImageIndex = profileImages.length; // New image will be at this index
+        onImageChange?.(uploadedImageIndex);
+
+        onAddImage?.();
+      }
+    } catch (error) {
+      console.error("Error creating profile image:", error);
+      Toast.error(
+        intl.formatMessage({
+          id: "toast.upload_failed",
+          defaultMessage: "Failed to add image"
+        })
+      );
+
+      // Fallback to legacy behavior
+      setImage?.(imageData);
+    } finally {
+      setEncodingImage?.(false);
+    }
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    ImageUtils.onImageChange(event, handleImageUpload);
+  };
+
+  const handleImageURL = (url: string) => {
+    if (url) {
+      ImageUtils.imageToDataURL(url)
+        .then(handleImageUpload)
+        .catch((error) => {
+          console.error("Error loading image from URL:", error);
+          Toast.error(
+            intl.formatMessage({
+              id: "toast.url_image_load_failed",
+              defaultMessage: "Failed to load image from URL"
+            })
+          );
+        });
     }
   };
 
@@ -372,9 +482,8 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   return (
     <div className={`profile-image-slider ${isEditing ? 'editing' : ''}`}>
-      <div className="performer-image-container">      
-        {/* Основная картинка */}
-        <div 
+      <div className="performer-image-container">
+        <div
           className={`image-container ${isDragging ? 'dragging' : ''}`}
           onTouchStart={isCropping ? undefined : handleTouchStart}
           onTouchMove={isCropping ? undefined : handleTouchMove}
@@ -382,26 +491,55 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
           onMouseDown={isCropping ? undefined : handleMouseDown}
           onMouseMove={isCropping ? undefined : handleMouseMove}
           onMouseUp={isCropping ? undefined : handleMouseUp}
-          onClick={isCropping ? undefined : handleImageClick}
           onDragStart={(e) => e.preventDefault()}
-          style={{ 
-            userSelect: 'none', 
-            WebkitUserSelect: 'none', 
+          style={{
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
             cursor: isCropping ? 'default' : 'pointer',
             pointerEvents: isCropping ? 'none' : 'auto'
           }}
         >
-        <div className="image-wrapper">
-          {currentImage?.image_path && (
-            <ProfileImageCropper
-              imageSrc={currentImage.image_path}
-              profileImageId={parseInt(currentImage.id, 10)}
-              performerId={performerId.toString()}
-              onCroppingChange={setIsCropping}
-              onImageUpdate={onImageUpdate}
-            />
-          )}
-        </div>
+          <div className="image-wrapper">
+            {hasNoImages ? (
+              // No images state - show default image
+              activeImage && (
+              <ProfileImageCropper
+                imageSrc={activeImage}
+                profileImageId={0}
+                performerId={performerId.toString()}
+                isNew={isNew}
+                onCroppingChange={() => {}}
+                onImageUpdate={onImageUpdate}
+                onAddImage={onAddImage}
+                onImageClick={() => {}}
+                onImageChange={onImageChange}
+                profileImages={profileImages}
+                setImage={setImage}
+                setEncodingImage={setEncodingImage}
+                onPerformerUpdate={onPerformerUpdate}
+              />
+              )
+            ) : (
+              <>
+                {currentImage?.image_path && (
+                <ProfileImageCropper
+                  imageSrc={currentImage.image_path}
+                  profileImageId={parseInt(currentImage.id, 10)}
+                  performerId={performerId.toString()}
+                  isNew={isNew}
+                  onCroppingChange={setIsCropping}
+                  onImageUpdate={onImageUpdate}
+                  onAddImage={onAddImage}
+                  onImageClick={handleImageClick}
+                  onImageChange={onImageChange}
+                  profileImages={profileImages}
+                  setImage={setImage}
+                  setEncodingImage={setEncodingImage}
+                  onPerformerUpdate={onPerformerUpdate}
+                  onSetPrimary={onSetPrimary}
+                  onDeleteImage={onDeleteImage}
+                />
+                )}
 
                 {/* Primary indicator */}
                 {currentImage?.is_primary && (
@@ -409,87 +547,61 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
                     <Icon icon={faStar} className="text-warning" />
                   </div>
                 )}
+              </>
+            )}
 
-                {/* Navigation arrows */}
-                {hasMultipleImages && !isCropping && (
-                  <>
-                    <button
-                      className="nav-arrow nav-arrow-left"
-                      onClick={handlePreviousClick}
-                      title={intl.formatMessage({ 
-                        id: "actions.previous_action", 
-                        defaultMessage: "Previous" 
-                      })}
-                    >
-                      <Icon icon={faChevronLeft} />
-                    </button>
-                    <button
-                      className="nav-arrow nav-arrow-right"
-                      onClick={handleNextClick}
-                      title={intl.formatMessage({ 
-                        id: "actions.next_action", 
-                        defaultMessage: "Next" 
-                      })}
-                    >
-                      <Icon icon={faChevronRight} />
-                    </button>
-                  </>
-                )}
-
+            {/* Loading overlay for image encoding */}
+            {encodingImage && (
+              <div className="image-loading-overlay">
+                <LoadingIndicator
+                  message={intl.formatMessage({ id: "actions.encoding_image" })}
+                />
               </div>
+            )}
 
-      {/* Dots indicator (for multiple images) - outside image container */}
-      {hasMultipleImages && !isCropping && (
-        <div className="dots-indicator">
-          {sortedImages.map((image, index) => (
-            <button
-              key={image.id}
-              className={`dot ${index === activeIndex ? 'active' : ''} ${image.is_primary ? 'primary' : ''}`}
-              onClick={handleDotClick(index)}
-              title={`Image ${index + 1}${image.is_primary ? ' (Primary)' : ''}`}
-            />
-          ))}
+            {/* Navigation arrows */}
+            {hasMultipleImages && !isCropping && (
+              <>
+                <button
+                  className="nav-arrow nav-arrow-left"
+                  onClick={handlePreviousClick}
+                  title={intl.formatMessage({
+                    id: "actions.previous_action",
+                    defaultMessage: "Previous"
+                  })}
+                >
+                  <Icon icon={faChevronLeft} />
+                </button>
+                <button
+                  className="nav-arrow nav-arrow-right"
+                  onClick={handleNextClick}
+                  title={intl.formatMessage({
+                    id: "actions.next_action",
+                    defaultMessage: "Next"
+                  })}
+                >
+                  <Icon icon={faChevronRight} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* Action buttons (only in edit mode) */}
-      {isEditing && (
-        <div className="image-action-buttons">
-          {!currentImage?.is_primary && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleSetPrimary}
-              title={intl.formatMessage({
-                id: "actions.set_as_primary",
-                defaultMessage: "Set as primary"
-              })}
-            >
-              <Icon icon={faStar} className="mr-2" />
-              {intl.formatMessage({
-                id: "actions.set_primary",
-                defaultMessage: "Set Primary"
-              })} {activeIndex + 1}
-            </Button>
-          )}
+        {/* Dots indicator (for multiple images) - outside image container */}
+        {hasMultipleImages && !isCropping && (
+          <div className="dots-indicator">
+            {sortedImages.map((image, index) => (
+              <button
+                key={image.id}
+                className={`dot ${index === activeIndex ? 'active' : ''} ${image.is_primary ? 'primary' : ''}`}
+                onClick={handleDotClick(index)}
+                title={`Image ${index + 1}${image.is_primary ? ' (Primary)' : ''}`}
+              />
+            ))}
+          </div>
+        )}
 
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={handleDeleteImage}
-            title={intl.formatMessage({
-              id: "actions.delete_entity",
-              defaultMessage: "Delete {entityType}",
-            }, { entityType: intl.formatMessage({ id: "image" }) })}
-          >
-            <Icon icon={faTrash} className="mr-2" />
-            {intl.formatMessage({
-              id: "actions.delete_entity",
-              defaultMessage: "Delete {entityType}",
-            }, { entityType: intl.formatMessage({ id: "image" }) })} {activeIndex + 1}
-          </Button>
-        </div>
-      )}
+        {/* Action buttons */}
       </div>
     </div>
   );

@@ -133,6 +133,8 @@
         "set_cover": "Set as Cover",
         "set_front_image": "Front image…",
         "set_image": "Add image…",
+        "set_photo": "Add photo…",
+        "no_profile_images_message": "No profile images yet. Use \"Add photo...\" to add images.",
         "show": "Show",
         "show_configuration": "Show Configuration",
         "show_results": "Show results",
@@ -241,11 +243,13 @@
         "rescanning_entity": "Rescanning {count, plural, one {{singularEntity}} other {{pluralEntity}}}…",
         "rescanning_similarity": "Recalculating similarity for {entity}…",
         "saved_entity": "Saved {entity}",
+        "set_primary_success": "Set as primary image",
         "filters_for_scene_saved": "Filters for scene was saved",
         "started_auto_tagging": "Started auto tagging",
         "started_generating": "Started generating",
         "started_importing": "Started importing",
         "updated_entity": "Updated {entity}",
+        "url_image_load_failed": "Failed to load image from URL",
         "scene_with_similars_updated": "Scene with similars was updated",
         "similarity_recalculation_started": "Started similarity recalculation for scene {sceneId}",
         "similarity_recalculation_completed": "Similarity recalculation completed for scene {sceneId}",
@@ -256,5 +260,9 @@
     "no_scenes_to_review": "No scenes without rating, without tags, or unorganized scenes to review",
     "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
     "no_best_scenes_available": "No scenes with rating >= {ratingThreshold}",
-    "review_unrated_video_title": "Review unrated video, video without tags, or unorganized video"
+    "review_unrated_video_title": "Review unrated video, video without tags, or unorganized video",
+    "scene_gen": {
+        "force_hls": "Force HLS streaming",
+        "force_hls_tooltip": "Force HTTP Live Streaming even with range requests. Useful for scenes with audio corrections where seeking may be limited."
+    }
 }
