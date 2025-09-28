@@ -320,7 +320,7 @@ func NewSceneStore(r *storeRepository, blobStore *BlobStore) *SceneStore {
 		},
 
 		tableMgr:        sceneTableMgr,
-		viewDateManager: viewDateManager{scenesViewTableMgr},
+		viewDateManager: viewDateManager{tableMgr: scenesViewTableMgr},
 		oDateManager:    oDateManager{scenesOTableMgr},
 		repo:            r,
 	}
@@ -1510,4 +1510,12 @@ func getFirstPath(scenes []*models.Scene) string {
 		}
 	}
 	return firstPath
+}
+
+func (qb *SceneStore) GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.AggregatedView, error) {
+	return qb.viewDateManager.GetAggregatedViewHistory(ctx, page, perPage)
+}
+
+func (qb *SceneStore) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	return qb.viewDateManager.GetAggregatedViewHistoryCount(ctx)
 }

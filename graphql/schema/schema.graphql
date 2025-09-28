@@ -281,6 +281,13 @@ type Query {
 
   # LatestVersion
   latestversion: LatestVersion!
+
+  # View History
+  "Get view history for scenes"
+  findViewHistory(
+    history_filter: ViewHistoryFilter
+    filter: FindFilterType
+  ): ViewHistoryResult!
 }
 
 type Mutation {

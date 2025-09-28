@@ -101,9 +101,6 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
       {sprite && (
         <div className="scene-card-preview-image" ref={imageParentRef}>
           <div className="scrubber-image" style={style}></div>
-          {currentTime !== undefined && (
-            <div className="scrubber-timestamp">{currentTime}</div>
-          )}
         </div>
       )}
       <HoverScrubber

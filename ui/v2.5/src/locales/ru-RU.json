@@ -1391,6 +1391,8 @@
         "similarity_recalculation_failed": "Ошибка пересчёта похожих сцен для сцены {sceneId}"
     },
     "total": "Всего",
+    "total_views": "{count, plural, one {# просмотр} few {# просмотра} many {# просмотров} other {# просмотров}}",
+    "consecutive_views": "{count, plural, one {# просмотр подряд} few {# просмотра подряд} many {# просмотров подряд} other {# просмотров подряд}}",
     "true": "Да",
     "twitter": "Twitter",
     "type": "Тип",

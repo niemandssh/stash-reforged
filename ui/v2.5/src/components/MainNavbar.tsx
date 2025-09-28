@@ -29,6 +29,7 @@ import {
   faBars,
   faChartColumn,
   faFilm,
+  faHistory,
   faImage,
   faImages,
   faMapMarkerAlt,
@@ -101,6 +102,10 @@ const messages = defineMessages({
     id: "statistics",
     defaultMessage: "Statistics",
   },
+  viewHistory: {
+    id: "view_history",
+    defaultMessage: "History",
+  },
 });
 
 const allMenuItems: IMenuItem[] = [
@@ -164,6 +169,13 @@ const allMenuItems: IMenuItem[] = [
     icon: faTag,
     hotkey: "g t",
     userCreatable: true,
+  },
+  {
+    name: "history",
+    message: messages.viewHistory,
+    href: "/history",
+    icon: faHistory,
+    hotkey: "g h",
   },
 ];
 

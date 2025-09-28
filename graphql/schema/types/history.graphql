@@ -1,0 +1,24 @@
+type ViewHistoryEntry {
+  scene: Scene!
+  viewDate: Time!
+  """Время o-count если он был в близком промежутке времени (в пределах 5 минут после просмотра)"""
+  oDate: Time
+  """Количество просмотров в группе (для сгруппированных подряд идущих просмотров)"""
+  viewCount: Int
+}
+
+type ViewHistoryResult {
+  count: Int!
+  items: [ViewHistoryEntry!]!
+}
+
+input ViewHistoryFilter {
+  """Фильтр по дате просмотра"""
+  viewDate: TimestampCriterionInput
+  """Фильтр по исполнителям"""
+  performers: MultiCriterionInput
+  """Фильтр по тегам"""
+  tags: HierarchicalMultiCriterionInput
+  """Фильтр по студиям"""
+  studios: HierarchicalMultiCriterionInput
+}

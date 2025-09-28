@@ -1,0 +1,202 @@
+.view-history-card {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 1rem;
+  border-radius: 8px !important;
+  padding: 1rem !important;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.view-history-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 138px; /* Match thumbnail height */
+}
+
+.view-history-thumbnail-container {
+  position: relative;
+  flex-shrink: 0;
+  width: 246px;
+  height: 138px;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--body-bg);
+
+  .view-history-duration {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    z-index: 10;
+  }
+}
+
+// Progress bar positioning for view history cards
+.view-history-thumbnail-container .scene-card-preview .progress-bar {
+  bottom: 5px;
+  position: absolute;
+  width: 100%;
+  z-index: 1;
+}
+
+
+.view-history-title-link {
+  text-decoration: none;
+  color: inherit;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.view-history-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin: 0;
+  max-width: 80%;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text-color);
+
+  .view-history-view-count-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.375rem;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: lowercase;
+  }
+
+  .view-history-status-chip {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+
+
+.view-history-view-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .view-history-separator {
+    font-size: 0.7rem;
+  }
+}
+
+.view-history-bottom-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.view-history-performers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+
+  .view-history-performer-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--secondary);
+    border-radius: 0.25rem;
+    text-decoration: none;
+    color: white;
+    font-size: 0.875rem;
+    transition: background-color 0.2s ease;
+    margin-bottom: 0.25rem;
+
+    &:hover {
+      background-color: #6c757d; // darken($secondary, 10%) equivalent
+      text-decoration: none;
+      color: white;
+    }
+  }
+
+  .view-history-gender-icon {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin-right: 0.25rem;
+  }
+
+  .view-history-more-performers {
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+  }
+}
+
+.view-history-o-count-indicator {
+  position: absolute;
+  bottom: 1rem;
+  right: 2rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+// Override object-fit for view history cards to show video fully
+.view-history-card .scene-card-preview-image,
+.view-history-card .scene-card-preview-video {
+  object-fit: contain !important;
+  object-position: center;
+}
+
+.view-history-card .scene-card-preview {
+  background-color: #26313b;
+}
+
+// Smaller studio images in view history
+.view-history-card .studio-overlay {
+  right: 2rem;
+  top: 2rem;
+
+  .image-thumbnail {
+    height: 50px !important;
+    width: 120px !important;
+    object-position: top right;
+  }
+}
+
+// Hover behavior for scene card preview
+.view-history-thumbnail-container:hover .scene-card-preview-video {
+  top: 0;
+  transition-delay: 0.2s;
+}
+
+// Mobile responsive
+@media (max-width: 768px) {
+  .view-history-card {
+    flex-direction: column;
+  }
+
+  .view-history-thumbnail-container {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+  }
+
+  .view-history-o-count-indicator {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+}

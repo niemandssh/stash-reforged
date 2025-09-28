@@ -76,6 +76,23 @@ type ViewDateReader interface {
 	GetViewDates(ctx context.Context, relatedID int) ([]time.Time, error)
 	GetManyViewDates(ctx context.Context, ids []int) ([][]time.Time, error)
 	GetManyLastViewed(ctx context.Context, ids []int) ([]*time.Time, error)
+	GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]AggregatedView, error)
+	GetAggregatedViewHistoryCount(ctx context.Context) (int, error)
+}
+
+// ViewEvent represents a single view event with scene information
+type ViewEvent struct {
+	SceneID  int        `json:"scene_id"`
+	ViewDate time.Time  `json:"view_date"`
+	ODate    *time.Time `json:"o_date"`
+}
+
+// AggregatedView represents aggregated view data for history
+type AggregatedView struct {
+	SceneID   int        `json:"scene_id"`
+	ViewDate  time.Time  `json:"view_date"`
+	ODate     *time.Time `json:"o_date"`
+	ViewCount int        `json:"view_count"`
 }
 
 type ODateReader interface {

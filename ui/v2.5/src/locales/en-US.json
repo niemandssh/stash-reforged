@@ -161,7 +161,6 @@
         "temp_enable": "Enable temporarily…",
         "unset": "Unset",
         "use_default": "Use default",
-        "view_history": "View history",
         "view_random": "View Random"
     },
     "actions_name": "Actions",
@@ -264,5 +263,8 @@
     "scene_gen": {
         "force_hls": "Force HLS streaming",
         "force_hls_tooltip": "Force HTTP Live Streaming even with range requests. Useful for scenes with audio corrections where seeking may be limited."
-    }
+    },
+    "view_history": "History",
+    "total_views": "{count, plural, one {# view} other {# views}}",
+    "consecutive_views": "{count, plural, one {# view in a row} other {# views in a row}}"
 }
