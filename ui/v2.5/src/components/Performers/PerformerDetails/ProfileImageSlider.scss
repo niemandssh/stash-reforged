@@ -110,7 +110,6 @@
       -khtml-user-drag: none;
       -moz-user-drag: none;
       -o-user-drag: none;
-      user-drag: none;
 
       &.performer {
         width: 100% !important;
@@ -178,7 +177,7 @@
       }
 
       &:active {
-        // Убрано смещение при клике
+        transform: none;
       }
 
       &.nav-arrow-left {
@@ -300,6 +299,21 @@
     background: #1b252c;
     border-radius: 8px;
     border: 2px dashed rgba(0, 0, 0, 0.2);
+
+    .add-image-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+  }
+
+  .add-photo-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
   }
 }
 
@@ -411,6 +425,14 @@
   .crop-btn-container {
     position: relative;
     bottom: 0;
+
+    &.add-only {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      bottom: auto;
+    }
   }
 
   img.performer {

@@ -123,7 +123,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   const currentImage = sortedImages.length > 0 ? sortedImages[activeIndex] : null;
   const hasMultipleImages = sortedImages.length > 1;
-  const hasNoImages = sortedImages.length === 0;
+  const hasNoImages = sortedImages.length === 0 && !activeImage;
 
   const goToPrevious = useCallback(() => {
     const newIndex = activeIndex > 0 ? activeIndex - 1 : sortedImages.length - 1;
@@ -500,11 +500,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
           }}
         >
           <div className="image-wrapper">
-            {hasNoImages ? (
-              // No images state - show default image
-              activeImage && (
+            {sortedImages.length === 0 ? (
               <ProfileImageCropper
-                imageSrc={activeImage}
+                imageSrc={activeImage || ""}
                 profileImageId={0}
                 performerId={performerId.toString()}
                 isNew={isNew}
@@ -518,7 +516,6 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
                 setEncodingImage={setEncodingImage}
                 onPerformerUpdate={onPerformerUpdate}
               />
-              )
             ) : (
               <>
                 {currentImage?.image_path && (

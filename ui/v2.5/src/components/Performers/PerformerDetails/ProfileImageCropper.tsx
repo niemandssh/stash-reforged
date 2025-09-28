@@ -240,13 +240,12 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     }
   };
 
-  if (!imageSrc) {
-    return null;
-  }
-
-  const hasNoImages = !profileImages || profileImages.length === 0;
+  const hasNoImages = (!profileImages || profileImages.length === 0) && !imageSrc;
   const currentImageIndex = profileImages?.findIndex(img => img.id === profileImageId.toString()) ?? -1;
   const currentImage = profileImages?.find(img => img.id === profileImageId.toString());
+
+  const showAddImageOnly = !imageSrc;
+  const hasImageToEdit = !!imageSrc;
 
   return (
     <div className="image-cropper-container" style={{ pointerEvents: 'auto' }}>
@@ -267,77 +266,92 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
           }}
         />
 
-        <img
-          ref={imageRef}
-          src={imageSrc}
-          className="performer"
-          alt="Performer Profile Image"
-          onClick={handleImageClick}
-          style={{ transition: "none" }}
-        />
+        {imageSrc && (
+          <img
+            ref={imageRef}
+            src={imageSrc}
+            className="performer"
+            alt="Performer Profile Image"
+            onClick={handleImageClick}
+            style={{ transition: "none" }}
+          />
+        )}
       </div>
 
-      {!hasNoImages && (
-        <div className={`crop-btn-container ${cropping ? 'is-cropping' : ''}`}>
-        <Button
-          className="crop-start"
-          variant="secondary"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCropStart();
-          }}
-          style={{ display: cropping ? "none" : "inline-block" }}
-        >
-          Crop Image
-        </Button>
+      {(showAddImageOnly || hasImageToEdit) && (
+        <div className={`crop-btn-container ${cropping ? 'is-cropping' : ''} ${showAddImageOnly ? 'add-only' : ''}`}>
+        {!showAddImageOnly && (
+          <Button
+            className="crop-start"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCropStart();
+            }}
+            style={{ display: cropping ? "none" : "inline-block" }}
+          >
+            Crop Image
+          </Button>
+        )}
 
-        <div
-          className="add-image-btn"
-          style={{ display: cropping ? "none" : "flex", marginLeft: "8px", gap: "8px" }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ImageInput
-            isEditing={true}
-            onImageChange={handleImageChange}
-            onImageURL={handleImageURL}
-            text={intl.formatMessage({ id: "actions.set_photo" })}
-          />
+          <div
+            className="add-image-btn"
+            style={{ display: cropping ? "none" : "flex", marginLeft: "8px", gap: "8px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {showAddImageOnly ? (
+              <ImageInput
+                isEditing={true}
+                onImageChange={handleImageChange}
+                onImageURL={handleImageURL}
+                text={intl.formatMessage({ id: "actions.set_photo" })}
+              />
+            ) : (
+              <>
+                <ImageInput
+                  isEditing={true}
+                  onImageChange={handleImageChange}
+                  onImageURL={handleImageURL}
+                  text={intl.formatMessage({ id: "actions.set_photo" })}
+                />
 
-          {currentImage && (
-            <Button
-              variant="secondary"
-              disabled={currentImage.is_primary}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSetPrimary?.(currentImage.id, currentImageIndex);
-              }}
-              style={{ display: cropping ? "none" : "inline-block" }}
-              title={intl.formatMessage({
-                id: "actions.set_as_primary",
-                defaultMessage: "Set as primary"
-              })}
-            >
-              <Icon icon={faStar} />
-            </Button>
-          )}
+                {currentImage && (
+                  <Button
+                    variant="secondary"
+                    disabled={currentImage.is_primary}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSetPrimary?.(currentImage.id, currentImageIndex);
+                    }}
+                    style={{ display: cropping ? "none" : "inline-block" }}
+                    title={intl.formatMessage({
+                      id: "actions.set_as_primary",
+                      defaultMessage: "Set as primary"
+                    })}
+                  >
+                    <Icon icon={faStar} />
+                  </Button>
+                )}
 
-          {currentImage && (
-            <Button
-              variant="danger"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteImage?.(currentImage.id, currentImageIndex);
-              }}
-              style={{ display: cropping ? "none" : "inline-block" }}
-              title={intl.formatMessage({
-                id: "actions.delete_entity",
-                defaultMessage: "Delete {entityType}",
-              }, { entityType: intl.formatMessage({ id: "image" }) })}
-            >
-              <Icon icon={faTrash} />
-            </Button>
-          )}
-        </div>
+                {currentImage && (
+                  <Button
+                    variant="danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteImage?.(currentImage.id, currentImageIndex);
+                    }}
+                    style={{ display: cropping ? "none" : "inline-block" }}
+                    title={intl.formatMessage({
+                      id: "actions.delete_entity",
+                      defaultMessage: "Delete {entityType}",
+                    }, { entityType: intl.formatMessage({ id: "image" }) })}
+                  >
+                    <Icon icon={faTrash} />
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
 
         <Button
           className="crop-cancel"
