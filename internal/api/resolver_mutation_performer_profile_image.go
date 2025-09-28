@@ -66,8 +66,8 @@ func (r *mutationResolver) PerformerProfileImageUpdate(ctx context.Context, inpu
 
 		// Update image if provided
 		if input.Image != nil {
-			// Convert base64 to bytes
-			imageData, err := utils.ProcessBase64Image(*input.Image)
+			// Convert base64 or URL to bytes
+			imageData, err := utils.ProcessImageInput(ctx, *input.Image)
 			if err != nil {
 				return err
 			}

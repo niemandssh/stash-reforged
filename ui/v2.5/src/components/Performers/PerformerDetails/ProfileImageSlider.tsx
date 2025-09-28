@@ -447,17 +447,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   const handleImageURL = (url: string) => {
     if (url) {
-      ImageUtils.imageToDataURL(url)
-        .then(handleImageUpload)
-        .catch((error) => {
-          console.error("Error loading image from URL:", error);
-          Toast.error(
-            intl.formatMessage({
-              id: "toast.url_image_load_failed",
-              defaultMessage: "Failed to load image from URL"
-            })
-          );
-        });
+      handleImageUpload(url);
     }
   };
 
