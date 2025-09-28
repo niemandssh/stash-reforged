@@ -487,17 +487,17 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const updateVideoJsProgressBarTrimStyles = useCallback((player: VideoJsPlayer) => {
       const progressHolder = player.el().querySelector('.vjs-progress-holder');
       if (!progressHolder) return;
-      
+
       const duration = player.duration();
       const startTime = scene.start_time ?? 0;
       const endTime = scene.end_time ?? 0;
-      
+
       if (duration <= 0) return;
-      
+
       // Remove existing trim overlays
       const existingOverlays = progressHolder.querySelectorAll('.vjs-trim-overlay');
       existingOverlays.forEach((overlay: Element) => overlay.remove());
-      
+
       // Add start trim overlay
       if (startTime > 0) {
         const startPercent = (startTime / duration) * 100;
@@ -515,7 +515,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         `;
         progressHolder.appendChild(startOverlay);
       }
-      
+
       // Add end trim overlay
       if (endTime > 0 && endTime < duration) {
         const endPercent = (endTime / duration) * 100;
@@ -596,7 +596,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             interactiveClient.play(this.currentTime());
           }, DELAY_FOR_SECOND_PLAY_MS);
         }
-        
+
         // If trim is enabled, handle trimmed segments
         if (trimEnabled) {
           const currentTime = this.currentTime();
@@ -605,7 +605,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           const inTrimmedStart = startTime > 0 && currentTime < startTime;
           const inTrimmedEnd = endTime > 0 && currentTime > endTime;
           const inTrimmedSegment = inTrimmedStart || inTrimmedEnd;
-          
+
           // If we were paused by trim restrictions OR if we're in a trimmed segment, jump to start_time
           if ((pausedByTrim || inTrimmedSegment) && startTime > 0) {
             this.currentTime(startTime);
@@ -628,19 +628,19 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         if (this.paused()) return;
         const currentTime = this.currentTime();
         setTime(currentTime);
-        
+
         // Update Video.js progress bar trim styles
         updateVideoJsProgressBarTrimStyles(this);
-        
+
         // Check if we're in a trimmed segment
         const endTime = scene.end_time ?? 0;
         const startTime = scene.start_time ?? 0;
         const inTrimmedStart = startTime > 0 && currentTime < startTime;
         const inTrimmedEnd = endTime > 0 && currentTime > endTime;
         const inTrimmedSegment = inTrimmedStart || inTrimmedEnd;
-        
+
         setIsInTrimmedSegment(inTrimmedSegment);
-        
+
         // Auto-pause when reaching end_time, but only if trim is enabled
         if (trimEnabled && endTime && endTime > 0 && currentTime >= endTime) {
           this.pause();
@@ -791,7 +791,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         const inTrimmedStart = startTime > 0 && resumeTime < startTime;
         const inTrimmedEnd = endTime > 0 && resumeTime > endTime;
         const inTrimmedSegment = inTrimmedStart || inTrimmedEnd;
-        
+
         if (inTrimmedSegment) {
           // If resume position is in trimmed segment, start from start_time
           startPosition = startTime > 0 ? startTime : 0;
@@ -819,20 +819,20 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         if (startPosition) {
           player.currentTime(startPosition);
         }
-        
+
         // Initialize Video.js progress bar trim styles
         updateVideoJsProgressBarTrimStyles(player);
-        
+
         // Also set trim styles after a short delay to ensure progress bar is rendered
         setTimeout(() => {
           updateVideoJsProgressBarTrimStyles(player);
         }, 100);
-        
+
         // Set trim styles when metadata is loaded
         player.on('loadedmetadata', () => {
           updateVideoJsProgressBarTrimStyles(player);
         });
-        
+
         // Set trim styles when video can play
         player.on('canplay', () => {
           updateVideoJsProgressBarTrimStyles(player);
@@ -840,7 +840,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       });
 
       started.current = false;
-      
+
       // Update Video.js progress bar trim styles when scene changes
       setTimeout(() => {
         updateVideoJsProgressBarTrimStyles(player);
@@ -872,7 +872,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       // Update immediately
       updateVideoJsProgressBarTrimStyles(player);
-      
+
       // Also update after a delay to ensure progress bar is ready
       const timeoutId = setTimeout(() => {
         updateVideoJsProgressBarTrimStyles(player);
@@ -1045,7 +1045,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     function onScrubberSeek(seconds: number) {
       // Reset pausedByTrim flag when manually seeking
       setPausedByTrim(false);
-      
+
       if (started.current) {
         getPlayer()?.currentTime(seconds);
       } else {
@@ -1063,7 +1063,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
         return;
       }
-      
+
       if (event.key == " ") {
         event.preventDefault();
         event.stopPropagation();
@@ -1073,9 +1073,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           player.pause();
         }
       }
-      
+
       // Hotkeys for trim controls
-      
+
     }
 
     const isPortrait =

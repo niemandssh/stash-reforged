@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/internal/static"
@@ -76,6 +77,30 @@ func (s *SceneServer) StreamSceneDirect(scene *models.Scene, w http.ResponseWrit
 
 		startTime := r.Form.Get("start")
 		ss, _ := strconv.ParseFloat(startTime, 64)
+
+		// If no start time in query, try to extract from Range header
+		if startTime == "" && rangeHeader != "" {
+			// Parse Range header like "bytes=426770432-"
+			if strings.HasPrefix(rangeHeader, "bytes=") {
+				rangeParts := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+				if len(rangeParts) >= 1 {
+					startBytes, err := strconv.ParseInt(rangeParts[0], 10, 64)
+					if err == nil && startBytes > 0 {
+						// Get file size
+						fileSize := pf.Size
+						if fileSize > 0 {
+							// Calculate start time based on byte position
+							// This is approximate: (start_bytes / total_bytes) * duration
+							fileDuration := pf.Duration
+							if fileDuration > 0 {
+								ss = float64(startBytes) / float64(fileSize) * fileDuration
+								logger.Infof("[stream] Calculated start time from Range header: %.2f (bytes: %d/%d, duration: %.2f)", ss, startBytes, fileSize, fileDuration)
+							}
+						}
+					}
+				}
+			}
+		}
 
 		logger.Infof("[stream] StartTime requested: %s (parsed: %.2f)", startTime, ss)
 
