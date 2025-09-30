@@ -912,11 +912,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderTagsField()}
             {renderPerformersField()}
 
-            {renderDateField("date", "release_date")}
-            {renderDateField("shoot_date")}
-
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}
+
+            {renderDateField("date", "release_date")}
+            {renderDateField("shoot_date")}
 
             {renderInputField("code", "text", "scene_code")}
             {renderStudioField()}
