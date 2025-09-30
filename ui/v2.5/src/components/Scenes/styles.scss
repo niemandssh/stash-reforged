@@ -1304,3 +1304,39 @@ input[type="range"].blue-slider {
     }
   }
 }
+
+// Scene description collapse/expand functionality
+.scene-description {
+  .scene-description-text {
+    margin-bottom: 4px;
+
+    &.scene-description-collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  .scene-description-toggle {
+    margin-top: 0.25rem;
+    padding: 0;
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: $link-color;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+      color: $link-hover-color;
+    }
+
+    &:focus {
+      outline: none;
+      text-decoration: underline;
+    }
+  }
+}

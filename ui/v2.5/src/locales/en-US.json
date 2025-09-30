@@ -140,6 +140,7 @@
         "show_results": "Show results",
         "show_count_results": "Show {count} results",
         "show_more": "Show More",
+        "show_less": "Show Less",
         "sidebar": {
             "close": "Close sidebar",
             "open": "Open sidebar",

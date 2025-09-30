@@ -1,6 +1,7 @@
 import React from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Link } from "react-router-dom";
+import { Button } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
 import TextUtils from "src/utils/text";
 import { TagLink } from "src/components/Shared/TagLink";
@@ -18,15 +19,61 @@ interface ISceneDetailProps {
 
 export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   const intl = useIntl();
+  const [isDescriptionCollapsed, setIsDescriptionCollapsed] = React.useState(true);
+  const [shouldShowToggle, setShouldShowToggle] = React.useState(false);
+  const textRef = React.useRef<HTMLParagraphElement>(null);
+
+  React.useLayoutEffect(() => {
+    if (textRef.current && props.scene.details) {
+      const tempElement = document.createElement('p');
+      tempElement.className = 'pre scene-description-text';
+      tempElement.style.position = 'absolute';
+      tempElement.style.visibility = 'hidden';
+      tempElement.style.width = textRef.current.offsetWidth + 'px';
+      tempElement.style.whiteSpace = 'pre-wrap';
+      tempElement.style.wordWrap = 'break-word';
+      tempElement.style.fontSize = getComputedStyle(textRef.current).fontSize;
+      tempElement.style.lineHeight = getComputedStyle(textRef.current).lineHeight;
+      tempElement.textContent = props.scene.details;
+
+      document.body.appendChild(tempElement);
+      const fullHeight = tempElement.offsetHeight;
+
+      const lineHeight = parseFloat(getComputedStyle(textRef.current).lineHeight) || 16;
+      const threeLinesHeight = lineHeight * 3;
+
+      document.body.removeChild(tempElement);
+
+      setShouldShowToggle(fullHeight > threeLinesHeight);
+    }
+  }, [props.scene.details]);
 
   function renderDetails() {
     if (!props.scene.details || props.scene.details === "") return;
+
     return (
       <>
-        <h6>
+        <h6 className="font-weight-bold mt-3">
           <FormattedMessage id="details" />:{" "}
         </h6>
-        <p className="pre">{props.scene.details}</p>
+        <div className="scene-description">
+          <p
+            ref={textRef}
+            className={`pre scene-description-text ${isDescriptionCollapsed ? 'scene-description-collapsed' : ''}`}
+          >
+            {props.scene.details}
+          </p>
+          {shouldShowToggle && (
+            <Button
+              variant="link"
+              size="sm"
+              className="scene-description-toggle"
+              onClick={() => setIsDescriptionCollapsed(!isDescriptionCollapsed)}
+            >
+              <FormattedMessage id={isDescriptionCollapsed ? "actions.show_more" : "actions.show_less"} />
+            </Button>
+          )}
+        </div>
       </>
     );
   }
@@ -151,21 +198,21 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       <div className="row">
         <div className={`${sceneDetailsWidth} col-12 scene-details`}>
           <URLsField id="urls" urls={props.scene.urls} truncate />
-          <h6>
+          <h6 className="font-weight-bold">
             <FormattedMessage id="created_at" />:{" "}
             {TextUtils.formatDateTime(intl, props.scene.created_at)}{" "}
           </h6>
-          <h6>
+          <h6 className="font-weight-bold">
             <FormattedMessage id="updated_at" />:{" "}
             {TextUtils.formatDateTime(intl, props.scene.updated_at)}{" "}
           </h6>
           {props.scene.code && (
-            <h6>
+            <h6 className="font-weight-bold">
               <FormattedMessage id="scene_code" />: {props.scene.code}{" "}
             </h6>
           )}
           {props.scene.director && (
-            <h6>
+            <h6 className="font-weight-bold">
               <FormattedMessage id="director" />:{" "}
               <DirectorLink director={props.scene.director} linkType="scene" />
             </h6>
