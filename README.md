@@ -25,6 +25,7 @@ This version will be always in develop branch.
 - [x] **Primary tag for performer** (will show after name)
 - [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
+- [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 
 **And a lot of other improvements! You can view the full list [in this page](IMPROVEMENTS.md).**
 

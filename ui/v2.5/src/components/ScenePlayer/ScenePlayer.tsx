@@ -33,6 +33,8 @@ import { useTrimContext } from "src/contexts/TrimContext";
 import * as GQL from "src/core/generated-graphql";
 import { ScenePlayerScrubber } from "./ScenePlayerScrubber";
 import { ConfigurationContext } from "src/hooks/Config";
+import { NextSceneOverlay } from "./NextSceneOverlay";
+import { useNextScene } from "src/utils/nextSceneSelector";
 import {
   ConnectionState,
   InteractiveContext,
@@ -40,6 +42,7 @@ import {
 import { SceneInteractiveStatus } from "src/hooks/Interactive/status";
 import { languageMap } from "src/utils/caption";
 import { VIDEO_PLAYER_ID } from "./util";
+import { useQuery } from "@apollo/client";
 
 // @ts-ignore
 import airplay from "@silvermine/videojs-airplay";
@@ -226,6 +229,7 @@ interface IScenePlayerProps {
   onComplete: () => void;
   onNext: () => void;
   onPrevious: () => void;
+  onPlayScene?: (sceneId: string) => void;
 }
 
 export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
@@ -240,6 +244,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     onComplete,
     onNext,
     onPrevious,
+    onPlayScene,
   }) => {
     const { configuration } = useContext(ConfigurationContext);
     const interfaceConfig = configuration?.interface;
@@ -266,11 +271,23 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     const [fullscreen, setFullscreen] = useState(false);
     const [showScrubber, setShowScrubber] = useState(false);
+    const [showNextSceneOverlay, setShowNextSceneOverlay] = useState(false);
 
     const started = useRef(false);
     const auto = useRef(false);
     const interactiveReady = useRef(false);
     const minimumPlayPercent = uiConfig?.minimumPlayPercent ?? 0;
+
+    // Query for similar scenes to determine next scene for autoplay
+    const { data: similarScenesData } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
+      GQL.FindSimilarScenesDocument,
+      {
+        variables: { id: scene.id, limit: 5 }, // Get top 5 similar scenes
+        skip: !scene.id,
+      }
+    );
+
+    const nextScene = useNextScene(scene.id, similarScenesData?.findScene?.similar_scenes);
     const trackActivity = uiConfig?.trackActivity ?? true;
     const vrTag = uiConfig?.vrTag ?? undefined;
 
@@ -641,10 +658,15 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
         setIsInTrimmedSegment(inTrimmedSegment);
 
-        // Auto-pause when reaching end_time, but only if trim is enabled
-        if (trimEnabled && endTime && endTime > 0 && currentTime >= endTime) {
-          this.pause();
-          setPausedByTrim(true);
+        // Auto-pause when reaching end_time, or show next scene overlay if available
+        if (endTime && endTime > 0 && currentTime >= endTime) {
+          if (nextScene) {
+            this.pause();
+            setShowNextSceneOverlay(true);
+          } else if (trimEnabled) {
+            this.pause();
+            setPausedByTrim(true);
+          }
         }
       }
 
@@ -1026,15 +1048,48 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       auto.current = false;
     }, [getPlayer, scene, ready, interactiveClient, currentScript]);
 
+    // Handle video end - show next scene overlay if available
+    const handleVideoEnd = useCallback(() => {
+      if (nextScene) {
+        setShowNextSceneOverlay(true);
+      } else {
+        onComplete();
+      }
+    }, [nextScene, onComplete]);
+
+    // Handle next scene overlay actions
+    const handleNextScenePlay = useCallback(() => {
+      setShowNextSceneOverlay(false);
+      if (onPlayScene && nextScene) {
+        onPlayScene(nextScene.id);
+      } else {
+        onNext();
+      }
+    }, [onPlayScene, nextScene, onNext]);
+
+    const handleNextSceneSkip = useCallback(() => {
+      setShowNextSceneOverlay(false);
+      if (onPlayScene && nextScene) {
+        onPlayScene(nextScene.id);
+      } else {
+        onNext();
+      }
+    }, [onPlayScene, nextScene, onNext]);
+
+    const handleNextSceneCancel = useCallback(() => {
+      setShowNextSceneOverlay(false);
+      onComplete();
+    }, [onComplete]);
+
     // Attach handler for onComplete event
     useEffect(() => {
       const player = getPlayer();
       if (!player) return;
 
-      player.on("ended", onComplete);
+      player.on("ended", handleVideoEnd);
 
       return () => player.off("ended");
-    }, [getPlayer, onComplete]);
+    }, [getPlayer, handleVideoEnd]);
 
     function onScrubberScroll() {
       if (started.current) {
@@ -1089,7 +1144,16 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         })}
         onKeyDownCapture={onKeyDown}
       >
-        <div className="video-wrapper" ref={videoRef} />
+        <div className="video-wrapper" ref={videoRef}>
+          {showNextSceneOverlay && nextScene && (
+            <NextSceneOverlay
+              nextScene={nextScene}
+              onPlay={handleNextScenePlay}
+              onCancel={handleNextSceneCancel}
+              onSkip={handleNextSceneSkip}
+            />
+          )}
+        </div>
         {scene.interactive &&
           (interactiveState !== ConnectionState.Ready ||
             getPlayer()?.paused()) && <SceneInteractiveStatus />}

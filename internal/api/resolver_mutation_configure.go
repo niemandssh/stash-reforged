@@ -507,6 +507,8 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input ConfigI
 		r.setConfigBool(config.DisableDropdownCreateMovie, ddc.Movie)
 	}
 
+	r.setConfigInt(config.AutoplayNextVideoTimer, input.AutoplayNextVideoTimer)
+
 	r.setConfigString(config.HandyKey, input.HandyKey)
 	r.setConfigInt(config.FunscriptOffset, input.FunscriptOffset)
 	r.setConfigBool(config.UseStashHostedFunscript, input.UseStashHostedFunscript)

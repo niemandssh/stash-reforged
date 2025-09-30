@@ -35,6 +35,18 @@ export const SettingsCustomPanel: React.FC = () => {
         />
       </SettingSection>
 
+      <SettingSection headingID="config.custom.autoplay">
+        <NumberSetting
+          id="autoplay-next-video-timer"
+          headingID="config.custom.autoplay_next_video_timer"
+          subHeadingID="config.custom.autoplay_next_video_timer_desc"
+          value={iface.autoplayNextVideoTimer ?? 10}
+          min={0}
+          max={60}
+          onChange={(v) => saveInterface({ autoplayNextVideoTimer: v })}
+        />
+      </SettingSection>
+
       <SettingSection headingID="config.custom.external_player">
         <StringSetting
           id="external-video-player"

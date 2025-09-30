@@ -1144,6 +1144,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           onComplete={onComplete}
           onNext={() => queueNext(true)}
           onPrevious={() => queuePrevious(true)}
+          onPlayScene={(sceneId) => loadScene(sceneId, true)}
         />
       </div>
     </div>

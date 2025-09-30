@@ -387,6 +387,9 @@ input ConfigInterfaceInput {
   "Set to true to disable creating new objects via the dropdown menus"
   disableDropdownCreate: ConfigDisableDropdownCreateInput
 
+  "Timer for autoplay next video (in seconds)"
+  autoplayNextVideoTimer: Int
+
   "Minimum rating threshold for Random button (0-100)"
   randomRatingThreshold: Int
   "Minimum rating threshold for Random Best button (0-100)"
@@ -469,6 +472,9 @@ type ConfigInterfaceResult {
 
   "Fields are true if creating via dropdown menus are disabled"
   disableDropdownCreate: ConfigDisableDropdownCreate!
+
+  "Timer for autoplay next video (in seconds)"
+  autoplayNextVideoTimer: Int
 
   "Minimum rating threshold for Random button (0-100)"
   randomRatingThreshold: Int

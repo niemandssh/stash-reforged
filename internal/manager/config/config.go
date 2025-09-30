@@ -195,6 +195,9 @@ const (
 	ShowScrubber        = "show_scrubber"
 	showScrubberDefault = true
 
+	AutoplayNextVideoTimer        = "autoplay_next_video_timer"
+	autoplayNextVideoTimerDefault = 10
+
 	WallPlayback        = "wall_playback"
 	defaultWallPlayback = "video"
 
@@ -1261,6 +1264,10 @@ func (i *Config) GetShowScrubber() bool {
 	return i.getBoolDefault(ShowScrubber, showScrubberDefault)
 }
 
+func (i *Config) GetAutoplayNextVideoTimer() int {
+	return i.getIntDefault(AutoplayNextVideoTimer, autoplayNextVideoTimerDefault)
+}
+
 func (i *Config) GetMaximumLoopDuration() int {
 	return i.getInt(MaximumLoopDuration)
 }
@@ -1911,6 +1918,9 @@ func (i *Config) setExistingSystemDefaults() {
 		}
 		if !i.main.Exists(ShowSimilarityPercent) {
 			i.set(ShowSimilarityPercent, showSimilarityPercentDefault)
+		}
+		if !i.main.Exists(AutoplayNextVideoTimer) {
+			i.set(AutoplayNextVideoTimer, autoplayNextVideoTimerDefault)
 		}
 	}
 }

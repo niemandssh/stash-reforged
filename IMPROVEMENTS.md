@@ -18,6 +18,7 @@
 - [x] **Primary tag for performer** (will show after name)
 - [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
+- [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 - [x] Show current or dead age for performer in the Scene's performer cards
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)

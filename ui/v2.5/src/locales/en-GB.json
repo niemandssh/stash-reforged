@@ -161,6 +161,7 @@
     "use_default": "Use default",
     "view_random": "View Random"
   },
+  "next_scene_autoplay": "Next scene in {seconds}s",
   "actions_name": "Actions",
   "age": "Age",
   "age_on_date": "{age} at production",
@@ -280,6 +281,9 @@
       "similar_scenes": "Similar Scenes",
       "show_similarity_percent": "Show percent of scene similarity",
       "show_similarity_percent_desc": "Display similarity percentage badges on similar scenes",
+      "autoplay": "Autoplay",
+      "autoplay_next_video_timer": "Autoplay Next Video Timer",
+      "autoplay_next_video_timer_desc": "Time in seconds to wait before automatically playing the next video (0 to disable)",
       "external_player": "External Player",
       "external_video_player": "External Video Player Command",
       "external_video_player_desc": "Command to execute for external video player. File path will be automatically appended or you can use {path} placeholder. Examples: 'vlc', 'mpv', '/usr/bin/vlc', 'vlc {path}'",

@@ -166,6 +166,7 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 	redirectHomeToScenes := config.GetRedirectHomeToScenes()
 	imageLightboxOptions := config.GetImageLightboxOptions()
 	disableDropdownCreate := config.GetDisableDropdownCreate()
+	autoplayNextVideoTimer := config.GetAutoplayNextVideoTimer()
 
 	return &ConfigInterfaceResult{
 		MenuItems:                    menuItems,
@@ -191,6 +192,8 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 		ImageLightbox: &imageLightboxOptions,
 
 		DisableDropdownCreate: disableDropdownCreate,
+
+		AutoplayNextVideoTimer: &autoplayNextVideoTimer,
 
 		HandyKey:                &handyKey,
 		FunscriptOffset:         &scriptOffset,

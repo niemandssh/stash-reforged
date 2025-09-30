@@ -13,6 +13,7 @@ $sceneTabWidth: 450px;
   flex-direction: column;
   max-height: calc(100vh - #{$menuHeight});
   padding-bottom: 0.25rem;
+  position: relative;
 
   @media (min-width: 1200px) {
     height: 100vh;

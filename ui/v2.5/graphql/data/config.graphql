@@ -104,6 +104,7 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
     studio
     movie
   }
+  autoplayNextVideoTimer
   handyKey
   funscriptOffset
   useStashHostedFunscript
