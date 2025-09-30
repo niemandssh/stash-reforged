@@ -31,6 +31,8 @@ type SceneFilterType struct {
 	Rating100 *IntCriterionInput `json:"rating100"`
 	// Filter by organized
 	Organized *bool `json:"organized"`
+	// Filter by pinned
+	Pinned *bool `json:"pinned"`
 	// Filter by is_broken
 	IsBroken *bool `json:"is_broken"`
 	// Filter by o-counter
@@ -189,6 +191,7 @@ type SceneUpdateInput struct {
 	Rating100          *int              `json:"rating100"`
 	OCounter           *int              `json:"o_counter"`
 	Organized          *bool             `json:"organized"`
+	Pinned             *bool             `json:"pinned"`
 	IsBroken           *bool             `json:"is_broken"`
 	IsNotBroken        *bool             `json:"is_not_broken"`
 	AudioOffsetMs      *int              `json:"audio_offset_ms"`

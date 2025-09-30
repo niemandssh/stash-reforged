@@ -11,6 +11,7 @@ import { PopoverCountButton } from "../Shared/PopoverCountButton";
 import NavUtils from "src/utils/navigation";
 import { RatingBanner } from "../Shared/RatingBanner";
 import { faBox, faPlayCircle, faTag } from "@fortawesome/free-solid-svg-icons";
+import { PinIcon } from "../Shared/PinIcon";
 import { SweatDrops } from "src/components/Shared/SweatDrops";
 import { galleryTitle } from "src/core/galleries";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
@@ -18,6 +19,7 @@ import { GalleryPreviewScrubber } from "./GalleryPreviewScrubber";
 import cx from "classnames";
 import { useHistory } from "react-router-dom";
 import { PatchComponent } from "src/patch";
+import { useGalleryUpdate } from "src/core/StashService";
 
 interface IGalleryPreviewProps {
   gallery: GQL.SlimGalleryDataFragment;
@@ -239,6 +241,33 @@ const GalleryCardImage = PatchComponent(
 export const GalleryCard = PatchComponent(
   "GalleryCard",
   (props: IGalleryCardProps) => {
+    const [updateGallery] = useGalleryUpdate();
+
+    function togglePin(event: React.MouseEvent) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      updateGallery({
+        variables: {
+          input: {
+            id: props.gallery.id,
+            pinned: !props.gallery.pinned,
+          },
+        },
+      });
+    }
+
+    const pinButton = (
+      <Button
+        variant="link"
+        className={`p-0 text-decoration-none mt-n1 ml-n1 ${props.gallery.pinned ? 'text-warning' : 'text-muted'}`}
+        onClick={togglePin}
+        title={props.gallery.pinned ? "Unpin" : "Pin"}
+      >
+        <PinIcon />
+      </Button>
+    );
+
     return (
       <GridCard
         className={`gallery-card zoom-${props.zoomIndex}`}
@@ -253,6 +282,8 @@ export const GalleryCard = PatchComponent(
         selected={props.selected}
         selecting={props.selecting}
         onSelectedChanged={props.onSelectedChanged}
+        pinButton={pinButton}
+        isPinned={props.gallery.pinned}
       />
     );
   }

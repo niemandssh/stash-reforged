@@ -7,7 +7,7 @@ import * as GQL from "src/core/generated-graphql";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
-import { queryFindGalleries, useFindGalleries } from "src/core/StashService";
+import { queryFindGalleries, useFindGalleries, useGalleryUpdate, getClient } from "src/core/StashService";
 import GalleryWallCard from "./GalleryWallCard";
 import { EditGalleriesDialog } from "./EditGalleriesDialog";
 import { DeleteGalleriesDialog } from "./DeleteGalleriesDialog";
@@ -56,6 +56,16 @@ export const GalleryList: React.FC<IGalleryList> = ({
       text: intl.formatMessage({ id: "actions.export_all" }),
       onClick: onExportAll,
     },
+    {
+      text: intl.formatMessage({ id: "actions.pin" }),
+      onClick: (selectedIds: string[]) => onPinSelected(selectedIds),
+      isDisplayed: showWhenSelected,
+    },
+    {
+      text: intl.formatMessage({ id: "actions.unpin" }),
+      onClick: (selectedIds: string[]) => onUnpinSelected(selectedIds),
+      isDisplayed: showWhenSelected,
+    },
   ];
 
   function addKeybinds(
@@ -100,6 +110,44 @@ export const GalleryList: React.FC<IGalleryList> = ({
   async function onExportAll() {
     setIsExportAll(true);
     setIsExportDialogOpen(true);
+  }
+
+  function onPinSelected(selectedIds: string[]) {
+    const client = getClient();
+    const updatePromises = selectedIds.map(galleryId =>
+      client.mutate({
+        mutation: GQL.BulkGalleryUpdateDocument,
+        variables: {
+          input: {
+            ids: [galleryId],
+            pinned: true,
+          },
+        },
+      })
+    );
+
+    Promise.all(updatePromises).catch(error => {
+      console.error("Error pinning galleries:", error);
+    });
+  }
+
+  function onUnpinSelected(selectedIds: string[]) {
+    const client = getClient();
+    const updatePromises = selectedIds.map(galleryId =>
+      client.mutate({
+        mutation: GQL.BulkGalleryUpdateDocument,
+        variables: {
+          input: {
+            ids: [galleryId],
+            pinned: false,
+          },
+        },
+      })
+    );
+
+    Promise.all(updatePromises).catch(error => {
+      console.error("Error unpinning galleries:", error);
+    });
   }
 
   function renderContent(

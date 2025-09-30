@@ -23,6 +23,8 @@ This version will be always in develop branch.
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] **Primary tag for performer** (will show after name)
+- [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
+- [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
 
 **And a lot of other improvements! You can view the full list [in this page](IMPROVEMENTS.md).**
 

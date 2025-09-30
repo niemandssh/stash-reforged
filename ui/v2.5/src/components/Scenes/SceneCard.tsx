@@ -16,6 +16,7 @@ import { PerformerPopoverButton } from "../Shared/PerformerPopoverButton";
 import { GridCard } from "../Shared/GridCard/GridCard";
 import { RatingBanner } from "../Shared/RatingBanner";
 import { FormattedMessage } from "react-intl";
+import { useSceneUpdate } from "src/core/StashService";
 import {
   faBox,
   faCopy,
@@ -25,6 +26,7 @@ import {
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
+import { PinIcon } from "../Shared/PinIcon";
 import { PreviewScrubber } from "./PreviewScrubber";
 import { PatchComponent } from "src/patch";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
@@ -460,6 +462,7 @@ export const SceneCard = PatchComponent(
   "SceneCard",
   (props: ISceneCardProps) => {
     const { configuration } = React.useContext(ConfigurationContext);
+    const [updateScene] = useSceneUpdate();
 
     const file = useMemo(
       () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
@@ -482,6 +485,26 @@ export const SceneCard = PatchComponent(
       return "";
     }
 
+    function togglePin(event: React.MouseEvent) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      updateScene({
+        variables: {
+          input: {
+            id: props.scene.id,
+            pinned: !props.scene.pinned,
+          },
+        },
+        onCompleted: () => {
+          // The cache will be updated automatically by Apollo
+        },
+        onError: (error) => {
+          console.error("Error toggling pin:", error);
+        },
+      });
+    }
+
     const cont = configuration?.interface.continuePlaylistDefault ?? false;
 
     const sceneLink = props.queue
@@ -490,6 +513,17 @@ export const SceneCard = PatchComponent(
           continue: cont,
         })
       : `/scenes/${props.scene.id}`;
+
+    const pinButton = (
+      <Button
+        variant="link"
+        className={`p-0 text-decoration-none mt-n1 ml-n1 ${props.scene.pinned ? 'text-warning' : 'text-muted'}`}
+        onClick={togglePin}
+        title={props.scene.pinned ? "Unpin" : "Pin"}
+      >
+        <PinIcon />
+      </Button>
+    );
 
     return (
       <GridCard
@@ -513,6 +547,8 @@ export const SceneCard = PatchComponent(
         selected={props.selected}
         selecting={props.selecting}
         onSelectedChanged={props.onSelectedChanged}
+        pinButton={pinButton}
+        isPinned={props.scene.pinned}
       />
     );
   }

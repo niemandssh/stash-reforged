@@ -42,6 +42,7 @@ type galleryRow struct {
 	// expressed as 1-100
 	Rating      null.Int  `db:"rating"`
 	Organized   bool      `db:"organized"`
+	Pinned      bool      `db:"pinned"`
 	OCounter    int       `db:"o_counter"`
 	DisplayMode null.Int  `db:"display_mode"`
 	StudioID    null.Int  `db:"studio_id,omitempty"`
@@ -59,6 +60,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Photographer = zero.StringFrom(o.Photographer)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.Pinned = o.Pinned
 	r.OCounter = o.OCounter
 	r.DisplayMode = intFromValue(o.DisplayMode)
 	r.StudioID = intFromPtr(o.StudioID)
@@ -86,6 +88,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Photographer:  r.Photographer.String,
 		Rating:        nullIntPtr(r.Rating),
 		Organized:     r.Organized,
+		Pinned:        r.Pinned,
 		OCounter:      r.OCounter,
 		DisplayMode:   int(r.DisplayMode.Int64),
 		StudioID:      nullIntPtr(r.StudioID),
@@ -116,6 +119,7 @@ func (r *galleryRowRecord) fromPartial(o models.GalleryPartial) {
 	r.setNullString("photographer", o.Photographer)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
+	r.setBool("pinned", o.Pinned)
 	r.setNullInt("display_mode", o.DisplayMode)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
@@ -799,17 +803,26 @@ var gallerySortOptions = sortOptions{
 }
 
 func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.FindFilterType) error {
-	if findFilter == nil || findFilter.Sort == nil || *findFilter.Sort == "" {
-		return nil
-	}
+	sort := "created_at"
+	direction := "DESC"
 
-	sort := findFilter.GetSort("path")
-	direction := findFilter.GetDirection()
+	if findFilter != nil && findFilter.Sort != nil && *findFilter.Sort != "" {
+		sort = findFilter.GetSort("path")
+		direction = findFilter.GetDirection()
+	}
 
 	// CVE-2024-32231 - ensure sort is in the list of allowed sorts
 	if err := gallerySortOptions.validateSort(sort); err != nil {
 		return err
 	}
+
+	// If no search query, sort pinned items first, then by created_at
+	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
+		query.sortAndPagination += " ORDER BY galleries.pinned DESC, galleries.created_at DESC, COALESCE(galleries.title, galleries.id) COLLATE NATURAL_CI ASC"
+		return nil
+	}
+
+	// If there is a search query, use normal sorting
 
 	addFileTable := func() {
 		query.addJoins(

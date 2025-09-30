@@ -20,11 +20,11 @@ import { getFilterOptions } from "src/models/list-filter/factory";
 import { FilterTags } from "./FilterTags";
 import { CriterionEditor } from "./CriterionEditor";
 import { Icon } from "../Shared/Icon";
+import { PinIcon } from "../Shared/PinIcon";
 import {
   faChevronDown,
   faChevronRight,
   faTimes,
-  faThumbtack,
 } from "@fortawesome/free-solid-svg-icons";
 import { useCompare, usePrevious } from "src/hooks/state";
 import { CriterionType } from "src/models/list-filter/types";
@@ -138,6 +138,13 @@ const CriterionOptionList: React.FC<ICriterionList> = ({
             />
             <FormattedMessage id={c.messageID} />
           </span>
+          <Button
+            className="pin-criterion-button"
+            variant="minimal"
+            onClick={(e) => togglePin(e, c)}
+          >
+            <PinIcon className={isPin ? "" : "tilted"} />
+          </Button>
           {criteria.some((cc) => c.type === cc) && (
             <Button
               className="remove-criterion-button"
@@ -147,13 +154,6 @@ const CriterionOptionList: React.FC<ICriterionList> = ({
               <Icon icon={faTimes} />
             </Button>
           )}
-          <Button
-            className="pin-criterion-button"
-            variant="minimal"
-            onClick={(e) => togglePin(e, c)}
-          >
-            <Icon icon={faThumbtack} className={isPin ? "" : "tilted"} />
-          </Button>
         </Accordion.Toggle>
         <Accordion.Collapse eventKey={c.type}>
           {(type === c.type && currentCriterion) ||

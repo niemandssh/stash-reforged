@@ -21,6 +21,8 @@ type GalleryFilterType struct {
 	Rating100 *IntCriterionInput `json:"rating100"`
 	// Filter by organized
 	Organized *bool `json:"organized"`
+	// Filter by pinned
+	Pinned *bool `json:"pinned"`
 	// Filter by average image resolution
 	AverageResolution *ResolutionCriterionInput `json:"average_resolution"`
 	// Filter to only include scenes which have chapters. `true` or `false`
@@ -76,6 +78,7 @@ type GalleryUpdateInput struct {
 	Photographer     *string  `json:"photographer"`
 	Rating100        *int     `json:"rating100"`
 	Organized        *bool    `json:"organized"`
+	Pinned           *bool    `json:"pinned"`
 	DisplayMode      *int     `json:"display_mode"`
 	SceneIds         []string `json:"scene_ids"`
 	StudioID         *string  `json:"studio_id"`

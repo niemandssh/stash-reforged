@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Button } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
 import NavUtils from "src/utils/navigation";
 import TextUtils from "src/utils/text";
@@ -14,6 +15,8 @@ import { useTableColumns } from "src/hooks/useTableColumns";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
+import { Icon } from "../Shared/Icon";
+import { PinIcon } from "../Shared/PinIcon";
 
 interface ISceneListTableProps {
   scenes: GQL.SlimSceneDataFragment[];
@@ -44,6 +47,17 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
     }
   }
 
+  function togglePinned(sceneId: string, pinned: boolean) {
+    updateScene({
+      variables: {
+        input: {
+          id: sceneId,
+          pinned: !pinned,
+        },
+      },
+    });
+  }
+
   const CoverImageCell = (scene: GQL.SlimSceneDataFragment, index: number) => {
     const title = objectTitle(scene);
     const sceneLink = props.queue
@@ -70,12 +84,31 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
 
     return (
       <div className="d-flex align-items-center">
+        {scene.pinned && (
+          <PinIcon
+            className="text-warning me-1"
+            title={intl.formatMessage({ id: "actions.pinned" })}
+          />
+        )}
         {scene.is_broken && !scene.is_not_broken && <BrokenBadge className="me-2" />}
         {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge className="me-2" />}
         <Link to={sceneLink} title={title}>
           <span className="ellips-data">{title}</span>
         </Link>
       </div>
+    );
+  };
+
+  const PinnedCell = (scene: GQL.SlimSceneDataFragment) => {
+    return (
+      <Button
+        variant="link"
+        className={`p-0 text-decoration-none ${scene.pinned ? 'text-warning' : 'text-muted'}`}
+        onClick={() => togglePinned(scene.id, scene.pinned)}
+        title={scene.pinned ? intl.formatMessage({ id: "actions.unpin" }) : intl.formatMessage({ id: "actions.pin" })}
+      >
+        <PinIcon />
+      </Button>
     );
   };
 
@@ -274,6 +307,12 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
       defaultShow: true,
       mandatory: true,
       render: TitleCell,
+    },
+    {
+      value: "pinned",
+      label: "📌",
+      defaultShow: false,
+      render: PinnedCell,
     },
     {
       value: "date",

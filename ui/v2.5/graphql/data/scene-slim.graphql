@@ -9,6 +9,7 @@ fragment SlimSceneData on Scene {
   rating100
   o_counter
   organized
+  pinned
   interactive
   interactive_speed
   is_broken

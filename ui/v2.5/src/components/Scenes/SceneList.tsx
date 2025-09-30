@@ -728,6 +728,40 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
     );
   }
 
+  function onPinSelected() {
+    client.mutate({
+      mutation: GQL.BulkSceneUpdateDocument,
+      variables: {
+        input: {
+          ids: selectedItems,
+          pinned: true,
+        },
+      },
+    }).then(() => {
+      // Refresh the list
+      refetch();
+    }).catch(error => {
+      console.error("Error pinning scenes:", error);
+    });
+  }
+
+  function onUnpinSelected() {
+    client.mutate({
+      mutation: GQL.BulkSceneUpdateDocument,
+      variables: {
+        input: {
+          ids: selectedItems,
+          pinned: false,
+        },
+      },
+    }).then(() => {
+      // Refresh the list
+      refetch();
+    }).catch(error => {
+      console.error("Error unpinning scenes:", error);
+    });
+  }
+
   const otherOperations = [
     {
       text: intl.formatMessage({ id: "actions.play" }),
@@ -795,6 +829,16 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
     {
       text: intl.formatMessage({ id: "actions.export_all" }),
       onClick: () => onExport(true),
+    },
+    {
+      text: intl.formatMessage({ id: "actions.pin" }),
+      onClick: onPinSelected,
+      isDisplayed: () => hasSelection,
+    },
+    {
+      text: intl.formatMessage({ id: "actions.unpin" }),
+      onClick: onUnpinSelected,
+      isDisplayed: () => hasSelection,
     },
   ];
 

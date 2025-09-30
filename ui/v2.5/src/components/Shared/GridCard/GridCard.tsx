@@ -38,6 +38,10 @@ interface ICardProps {
   // move logic - both of the following are required to enable move dragging
   objectId?: string; // required for move dragging
   onMove?: (srcIds: string[], targetId: string, after: boolean) => void;
+
+  // pin functionality
+  pinButton?: JSX.Element;
+  isPinned?: boolean;
 }
 
 export const calculateCardWidth = (
@@ -165,6 +169,7 @@ const MoveTarget: React.FC<{ dragSide: DragSide }> = ({ dragSide }) => {
 };
 
 export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
+  const [isHovered, setIsHovered] = useState(false);
   const { setInHandle, moveTarget, dragProps } = useDragMoveSelect({
     selecting: props.selecting || false,
     selected: props.selected || false,
@@ -220,6 +225,8 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
     <Card
       className={cx(props.className, "grid-card")}
       onClick={handleImageClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       {...dragProps}
       style={
         props.width && !ScreenUtils.isMobile()
@@ -260,6 +267,13 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
           <h5 className="card-section-title flex-aligned">
             {props.pretitleIcon}
             <TruncatedText text={props.title} lineCount={2} />
+            {props.pinButton && (
+              <span
+                className={`pin-button-container ${props.isPinned || isHovered ? 'visible' : 'hidden'}`}
+              >
+                {props.pinButton}
+              </span>
+            )}
           </h5>
         </Link>
         {props.details}

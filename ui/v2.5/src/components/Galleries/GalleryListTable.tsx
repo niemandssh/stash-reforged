@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Button } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
 import NavUtils from "src/utils/navigation";
 import { useIntl } from "react-intl";
@@ -9,6 +10,8 @@ import { RatingSystem } from "../Shared/Rating/RatingSystem";
 import { useGalleryUpdate } from "src/core/StashService";
 import { IColumn, ListTable } from "../List/ListTable";
 import { useTableColumns } from "src/hooks/useTableColumns";
+import { Icon } from "../Shared/Icon";
+import { PinIcon } from "../Shared/PinIcon";
 
 interface IGalleryListTableProps {
   galleries: GQL.SlimGalleryDataFragment[];
@@ -38,6 +41,17 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     }
   }
 
+  function togglePinned(galleryId: string, pinned: boolean) {
+    updateGallery({
+      variables: {
+        input: {
+          id: galleryId,
+          pinned: !pinned,
+        },
+      },
+    });
+  }
+
   const CoverImageCell = (gallery: GQL.SlimGalleryDataFragment) => {
     const title = galleryTitle(gallery);
 
@@ -57,9 +71,30 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     const title = galleryTitle(gallery);
 
     return (
-      <Link to={NavUtils.makeGalleryUrl(gallery)}>
-        <span className="ellips-data">{title}</span>
-      </Link>
+      <div className="d-flex align-items-center">
+        {gallery.pinned && (
+          <PinIcon
+            className="text-warning me-1"
+            title={intl.formatMessage({ id: "actions.pinned" })}
+          />
+        )}
+        <Link to={NavUtils.makeGalleryUrl(gallery)}>
+          <span className="ellips-data">{title}</span>
+        </Link>
+      </div>
+    );
+  };
+
+  const PinnedCell = (gallery: GQL.SlimGalleryDataFragment) => {
+    return (
+      <Button
+        variant="link"
+        className={`p-0 text-decoration-none ${gallery.pinned ? 'text-warning' : 'text-muted'}`}
+        onClick={() => togglePinned(gallery.id, gallery.pinned)}
+        title={gallery.pinned ? intl.formatMessage({ id: "actions.unpin" }) : intl.formatMessage({ id: "actions.pin" })}
+      >
+        <PinIcon />
+      </Button>
     );
   };
 
@@ -166,6 +201,12 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
       defaultShow: true,
       mandatory: true,
       render: TitleCell,
+    },
+    {
+      value: "pinned",
+      label: "📌",
+      defaultShow: false,
+      render: PinnedCell,
     },
     {
       value: "date",

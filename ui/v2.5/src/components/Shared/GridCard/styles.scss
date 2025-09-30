@@ -82,3 +82,26 @@
 .card-drag-handle {
   filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.7));
 }
+
+.pin-button-container {
+  display: inline-block;
+  height: 100%;
+  line-height: 1;
+  margin-left: 0.25rem;
+  transition: opacity 0.2s ease-in-out;
+  vertical-align: top;
+
+  &.visible {
+    opacity: 1;
+  }
+
+  &.hidden {
+    opacity: 0;
+  }
+
+  .btn {
+    height: 100%;
+    padding: 0;
+    vertical-align: top;
+  }
+}

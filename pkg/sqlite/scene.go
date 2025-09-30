@@ -88,6 +88,7 @@ type sceneRow struct {
 	// expressed as 1-100
 	Rating             null.Int    `db:"rating"`
 	Organized          bool        `db:"organized"`
+	Pinned             bool        `db:"pinned"`
 	IsBroken           bool        `db:"is_broken"`
 	IsNotBroken        bool        `db:"is_not_broken"`
 	AudioOffsetMs      int         `db:"audio_offset_ms"`
@@ -117,6 +118,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.ShootDate = NullDateFromDatePtr(o.ShootDate)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.Pinned = o.Pinned
 	r.IsBroken = o.IsBroken
 	r.IsNotBroken = o.IsNotBroken
 	r.AudioOffsetMs = o.AudioOffsetMs
@@ -163,6 +165,7 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		ShootDate:          r.ShootDate.DatePtr(),
 		Rating:             nullIntPtr(r.Rating),
 		Organized:          r.Organized,
+		Pinned:             r.Pinned,
 		IsBroken:           r.IsBroken,
 		IsNotBroken:        r.IsNotBroken,
 		AudioOffsetMs:      r.AudioOffsetMs,
@@ -216,6 +219,7 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setNullDate("date", o.Date)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
+	r.setBool("pinned", o.Pinned)
 	r.setBool("is_broken", o.IsBroken)
 	r.setBool("is_not_broken", o.IsNotBroken)
 	r.setInt("audio_offset_ms", o.AudioOffsetMs)
@@ -1196,16 +1200,26 @@ var sceneSortOptions = sortOptions{
 }
 
 func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindFilterType) error {
-	if findFilter == nil || findFilter.Sort == nil || *findFilter.Sort == "" {
-		return nil
+	sort := "created_at"
+	direction := "DESC"
+
+	if findFilter != nil && findFilter.Sort != nil && *findFilter.Sort != "" {
+		sort = findFilter.GetSort("title")
+		direction = findFilter.GetDirection()
 	}
-	sort := findFilter.GetSort("title")
 
 	// CVE-2024-32231 - ensure sort is in the list of allowed sorts
 	if err := sceneSortOptions.validateSort(sort); err != nil {
 		return err
 	}
 
+	// If no search query, sort pinned items first, then by created_at
+	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
+		query.sortAndPagination += " ORDER BY scenes.pinned DESC, scenes.created_at DESC, COALESCE(scenes.title, scenes.id) COLLATE NATURAL_CI ASC"
+		return nil
+	}
+
+	// If there is a search query, use normal sorting
 	addFileTable := func() {
 		query.addJoins(
 			join{
@@ -1238,7 +1252,6 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		)
 	}
 
-	direction := findFilter.GetDirection()
 	switch sort {
 	case "movie_scene_number":
 		query.join(groupsScenesTable, "", "scenes.id = groups_scenes.scene_id")

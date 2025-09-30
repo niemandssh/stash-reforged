@@ -87,6 +87,7 @@ type Scene {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!
+  pinned: Boolean!
   o_counter: Int
   interactive: Boolean!
   interactive_speed: Int
@@ -203,6 +204,7 @@ input SceneUpdateInput {
   o_counter: Int
     @deprecated(reason: "Unsupported - Use sceneIncrementO/sceneDecrementO")
   organized: Boolean
+  pinned: Boolean
   is_broken: Boolean
   is_not_broken: Boolean
   audio_offset_ms: Int

@@ -16,6 +16,7 @@ type Gallery {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!
+  pinned: Boolean!
   o_counter: Int!
   o_history: [Time!]!
   display_mode: Int!
@@ -69,6 +70,7 @@ input GalleryUpdateInput {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
+  pinned: Boolean
   display_mode: Int
   scene_ids: [ID!]
   studio_id: ID

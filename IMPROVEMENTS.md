@@ -17,7 +17,8 @@
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] **Primary tag for performer** (will show after name)
 - [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
-- [x] show current or dead age for performer in the Scene's performer cards
+- [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
+- [x] Show current or dead age for performer in the Scene's performer cards
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's, Studio's and tag's photo cropper
@@ -39,6 +40,7 @@
 - [x] Tag links and performer card links now opens in the new tab in scene
 - [x] Setting for redirect to /scenes from main page if it is turned on
 - [x] Undo/redo for tags field (you can type Ctrl+Z for return accidentally deleted tag)
+- [x] Collapse for scene description in Scene Details tab
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

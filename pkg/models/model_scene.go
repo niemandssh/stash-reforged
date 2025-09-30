@@ -20,6 +20,7 @@ type Scene struct {
 	// Rating expressed in 1-100 scale
 	Rating             *int    `json:"rating"`
 	Organized          bool    `json:"organized"`
+	Pinned             bool    `json:"pinned"`
 	IsBroken           bool    `json:"is_broken"`
 	IsNotBroken        bool    `json:"is_not_broken"`
 	AudioOffsetMs      int     `json:"audio_offset_ms"`
@@ -79,6 +80,7 @@ type ScenePartial struct {
 	// Rating expressed in 1-100 scale
 	Rating             OptionalInt
 	Organized          OptionalBool
+	Pinned             OptionalBool
 	IsBroken           OptionalBool
 	IsNotBroken        OptionalBool
 	AudioOffsetMs      OptionalInt

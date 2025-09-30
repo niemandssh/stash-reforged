@@ -18,6 +18,7 @@ type Gallery struct {
 	// Rating expressed in 1-100 scale
 	Rating      *int `json:"rating"`
 	Organized   bool `json:"organized"`
+	Pinned      bool `json:"pinned"`
 	OCounter    int  `json:"o_counter"`
 	DisplayMode int  `json:"display_mode"`
 	StudioID    *int `json:"studio_id"`
@@ -63,6 +64,7 @@ type GalleryPartial struct {
 	// Rating expressed in 1-100 scale
 	Rating      OptionalInt
 	Organized   OptionalBool
+	Pinned      OptionalBool
 	OCounter    OptionalInt
 	DisplayMode OptionalInt
 	StudioID    OptionalInt

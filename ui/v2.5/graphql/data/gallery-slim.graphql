@@ -8,6 +8,7 @@ fragment SlimGalleryData on Gallery {
   photographer
   rating100
   organized
+  pinned
   o_counter
   display_mode
   files {
