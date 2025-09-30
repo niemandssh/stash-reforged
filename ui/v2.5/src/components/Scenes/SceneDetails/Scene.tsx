@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useContext,
   useRef,
+  useCallback,
 } from "react";
 import { FormattedDate, FormattedMessage, useIntl } from "react-intl";
 import { Link, RouteComponentProps } from "react-router-dom";
@@ -890,6 +891,11 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const [queueScenes, setQueueScenes] = useState<QueuedScene[]>([]);
 
   const [collapsed, setCollapsed] = useState(false);
+  const [viewedScenes, setViewedScenes] = useState<Set<string>>(new Set());
+
+  const handleMarkSceneViewed = useCallback((sceneId: string) => {
+    setViewedScenes(prev => new Set(prev).add(sceneId));
+  }, []);
   const [continuePlaylist, setContinuePlaylist] = useState(queryContinue);
   const [hideScrubber, setHideScrubber] = useState(
     !(configuration?.interface.showScrubber ?? true)
@@ -1145,6 +1151,8 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           onNext={() => queueNext(true)}
           onPrevious={() => queuePrevious(true)}
           onPlayScene={(sceneId) => loadScene(sceneId, true)}
+          viewedScenes={viewedScenes}
+          onMarkSceneViewed={handleMarkSceneViewed}
         />
       </div>
     </div>

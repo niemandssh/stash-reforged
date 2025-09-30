@@ -230,6 +230,8 @@ interface IScenePlayerProps {
   onNext: () => void;
   onPrevious: () => void;
   onPlayScene?: (sceneId: string) => void;
+  viewedScenes?: Set<string>;
+  onMarkSceneViewed?: (sceneId: string) => void;
 }
 
 export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
@@ -245,6 +247,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     onNext,
     onPrevious,
     onPlayScene,
+    viewedScenes = new Set(),
+    onMarkSceneViewed,
   }) => {
     const { configuration } = useContext(ConfigurationContext);
     const interfaceConfig = configuration?.interface;
@@ -279,17 +283,25 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const minimumPlayPercent = uiConfig?.minimumPlayPercent ?? 0;
 
     // Query for similar scenes to determine next scene for autoplay
+    // Get enough scenes to handle multiple batches when some are already viewed
     const { data: similarScenesData } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
       GQL.FindSimilarScenesDocument,
       {
-        variables: { id: scene.id, limit: 5 }, // Get top 5 similar scenes
+        variables: { id: scene.id, limit: 50 }, // Get more scenes to handle viewed scenes
         skip: !scene.id,
       }
     );
 
-    const nextScene = useNextScene(scene.id, similarScenesData?.findScene?.similar_scenes);
+    const nextScene = useNextScene(scene.id, similarScenesData?.findScene?.similar_scenes, Array.from(viewedScenes as Set<string>));
     const trackActivity = uiConfig?.trackActivity ?? true;
     const vrTag = uiConfig?.vrTag ?? undefined;
+
+    // Mark current scene as viewed when component mounts or scene changes
+    useEffect(() => {
+      if (scene.id && onMarkSceneViewed) {
+        onMarkSceneViewed(scene.id);
+      }
+    }, [scene.id, onMarkSceneViewed]);
 
     useScript(
       "https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1",

@@ -4,6 +4,7 @@ import { FormattedMessage } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import { ScenePreview } from "../Scenes/SceneCard";
 import { Icon } from "../Shared/Icon";
+import { TruncatedText } from "../Shared/TruncatedText";
 import { ConfigurationContext } from "../../hooks/Config";
 import GenderIcon from "../Performers/GenderIcon";
 import { faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -55,6 +56,15 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
   const duration = file?.duration ?? 0;
   const scenePath = `/scenes/${nextScene.id}`;
 
+  // Get filename from path for fallback title
+  const getFileName = (path: string) => {
+    return path.split('/').pop()?.split('\\').pop() || '';
+  };
+
+  const fallbackTitle = nextScene.files.length > 0
+    ? getFileName(nextScene.files[0].path)
+    : "Untitled Scene";
+
   return (
     <div className="next-scene-overlay">
       <div className="next-scene-overlay-background" onClick={onCancel} />
@@ -89,7 +99,7 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
           <div className="next-scene-overlay-info">
             <h2 className="next-scene-overlay-title">
               <Link to={scenePath} onClick={handleSkip}>
-                {nextScene.title || "Untitled Scene"}
+                <TruncatedText text={nextScene.title || fallbackTitle} lineCount={2} />
               </Link>
             </h2>
 
