@@ -187,7 +187,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
   );
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
-  
+
   useEffect(() => {
     const loadAllTags = async () => {
       try {
@@ -195,14 +195,14 @@ export const SceneEditPanel: React.FC<IProps> = ({
         filter.itemsPerPage = -1;
         filter.sortBy = "name";
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
-        
+
         const result = await queryFindTags(filter);
         setAllTags(result.data.findTags.tags as unknown as GQL.Tag[]);
       } catch (error) {
         console.error("Error loading all tags:", error);
       }
     };
-    
+
     loadAllTags();
   }, []);
 
@@ -220,7 +220,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       const poseTagIdsFromTags = tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
-      
+
       if (!isEqual(poseTagIdsFromTags.sort(), selectedPoseTagIds.sort())) {
         setSelectedPoseTagIds(poseTagIdsFromTags);
       }
@@ -274,18 +274,18 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   function onPoseTagSelectionChange(poseTagIds: string[]) {
     setSelectedPoseTagIds(poseTagIds);
-    
+
     // Получаем текущие теги из useTagsEdit (включая новосозданные)
     const currentTags = tags || [];
-    
+
     // Фильтруем теги, исключая теги позы
     const nonPoseTags = currentTags.filter(tag => !tag.is_pose_tag);
-    
+
     // Добавляем выбранные теги позы
     const poseTagObjects = poseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
-    
+
     const newTags = [...nonPoseTags, ...poseTagObjects];
-    
+
     onSetTags(newTags);
   }
 
@@ -906,8 +906,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
         <Row className="form-container px-3">
           <Col lg={7} xl={12}>
             {renderInputField("title")}
-
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
+
+            {renderPoseTagsField()}
+            {renderTagsField()}
+            {renderPerformersField()}
 
             {renderDateField("date", "release_date")}
             {renderDateField("shoot_date")}
@@ -915,11 +918,6 @@ export const SceneEditPanel: React.FC<IProps> = ({
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}
 
-            {renderPerformersField()}
-            {renderPoseTagsField()}
-            {renderTagsField()}
-            {renderIsBrokenField()}
-            {renderIsNotBrokenField()}
             {renderInputField("code", "text", "scene_code")}
             {renderStudioField()}
             {renderInputField("director")}
@@ -934,7 +932,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
             )}
           </Col>
           <Col lg={5} xl={12}>
+            {renderIsBrokenField()}
+            {renderIsNotBrokenField()}
+
             {renderDetailsField()}
+
             <Form.Group controlId="cover_image">
               <Form.Label>
                 <FormattedMessage id="cover_image" />

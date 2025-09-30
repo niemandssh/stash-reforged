@@ -108,7 +108,7 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
                   className="next-scene-overlay-studio"
                   onClick={handleSkip}
                 >
-                  {nextScene.studio.image_path ? (
+                  {nextScene.studio.image_path && !nextScene.studio.image_path.includes('default=true') ? (
                     <img
                       src={nextScene.studio.image_path}
                       alt={nextScene.studio.name}
