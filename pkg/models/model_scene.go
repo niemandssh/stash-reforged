@@ -304,8 +304,9 @@ func (c VideoCaption) Path(filePath string) string {
 
 // SimilarScene represents a scene with its similarity score
 type SimilarScene struct {
-	Scene           *Scene  `json:"scene"`
-	SimilarityScore float64 `json:"similarity_score"`
+	Scene               *Scene               `json:"scene"`
+	SimilarityScore     float64              `json:"similarity_score"`
+	SimilarityScoreData *SimilarityScoreData `json:"similarity_score_data,omitempty"`
 }
 
 // VideoFilters represents video filter settings for a scene

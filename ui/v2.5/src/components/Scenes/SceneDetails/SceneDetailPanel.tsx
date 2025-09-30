@@ -198,24 +198,37 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       <div className="row">
         <div className={`${sceneDetailsWidth} col-12 scene-details`}>
           <URLsField id="urls" urls={props.scene.urls} truncate />
-          <h6 className="font-weight-bold">
-            <FormattedMessage id="created_at" />:{" "}
+
+          <div className="mb-2">
+            <h6 className="font-weight-bold d-inline-block mr-1">
+              <FormattedMessage id="created_at" />:{" "}
+            </h6>
             {TextUtils.formatDateTime(intl, props.scene.created_at)}{" "}
-          </h6>
-          <h6 className="font-weight-bold">
-            <FormattedMessage id="updated_at" />:{" "}
+          </div>
+
+          <div className="mb-2">
+            <h6 className="font-weight-bold d-inline-block mr-1">
+              <FormattedMessage id="updated_at" />:{" "}
+            </h6>
             {TextUtils.formatDateTime(intl, props.scene.updated_at)}{" "}
-          </h6>
+          </div>
+
           {props.scene.code && (
-            <h6 className="font-weight-bold">
-              <FormattedMessage id="scene_code" />: {props.scene.code}{" "}
-            </h6>
+            <div className="mb-2">
+              <h6 className="font-weight-bold d-inline-block mr-1">
+                <FormattedMessage id="scene_code" />:
+              </h6>
+              {props.scene.code}{" "}
+            </div>
           )}
+
           {props.scene.director && (
-            <h6 className="font-weight-bold">
-              <FormattedMessage id="director" />:{" "}
+            <div className="mb-2">
+              <h6 className="font-weight-bold d-inline-block mr-1">
+                <FormattedMessage id="director" />:{" "}
+              </h6>
               <DirectorLink director={props.scene.director} linkType="scene" />
-            </h6>
+            </div>
           )}
         </div>
       </div>

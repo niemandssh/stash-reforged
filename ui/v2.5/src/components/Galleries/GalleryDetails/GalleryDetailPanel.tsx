@@ -86,18 +86,28 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
       <div className="row">
         <div className={`${galleryDetailsWidth} col-12 gallery-details`}>
           <URLsField id="urls" urls={gallery.urls} />
-          <h6>
-            <FormattedMessage id="created_at" />:{" "}
-            {TextUtils.formatDateTime(intl, gallery.created_at)}{" "}
-          </h6>
-          <h6>
-            <FormattedMessage id="updated_at" />:{" "}
-            {TextUtils.formatDateTime(intl, gallery.updated_at)}{" "}
-          </h6>
-          {gallery.code && (
-            <h6>
-              <FormattedMessage id="scene_code" />: {gallery.code}{" "}
+
+          <div className="mb-2">
+            <h6 className="font-weight-bold d-inline-block mr-1">
+              <FormattedMessage id="created_at" />:{" "}
             </h6>
+            {TextUtils.formatDateTime(intl, gallery.created_at)}{" "}
+          </div>
+
+          <div className="mb-2">
+            <h6 className="font-weight-bold d-inline-block mr-1">
+              <FormattedMessage id="updated_at" />:{" "}
+            </h6>
+            {TextUtils.formatDateTime(intl, gallery.updated_at)}{" "}
+          </div>
+
+          {gallery.code && (
+            <div className="mb-2">
+              <h6 className="font-weight-bold d-inline-block mr-1">
+                <FormattedMessage id="scene_code" />:
+              </h6>
+              {gallery.code}{" "}
+            </div>
           )}
           {gallery.photographer && (
             <h6>

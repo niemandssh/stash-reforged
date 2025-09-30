@@ -491,8 +491,9 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 		}
 		if scene != nil {
 			similarScenes[i] = &models.SimilarScene{
-				Scene:           scene,
-				SimilarityScore: sim.SimilarityScore,
+				Scene:               scene,
+				SimilarityScore:     sim.SimilarityScore,
+				SimilarityScoreData: sim.SimilarityScoreData,
 			}
 		}
 	}

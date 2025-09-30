@@ -2,7 +2,9 @@ package sqlite
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
@@ -33,8 +35,17 @@ func NewSceneSimilarityQueryBuilder() *sceneSimilarityQueryBuilder {
 }
 
 func (qb *sceneSimilarityQueryBuilder) Create(ctx context.Context, newObject models.SceneSimilarity) (*models.SceneSimilarity, error) {
-	query := fmt.Sprintf("INSERT INTO %s (scene_id, similar_scene_id, similarity_score, created_at, updated_at) VALUES (?, ?, ?, ?, ?)", qb.tableName)
-	result, err := dbWrapper.Exec(ctx, query, newObject.SceneID, newObject.SimilarSceneID, newObject.SimilarityScore, newObject.CreatedAt, newObject.UpdatedAt)
+	var similarityScoreData *string
+	if newObject.SimilarityScoreData != nil {
+		data, err := newObject.SimilarityScoreData.MarshalSimilarityScoreData()
+		if err != nil {
+			return nil, fmt.Errorf("marshaling similarity score data: %w", err)
+		}
+		similarityScoreData = &data
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s (scene_id, similar_scene_id, similarity_score, similarity_score_data, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)", qb.tableName)
+	result, err := dbWrapper.Exec(ctx, query, newObject.SceneID, newObject.SimilarSceneID, newObject.SimilarityScore, similarityScoreData, newObject.CreatedAt, newObject.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("inserting scene similarity: %w", err)
 	}
@@ -48,8 +59,17 @@ func (qb *sceneSimilarityQueryBuilder) Create(ctx context.Context, newObject mod
 }
 
 func (qb *sceneSimilarityQueryBuilder) Update(ctx context.Context, updatedObject models.SceneSimilarity) (*models.SceneSimilarity, error) {
-	query := fmt.Sprintf("UPDATE %s SET scene_id = ?, similar_scene_id = ?, similarity_score = ?, updated_at = ? WHERE %s = ?", qb.tableName, qb.idColumn)
-	_, err := dbWrapper.Exec(ctx, query, updatedObject.SceneID, updatedObject.SimilarSceneID, updatedObject.SimilarityScore, updatedObject.UpdatedAt, updatedObject.ID)
+	var similarityScoreData *string
+	if updatedObject.SimilarityScoreData != nil {
+		data, err := updatedObject.SimilarityScoreData.MarshalSimilarityScoreData()
+		if err != nil {
+			return nil, fmt.Errorf("marshaling similarity score data: %w", err)
+		}
+		similarityScoreData = &data
+	}
+
+	query := fmt.Sprintf("UPDATE %s SET scene_id = ?, similar_scene_id = ?, similarity_score = ?, similarity_score_data = ?, updated_at = ? WHERE %s = ?", qb.tableName, qb.idColumn)
+	_, err := dbWrapper.Exec(ctx, query, updatedObject.SceneID, updatedObject.SimilarSceneID, updatedObject.SimilarityScore, similarityScoreData, updatedObject.UpdatedAt, updatedObject.ID)
 	if err != nil {
 		return nil, fmt.Errorf("updating scene similarity: %w", err)
 	}
@@ -63,9 +83,36 @@ func (qb *sceneSimilarityQueryBuilder) Destroy(ctx context.Context, id int) erro
 
 func (qb *sceneSimilarityQueryBuilder) Find(ctx context.Context, id int) (*models.SceneSimilarity, error) {
 	var ret models.SceneSimilarity
-	query := fmt.Sprintf("SELECT * FROM %s WHERE %s = ?", qb.tableName, qb.idColumn)
-	if err := qb.queryStruct(ctx, query, []interface{}{id}, &ret); err != nil {
+	var similarityScoreData sql.NullString
+
+	query := fmt.Sprintf("SELECT id, scene_id, similar_scene_id, similarity_score, similarity_score_data, created_at, updated_at FROM %s WHERE %s = ?", qb.tableName, qb.idColumn)
+	if err := dbWrapper.Get(ctx, &struct {
+		ID                  *int            `db:"id"`
+		SceneID             *int            `db:"scene_id"`
+		SimilarSceneID      *int            `db:"similar_scene_id"`
+		SimilarityScore     *float64        `db:"similarity_score"`
+		SimilarityScoreData *sql.NullString `db:"similarity_score_data"`
+		CreatedAt           *time.Time      `db:"created_at"`
+		UpdatedAt           *time.Time      `db:"updated_at"`
+	}{
+		ID:                  &ret.ID,
+		SceneID:             &ret.SceneID,
+		SimilarSceneID:      &ret.SimilarSceneID,
+		SimilarityScore:     &ret.SimilarityScore,
+		SimilarityScoreData: &similarityScoreData,
+		CreatedAt:           &ret.CreatedAt,
+		UpdatedAt:           &ret.UpdatedAt,
+	}, query, id); err != nil {
 		return nil, err
+	}
+
+	// Unmarshal similarity_score_data if present
+	if similarityScoreData.Valid && similarityScoreData.String != "" {
+		scoreData, err := models.UnmarshalSimilarityScoreData(similarityScoreData.String)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshaling similarity score data: %w", err)
+		}
+		ret.SimilarityScoreData = scoreData
 	}
 
 	return &ret, nil
@@ -99,6 +146,7 @@ func (qb *sceneSimilarityQueryBuilder) FindSimilarScenes(ctx context.Context, sc
 			When(sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID), sceneSimilaritiesTableMgr.table.Col("similar_scene_id")).
 			Else(sceneSimilaritiesTableMgr.table.Col("scene_id")).As("similar_scene_id"),
 		sceneSimilaritiesTableMgr.table.Col("similarity_score"),
+		sceneSimilaritiesTableMgr.table.Col("similarity_score_data"),
 		sceneSimilaritiesTableMgr.table.Col("created_at"),
 		sceneSimilaritiesTableMgr.table.Col("updated_at"),
 	).From(sceneSimilaritiesTableMgr.table).Where(
@@ -115,16 +163,28 @@ func (qb *sceneSimilarityQueryBuilder) FindSimilarScenes(ctx context.Context, sc
 	var ret []*models.SceneSimilarity
 	if err := queryFunc(ctx, query, false, func(rows *sqlx.Rows) error {
 		var similarity models.SceneSimilarity
+		var similarityScoreData sql.NullString
 		if err := rows.Scan(
 			&similarity.ID,
 			&similarity.SceneID,
 			&similarity.SimilarSceneID,
 			&similarity.SimilarityScore,
+			&similarityScoreData,
 			&similarity.CreatedAt,
 			&similarity.UpdatedAt,
 		); err != nil {
 			return err
 		}
+
+		// Unmarshal similarity_score_data if present
+		if similarityScoreData.Valid && similarityScoreData.String != "" {
+			scoreData, err := models.UnmarshalSimilarityScoreData(similarityScoreData.String)
+			if err != nil {
+				return fmt.Errorf("unmarshaling similarity score data: %w", err)
+			}
+			similarity.SimilarityScoreData = scoreData
+		}
+
 		ret = append(ret, &similarity)
 		return nil
 	}); err != nil {
@@ -150,18 +210,29 @@ func (qb *sceneSimilarityQueryBuilder) DeleteByScene(ctx context.Context, sceneI
 }
 
 func (qb *sceneSimilarityQueryBuilder) Upsert(ctx context.Context, similarity models.SceneSimilarity) error {
+	var similarityScoreData *string
+	if similarity.SimilarityScoreData != nil {
+		data, err := similarity.SimilarityScoreData.MarshalSimilarityScoreData()
+		if err != nil {
+			return fmt.Errorf("marshaling similarity score data: %w", err)
+		}
+		similarityScoreData = &data
+	}
+
 	query := dialect.Insert(sceneSimilaritiesTableMgr.table).
-		Cols("scene_id", "similar_scene_id", "similarity_score", "created_at", "updated_at").
+		Cols("scene_id", "similar_scene_id", "similarity_score", "similarity_score_data", "created_at", "updated_at").
 		Vals(goqu.Vals{
 			similarity.SceneID,
 			similarity.SimilarSceneID,
 			similarity.SimilarityScore,
+			similarityScoreData,
 			similarity.CreatedAt,
 			similarity.UpdatedAt,
 		}).
 		OnConflict(goqu.DoUpdate("scene_id, similar_scene_id", goqu.Record{
-			"similarity_score": similarity.SimilarityScore,
-			"updated_at":       similarity.UpdatedAt,
+			"similarity_score":      similarity.SimilarityScore,
+			"similarity_score_data": similarityScoreData,
+			"updated_at":            similarity.UpdatedAt,
 		}))
 
 	if _, err := exec(ctx, query); err != nil {

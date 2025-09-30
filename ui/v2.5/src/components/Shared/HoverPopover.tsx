@@ -7,10 +7,12 @@ interface IHoverPopover {
   leaveDelay?: number;
   content: JSX.Element[] | JSX.Element | string;
   className?: string;
+  popoverClassName?: string;
   placement?: OverlayProps["placement"];
+  offset?: OverlayProps["offset"];
   onOpen?: () => void;
   onClose?: () => void;
-  target?: React.RefObject<HTMLElement>;
+  target?: React.RefObject<HTMLElement> | (() => HTMLElement | null);
 }
 
 export const HoverPopover: React.FC<IHoverPopover> = PatchComponent(
@@ -21,7 +23,9 @@ export const HoverPopover: React.FC<IHoverPopover> = PatchComponent(
     content,
     children,
     className,
+    popoverClassName,
     placement = "top",
+    offset,
     onOpen,
     onClose,
     target,
@@ -65,17 +69,19 @@ export const HoverPopover: React.FC<IHoverPopover> = PatchComponent(
         >
           {children}
         </div>
-        {triggerRef.current && (
+        {triggerRef.current && (typeof target === 'function' ? target() : (target?.current ?? triggerRef.current)) && (
           <Overlay
             show={show}
             placement={placement}
-            target={target?.current ?? triggerRef.current}
+            offset={offset}
+            container={document.body}
+            target={typeof target === 'function' ? target() : (target?.current ?? triggerRef.current)}
           >
             <Popover
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
               id="popover"
-              className="hover-popover-content"
+              className={`hover-popover-content ${popoverClassName || ''}`}
             >
               {content}
             </Popover>

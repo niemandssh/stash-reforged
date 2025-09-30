@@ -2,15 +2,17 @@ import React from "react";
 
 interface PinIconProps {
   className?: string;
+  title?: string;
 }
 
-export const PinIcon: React.FC<PinIconProps> = ({ className }) => (
+export const PinIcon: React.FC<PinIconProps> = ({ className, title }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"
     height="16"
     viewBox="0 0 24 24"
     className={`fa-icon ${className ?? ""}`}
+    title={title}
   >
     <path
       fill="currentColor"

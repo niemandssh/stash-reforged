@@ -145,6 +145,18 @@ type Scene {
 type SimilarScene {
   scene: Scene!
   similarity_score: Float!
+  similarity_score_data: SimilarityScoreData
+}
+
+type SimilarityScoreData {
+  enhanced_tags: Float
+  normal_tags: Float
+  reduced_tags: Float
+  tags: Float
+  performers: Float
+  groups: Float
+  studio: Float
+  penalty: Float
 }
 
 input SceneMovieInput {

@@ -11,22 +11,34 @@ import (
 
 // SimilarityWeights defines the weights for different similarity factors
 type SimilarityWeights struct {
-	Performers float64 // Weight for performer similarity
-	Groups     float64 // Weight for group similarity
-	Tags       float64 // Weight for tag similarity
-	Studio     float64 // Weight for studio similarity
-	MinScore   float64 // Minimum similarity score to store (default 0.3)
+	Performers   float64 // Weight for performer similarity
+	Groups       float64 // Weight for group similarity
+	EnhancedTags float64 // Weight for enhanced tags
+	NormalTags   float64 // Weight for normal tags
+	ReducedTags  float64 // Weight for reduced tags
+	Tags         float64 // Weight for overall tag similarity
+	Studio       float64 // Weight for studio similarity
+	MinScore     float64 // Minimum similarity score to store (default 0.3)
+}
+
+// TagSimilarityBreakdown holds the tag similarity breakdown by weight categories
+type TagSimilarityBreakdown struct {
+	EnhancedTags float64 // Sum of weights for enhanced tags (>0.61)
+	NormalTags   float64 // Sum of weights for normal tags (0.41-0.6)
+	ReducedTags  float64 // Sum of weights for reduced tags (<0.4)
 }
 
 // DefaultSimilarityWeights returns the default weights for similarity calculation
 func DefaultSimilarityWeights() SimilarityWeights {
 	return SimilarityWeights{
-		Performers: 0.4, // 30% weight
-		Groups:     0.2, // 20% weight
-		Tags:       0.5, // 50% weight (highest)
-		Studio:     0.2, // 10% weight (lowest)
-		/////////////////////////////////////////////////////////////
-		MinScore: 0.1, // Only store similarities with score >= 0.1
+		Performers:   0.4, // 30% weight
+		Groups:       0.2, // 20% weight
+		EnhancedTags: 0.4, // Enhanced tags
+		NormalTags:   0.3, // Normal tags
+		ReducedTags:  0.3, // Reduced tags
+		Tags:         0.5, // Overall tag similarity
+		Studio:       0.2, // 10% weight (lowest)
+		MinScore:     0.1, // Only store similarities with score >= 0.1
 	}
 }
 
@@ -48,12 +60,8 @@ func NewSceneSimilarityCalculator(repository models.SceneSimilarityReaderWriter,
 	}
 }
 
-// CalculateSimilarity calculates the similarity score between two scenes
-func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, scene1, scene2 *models.Scene) (float64, error) {
-	if scene1.ID == scene2.ID {
-		return 1.0, nil // Same scene
-	}
-
+// calculateSimilarityScore calculates the similarity score between two scenes
+func (c *SceneSimilarityCalculator) calculateSimilarityScore(ctx context.Context, scene1, scene2 *models.Scene) (float64, error) {
 	var totalScore float64
 
 	// Calculate performer similarity
@@ -61,7 +69,7 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 	if err != nil {
 		return 0, fmt.Errorf("calculating performer similarity: %w", err)
 	}
-	performerContribution := performerScore * c.weights.Performers
+	performerContribution := math.Min(performerScore*c.weights.Performers, c.weights.Performers)
 	totalScore += performerContribution
 
 	// Calculate group similarity
@@ -69,22 +77,32 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 	if err != nil {
 		return 0, fmt.Errorf("calculating group similarity: %w", err)
 	}
-	groupContribution := groupScore * c.weights.Groups
+	groupContribution := math.Min(groupScore*c.weights.Groups, c.weights.Groups)
 	totalScore += groupContribution
 
-	// Calculate tag similarity
+	// Calculate tag similarity breakdown
 	tags1 := scene1.TagIDs.List()
 	tags2 := scene2.TagIDs.List()
-	tagScore, err := c.calculateTagSimilarity(ctx, tags1, tags2)
+	tagBreakdown, _, _, _, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
 	if err != nil {
-		return 0, fmt.Errorf("calculating tag similarity: %w", err)
+		return 0, fmt.Errorf("calculating tag similarity breakdown: %w", err)
 	}
-	tagContribution := tagScore * c.weights.Tags
+	enhancedContribution := tagBreakdown.EnhancedTags * c.weights.EnhancedTags
+	normalContribution := tagBreakdown.NormalTags * c.weights.NormalTags
+	reducedPenalty := tagBreakdown.ReducedTags * c.weights.ReducedTags // Reduced tags are penalty
+	totalScore += enhancedContribution + normalContribution - reducedPenalty
+
+	// Calculate overall tag similarity (old logic)
+	overallTagScore, err := c.calculateOverallTagSimilarity(ctx, tags1, tags2)
+	if err != nil {
+		return 0, fmt.Errorf("calculating overall tag similarity: %w", err)
+	}
+	tagContribution := math.Min(overallTagScore*c.weights.Tags, c.weights.Tags)
 	totalScore += tagContribution
 
 	// Calculate studio similarity
 	studioScore := c.calculateStudioSimilarity(scene1.StudioID, scene2.StudioID)
-	studioContribution := studioScore * c.weights.Studio
+	studioContribution := math.Min(studioScore*c.weights.Studio, c.weights.Studio)
 	totalScore += studioContribution
 
 	// Apply broken status penalty
@@ -93,8 +111,277 @@ func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, sce
 		brokenPenalty = 0.3 // Strong penalty for broken scenes
 	}
 
-	finalScore := math.Min(totalScore, 1.0) * brokenPenalty
+	// Cap total score at sum of all weights
+	maxTotalScore := c.weights.Performers + c.weights.Groups + c.weights.Studio + c.weights.EnhancedTags + c.weights.NormalTags + c.weights.Tags
+	finalScore := math.Min(totalScore, maxTotalScore) * brokenPenalty
 	return finalScore, nil
+}
+
+// CalculateSimilarity calculates the similarity score between two scenes
+func (c *SceneSimilarityCalculator) CalculateSimilarity(ctx context.Context, scene1, scene2 *models.Scene) (float64, *models.SimilarityScoreData, error) {
+	if scene1.ID == scene2.ID {
+		return 1.0, nil, nil // Same scene
+	}
+
+	// Calculate similarity score
+	score, err := c.calculateSimilarityScore(ctx, scene1, scene2)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	// Calculate breakdown for analytics
+	scoreData, err := c.calculateSimilarityBreakdown(ctx, scene1, scene2)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	return score, scoreData, nil
+}
+
+// calculateTagSimilarityBreakdown calculates tag similarity breakdown by weight categories
+func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.Context, tags1, tags2 []int) (*TagSimilarityBreakdown, int, int, int, error) {
+	breakdown := &TagSimilarityBreakdown{}
+
+	if len(tags1) == 0 && len(tags2) == 0 {
+		return breakdown, 0, 0, 0, nil
+	}
+
+	// Get all unique tags from both scenes
+	allTags := make(map[int]bool)
+	for _, tagID := range tags1 {
+		allTags[tagID] = true
+	}
+	for _, tagID := range tags2 {
+		allTags[tagID] = true
+	}
+
+	// Load tag weights from database and filter out ignored tags
+	tagWeights := make(map[int]float64)
+	ignoredTags := make(map[int]bool)
+	for tagID := range allTags {
+		tag, err := c.tagRepo.Find(ctx, tagID)
+		if err != nil {
+			continue
+		}
+		if tag != nil {
+			// Skip tags that are set to ignore suggestions
+			if tag.IgnoreSuggestions {
+				ignoredTags[tagID] = true
+				continue
+			}
+			tagWeights[tagID] = tag.Weight
+		} else {
+			tagWeights[tagID] = 0.5 // Default weight if tag not found
+		}
+	}
+
+	// Count total tags per category
+	enhancedTotal := 0
+	normalTotal := 0
+	reducedTotal := 0
+	for _, tagID := range tags1 {
+		if !ignoredTags[tagID] {
+			weight := tagWeights[tagID]
+			if weight > 0.61 {
+				enhancedTotal++
+			} else if weight >= 0.35 {
+				normalTotal++
+			} else {
+				reducedTotal++
+			}
+		}
+	}
+	for _, tagID := range tags2 {
+		if !ignoredTags[tagID] {
+			weight := tagWeights[tagID]
+			if weight > 0.61 {
+				if enhancedTotal == 0 {
+					enhancedTotal = 1
+				}
+			} else if weight >= 0.35 {
+				if normalTotal == 0 {
+					normalTotal = 1
+				}
+			} else {
+				if reducedTotal == 0 {
+					reducedTotal = 1
+				}
+			}
+		}
+	}
+
+	// Find shared tags and collect them by category
+	enhancedTags := make([]float64, 0)
+	normalTags := make([]float64, 0)
+	reducedTags := make([]float64, 0)
+
+	for _, tagID := range tags1 {
+		if !ignoredTags[tagID] && c.contains(tags2, tagID) {
+			weight := tagWeights[tagID]
+			// Categorize by weight ranges: enhanced (>0.61), normal (0.35-0.6), reduced (<0.35) - penalty
+			if weight > 0.61 {
+				enhancedTags = append(enhancedTags, weight)
+			} else if weight >= 0.35 {
+				normalTags = append(normalTags, weight)
+			} else {
+				reducedTags = append(reducedTags, weight)
+			}
+		}
+	}
+
+	// Calculate quality scores for each category
+	breakdown.EnhancedTags = 0.0
+	if enhancedTotal > 0 {
+		breakdown.EnhancedTags = float64(len(enhancedTags)) / float64(enhancedTotal)
+	}
+	breakdown.NormalTags = 0.0
+	if normalTotal > 0 {
+		breakdown.NormalTags = float64(len(normalTags)) / float64(normalTotal)
+	}
+	breakdown.ReducedTags = 0.0
+	if reducedTotal > 0 {
+		breakdown.ReducedTags = float64(len(reducedTags)) / float64(reducedTotal)
+	}
+
+	return breakdown, len(enhancedTags), len(normalTags), len(reducedTags), nil
+}
+
+// countTagsByCategory counts tags in each weight category for a scene
+func (c *SceneSimilarityCalculator) countTagsByCategory(ctx context.Context, tags []int) (int, int, int) {
+	enhancedCount := 0
+	normalCount := 0
+	reducedCount := 0
+
+	for _, tagID := range tags {
+		tag, err := c.tagRepo.Find(ctx, tagID)
+		if err != nil || tag == nil {
+			continue
+		}
+		if tag.IgnoreSuggestions {
+			continue
+		}
+		weight := tag.Weight
+		if weight > 0.61 {
+			enhancedCount++
+		} else if weight >= 0.35 {
+			normalCount++
+		} else {
+			reducedCount++
+		}
+	}
+
+	return enhancedCount, normalCount, reducedCount
+}
+
+// calculateOverallTagSimilarity calculates overall tag similarity using Dice coefficient with weights (old logic)
+func (c *SceneSimilarityCalculator) calculateOverallTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
+	// Get all unique tags from both scenes
+	allTags := make(map[int]bool)
+	for _, tagID := range tags1 {
+		allTags[tagID] = true
+	}
+	for _, tagID := range tags2 {
+		allTags[tagID] = true
+	}
+
+	// Load tag weights from database and filter out ignored tags
+	tagWeights := make(map[int]float64)
+	ignoredTags := make(map[int]bool)
+	for tagID := range allTags {
+		tag, err := c.tagRepo.Find(ctx, tagID)
+		if err != nil {
+			continue
+		}
+		if tag != nil {
+			// Skip tags that are set to ignore suggestions
+			if tag.IgnoreSuggestions {
+				ignoredTags[tagID] = true
+				continue
+			}
+			tagWeights[tagID] = tag.Weight
+		} else {
+			tagWeights[tagID] = 0.5 // Default weight if tag not found
+		}
+	}
+
+	sum1 := 0.0
+	sum2 := 0.0
+	intersection := 0.0
+
+	for _, tagID := range tags1 {
+		if !ignoredTags[tagID] {
+			weight := tagWeights[tagID]
+			sum1 += weight
+			if c.contains(tags2, tagID) {
+				intersection += weight
+			}
+		}
+	}
+
+	for _, tagID := range tags2 {
+		if !ignoredTags[tagID] {
+			sum2 += tagWeights[tagID]
+		}
+	}
+
+	if sum1+sum2-intersection == 0 {
+		return 0, nil
+	}
+
+	return 2 * intersection / (sum1 + sum2), nil
+}
+
+// calculateSimilarityBreakdown calculates the breakdown of similarity contributions for analytics
+func (c *SceneSimilarityCalculator) calculateSimilarityBreakdown(ctx context.Context, scene1, scene2 *models.Scene) (*models.SimilarityScoreData, error) {
+	scoreData := &models.SimilarityScoreData{}
+
+	// Calculate raw component scores
+	performerScore, _ := c.calculatePerformerSimilarity(scene1.PerformerIDs.List(), scene2.PerformerIDs.List())
+	groupScore, _ := c.calculateGroupSimilarity(scene1.Groups.List(), scene2.Groups.List())
+	studioScore := c.calculateStudioSimilarity(scene1.StudioID, scene2.StudioID)
+
+	tags1 := scene1.TagIDs.List()
+	tags2 := scene2.TagIDs.List()
+	tagBreakdown, _, _, _, _ := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	overallTagScore, _ := c.calculateOverallTagSimilarity(ctx, tags1, tags2)
+
+	// Calculate contributions (tagBreakdown already includes quality)
+	performerContribution := math.Min(performerScore*c.weights.Performers, c.weights.Performers)
+	groupContribution := math.Min(groupScore*c.weights.Groups, c.weights.Groups)
+	studioContribution := math.Min(studioScore*c.weights.Studio, c.weights.Studio)
+	enhancedContribution := tagBreakdown.EnhancedTags * c.weights.EnhancedTags
+	normalContribution := tagBreakdown.NormalTags * c.weights.NormalTags
+	reducedPenalty := tagBreakdown.ReducedTags * c.weights.ReducedTags
+	tagContribution := math.Min(overallTagScore*c.weights.Tags, c.weights.Tags)
+
+	// Calculate total before penalty
+	rawTotal := performerContribution + groupContribution + studioContribution + enhancedContribution + normalContribution + tagContribution - reducedPenalty
+
+	// Apply penalty
+	penalty := 1.0
+	if scene1.IsBroken || scene2.IsBroken {
+		penalty = 0.3
+	}
+
+	// Calculate proportional contributions (sum of scoreData = finalScore)
+
+	if rawTotal > 0 {
+		finalScore := rawTotal * penalty
+		scoreData.Performers = (performerContribution / rawTotal) * finalScore
+		scoreData.Groups = (groupContribution / rawTotal) * finalScore
+		scoreData.Studio = (studioContribution / rawTotal) * finalScore
+		scoreData.EnhancedTags = (enhancedContribution / rawTotal) * finalScore
+		scoreData.NormalTags = (normalContribution / rawTotal) * finalScore
+		scoreData.ReducedTags = -(reducedPenalty / rawTotal) * finalScore // Negative penalty
+		scoreData.Tags = (tagContribution / rawTotal) * finalScore
+	}
+
+	// Add penalty as negative contribution
+	if scene1.IsBroken || scene2.IsBroken {
+		scoreData.Penalty = -0.7 // Since penalty = 0.3, the reduction is 0.7
+	}
+
+	return scoreData, nil
 }
 
 // calculatePerformerSimilarity calculates similarity based on shared performers
@@ -381,7 +668,7 @@ func (c *SceneSimilarityCalculator) contains(slice []int, element int) bool {
 
 // CalculateAndStoreSimilarity calculates similarity between two scenes and stores it
 func (c *SceneSimilarityCalculator) CalculateAndStoreSimilarity(ctx context.Context, scene1, scene2 *models.Scene) error {
-	score, err := c.CalculateSimilarity(ctx, scene1, scene2)
+	score, scoreData, err := c.CalculateSimilarity(ctx, scene1, scene2)
 	if err != nil {
 		return err
 	}
@@ -392,9 +679,10 @@ func (c *SceneSimilarityCalculator) CalculateAndStoreSimilarity(ctx context.Cont
 	}
 
 	similarity := models.SceneSimilarity{
-		SceneID:         scene1.ID,
-		SimilarSceneID:  scene2.ID,
-		SimilarityScore: score,
+		SceneID:             scene1.ID,
+		SimilarSceneID:      scene2.ID,
+		SimilarityScore:     score,
+		SimilarityScoreData: scoreData,
 	}
 
 	// Create partial for timestamps
@@ -442,7 +730,7 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 		}
 
 		// Calculate similarity
-		score, err := c.CalculateSimilarity(ctx, scene, otherScene)
+		score, scoreData, err := c.CalculateSimilarity(ctx, scene, otherScene)
 		if err != nil {
 			fmt.Printf("Error calculating similarity between scenes %d and %d: %v\n", sceneID, otherScene.ID, err)
 			continue
@@ -455,9 +743,10 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 
 		// Create similarity record
 		similarity := models.SceneSimilarity{
-			SceneID:         scene.ID,
-			SimilarSceneID:  otherScene.ID,
-			SimilarityScore: score,
+			SceneID:             scene.ID,
+			SimilarSceneID:      otherScene.ID,
+			SimilarityScore:     score,
+			SimilarityScoreData: scoreData,
 		}
 
 		// Create partial for timestamps

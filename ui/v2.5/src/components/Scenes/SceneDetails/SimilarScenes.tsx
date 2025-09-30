@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { FormattedMessage } from "react-intl";
 import { useQuery } from "@apollo/client";
 import * as GQL from "src/core/generated-graphql";
@@ -30,6 +30,7 @@ interface ISimilarScenesProps {
 interface ISimilarSceneCardProps {
   scene: GQL.SlimSceneDataFragment;
   similarityScore: number;
+  similarityScoreData?: GQL.SimilarityScoreData | null;
   getSimilarityColor: (score: number) => string;
   getSimilarityText: (score: number) => string;
   getSimilarityTextColor: (score: number) => string;
@@ -39,12 +40,14 @@ interface ISimilarSceneCardProps {
 const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   scene,
   similarityScore,
+  similarityScoreData,
   getSimilarityColor,
   getSimilarityText,
   getSimilarityTextColor,
   showSimilarityPercent
 }) => {
   const { configuration } = React.useContext(ConfigurationContext);
+  const chipRef = useRef<HTMLDivElement>(null);
   
   const sceneLink = `/scenes/${scene.id}`;
   
@@ -232,20 +235,76 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
       }
       overlays={
         showSimilarityPercent ? (
-          <div 
-            className="similarity-badge px-2 py-1 rounded fw-bold"
-            style={{ 
-              position: 'absolute',
-              bottom: '12px',
-              left: '8px',
-              backgroundColor: getSimilarityColor(similarityScore),
-              color: getSimilarityTextColor(similarityScore),
-              fontSize: '0.8rem',
-              zIndex: 10
-            }}
+          <HoverPopover
+            placement="top"
+            offset={[10, 10]}
+            popoverClassName="similarity-popover-content"
+            target={chipRef}
+            content={
+              similarityScoreData ? (() => {
+                const totalContribution = (similarityScoreData.enhanced_tags || 0) +
+                  (similarityScoreData.normal_tags || 0) +
+                  (similarityScoreData.reduced_tags || 0) +
+                  (similarityScoreData.tags || 0) +
+                  (similarityScoreData.performers || 0) +
+                  (similarityScoreData.groups || 0) +
+                  (similarityScoreData.studio || 0);
+
+                return (
+                  <div className="p-2" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
+                    <div className="mb-2"><strong>Similarity Breakdown:</strong></div>
+                    {totalContribution > 0 && (
+                      <>
+                        {similarityScoreData.enhanced_tags !== undefined && similarityScoreData.enhanced_tags > 0 && (
+                          <div>Enhanced Tags: <strong>{(similarityScoreData.enhanced_tags * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.normal_tags !== undefined && similarityScoreData.normal_tags > 0 && (
+                          <div>Normal Tags: <strong>{(similarityScoreData.normal_tags * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.reduced_tags !== undefined && similarityScoreData.reduced_tags < 0 && (
+                          <div>Reduced Tags Penalty: <strong>{(similarityScoreData.reduced_tags * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.tags !== undefined && similarityScoreData.tags > 0 && (
+                          <div>Tags: <strong>{(similarityScoreData.tags * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.performers !== undefined && similarityScoreData.performers > 0 && (
+                          <div>Performers: <strong>{(similarityScoreData.performers * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.groups !== undefined && similarityScoreData.groups > 0 && (
+                          <div>Groups: <strong>{(similarityScoreData.groups * 100).toFixed(1)}%</strong></div>
+                        )}
+                        {similarityScoreData.studio !== undefined && similarityScoreData.studio > 0 && (
+                          <div>Studio: <strong>{(similarityScoreData.studio * 100).toFixed(1)}%</strong></div>
+                        )}
+                      </>
+                    )}
+                    {similarityScoreData.penalty !== undefined && similarityScoreData.penalty < 1 && (
+                      <div>Penalty: <strong>{(similarityScoreData.penalty * 100).toFixed(0)}%</strong></div>
+                    )}
+                  </div>
+                );
+              })() : (
+                <div>Similarity score: {getSimilarityText(similarityScore)}</div>
+              )
+            }
           >
-            {getSimilarityText(similarityScore)}
-          </div>
+            <div
+              ref={chipRef}
+              className="similarity-badge px-2 py-1 rounded fw-bold"
+              style={{
+                position: 'absolute',
+                bottom: '12px',
+                left: '8px',
+                backgroundColor: getSimilarityColor(similarityScore),
+                color: getSimilarityTextColor(similarityScore),
+                fontSize: '0.8rem',
+                zIndex: 10,
+                cursor: 'pointer'
+              }}
+            >
+              {getSimilarityText(similarityScore)}
+            </div>
+          </HoverPopover>
         ) : null
       }
       details={
@@ -298,7 +357,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
 
   // Function to get color based on similarity score
   const getSimilarityColor = (score: number) => {
-    const percentage = Math.round(score * 100);
+    const percentage = Math.round(Math.min(score, 1.0) * 100);
     if (percentage >= 85) return '#28a745'; // Green
     if (percentage >= 60) return '#ffc107'; // Yellow
     if (percentage >= 40) return '#dc3545'; // Red
@@ -307,7 +366,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
 
   // Function to get text color based on similarity score
   const getSimilarityTextColor = (score: number) => {
-    const percentage = Math.round(score * 100);
+    const percentage = Math.round(Math.min(score, 1.0) * 100);
     if (percentage >= 60 && percentage < 85) return '#000000'; // Black for yellow
     return '#ffffff'; // White for other colors
   };
@@ -381,6 +440,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
             <SimilarSceneCard
               scene={similarScene.scene}
               similarityScore={similarScene.similarity_score}
+              similarityScoreData={similarScene.similarity_score_data}
               getSimilarityColor={getSimilarityColor}
               getSimilarityText={getSimilarityText}
               getSimilarityTextColor={getSimilarityTextColor}
