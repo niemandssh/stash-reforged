@@ -706,11 +706,12 @@ func (c *SceneSimilarityCalculator) RecalculateSceneSimilarities(ctx context.Con
 		return fmt.Errorf("loading relationships for scene %d: %w", sceneID, err)
 	}
 
-	// Delete existing similarities for this scene in a transaction
+	// Delete existing similarities for this scene as source in a transaction
+	// Only delete where this scene is the source (scene_id), not where it's the target
 	if err := txn.WithTxn(ctx, txnManager, func(ctx context.Context) error {
-		return c.repository.DeleteByScene(ctx, sceneID)
+		return c.repository.DeleteBySceneAsSource(ctx, sceneID)
 	}); err != nil {
-		return fmt.Errorf("deleting existing similarities for scene %d: %w", sceneID, err)
+		return fmt.Errorf("deleting existing similarities for scene %d as source: %w", sceneID, err)
 	}
 
 	// Calculate similarities with all other scenes

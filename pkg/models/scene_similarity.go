@@ -14,6 +14,7 @@ type SceneSimilarityWriter interface {
 	Update(ctx context.Context, updatedObject SceneSimilarity) (*SceneSimilarity, error)
 	Destroy(ctx context.Context, id int) error
 	DeleteByScene(ctx context.Context, sceneID int) error
+	DeleteBySceneAsSource(ctx context.Context, sceneID int) error
 	Upsert(ctx context.Context, similarity SceneSimilarity) error
 }
 

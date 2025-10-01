@@ -209,6 +209,20 @@ func (qb *sceneSimilarityQueryBuilder) DeleteByScene(ctx context.Context, sceneI
 	return nil
 }
 
+// DeleteBySceneAsSource deletes only similarities where the scene is the source (scene_id)
+// This should be used when recalculating similarities for a specific scene
+func (qb *sceneSimilarityQueryBuilder) DeleteBySceneAsSource(ctx context.Context, sceneID int) error {
+	query := dialect.Delete(sceneSimilaritiesTableMgr.table).Where(
+		sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID),
+	)
+
+	if _, err := exec(ctx, query); err != nil {
+		return fmt.Errorf("deleting scene similarities for scene %d as source: %w", sceneID, err)
+	}
+
+	return nil
+}
+
 func (qb *sceneSimilarityQueryBuilder) Upsert(ctx context.Context, similarity models.SceneSimilarity) error {
 	var similarityScoreData *string
 	if similarity.SimilarityScoreData != nil {
