@@ -264,6 +264,21 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const [isInTrimmedSegment, setIsInTrimmedSegment] = useState(false);
     const { trimEnabled } = useTrimContext();
     const [pausedByTrim, setPausedByTrim] = useState(false);
+    const previousTime = useRef<number>(0);
+    const lastSeekTime = useRef<number>(0);
+    const scrubberSeekStart = useRef<number>(0);
+    const recentlyClosedOverlay = useRef<boolean>(false);
+
+    // Reset the recently closed overlay flag
+    useEffect(() => {
+      if (recentlyClosedOverlay.current) {
+        const timer = setTimeout(() => {
+          recentlyClosedOverlay.current = false;
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }, [recentlyClosedOverlay.current]);
+    const isSeeking = useRef<boolean>(false);
 
     const {
       interactive: interactiveClient,
@@ -652,11 +667,35 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         interactiveClient.pause();
       }
 
+      function seeking(this: VideoJsPlayer) {
+        // Track that seeking has started
+        isSeeking.current = true;
+        lastSeekTime.current = this.currentTime();
+      }
+
+      function seeked(this: VideoJsPlayer) {
+        // Seeking completed - check if seeking backward
+        const currentTime = this.currentTime();
+        if (showNextSceneOverlay && currentTime < lastSeekTime.current) {
+          setShowNextSceneOverlay(false);
+          recentlyClosedOverlay.current = true;
+        }
+        isSeeking.current = false;
+      }
 
       function timeupdate(this: VideoJsPlayer) {
-        if (this.paused()) return;
         const currentTime = this.currentTime();
         setTime(currentTime);
+
+        // Check for seeking backward
+        if (showNextSceneOverlay && currentTime < previousTime.current) {
+          setShowNextSceneOverlay(false);
+          recentlyClosedOverlay.current = true;
+          setTimeout(() => {
+            recentlyClosedOverlay.current = false;
+          }, 1000);
+        }
+        previousTime.current = currentTime;
 
         // Update Video.js progress bar trim styles
         updateVideoJsProgressBarTrimStyles(this);
@@ -671,7 +710,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         setIsInTrimmedSegment(inTrimmedSegment);
 
         // Auto-pause when reaching end_time, or show next scene overlay if available
-        if (endTime && endTime > 0 && currentTime >= endTime) {
+        // Don't show overlay if it was recently closed due to seeking backward
+        if (endTime && endTime > 0 && currentTime >= endTime && !recentlyClosedOverlay.current) {
           if (nextScene) {
             this.pause();
             setShowNextSceneOverlay(true);
@@ -685,6 +725,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       player.on("playing", playing);
       player.on("pause", pause);
       player.on("timeupdate", timeupdate);
+      player.on("seeking", seeking);
+      player.on("seeked", seeked);
 
       return () => {
         player.off("playing", playing);
@@ -1112,6 +1154,15 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     function onScrubberSeek(seconds: number) {
       // Reset pausedByTrim flag when manually seeking
       setPausedByTrim(false);
+
+      // Close next scene overlay if seeking backward from end of video
+      if (showNextSceneOverlay && seconds < time) {
+        setShowNextSceneOverlay(false);
+        recentlyClosedOverlay.current = true;
+        setTimeout(() => {
+          recentlyClosedOverlay.current = false;
+        }, 1000);
+      }
 
       if (started.current) {
         getPlayer()?.currentTime(seconds);

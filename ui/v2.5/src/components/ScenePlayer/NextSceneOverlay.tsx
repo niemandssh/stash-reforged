@@ -44,6 +44,27 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
     return () => clearTimeout(timer);
   }, [timeLeft, onPlay, timerCancelled, hasAutoplay]);
 
+  // Handle Escape key to close overlay and cancel timer
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setTimerCancelled(true);
+        onCancel();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onCancel]);
+
+  // Handle Escape key to close overlay (separate from timer cancellation)
+  const handleEscapeClose = useCallback(() => {
+    setTimerCancelled(true);
+    onCancel();
+  }, [onCancel]);
+
   const handleSkip = useCallback(() => {
     onSkip();
   }, [onSkip]);
