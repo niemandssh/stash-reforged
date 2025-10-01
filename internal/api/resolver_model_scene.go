@@ -469,18 +469,19 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 	}
 
 	// Load the actual scenes within a transaction
+	// Use FindByIDs instead of FindMany to handle missing scenes gracefully
 	var scenes []*models.Scene
 	if err := r.repository.WithTxn(ctx, func(ctx context.Context) error {
 		var err error
-		scenes, err = r.repository.Scene.FindMany(ctx, sceneIDs)
+		scenes, err = r.repository.Scene.FindByIDs(ctx, sceneIDs)
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("loading similar scenes: %w", err)
 	}
 
-	// Create SimilarScene objects with scores
-	similarScenes := make([]*models.SimilarScene, len(similarities))
-	for i, sim := range similarities {
+	// Create SimilarScene objects with scores, filtering out missing scenes
+	similarScenes := make([]*models.SimilarScene, 0, len(similarities))
+	for _, sim := range similarities {
 		// Find the corresponding scene
 		var scene *models.Scene
 		for _, s := range scenes {
@@ -490,12 +491,14 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 			}
 		}
 		if scene != nil {
-			similarScenes[i] = &models.SimilarScene{
+			similarScenes = append(similarScenes, &models.SimilarScene{
 				Scene:               scene,
 				SimilarityScore:     sim.SimilarityScore,
 				SimilarityScoreData: sim.SimilarityScoreData,
-			}
+			})
 		}
+		// Note: If scene is nil, it means the scene was deleted but similarity record still exists
+		// This is handled gracefully by skipping the missing scene
 	}
 
 	return similarScenes, nil

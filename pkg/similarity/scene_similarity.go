@@ -618,7 +618,7 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 	avgWeight := totalWeight / float64(len(sharedTags))
 	if avgWeight > 0.8 {
 		multiplier *= 1.2
-	} else if avgWeight < 0.3 {
+	} else if avgWeight <= 0.3 {
 		multiplier *= 0.8
 	}
 

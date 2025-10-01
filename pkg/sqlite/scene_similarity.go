@@ -223,6 +223,33 @@ func (qb *sceneSimilarityQueryBuilder) DeleteBySceneAsSource(ctx context.Context
 	return nil
 }
 
+// CleanupOrphanedSimilarities removes similarity records that reference non-existent scenes
+func (qb *sceneSimilarityQueryBuilder) CleanupOrphanedSimilarities(ctx context.Context) error {
+	// Delete similarities where scene_id doesn't exist in scenes table
+	query1 := dialect.Delete(sceneSimilaritiesTableMgr.table).Where(
+		sceneSimilaritiesTableMgr.table.Col("scene_id").NotIn(
+			dialect.From("scenes").Select("id"),
+		),
+	)
+
+	if _, err := exec(ctx, query1); err != nil {
+		return fmt.Errorf("deleting orphaned similarities by scene_id: %w", err)
+	}
+
+	// Delete similarities where similar_scene_id doesn't exist in scenes table
+	query2 := dialect.Delete(sceneSimilaritiesTableMgr.table).Where(
+		sceneSimilaritiesTableMgr.table.Col("similar_scene_id").NotIn(
+			dialect.From("scenes").Select("id"),
+		),
+	)
+
+	if _, err := exec(ctx, query2); err != nil {
+		return fmt.Errorf("deleting orphaned similarities by similar_scene_id: %w", err)
+	}
+
+	return nil
+}
+
 func (qb *sceneSimilarityQueryBuilder) Upsert(ctx context.Context, similarity models.SceneSimilarity) error {
 	var similarityScoreData *string
 	if similarity.SimilarityScoreData != nil {
