@@ -479,9 +479,16 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 		return nil, fmt.Errorf("loading similar scenes: %w", err)
 	}
 
-	// Create SimilarScene objects with scores, filtering out missing scenes
+	// Create SimilarScene objects with scores, filtering out missing scenes and duplicates
 	similarScenes := make([]*models.SimilarScene, 0, len(similarities))
+	seenSceneIDs := make(map[int]bool)
+
 	for _, sim := range similarities {
+		// Skip if we've already processed this scene (duplicate)
+		if seenSceneIDs[sim.SimilarSceneID] {
+			continue
+		}
+
 		// Find the corresponding scene
 		var scene *models.Scene
 		for _, s := range scenes {
@@ -490,7 +497,9 @@ func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, li
 				break
 			}
 		}
+
 		if scene != nil {
+			seenSceneIDs[sim.SimilarSceneID] = true
 			similarScenes = append(similarScenes, &models.SimilarScene{
 				Scene:               scene,
 				SimilarityScore:     sim.SimilarityScore,

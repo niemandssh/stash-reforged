@@ -135,26 +135,31 @@ func (qb *sceneSimilarityQueryBuilder) FindByScenePair(ctx context.Context, scen
 }
 
 func (qb *sceneSimilarityQueryBuilder) FindSimilarScenes(ctx context.Context, sceneID int, limit int) ([]*models.SceneSimilarity, error) {
-	// Search in both directions: where scene_id = ? OR similar_scene_id = ?
-	// But we need to normalize the results so that sceneID is always the first column
-	query := dialect.Select(
+	// Create two queries for both directions and UNION them
+	// Direction 1: scene_id = sceneID (scene is source)
+	query1 := dialect.Select(
 		sceneSimilaritiesTableMgr.table.Col("id"),
-		goqu.Case().
-			When(sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID), sceneSimilaritiesTableMgr.table.Col("scene_id")).
-			Else(sceneSimilaritiesTableMgr.table.Col("similar_scene_id")).As("scene_id"),
-		goqu.Case().
-			When(sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID), sceneSimilaritiesTableMgr.table.Col("similar_scene_id")).
-			Else(sceneSimilaritiesTableMgr.table.Col("scene_id")).As("similar_scene_id"),
+		goqu.Literal(fmt.Sprintf("%d", sceneID)).As("scene_id"),
+		sceneSimilaritiesTableMgr.table.Col("similar_scene_id"),
 		sceneSimilaritiesTableMgr.table.Col("similarity_score"),
 		sceneSimilaritiesTableMgr.table.Col("similarity_score_data"),
 		sceneSimilaritiesTableMgr.table.Col("created_at"),
 		sceneSimilaritiesTableMgr.table.Col("updated_at"),
-	).From(sceneSimilaritiesTableMgr.table).Where(
-		goqu.Or(
-			sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID),
-			sceneSimilaritiesTableMgr.table.Col("similar_scene_id").Eq(sceneID),
-		),
-	).Order(sceneSimilaritiesTableMgr.table.Col("similarity_score").Desc())
+	).From(sceneSimilaritiesTableMgr.table).Where(sceneSimilaritiesTableMgr.table.Col("scene_id").Eq(sceneID))
+
+	// Direction 2: similar_scene_id = sceneID (scene is target)
+	query2 := dialect.Select(
+		sceneSimilaritiesTableMgr.table.Col("id"),
+		goqu.Literal(fmt.Sprintf("%d", sceneID)).As("scene_id"),
+		sceneSimilaritiesTableMgr.table.Col("scene_id").As("similar_scene_id"),
+		sceneSimilaritiesTableMgr.table.Col("similarity_score"),
+		sceneSimilaritiesTableMgr.table.Col("similarity_score_data"),
+		sceneSimilaritiesTableMgr.table.Col("created_at"),
+		sceneSimilaritiesTableMgr.table.Col("updated_at"),
+	).From(sceneSimilaritiesTableMgr.table).Where(sceneSimilaritiesTableMgr.table.Col("similar_scene_id").Eq(sceneID))
+
+	// Union the two queries and order by similarity_score
+	query := query1.Union(query2).Order(sceneSimilaritiesTableMgr.table.Col("similarity_score").Desc())
 
 	if limit > 0 {
 		query = query.Limit(uint(limit))
