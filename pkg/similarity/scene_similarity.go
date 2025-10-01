@@ -238,9 +238,15 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.
 	if normalTotal > 0 {
 		breakdown.NormalTags = float64(len(normalTags)) / float64(normalTotal)
 	}
+
+	// For reduced tags, calculate penalty based on the presence of reduced tags
+	// Penalty increases with the number of reduced tags, regardless of whether they match
 	breakdown.ReducedTags = 0.0
 	if reducedTotal > 0 {
-		breakdown.ReducedTags = float64(len(reducedTags)) / float64(reducedTotal)
+		// Calculate penalty as the ratio of reduced tags to total tags
+		// This ensures that having reduced tags always reduces similarity
+		totalTags := enhancedTotal + normalTotal + reducedTotal
+		breakdown.ReducedTags = float64(reducedTotal) / float64(totalTags)
 	}
 
 	return breakdown, len(enhancedTags), len(normalTags), len(reducedTags), nil
@@ -364,9 +370,9 @@ func (c *SceneSimilarityCalculator) calculateSimilarityBreakdown(ctx context.Con
 	}
 
 	// Calculate proportional contributions (sum of scoreData = finalScore)
+	finalScore := rawTotal * penalty
 
 	if rawTotal > 0 {
-		finalScore := rawTotal * penalty
 		scoreData.Performers = (performerContribution / rawTotal) * finalScore
 		scoreData.Groups = (groupContribution / rawTotal) * finalScore
 		scoreData.Studio = (studioContribution / rawTotal) * finalScore
@@ -374,6 +380,15 @@ func (c *SceneSimilarityCalculator) calculateSimilarityBreakdown(ctx context.Con
 		scoreData.NormalTags = (normalContribution / rawTotal) * finalScore
 		scoreData.ReducedTags = -(reducedPenalty / rawTotal) * finalScore // Negative penalty
 		scoreData.Tags = (tagContribution / rawTotal) * finalScore
+	} else {
+		// If rawTotal is 0, set all contributions to 0 except reduced tags penalty
+		scoreData.Performers = 0
+		scoreData.Groups = 0
+		scoreData.Studio = 0
+		scoreData.EnhancedTags = 0
+		scoreData.NormalTags = 0
+		scoreData.ReducedTags = -reducedPenalty * penalty // Apply penalty even if rawTotal is 0
+		scoreData.Tags = 0
 	}
 
 	// Add penalty as negative contribution
