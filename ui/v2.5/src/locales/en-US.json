@@ -209,6 +209,8 @@
         "edit": "Edit Preset",
         "name": "Name",
         "color": "Color",
+        "sort": "Sort",
+        "drag_to_reorder": "Drag and drop to reorder presets",
         "name_placeholder": "Enter preset name",
         "created": "Preset created",
         "updated": "Preset updated",

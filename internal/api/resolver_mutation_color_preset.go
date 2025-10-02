@@ -12,6 +12,9 @@ func (r *mutationResolver) ColorPresetCreate(ctx context.Context, input ColorPre
 	newColorPreset := models.NewColorPreset()
 	newColorPreset.Name = input.Name
 	newColorPreset.Color = input.Color
+	if input.Sort != nil {
+		newColorPreset.Sort = *input.Sort
+	}
 
 	// Start the transaction and save the color preset
 	var colorPreset *models.ColorPreset
@@ -41,6 +44,9 @@ func (r *mutationResolver) ColorPresetUpdate(ctx context.Context, input ColorPre
 	}
 	if input.Color != nil {
 		updatedColorPreset.Color = models.NewOptionalString(*input.Color)
+	}
+	if input.Sort != nil {
+		updatedColorPreset.Sort = models.NewOptionalInt(*input.Sort)
 	}
 
 	// Start the transaction and save the color preset

@@ -12,6 +12,7 @@ import { SimilarScenes } from "./SimilarScenes";
 import { URLsField } from "src/utils/field";
 import { PoseTagsDisplay } from "./PoseTagsDisplay";
 import GenderIcon from "src/components/Performers/GenderIcon";
+import { useFindColorPresets } from "src/core/StashService";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -22,6 +23,9 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   const [isDescriptionCollapsed, setIsDescriptionCollapsed] = React.useState(true);
   const [shouldShowToggle, setShouldShowToggle] = React.useState(false);
   const textRef = React.useRef<HTMLParagraphElement>(null);
+
+  const { data: presetsData } = useFindColorPresets();
+  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   React.useLayoutEffect(() => {
     if (textRef.current && props.scene.details) {
@@ -81,9 +85,44 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   function renderTags() {
     const regularTags = props.scene.tags.filter(tag => !tag.is_pose_tag);
     if (regularTags.length === 0) return;
-    const tags = regularTags.map((tag) => (
+
+    // Create a map of colors to presets for quick lookup
+    const colorToPreset = new Map<string, GQL.ColorPreset>();
+    colorPresets.forEach(preset => {
+      colorToPreset.set(preset.color.toLowerCase(), preset);
+    });
+
+    // Sort tags according to requirements:
+    // 1. By preset sort order (ascending)
+    // 2. If same sort, by preset color (ascending)
+    // 3. Tags without color go to the end, sorted alphabetically
+    const sortedTags = [...regularTags].sort((a, b) => {
+      const aColor = a.color?.toLowerCase();
+      const bColor = b.color?.toLowerCase();
+
+      const aPreset = aColor ? colorToPreset.get(aColor) : null;
+      const bPreset = bColor ? colorToPreset.get(bColor) : null;
+
+      // Tags without color go to the end
+      if (!aPreset && !bPreset) {
+        return a.name.localeCompare(b.name);
+      }
+      if (!aPreset) return 1;
+      if (!bPreset) return -1;
+
+      // Compare by sort order
+      if (aPreset.sort !== bPreset.sort) {
+        return aPreset.sort - bPreset.sort;
+      }
+
+      // If sort is same, compare by color
+      return aPreset.color.localeCompare(bPreset.color);
+    });
+
+    const tags = sortedTags.map((tag) => (
       <TagLink key={tag.id} tag={tag} linkType="details" />
     ));
+
     return (
       <>
         <div className="mt-3 mb-3">

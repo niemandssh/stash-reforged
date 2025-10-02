@@ -9,6 +9,7 @@ type ColorPreset struct {
 	ID        int       `json:"id"`
 	Name      string    `json:"name"`
 	Color     string    `json:"color"`
+	Sort      int       `json:"sort"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -18,12 +19,14 @@ func NewColorPreset() ColorPreset {
 	return ColorPreset{
 		CreatedAt: currentTime,
 		UpdatedAt: currentTime,
+		Sort:      0,
 	}
 }
 
 type ColorPresetPartial struct {
 	Name  OptionalString
 	Color OptionalString
+	Sort  OptionalInt
 }
 
 func NewColorPresetPartial() ColorPresetPartial {

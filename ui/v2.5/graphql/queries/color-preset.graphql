@@ -5,6 +5,7 @@ query FindColorPresets($filter: FindFilterType) {
       id
       name
       color
+      sort
       created_at
       updated_at
     }
@@ -16,6 +17,7 @@ query FindColorPreset($id: ID!) {
     id
     name
     color
+    sort
     created_at
     updated_at
   }
@@ -26,6 +28,7 @@ mutation ColorPresetCreate($input: ColorPresetCreateInput!) {
     id
     name
     color
+    sort
     created_at
     updated_at
   }
@@ -36,6 +39,7 @@ mutation ColorPresetUpdate($input: ColorPresetUpdateInput!) {
     id
     name
     color
+    sort
     created_at
     updated_at
   }

@@ -2,6 +2,7 @@ type ColorPreset {
   id: ID!
   name: String!
   color: String!
+  sort: Int!
   created_at: Time!
   updated_at: Time!
 }
@@ -9,12 +10,14 @@ type ColorPreset {
 input ColorPresetCreateInput {
   name: String!
   color: String!
+  sort: Int
 }
 
 input ColorPresetUpdateInput {
   id: ID!
   name: String
   color: String
+  sort: Int
 }
 
 input ColorPresetDestroyInput {

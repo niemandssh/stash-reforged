@@ -18,6 +18,7 @@ type colorPresetRow struct {
 	ID        int         `db:"id" goqu:"skipinsert"`
 	Name      null.String `db:"name"`
 	Color     null.String `db:"color"`
+	Sort      int         `db:"sort"`
 	CreatedAt Timestamp   `db:"created_at"`
 	UpdatedAt Timestamp   `db:"updated_at"`
 }
@@ -26,6 +27,7 @@ func (r *colorPresetRow) fromColorPreset(o models.ColorPreset) {
 	r.ID = o.ID
 	r.Name = null.StringFrom(o.Name)
 	r.Color = null.StringFrom(o.Color)
+	r.Sort = o.Sort
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
 }
@@ -35,6 +37,7 @@ func (r *colorPresetRow) resolve() *models.ColorPreset {
 		ID:        r.ID,
 		Name:      r.Name.String,
 		Color:     r.Color.String,
+		Sort:      r.Sort,
 		CreatedAt: r.CreatedAt.Timestamp,
 		UpdatedAt: r.UpdatedAt.Timestamp,
 	}
@@ -54,6 +57,9 @@ func (r *colorPresetRowRecord) fromPartial(o models.ColorPresetPartial) {
 	}
 	if o.Color.Set {
 		r.Color = null.StringFrom(o.Color.Value)
+	}
+	if o.Sort.Set {
+		r.Sort = o.Sort.Value
 	}
 }
 
@@ -108,6 +114,9 @@ func (qb *colorPresetRepository) Update(ctx context.Context, id int, updatedColo
 	if updatedColorPreset.Color.Set {
 		updateRecord["color"] = updatedColorPreset.Color.Value
 	}
+	if updatedColorPreset.Sort.Set {
+		updateRecord["sort"] = updatedColorPreset.Sort.Value
+	}
 
 	// If no fields to update, return current record
 	if len(updateRecord) == 0 {
@@ -150,7 +159,7 @@ func (qb *colorPresetRepository) Find(ctx context.Context, id int) (*models.Colo
 
 func (qb *colorPresetRepository) FindAll(ctx context.Context) ([]*models.ColorPreset, error) {
 	table := qb.table()
-	q := qb.selectDataset().Order(table.Col("name").Asc())
+	q := qb.selectDataset().Order(table.Col("sort").Asc(), table.Col("name").Asc())
 
 	return qb.getMany(ctx, q)
 }
