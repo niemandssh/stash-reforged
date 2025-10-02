@@ -3,7 +3,6 @@ import { shouldPolyfill as shouldPolyfillCanonicalLocales } from "@formatjs/intl
 import { shouldPolyfill as shouldPolyfillLocale } from "@formatjs/intl-locale/should-polyfill";
 import { shouldPolyfill as shouldPolyfillNumberformat } from "@formatjs/intl-numberformat/should-polyfill";
 import { shouldPolyfill as shouldPolyfillPluralRules } from "@formatjs/intl-pluralrules/should-polyfill";
-import "intersection-observer";
 
 // needed for older safari versions
 import "event-target-polyfill";
@@ -31,6 +30,11 @@ async function checkPolyfills() {
   if (!("ResizeObserver" in window)) {
     const ResizeObserver = await import("resize-observer-polyfill");
     window.ResizeObserver = ResizeObserver.default;
+  }
+
+  if (!("IntersectionObserver" in window)) {
+    // Load Intersection Observer polyfill for older browsers
+    await import("intersection-observer-polyfill");
   }
 }
 

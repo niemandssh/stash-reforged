@@ -1,9 +1,10 @@
-declare module "intersection-observer";
 
 declare module "*.md" {
   const src: string;
   export default src;
 }
+
+declare module "intersection-observer-polyfill";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 interface ImportMetaEnv {
