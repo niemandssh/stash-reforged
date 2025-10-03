@@ -284,7 +284,7 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
       });
       refetchPresets();
       Toast.success(intl.formatMessage({ id: "color_preset.deleted" }));
-      
+
       // Reset form to creation mode if deleting the currently edited preset
       if (editingPreset && editingPreset.id === preset.id) {
         setEditingPreset(null);
@@ -323,7 +323,7 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
           </small>
           {presetsLoading ? (
             <div className="text-muted">
-              <FormattedMessage id="loading" />
+              <FormattedMessage id="loading.generic" />
             </div>
           ) : presets.length > 0 ? (
             <div className="d-flex flex-wrap gap-1">
@@ -400,7 +400,7 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
             </div>
             {presetsLoading ? (
               <div className="text-center py-3">
-                <FormattedMessage id="loading" />
+                <FormattedMessage id="loading.generic" />
               </div>
             ) : presets.length > 0 ? (
               <DndContext
@@ -529,7 +529,7 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
 // Utility for determining text color based on background color
 function getContrastColor(backgroundColor: string): string {
   if (!backgroundColor) return "#000000";
-  
+
   let r = 0, g = 0, b = 0;
 
   if (backgroundColor.startsWith("#")) {
@@ -544,7 +544,7 @@ function getContrastColor(backgroundColor: string): string {
       b = parseInt(hex.substr(4, 2), 16);
     }
   }
-  
+
   const brightness = (r * 299 + g * 587 + b * 114) / 1000;
   return brightness > 128 ? "#000000" : "#ffffff";
 }

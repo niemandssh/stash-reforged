@@ -165,7 +165,8 @@
         "temp_enable": "Enable temporarily…",
         "unset": "Unset",
         "use_default": "Use default",
-        "view_random": "View Random"
+        "view_random": "View Random",
+        "view_history": "View History"
     },
     "actions_name": "Actions",
     "config": {

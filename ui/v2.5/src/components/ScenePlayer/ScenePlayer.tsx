@@ -697,7 +697,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
 
       function timeupdate(this: VideoJsPlayer) {
-        console.log('TIMEUPDATE called');
         const currentTime = this.currentTime();
         setTime(currentTime);
 

@@ -12,12 +12,31 @@ import { useTagsHistory } from "./tagsHistory";
 
 export function useTagsEdit(
   srcTags: Tag[] | undefined,
-  setFieldValue: (ids: string[]) => void,
-  sceneId?: string
+  setFieldValueOrSceneId?: ((ids: string[]) => void) | string,
+  sceneIdOrShouldUpdate?: string | boolean,
+  shouldUpdateFromSrc = true
 ) {
   const intl = useIntl();
   const Toast = useToast();
   const [createTag] = useTagCreate();
+
+  let setFieldValue: ((ids: string[]) => void) | undefined;
+  let sceneId: string | undefined;
+  let finalShouldUpdateFromSrc = shouldUpdateFromSrc;
+
+  if (typeof setFieldValueOrSceneId === 'function') {
+    setFieldValue = setFieldValueOrSceneId;
+    if (typeof sceneIdOrShouldUpdate === 'string') {
+      sceneId = sceneIdOrShouldUpdate;
+    } else if (typeof sceneIdOrShouldUpdate === 'boolean') {
+      finalShouldUpdateFromSrc = sceneIdOrShouldUpdate;
+    }
+  } else if (typeof setFieldValueOrSceneId === 'string') {
+    sceneId = setFieldValueOrSceneId;
+    if (typeof sceneIdOrShouldUpdate === 'boolean') {
+      finalShouldUpdateFromSrc = sceneIdOrShouldUpdate;
+    }
+  }
 
   const [tags, setTags] = useState<Tag[]>([]);
   const [newTags, setNewTags] = useState<GQL.ScrapedTag[]>();
@@ -29,11 +48,13 @@ export function useTagsEdit(
     clearHistory,
     canUndo,
     canRedo
-  } = useTagsHistory(sceneId);
+  } = useTagsHistory(sceneId || undefined);
 
   function onSetTags(items: Tag[]) {
     setTags(items);
-    setFieldValue(items.map((item) => item.id));
+    if (setFieldValue) {
+      setFieldValue(items.map((item) => item.id));
+    }
     addToHistory(items);
   }
 
@@ -41,21 +62,43 @@ export function useTagsEdit(
     const previousTags = undo();
     if (previousTags) {
       setTags(previousTags);
-      setFieldValue(previousTags.map((item) => item.id));
+      if (setFieldValue) {
+        setFieldValue(previousTags.map((item) => item.id));
+      }
     }
+    return previousTags;
   }
 
   function redoTags() {
     const nextTags = redo();
     if (nextTags) {
       setTags(nextTags);
-      setFieldValue(nextTags.map((item) => item.id));
+      if (setFieldValue) {
+        setFieldValue(nextTags.map((item) => item.id));
+      }
     }
+    return nextTags;
   }
 
   useEffect(() => {
-    setTags(srcTags ?? []);
-  }, [srcTags]);
+    if (finalShouldUpdateFromSrc !== false && srcTags) {
+      console.log('🏷️ useTagsEdit: updating tags from srcTags, count:', srcTags?.length);
+
+      setTags(currentTags => {
+        const currentTagIds = new Set(currentTags.map(t => t.id));
+        const srcTagIds = new Set(srcTags.map(t => t.id));
+
+        const updatedTags = currentTags.filter(tag => srcTagIds.has(tag.id));
+
+        const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
+        updatedTags.push(...newTags);
+
+        return updatedTags;
+      });
+    } else {
+      console.log('🚫 useTagsEdit: NOT updating tags from srcTags (user has modified)');
+    }
+  }, [srcTags, finalShouldUpdateFromSrc]);
 
   async function createNewTag(toCreate: GQL.ScrapedTag) {
     const tagInput: GQL.TagCreateInput = { name: toCreate.name ?? "" };

@@ -32,23 +32,23 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         filter.itemsPerPage = -1;
         filter.sortBy = "name";
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
-        
+
         const criterion = filter.makeCriterion("is_pose_tag");
-        criterion.setFromSavedCriterion({ 
+        criterion.setFromSavedCriterion({
           modifier: GQL.CriterionModifier.Equals,
-          value: "true" 
+          value: "true"
         });
         filter.criteria.push(criterion);
 
         const result = await queryFindTags(filter);
         const loadedPoseTags = result.data.findTags.tags as unknown as GQL.Tag[];
-        
+
         const sortedPoseTags = [...loadedPoseTags].sort((a, b) => {
           const aCount = a.scene_count || 0;
           const bCount = b.scene_count || 0;
           return bCount - aCount;
         });
-        
+
         setPoseTags(sortedPoseTags);
       } catch (error) {
         console.error("Error loading pose tags:", error);
@@ -64,7 +64,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
     if (disabled) return;
 
     const isSelected = selectedTagIds.includes(tagId);
-    
+
     if (isSelected) {
       const newSelection = selectedTagIds.filter(id => id !== tagId);
       onSelectionChange(newSelection);
@@ -86,7 +86,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
           <FormattedMessage id="pose_tags" />
         </Form.Label>
         <div className="text-center p-3">
-          <FormattedMessage id="loading" />
+          <FormattedMessage id="loading.generic" />
         </div>
       </div>
     );
@@ -111,8 +111,8 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
                 <div className="d-flex align-items-center">
                   <div className="pose-tag-icon">
                     {tag.image_path ? (
-                      <img 
-                        src={tag.image_path} 
+                      <img
+                        src={tag.image_path}
                         alt={tag.name}
                         className="pose-tag-image"
                         onClick={(e) => handleImageClick(e, tag.id)}
@@ -142,8 +142,8 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         </ListGroup>
         {poseTags.length === 0 && (
           <div className="text-center text-muted p-3">
-            <FormattedMessage 
-              id="no_pose_tags_found" 
+            <FormattedMessage
+              id="no_pose_tags_found"
             />
           </div>
         )}

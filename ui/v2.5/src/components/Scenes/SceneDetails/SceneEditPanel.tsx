@@ -87,6 +87,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const [scrapedScene, setScrapedScene] = useState<GQL.ScrapedScene | null>();
   const [endpoint, setEndpoint] = useState<string>();
   const [selectedPoseTagIds, setSelectedPoseTagIds] = useState<string[]>([]);
+  const [hasUserInteractedWithPoseTags, setHasUserInteractedWithPoseTags] = useState(false);
+  const [hasUserInteractedWithTags, setHasUserInteractedWithTags] = useState(false);
 
   useEffect(() => {
     setGalleries(
@@ -151,7 +153,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       code: scene.code ?? "",
       urls: scene.urls ?? [],
       date: scene.date ?? "",
-      shoot_date: scene.shoot_date ?? "",
+      shoot_date: (scene as any).shoot_date ?? "",
       director: scene.director ?? "",
       gallery_ids: (scene.galleries ?? []).map((g) => g.id),
       studio_id: scene.studio?.id ?? null,
@@ -175,7 +177,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   const formik = useFormik<InputValues>({
     initialValues,
-    enableReinitialize: true,
+    enableReinitialize: false, // Don't auto-reinitialize to prevent losing user changes
     validate: yupFormikValidate(schema),
     onSubmit: (values) => onSave(schema.cast(values)),
   });
@@ -183,10 +185,17 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const { tags, updateTagsStateFromScraper, tagsControl, onSetTags, undoTags, redoTags, clearHistory } = useTagsEdit(
     scene.tags,
     (ids) => formik.setFieldValue("tag_ids", ids),
-    scene.id
+    scene.id,
+    !hasUserInteractedWithTags && !hasUserInteractedWithPoseTags && !formik.dirty
   );
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
+
+  useEffect(() => {
+    if (formik.touched.tag_ids && Array.isArray(formik.touched.tag_ids)) {
+      setHasUserInteractedWithTags(true);
+    }
+  }, [formik.touched.tag_ids]);
 
   useEffect(() => {
     const loadAllTags = async () => {
@@ -274,6 +283,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   function onPoseTagSelectionChange(poseTagIds: string[]) {
     setSelectedPoseTagIds(poseTagIds);
+    setHasUserInteractedWithPoseTags(true);
 
     // Получаем текущие теги из useTagsEdit (включая новосозданные)
     const currentTags = tags || [];
@@ -364,6 +374,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
       await onSubmit(input);
       formik.resetForm();
       clearHistory();
+      setHasUserInteractedWithPoseTags(false);
+      setHasUserInteractedWithTags(false);
     } catch (e) {
       Toast.error(e);
     }

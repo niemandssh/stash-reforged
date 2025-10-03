@@ -154,6 +154,7 @@ interface IProps {
   collapsed: boolean;
   setCollapsed: (state: boolean) => void;
   setContinuePlaylist: (value: boolean) => void;
+  onSaved?: () => Promise<void> | void;
 }
 
 interface ISceneParams {
@@ -183,6 +184,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     collapsed,
     setCollapsed,
     setContinuePlaylist,
+    onSaved,
   } = props;
 
   const Toast = useToast();
@@ -282,6 +284,13 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         },
       },
     });
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    if (onSaved) {
+      await onSaved();
+    }
+
     Toast.success(
       intl.formatMessage({ id: "toast.scene_with_similars_updated" })
     );
@@ -1137,6 +1146,10 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
         collapsed={collapsed}
         setCollapsed={setCollapsed}
         setContinuePlaylist={setContinuePlaylist}
+        onSaved={async () => {
+          // force refetch immediately after save to provide latest data to form
+          await refetch();
+        }}
       />
       <div className={`scene-player-container ${collapsed ? "expanded" : ""}`}>
         <ScenePlayer
