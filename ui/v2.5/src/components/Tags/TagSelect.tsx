@@ -61,7 +61,6 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
 
 const tagSelectSort = PatchFunction("TagSelect.sort", sortTagsByRelevance);
 
-
 export type TagSelectProps = IFilterProps &
   IFilterValueProps<Tag> & {
     hoverPlacement?: Placement;
@@ -69,7 +68,7 @@ export type TagSelectProps = IFilterProps &
     excludeIds?: string[];
   };
 
-const CustomInput = (inputProps: InputProps<{value: string; object: Tag}, boolean, GroupBase<{value: string; object: Tag}>>) => {
+const TagCustomInput = (inputProps: InputProps<{value: string; object: Tag}, boolean, GroupBase<{value: string; object: Tag}>>) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
       e.stopPropagation();
@@ -234,7 +233,8 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     };
   };
 
-  const isValidNewOption = (inputValue: string, options: Tag[]) => {
+
+  const isValidNewOption = React.useCallback((inputValue: string, options: Tag[]) => {
     if (!inputValue) {
       return false;
     }
@@ -245,10 +245,73 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         o.aliases?.some((a) => a.toLowerCase() === inputValue.toLowerCase())
       );
     });
+  }, []);
+
+  // Wrap loadOptions to add a dummy "no match" option when no results found
+  const loadTagsWithDummy = React.useCallback(async (input: string) => {
+    const results = await loadTags(input);
+
+    // Add dummy option only when there are no search results but input exists
+    if (input && results.length === 0) {
+      // Add a dummy non-selectable option
+      const dummyOption: Option = {
+        value: "__no_match__",
+        object: {
+          id: "__no_match__",
+          name: `No results found. Use Tab or click to create "${input}"`,
+          aliases: [],
+          is_pose_tag: false,
+        },
+      };
+      return [dummyOption];
+    }
+
+    return results;
+  }, []);
+
+  // Custom Option that handles the dummy option
+  const CustomTagOption: React.FC<OptionProps<Option, boolean>> = (optionProps) => {
+    const { object } = optionProps.data;
+    const intl = useIntl();
+
+    // If this is the dummy option, render with custom text but standard disabled styles
+    if (object.id === "__no_match__") {
+      return (
+        <TagOption
+          {...optionProps}
+          data={{
+            ...optionProps.data,
+            object: {
+              ...object,
+              name: intl.formatMessage({ id: "actions.create_tag_no_results" })
+            }
+          }}
+        />
+      );
+    }
+
+    // Otherwise render normal TagOption
+    return <TagOption {...optionProps} />;
   };
+
+  // Wrap onSelect to filter out dummy options
+  const handleSelect = React.useCallback((items: Tag[]) => {
+    // Filter out dummy options
+    const realItems = items.filter(item => item.id !== "__no_match__");
+    if (props.onSelect) {
+      props.onSelect(realItems);
+    }
+  }, [props.onSelect]);
+
+  // Mark dummy option as disabled
+  const isOptionDisabled = React.useCallback((option: Option) => {
+    return option.object.id === "__no_match__";
+  }, []);
 
   const selectProps = {
     ...props,
+    onSelect: handleSelect,
+    isOptionDisabled: isOptionDisabled,
     className: cx(
       "tag-select",
       {
@@ -256,15 +319,15 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       },
       props.className
     ),
-    loadOptions: loadTags,
+    loadOptions: loadTagsWithDummy,
     getNamedObject: getNamedObject,
     isValidNewOption: isValidNewOption,
     components: {
-      Option: TagOption,
+      Option: CustomTagOption,
       MultiValue: TagMultiValue,
       MultiValueLabel: TagMultiValueLabel,
       SingleValue: TagValueLabel,
-      Input: CustomInput,
+      Input: TagCustomInput,
     },
     isMulti: props.isMulti ?? false,
     creatable: props.creatable ?? defaultCreatable,

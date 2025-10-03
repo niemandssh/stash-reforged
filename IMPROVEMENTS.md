@@ -20,6 +20,7 @@
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
 - [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 - [x] **Scene tags requirements helper** - if you fill descriptions and requirement status in color presets, you can see tag helper with checklist of fillable tags
+- [x] Fake item was added to away enter misclick on scene tags editing, now you can't create tag by do something like "crea"+Enter, now you can create it by "crea"+Key down+Enter (or by click on create element by left click of course)
 - [x] Show current or dead age for performer in the Scene's performer cards
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)

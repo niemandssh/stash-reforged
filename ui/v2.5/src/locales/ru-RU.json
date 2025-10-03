@@ -29,6 +29,7 @@
         "create_chapters": "Создать раздел",
         "create_entity": "Создать {entityType}",
         "create_marker": "Создать Маркер",
+        "create_tag_no_results": "Не найдено. Нажмите на кнопку ниже, чтобы создать тег",
         "created_entity": "Создано {entity_type}: {entity_name}",
         "customise": "Настроить",
         "delete": "Удалить",

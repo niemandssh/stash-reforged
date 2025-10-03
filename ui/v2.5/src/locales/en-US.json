@@ -39,6 +39,7 @@
         "create_entity": "Create {entityType}",
         "create_marker": "Create Marker",
         "create_parent_studio": "Create parent studio",
+        "create_tag_no_results": "Not found. Click below button to create tag",
         "created_entity": "Created {entity_type}: {entity_name}",
         "customise": "Customize",
         "delete": "Delete",

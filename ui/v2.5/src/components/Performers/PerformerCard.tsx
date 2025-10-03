@@ -224,18 +224,21 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
         performer.death_date
       );
 
-      if (currentAge <= 0 || !ageFromDate) {
+      if (currentAge <= 0) {
         return null;
       }
 
-      const productionAge = TextUtils.age(
-        performer.birthdate,
-        ageFromDate
-      );
+      // If we have ageFromDate, only show chip if current age is different from production age
+      if (ageFromDate) {
+        const productionAge = TextUtils.age(
+          performer.birthdate,
+          ageFromDate
+        );
 
-      // Only show if different from production age
-      if (currentAge === productionAge) {
-        return null;
+        // Only show if different from production age
+        if (currentAge === productionAge) {
+          return null;
+        }
       }
 
       // If performer is dead, show "Dead at X yo" instead of current age
@@ -294,43 +297,23 @@ const PerformerCardDetails: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Details",
   ({ performer, ageFromDate }) => {
     const intl = useIntl();
-    const age = TextUtils.age(
-      performer.birthdate,
-      ageFromDate ?? performer.death_date
-    );
-
-    // If performer is dead and we're not showing age at production, show "Dead at X yo"
-    const isDead = !!performer.death_date;
-    const showDeadText = isDead && !ageFromDate;
-
+    
+    // Only show age in details if we have ageFromDate (age at production)
     let ageString = "";
-    if (showDeadText) {
-      // Show "Dead at X yo" for deceased performers
-      const deathAge = TextUtils.age(performer.birthdate, performer.death_date);
-      if (deathAge > 0) {
-        const deadAtString = intl.formatMessage({
-          id: "dead_at",
-          defaultMessage: "Dead at",
+    if (ageFromDate) {
+      const age = TextUtils.age(performer.birthdate, ageFromDate);
+      
+      if (age > 0) {
+        const ageL10nId = "media_info.performer_card.age_context";
+        const ageL10String = intl.formatMessage({
+          id: "years_old",
+          defaultMessage: "years old",
         });
-        const ageShortString = intl.formatMessage({
-          id: "years_old_short",
-          defaultMessage: "yo",
-        });
-        ageString = `${deadAtString} ${deathAge} ${ageShortString}`;
+        ageString = intl.formatMessage(
+          { id: ageL10nId },
+          { age, years_old: ageL10String }
+        );
       }
-    } else if (age > 0) {
-      // Normal age display
-      const ageL10nId = ageFromDate
-        ? "media_info.performer_card.age_context"
-        : "media_info.performer_card.age";
-      const ageL10String = intl.formatMessage({
-        id: "years_old",
-        defaultMessage: "years old",
-      });
-      ageString = intl.formatMessage(
-        { id: ageL10nId },
-        { age, years_old: ageL10String }
-      );
     }
 
     return (
