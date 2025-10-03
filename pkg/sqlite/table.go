@@ -33,6 +33,13 @@ func (e *NotFoundError) Error() string {
 
 func (t *table) insert(ctx context.Context, o interface{}) (sql.Result, error) {
 	q := dialect.Insert(t.table).Prepared(true).Rows(o)
+
+	sqlStr, args, err := q.ToSQL()
+	if err != nil {
+		return nil, fmt.Errorf("building insert SQL: %w", err)
+	}
+	fmt.Printf("DEBUG table insert: SQL='%s', args=%v\n", sqlStr, args)
+
 	ret, err := exec(ctx, q)
 	if err != nil {
 		return nil, fmt.Errorf("inserting into %s: %w", t.table.GetTable(), err)
@@ -44,7 +51,7 @@ func (t *table) insert(ctx context.Context, o interface{}) (sql.Result, error) {
 func (t *table) insertID(ctx context.Context, o interface{}) (int, error) {
 	result, err := t.insert(ctx, o)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("inserting into %s: %w", t.table.GetTable(), err)
 	}
 
 	ret, err := result.LastInsertId()
@@ -57,6 +64,12 @@ func (t *table) insertID(ctx context.Context, o interface{}) (int, error) {
 
 func (t *table) updateByID(ctx context.Context, id interface{}, o interface{}) error {
 	q := dialect.Update(t.table).Prepared(true).Set(o).Where(t.byID(id))
+
+	sqlStr, args, err := q.ToSQL()
+	if err != nil {
+		return fmt.Errorf("building update SQL: %w", err)
+	}
+	fmt.Printf("DEBUG table updateByID: SQL='%s', args=%v\n", sqlStr, args)
 
 	if _, err := exec(ctx, q); err != nil {
 		return fmt.Errorf("updating %s: %w", t.table.GetTable(), err)

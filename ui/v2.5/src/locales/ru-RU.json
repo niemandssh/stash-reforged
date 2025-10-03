@@ -1554,6 +1554,9 @@
         "name": "Название",
         "color": "Цвет",
         "sort": "Сортировка",
+        "tag_requirements_description": "Описание требований к тегам",
+        "tag_requirements_description_placeholder": "Опишите, какие теги должны быть добавлены для этой категории",
+        "tag_requirements_description_help": "Это описание будет показано как подсказка при добавлении тегов к сценам",
         "drag_to_reorder": "Перетаскивайте для изменения порядка пресетов",
         "name_placeholder": "Введите название пресета",
         "created": "Пресет создан",
@@ -1580,5 +1583,9 @@
     "no_scenes_to_review": "Нет сцен без рейтинга, без тегов или неорганизованных сцен для рецензирования",
     "no_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
     "no_best_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
-    "review_unrated_video_title": "Рецензировать видео без рейтинга, без тегов или неорганизованное видео"
+    "review_unrated_video_title": "Рецензировать видео без рейтинга, без тегов или неорганизованное видео",
+    "tag_requirements": {
+        "title": "Требования к тегам",
+        "summary": "Заполнено: {filled}/{total} (минимум {min})"
+    }
 }

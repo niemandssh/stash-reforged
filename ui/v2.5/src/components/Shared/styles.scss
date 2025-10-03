@@ -1317,3 +1317,78 @@ $sticky-header-height: calc(50px + 3.3rem);
     }
   }
 }
+
+// Tag Requirements Indicator Styles
+.tag-requirements-indicator {
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.tag-requirements-popover {
+  max-width: 400px;
+  padding: 1rem;
+  font-size: 1.1em;
+
+  .tag-requirements-list {
+    max-height: 250px;
+    overflow-y: auto;
+
+    .tag-requirement-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.35rem;
+      font-size: 1em;
+
+      &.required-filled {
+        background-color: rgba(40, 167, 69, 0.30);
+      }
+
+      &.required-empty {
+        background-color: rgba(220, 53, 69, 0.30);
+      }
+
+      &.optional-filled {
+        background-color: rgba(144, 238, 144, 0.08);
+      }
+
+      &.optional-empty {
+        background-color: rgba(255, 152, 0, 0.08);
+      }
+
+      .requirement-indicator {
+        flex-shrink: 0;
+        margin-right: 0.75rem;
+        font-weight: bold;
+        font-size: 1.1em;
+
+        &.filled {
+          color: #28a745;
+        }
+
+        &.empty {
+          color: #dc3545;
+        }
+
+        &.optional-filled {
+          color: #28a745;
+        }
+
+        &.optional-empty {
+          color: #ff9800;
+        }
+      }
+
+      .requirement-description {
+        flex: 1;
+        line-height: 1.4;
+      }
+    }
+  }
+}

@@ -15,6 +15,12 @@ func (r *mutationResolver) ColorPresetCreate(ctx context.Context, input ColorPre
 	if input.Sort != nil {
 		newColorPreset.Sort = *input.Sort
 	}
+	if input.TagRequirementsDescription != nil {
+		newColorPreset.TagRequirementsDescription = *input.TagRequirementsDescription
+	}
+	if input.RequiredForRequirements != nil {
+		newColorPreset.RequiredForRequirements = *input.RequiredForRequirements
+	}
 
 	// Start the transaction and save the color preset
 	var colorPreset *models.ColorPreset
@@ -47,6 +53,18 @@ func (r *mutationResolver) ColorPresetUpdate(ctx context.Context, input ColorPre
 	}
 	if input.Sort != nil {
 		updatedColorPreset.Sort = models.NewOptionalInt(*input.Sort)
+	}
+	if input.TagRequirementsDescription != nil {
+		// Treat empty string as NULL
+		value := *input.TagRequirementsDescription
+		if value == "" {
+			updatedColorPreset.TagRequirementsDescription = models.OptionalString{Set: true, Null: true, Value: ""}
+		} else {
+			updatedColorPreset.TagRequirementsDescription = models.NewOptionalString(value)
+		}
+	}
+	if input.RequiredForRequirements != nil {
+		updatedColorPreset.RequiredForRequirements = models.NewOptionalBool(*input.RequiredForRequirements)
 	}
 
 	// Start the transaction and save the color preset

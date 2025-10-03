@@ -6,6 +6,8 @@ query FindColorPresets($filter: FindFilterType) {
       name
       color
       sort
+      tag_requirements_description
+      required_for_requirements
       created_at
       updated_at
     }
@@ -18,6 +20,8 @@ query FindColorPreset($id: ID!) {
     name
     color
     sort
+    tag_requirements_description
+    required_for_requirements
     created_at
     updated_at
   }
@@ -29,6 +33,8 @@ mutation ColorPresetCreate($input: ColorPresetCreateInput!) {
     name
     color
     sort
+    tag_requirements_description
+    required_for_requirements
     created_at
     updated_at
   }
@@ -40,6 +46,8 @@ mutation ColorPresetUpdate($input: ColorPresetUpdateInput!) {
     name
     color
     sort
+    tag_requirements_description
+    required_for_requirements
     created_at
     updated_at
   }

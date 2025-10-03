@@ -3,6 +3,8 @@ type ColorPreset {
   name: String!
   color: String!
   sort: Int!
+  tag_requirements_description: String
+  required_for_requirements: Boolean!
   created_at: Time!
   updated_at: Time!
 }
@@ -11,6 +13,8 @@ input ColorPresetCreateInput {
   name: String!
   color: String!
   sort: Int
+  tag_requirements_description: String
+  required_for_requirements: Boolean
 }
 
 input ColorPresetUpdateInput {
@@ -18,6 +22,8 @@ input ColorPresetUpdateInput {
   name: String
   color: String
   sort: Int
+  tag_requirements_description: String
+  required_for_requirements: Boolean
 }
 
 input ColorPresetDestroyInput {

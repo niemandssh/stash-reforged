@@ -6,27 +6,32 @@ import (
 )
 
 type ColorPreset struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Color     string    `json:"color"`
-	Sort      int       `json:"sort"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID                         int       `json:"id"`
+	Name                       string    `json:"name"`
+	Color                      string    `json:"color"`
+	Sort                       int       `json:"sort"`
+	TagRequirementsDescription string    `json:"tag_requirements_description"`
+	RequiredForRequirements    bool      `json:"required_for_requirements"`
+	CreatedAt                  time.Time `json:"created_at"`
+	UpdatedAt                  time.Time `json:"updated_at"`
 }
 
 func NewColorPreset() ColorPreset {
 	currentTime := time.Now()
 	return ColorPreset{
-		CreatedAt: currentTime,
-		UpdatedAt: currentTime,
-		Sort:      0,
+		CreatedAt:               currentTime,
+		UpdatedAt:               currentTime,
+		Sort:                    0,
+		RequiredForRequirements: true,
 	}
 }
 
 type ColorPresetPartial struct {
-	Name  OptionalString
-	Color OptionalString
-	Sort  OptionalInt
+	Name                       OptionalString
+	Color                      OptionalString
+	Sort                       OptionalInt
+	TagRequirementsDescription OptionalString
+	RequiredForRequirements    OptionalBool
 }
 
 func NewColorPresetPartial() ColorPresetPartial {

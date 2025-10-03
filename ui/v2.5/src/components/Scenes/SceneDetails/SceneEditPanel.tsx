@@ -48,6 +48,8 @@ import { useTagsEdit } from "src/hooks/tagsEdit";
 import { Tag } from "src/components/Tags/TagSelect";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
+import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
+import { useFindColorPresets } from "src/core/StashService";
 
 const SceneScrapeDialog = lazyComponent(() => import("./SceneScrapeDialog"));
 const SceneQueryModal = lazyComponent(() => import("./SceneQueryModal"));
@@ -80,6 +82,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const Scrapers = useListSceneScrapers();
   const [fragmentScrapers, setFragmentScrapers] = useState<GQL.Scraper[]>([]);
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
+
+  const { data: presetsData } = useFindColorPresets();
+  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   const [scraper, setScraper] = useState<GQL.ScraperSourceInput>();
   const [isScraperQueryModalOpen, setIsScraperQueryModalOpen] =
@@ -773,8 +778,19 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   function renderTagsField() {
-    const title = intl.formatMessage({ id: "tags" });
-    return renderField("tag_ids", title, tagsControl(), fullWidthProps);
+    const title = (
+      <div className="d-flex align-items-center w-100 justify-content-between" style={{ paddingRight: "15px" }}>
+        <FormattedMessage id="tags" />
+        <TagRequirementsIndicator tags={tags as GQL.Tag[]} colorPresets={colorPresets} />
+      </div>
+    );
+
+    return (
+      <Form.Group controlId="tag_ids" as={Row}>
+        <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
+        <Col {...fullWidthProps.fieldProps}>{tagsControl()}</Col>
+      </Form.Group>
+    );
   }
 
   function renderPoseTagsField() {

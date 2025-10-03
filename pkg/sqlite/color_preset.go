@@ -15,12 +15,14 @@ import (
 )
 
 type colorPresetRow struct {
-	ID        int         `db:"id" goqu:"skipinsert"`
-	Name      null.String `db:"name"`
-	Color     null.String `db:"color"`
-	Sort      int         `db:"sort"`
-	CreatedAt Timestamp   `db:"created_at"`
-	UpdatedAt Timestamp   `db:"updated_at"`
+	ID                         int            `db:"id" goqu:"skipinsert"`
+	Name                       null.String    `db:"name"`
+	Color                      null.String    `db:"color"`
+	Sort                       int            `db:"sort"`
+	TagRequirementsDescription sql.NullString `db:"tag_requirements_description"`
+	RequiredForRequirements    bool           `db:"required_for_requirements"`
+	CreatedAt                  Timestamp      `db:"created_at"`
+	UpdatedAt                  Timestamp      `db:"updated_at"`
 }
 
 func (r *colorPresetRow) fromColorPreset(o models.ColorPreset) {
@@ -28,18 +30,31 @@ func (r *colorPresetRow) fromColorPreset(o models.ColorPreset) {
 	r.Name = null.StringFrom(o.Name)
 	r.Color = null.StringFrom(o.Color)
 	r.Sort = o.Sort
+	if o.TagRequirementsDescription != "" {
+		r.TagRequirementsDescription = sql.NullString{String: o.TagRequirementsDescription, Valid: true}
+	} else {
+		r.TagRequirementsDescription = sql.NullString{Valid: false}
+	}
+	r.RequiredForRequirements = o.RequiredForRequirements
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
 }
 
 func (r *colorPresetRow) resolve() *models.ColorPreset {
+	tagReqDesc := ""
+	if r.TagRequirementsDescription.Valid {
+		tagReqDesc = r.TagRequirementsDescription.String
+	}
+
 	ret := &models.ColorPreset{
-		ID:        r.ID,
-		Name:      r.Name.String,
-		Color:     r.Color.String,
-		Sort:      r.Sort,
-		CreatedAt: r.CreatedAt.Timestamp,
-		UpdatedAt: r.UpdatedAt.Timestamp,
+		ID:                         r.ID,
+		Name:                       r.Name.String,
+		Color:                      r.Color.String,
+		Sort:                       r.Sort,
+		TagRequirementsDescription: tagReqDesc,
+		RequiredForRequirements:    r.RequiredForRequirements,
+		CreatedAt:                  r.CreatedAt.Timestamp,
+		UpdatedAt:                  r.UpdatedAt.Timestamp,
 	}
 
 	return ret
@@ -52,15 +67,11 @@ type colorPresetRowRecord struct {
 
 func (r *colorPresetRowRecord) fromPartial(o models.ColorPresetPartial) {
 	// Only update fields that are set
-	if o.Name.Set {
-		r.Name = null.StringFrom(o.Name.Value)
-	}
-	if o.Color.Set {
-		r.Color = null.StringFrom(o.Color.Value)
-	}
-	if o.Sort.Set {
-		r.Sort = o.Sort.Value
-	}
+	r.setNullString("name", o.Name)
+	r.setNullString("color", o.Color)
+	r.setNullInt("sort", o.Sort)
+	r.setNullString("tag_requirements_description", o.TagRequirementsDescription)
+	r.setBool("required_for_requirements", o.RequiredForRequirements)
 }
 
 type colorPresetRepository struct {
@@ -104,39 +115,25 @@ func (qb *colorPresetRepository) Create(ctx context.Context, newColorPreset mode
 }
 
 func (qb *colorPresetRepository) Update(ctx context.Context, id int, updatedColorPreset models.ColorPresetPartial) (*models.ColorPreset, error) {
-	// Build update record with all fields to update
-	updateRecord := goqu.Record{}
-
-	// Add fields to update
-	if updatedColorPreset.Name.Set {
-		updateRecord["name"] = updatedColorPreset.Name.Value
+	// Build update record using colorPresetRowRecord
+	r := colorPresetRowRecord{
+		updateRecord: updateRecord{
+			Record: make(exp.Record),
+		},
 	}
-	if updatedColorPreset.Color.Set {
-		updateRecord["color"] = updatedColorPreset.Color.Value
-	}
-	if updatedColorPreset.Sort.Set {
-		updateRecord["sort"] = updatedColorPreset.Sort.Value
-	}
+	r.fromPartial(updatedColorPreset)
 
 	// If no fields to update, return current record
-	if len(updateRecord) == 0 {
+	if len(r.Record) == 0 {
 		return qb.Find(ctx, id)
 	}
 
 	// Build and execute update query
-	query := dialect.Update(qb.table()).Set(updateRecord).Where(qb.tableMgr.idColumn.Eq(id))
-
-	_, err := exec(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("updating color preset: %w", err)
+	if err := qb.tableMgr.updateByID(ctx, id, r.Record); err != nil {
+		return nil, err
 	}
 
-	updated, err := qb.Find(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("finding after update: %w", err)
-	}
-
-	return updated, nil
+	return qb.Find(ctx, id)
 }
 
 func (qb *colorPresetRepository) Destroy(ctx context.Context, id int) error {

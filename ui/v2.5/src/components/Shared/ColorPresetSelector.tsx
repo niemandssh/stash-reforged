@@ -30,15 +30,13 @@ import { CSS } from '@dnd-kit/utilities';
 interface SortablePresetCardProps {
   preset: ColorPreset;
   onEdit: (preset: ColorPreset) => void;
-  onDelete: (preset: ColorPreset) => void;
-  onUse: (preset: ColorPreset) => void;
+  isSelected: boolean;
 }
 
 const SortablePresetCard: React.FC<SortablePresetCardProps> = ({
   preset,
   onEdit,
-  onDelete,
-  onUse,
+  isSelected,
 }) => {
   const {
     attributes,
@@ -64,23 +62,33 @@ const SortablePresetCard: React.FC<SortablePresetCardProps> = ({
       style={style}
       className="w-100 mb-2"
     >
-      <div className="card p-2 h-100" style={{ margin: 0 }}>
+      <div 
+        className="card p-2 h-100" 
+        style={{ 
+          margin: 0,
+          backgroundColor: isSelected ? 'rgba(19, 124, 189, 0.2)' : undefined,
+          borderColor: isSelected ? '#137cbd' : undefined,
+          cursor: 'pointer',
+        }}
+        onClick={() => onEdit(preset)}
+      >
         <div className="card-body pl-1 pr-2 p-0">
           <div className="d-flex align-items-center">
             <div
               ref={dragHandleRef}
-              className="drag-handle mr-3"
+              className="drag-handle mr-2"
               style={{ cursor: 'grab', flexShrink: 0 }}
               {...attributes}
               {...listeners}
+              onClick={(e) => e.stopPropagation()}
             >
               <Icon icon={faGripLines} />
             </div>
             <div
-              className="color-preview mr-3"
+              className="color-preview mr-2"
               style={{
-                width: "40px",
-                height: "40px",
+                width: "30px",
+                height: "30px",
                 backgroundColor: preset.color,
                 border: `2px solid ${preset.color}`,
                 borderRadius: "4px",
@@ -88,46 +96,8 @@ const SortablePresetCard: React.FC<SortablePresetCardProps> = ({
               }}
             />
             <div className="flex-grow-1">
-              <h6 className="mb-1">{preset.name}</h6>
+              <div className="font-weight-bold">{preset.name}</div>
               <small className="text-muted">{preset.color}</small>
-              <div className="text-muted small">
-                <FormattedMessage id="color_preset.sort" />: {preset.sort}
-              </div>
-            </div>
-            <div className="btn-group btn-group-sm ml-2">
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onUse(preset);
-                }}
-                title="Use"
-              >
-                <FormattedMessage id="actions.use" />
-              </Button>
-              <Button
-                variant="outline-success"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(preset);
-                }}
-                title="Edit"
-              >
-                <FormattedMessage id="actions.edit" />
-              </Button>
-              <Button
-                variant="outline-danger"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(preset);
-                }}
-                title="Delete"
-              >
-                <FormattedMessage id="actions.delete" />
-              </Button>
             </div>
           </div>
         </div>
@@ -154,6 +124,8 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
   const [presetName, setPresetName] = useState("");
   const [presetSort, setPresetSort] = useState(1);
   const [presetColor, setPresetColor] = useState("");
+  const [presetTagRequirementsDescription, setPresetTagRequirementsDescription] = useState("");
+  const [presetRequiredForRequirements, setPresetRequiredForRequirements] = useState(true);
   const [editingPreset, setEditingPreset] = useState<ColorPreset | null>(null);
 
   const { data: presetsData, refetch: refetchPresets, loading: presetsLoading } = useFindColorPresets();
@@ -227,19 +199,27 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
   const handleCreatePreset = async () => {
     if (!presetName.trim() || !presetColor) return;
 
+    const inputData = {
+      name: presetName.trim(),
+      color: presetColor,
+      sort: presetSort,
+      tag_requirements_description: presetTagRequirementsDescription.trim(),
+      required_for_requirements: presetRequiredForRequirements,
+    };
+
+    console.log('Creating preset with data:', inputData);
+
     try {
       await createPreset({
         variables: {
-          input: {
-            name: presetName.trim(),
-            color: presetColor,
-            sort: presetSort,
-          },
+          input: inputData,
         },
       });
       setPresetName("");
       setPresetSort(1);
       setPresetColor("");
+      setPresetTagRequirementsDescription("");
+      setPresetRequiredForRequirements(true);
       setShowPresetModal(false);
       refetchPresets();
       Toast.success(intl.formatMessage({ id: "color_preset.created" }));
@@ -251,15 +231,21 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
   const handleEditPreset = async () => {
     if (!editingPreset || !presetName.trim()) return;
 
+    const inputData = {
+      id: editingPreset.id,
+      name: presetName.trim(),
+      color: presetColor,
+      sort: presetSort,
+      tag_requirements_description: presetTagRequirementsDescription.trim(),
+      required_for_requirements: presetRequiredForRequirements,
+    };
+
+    console.log('Updating preset with data:', inputData);
+
     try {
       await updatePreset({
         variables: {
-          input: {
-            id: editingPreset.id,
-            name: presetName.trim(),
-            color: presetColor,
-            sort: presetSort,
-          },
+          input: inputData,
         },
       });
       refetchPresets();
@@ -291,6 +277,8 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
         setPresetName("");
         setPresetColor("");
         setPresetSort(1);
+        setPresetTagRequirementsDescription("");
+        setPresetRequiredForRequirements(true);
       }
     } catch (e) {
       Toast.error(e);
@@ -302,6 +290,8 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
     setPresetName(preset.name);
     setPresetSort(preset.sort);
     setPresetColor(preset.color);
+    setPresetTagRequirementsDescription(preset.tag_requirements_description || "");
+    setPresetRequiredForRequirements(preset.required_for_requirements ?? true);
     setShowPresetModal(true);
   };
 
@@ -311,6 +301,8 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
     setPresetName("");
     setPresetSort(0);
     setPresetColor("");
+    setPresetTagRequirementsDescription("");
+    setPresetRequiredForRequirements(true);
   };
 
   return (
@@ -381,133 +373,182 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
       </div>
 
       {/* Modal for managing presets */}
-      <Modal show={showPresetModal} onHide={handleModalClose} size="lg">
+      <Modal show={showPresetModal} onHide={handleModalClose} size="xl">
         <Modal.Header closeButton>
           <Modal.Title>
             <FormattedMessage id="color_preset.manage" />
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* List of existing presets */}
-          <div className="mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6>
-                <FormattedMessage id="color_preset.presets" /> ({presets.length})
-              </h6>
-              <small className="text-muted">
+          <Row>
+            {/* Left column: List of presets */}
+            <Col md={5}>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="mb-0">
+                  <FormattedMessage id="color_preset.presets" /> ({presets.length})
+                </h6>
+              </div>
+              <small className="text-muted d-block mb-2">
                 <FormattedMessage id="color_preset.drag_to_reorder" />
               </small>
-            </div>
-            {presetsLoading ? (
-              <div className="text-center py-3">
-                <FormattedMessage id="loading.generic" />
-              </div>
-            ) : presets.length > 0 ? (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={presets.map(p => p.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="d-flex flex-column">
-                    {presets.map((preset) => (
-                      <SortablePresetCard
-                        key={preset.id}
-                        preset={preset}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeletePreset}
-                        onUse={handlePresetClick}
-                      />
-                    ))}
+              <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
+                {presetsLoading ? (
+                  <div className="text-center py-3">
+                    <FormattedMessage id="loading.generic" />
                   </div>
-                </SortableContext>
-              </DndContext>
-            ) : (
-              <div className="text-center py-4 text-muted">
-                <FormattedMessage id="color_preset.no_presets" />
+                ) : presets.length > 0 ? (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={presets.map(p => p.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="d-flex flex-column">
+                        {presets.map((preset) => (
+                          <SortablePresetCard
+                            key={preset.id}
+                            preset={preset}
+                            onEdit={handleEditClick}
+                            isSelected={editingPreset?.id === preset.id}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                ) : (
+                  <div className="text-center py-4 text-muted">
+                    <FormattedMessage id="color_preset.no_presets" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </Col>
 
-          <hr className="mb-4" />
-
-          {/* Form for creating/editing preset */}
-          <div>
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h6 className="mb-0">
-                <FormattedMessage id={editingPreset ? "color_preset.edit" : "color_preset.create"} />
-              </h6>
-              {editingPreset && (
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => {
-                    setEditingPreset(null);
-                    setPresetName("");
-                    setPresetSort(1);
-                    setPresetColor("");
-                  }}
-                  title={intl.formatMessage({ id: "color_preset.create" })}
-                >
-                  <FormattedMessage id="color_preset.create" />
-                </Button>
-              )}
-            </div>
-            <Form.Group className="mb-3">
-              <Form.Label>
-                <FormattedMessage id="color_preset.name" />
-              </Form.Label>
-              <Form.Control
-                type="text"
-                name="preset_name"
-                className="text-input"
-                value={presetName}
-                onChange={(e) => setPresetName(e.target.value)}
-                placeholder={intl.formatMessage({ id: "color_preset.name_placeholder" })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>
-                <FormattedMessage id="color_preset.color" />
-              </Form.Label>
-              <div className="d-flex align-items-center">
-                <Form.Control
-                  type="color"
-                  name="preset_color"
-                  className="text-input mr-2"
-                  value={presetColor || "#bfccd6"}
-                  onChange={(e) => setPresetColor(e.target.value)}
-                  style={{ width: "60px", height: "38px" }}
-                />
+            {/* Right column: Form for creating/editing preset */}
+            <Col md={7}>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="mb-0">
+                  <FormattedMessage id={editingPreset ? "color_preset.edit" : "color_preset.create"} />
+                </h6>
+                {editingPreset && (
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => {
+                      setEditingPreset(null);
+                      setPresetName("");
+                      setPresetSort(presets.length + 1);
+                      setPresetColor(selectedColor || "");
+                      setPresetTagRequirementsDescription("");
+                      setPresetRequiredForRequirements(true);
+                    }}
+                    title={intl.formatMessage({ id: "color_preset.create" })}
+                  >
+                    + <FormattedMessage id="actions.create" />
+                  </Button>
+                )}
+              </div>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  <FormattedMessage id="color_preset.name" />
+                </Form.Label>
                 <Form.Control
                   type="text"
-                  name="preset_color_text"
+                  name="preset_name"
                   className="text-input"
-                  value={presetColor || ""}
-                  onChange={(e) => setPresetColor(e.target.value)}
-                  placeholder="#000000"
-                  style={{ flex: 1 }}
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  placeholder={intl.formatMessage({ id: "color_preset.name_placeholder" })}
                 />
-              </div>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>
-                <FormattedMessage id="color_preset.sort" />
-              </Form.Label>
-              <Form.Control
-                type="number"
-                name="preset_sort"
-                className="text-input"
-                value={presetSort}
-                onChange={(e) => setPresetSort(parseInt(e.target.value) || 0)}
-                placeholder="0"
-              />
-            </Form.Group>
-          </div>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  <FormattedMessage id="color_preset.color" />
+                </Form.Label>
+                <div className="d-flex align-items-center">
+                  <Form.Control
+                    type="color"
+                    name="preset_color"
+                    className="text-input mr-2"
+                    value={presetColor || "#bfccd6"}
+                    onChange={(e) => setPresetColor(e.target.value)}
+                    style={{ width: "60px", height: "38px" }}
+                  />
+                  <Form.Control
+                    type="text"
+                    name="preset_color_text"
+                    className="text-input"
+                    value={presetColor || ""}
+                    onChange={(e) => setPresetColor(e.target.value)}
+                    placeholder="#000000"
+                    style={{ flex: 1 }}
+                  />
+                </div>
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  <FormattedMessage id="color_preset.sort" />
+                </Form.Label>
+                <Form.Control
+                  type="number"
+                  name="preset_sort"
+                  className="text-input"
+                  value={presetSort}
+                  onChange={(e) => setPresetSort(parseInt(e.target.value) || 0)}
+                  placeholder="0"
+                />
+              </Form.Group>
+              
+              <Form.Group className="mb-3">
+                <Form.Label>
+                  <FormattedMessage id="color_preset.tag_requirements_description" />
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  name="preset_tag_requirements_description"
+                  className="text-input"
+                  value={presetTagRequirementsDescription}
+                  onChange={(e) => setPresetTagRequirementsDescription(e.target.value)}
+                  placeholder={intl.formatMessage({ id: "color_preset.tag_requirements_description_placeholder" })}
+                  rows={3}
+                />
+                <Form.Text className="text-muted">
+                  <FormattedMessage id="color_preset.tag_requirements_description_help" />
+                </Form.Text>
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  id="preset_required_for_requirements"
+                  label={intl.formatMessage({ id: "color_preset.required_for_requirements" })}
+                  checked={presetRequiredForRequirements}
+                  onChange={(e) => setPresetRequiredForRequirements(e.target.checked)}
+                />
+                <Form.Text className="text-muted">
+                  <FormattedMessage id="color_preset.required_for_requirements_help" />
+                </Form.Text>
+              </Form.Group>
+
+              {editingPreset && (
+                <div className="mt-4 pt-3 border-top">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDeletePreset(editingPreset)}
+                  >
+                    <FormattedMessage id="actions.delete" />
+                  </Button>
+                </div>
+              )}
+            </Col>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleModalClose}>

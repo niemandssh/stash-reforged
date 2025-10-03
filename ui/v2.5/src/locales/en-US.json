@@ -211,6 +211,11 @@
         "name": "Name",
         "color": "Color",
         "sort": "Sort",
+        "tag_requirements_description": "Tag Requirements Description",
+        "tag_requirements_description_placeholder": "Describe what tags should be added for this category",
+        "tag_requirements_description_help": "This description will be shown as a hint when tagging scenes",
+        "required_for_requirements": "Required for Requirements",
+        "required_for_requirements_help": "When checked, this preset must be filled to satisfy requirements. When unchecked, it's optional.",
         "drag_to_reorder": "Drag and drop to reorder presets",
         "name_placeholder": "Enter preset name",
         "created": "Preset created",
@@ -273,5 +278,10 @@
     },
     "view_history": "History",
     "total_views": "{count, plural, one {# view} other {# views}}",
-    "consecutive_views": "{count, plural, one {# view in a row} other {# views in a row}}"
+    "consecutive_views": "{count, plural, one {# view in a row} other {# views in a row}}",
+    "tag_requirements": {
+        "title": "Tag Requirements",
+        "summary": "Required: {filled}/{total} (minimum {min})",
+        "optional_summary": "{count, plural, one {# optional preset} other {# optional presets}}"
+    }
 }
