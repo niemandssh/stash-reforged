@@ -231,6 +231,8 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
   const handleEditPreset = async () => {
     if (!editingPreset || !presetName.trim()) return;
 
+    const oldColor = editingPreset.color;
+
     const inputData = {
       id: editingPreset.id,
       name: presetName.trim(),
@@ -250,6 +252,11 @@ export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
       });
       refetchPresets();
       Toast.success(intl.formatMessage({ id: "color_preset.updated" }));
+
+      // If current selected color matches old preset color, update it to new color
+      if (selectedColor && selectedColor === oldColor && presetColor !== oldColor) {
+        onColorSelect(presetColor);
+      }
     } catch (e) {
       Toast.error(e);
     }

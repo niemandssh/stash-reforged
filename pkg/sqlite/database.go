@@ -122,7 +122,7 @@ func NewDatabase() *Database {
 		Tag:                   tagStore,
 		Group:                 NewGroupStore(blobStore),
 		SavedFilter:           NewSavedFilterStore(),
-		ColorPreset:           NewColorPresetRepository(nil), // Will be set later
+		ColorPreset:           NewColorPresetRepository(nil, tagStore), // Will be set later
 	}
 
 	ret := &Database{
@@ -276,7 +276,7 @@ func (db *Database) initialise() error {
 	}
 
 	// Initialize ColorPreset repository with database
-	db.ColorPreset = NewColorPresetRepository(db.readDB)
+	db.ColorPreset = NewColorPresetRepository(db.readDB, db.Tag)
 
 	return nil
 }

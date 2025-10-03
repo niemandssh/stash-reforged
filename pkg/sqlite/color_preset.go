@@ -77,15 +77,17 @@ func (r *colorPresetRowRecord) fromPartial(o models.ColorPresetPartial) {
 type colorPresetRepository struct {
 	repository
 	tableMgr *table
+	tagStore *TagStore
 }
 
-func NewColorPresetRepository(db *sqlx.DB) *colorPresetRepository {
+func NewColorPresetRepository(db *sqlx.DB, tagStore *TagStore) *colorPresetRepository {
 	return &colorPresetRepository{
 		repository: repository{
 			tableName: colorPresetTable,
 			idColumn:  idColumn,
 		},
 		tableMgr: colorPresetTableMgr,
+		tagStore: tagStore,
 	}
 }
 
@@ -115,6 +117,18 @@ func (qb *colorPresetRepository) Create(ctx context.Context, newColorPreset mode
 }
 
 func (qb *colorPresetRepository) Update(ctx context.Context, id int, updatedColorPreset models.ColorPresetPartial) (*models.ColorPreset, error) {
+	// Get the old color preset before updating
+	var oldColor string
+	if updatedColorPreset.Color.Set && qb.tagStore != nil {
+		oldPreset, err := qb.Find(ctx, id)
+		if err != nil {
+			return nil, fmt.Errorf("finding old color preset: %w", err)
+		}
+		if oldPreset != nil {
+			oldColor = oldPreset.Color
+		}
+	}
+
 	// Build update record using colorPresetRowRecord
 	r := colorPresetRowRecord{
 		updateRecord: updateRecord{
@@ -131,6 +145,16 @@ func (qb *colorPresetRepository) Update(ctx context.Context, id int, updatedColo
 	// Build and execute update query
 	if err := qb.tableMgr.updateByID(ctx, id, r.Record); err != nil {
 		return nil, err
+	}
+
+	// Update all tags with the old color to the new color
+	if updatedColorPreset.Color.Set && qb.tagStore != nil && oldColor != "" {
+		newColor := updatedColorPreset.Color.Value
+		if oldColor != newColor {
+			if err := qb.tagStore.UpdateColorByOldColor(ctx, oldColor, newColor); err != nil {
+				return nil, fmt.Errorf("updating tag colors: %w", err)
+			}
+		}
 	}
 
 	return qb.Find(ctx, id)

@@ -895,6 +895,17 @@ func (qb *TagStore) UpdateChildTags(ctx context.Context, tagID int, childIDs []i
 	return nil
 }
 
+// UpdateColorByOldColor updates the color of all tags that have the old color to the new color
+func (qb *TagStore) UpdateColorByOldColor(ctx context.Context, oldColor, newColor string) error {
+	table := qb.table()
+	stmt := dialect.Update(table).
+		Set(goqu.Record{"color": newColor, "updated_at": goqu.L("datetime('now')")}).
+		Where(table.Col("color").Eq(oldColor))
+
+	_, err := exec(ctx, stmt)
+	return err
+}
+
 // FindAllAncestors returns a slice of TagPath objects, representing all
 // ancestors of the tag with the provided id.
 func (qb *TagStore) FindAllAncestors(ctx context.Context, tagID int, excludeIDs []int) ([]*models.TagPath, error) {
