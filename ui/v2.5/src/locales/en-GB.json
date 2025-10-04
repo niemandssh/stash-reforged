@@ -1640,5 +1640,8 @@
   "no_scenes_to_review": "No scenes without rating, without tags, or unorganised scenes to review",
   "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
   "no_best_scenes_available": "No scenes with rating >= {ratingThreshold}",
-  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video"
+  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video",
+  "countables": {
+    "urls": "{count, plural, one {# URL} other {# URLs}}"
+  }
 }

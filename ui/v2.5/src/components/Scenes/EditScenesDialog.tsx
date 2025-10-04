@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Col, Row } from "react-bootstrap";
+import { Form, Col, Row, Button, ButtonGroup } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import isEqual from "lodash-es/isEqual";
 import { useBulkSceneUpdate } from "src/core/StashService";
@@ -10,14 +10,17 @@ import { MultiSet } from "../Shared/MultiSet";
 import { useToast } from "src/hooks/Toast";
 import * as FormUtils from "src/utils/form";
 import { RatingSystem } from "../Shared/Rating/RatingSystem";
+import { URLListInput } from "../Shared/URLField";
 import {
   getAggregateInputIDs,
+  getAggregateInputStrings,
   getAggregateInputValue,
   getAggregateGroupIds,
   getAggregatePerformerIds,
   getAggregateRating,
   getAggregateStudioId,
   getAggregateTagIds,
+  getAggregateURLs,
 } from "src/utils/bulkUpdate";
 import { faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 
@@ -31,22 +34,30 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
 ) => {
   const intl = useIntl();
   const Toast = useToast();
-  const [rating100, setRating] = useState<number>();
-  const [studioId, setStudioId] = useState<string>();
+  const [rating100, setRating] = useState<number | undefined>(undefined);
+  const [studioId, setStudioId] = useState<string | undefined>(undefined);
+
+  // Memoize arrays to prevent unnecessary re-renders
+  const studioIds = React.useMemo(() => studioId ? [studioId] : [], [studioId]);
   const [performerMode, setPerformerMode] =
     React.useState<GQL.BulkUpdateIdMode>(GQL.BulkUpdateIdMode.Add);
-  const [performerIds, setPerformerIds] = useState<string[]>();
-  const [existingPerformerIds, setExistingPerformerIds] = useState<string[]>();
+  const [performerIds, setPerformerIds] = useState<string[]>([]);
+  const [existingPerformerIds, setExistingPerformerIds] = useState<string[]>([]);
   const [tagMode, setTagMode] = React.useState<GQL.BulkUpdateIdMode>(
     GQL.BulkUpdateIdMode.Add
   );
-  const [tagIds, setTagIds] = useState<string[]>();
-  const [existingTagIds, setExistingTagIds] = useState<string[]>();
+  const [tagIds, setTagIds] = useState<string[]>([]);
+  const [existingTagIds, setExistingTagIds] = useState<string[]>([]);
   const [groupMode, setGroupMode] = React.useState<GQL.BulkUpdateIdMode>(
     GQL.BulkUpdateIdMode.Add
   );
-  const [groupIds, setGroupIds] = useState<string[]>();
-  const [existingGroupIds, setExistingGroupIds] = useState<string[]>();
+  const [groupIds, setGroupIds] = useState<string[]>([]);
+  const [existingGroupIds, setExistingGroupIds] = useState<string[]>([]);
+  const [urlMode, setUrlMode] = React.useState<GQL.BulkUpdateIdMode>(
+    GQL.BulkUpdateIdMode.Add
+  );
+  const [urls, setUrls] = useState<string[]>([]);
+  const [existingUrls, setExistingUrls] = useState<string[]>([]);
   const [organized, setOrganized] = useState<boolean | undefined>();
 
   const [updateScenes] = useBulkSceneUpdate(getSceneInput());
@@ -63,6 +74,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     const aggregatePerformerIds = getAggregatePerformerIds(props.selected);
     const aggregateTagIds = getAggregateTagIds(props.selected);
     const aggregateGroupIds = getAggregateGroupIds(props.selected);
+    const aggregateURLs = getAggregateURLs(props.selected);
 
     const sceneInput: GQL.BulkSceneUpdateInput = {
       ids: props.selected.map((scene) => {
@@ -83,6 +95,11 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
       groupMode,
       groupIds,
       aggregateGroupIds
+    );
+    sceneInput.urls = getAggregateInputStrings(
+      urlMode,
+      urls,
+      aggregateURLs
     );
 
     if (organized !== undefined) {
@@ -113,6 +130,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     let updatePerformerIds: string[] = [];
     let updateTagIds: string[] = [];
     let updateGroupIds: string[] = [];
+    let updateUrls: string[] = [];
     let updateOrganized: boolean | undefined;
     let first = true;
 
@@ -121,9 +139,11 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
       const sceneStudioID = scene?.studio?.id;
       const scenePerformerIDs = (scene.performers ?? [])
         .map((p) => p.id)
+        .filter(id => id != null)
         .sort();
-      const sceneTagIDs = (scene.tags ?? []).map((p) => p.id).sort();
-      const sceneGroupIDs = (scene.groups ?? []).map((m) => m.group.id).sort();
+      const sceneTagIDs = (scene.tags ?? []).map((p) => p.id).filter(id => id != null).sort();
+      const sceneGroupIDs = (scene.groups ?? []).map((m) => m.group.id).filter(id => id != null).sort();
+      const sceneURLs = (scene.urls ?? []).filter(url => url != null && url !== "").sort();
 
       if (first) {
         updateRating = sceneRating ?? undefined;
@@ -131,6 +151,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
         updatePerformerIds = scenePerformerIDs;
         updateTagIds = sceneTagIDs;
         updateGroupIds = sceneGroupIDs;
+        updateUrls = sceneURLs;
         first = false;
         updateOrganized = scene.organized;
       } else {
@@ -149,6 +170,9 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
         if (!isEqual(sceneGroupIDs, updateGroupIds)) {
           updateGroupIds = [];
         }
+        if (!isEqual(sceneURLs, updateUrls)) {
+          updateUrls = [];
+        }
         if (scene.organized !== updateOrganized) {
           updateOrganized = undefined;
         }
@@ -160,6 +184,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     setExistingPerformerIds(updatePerformerIds);
     setExistingTagIds(updateTagIds);
     setExistingGroupIds(updateGroupIds);
+    setExistingUrls(updateUrls);
     setOrganized(updateOrganized);
   }, [props.selected]);
 
@@ -192,6 +217,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
 
     return (
       <MultiSet
+        key={`${type}-select`}
         type={type}
         disabled={isUpdating}
         onUpdate={(itemIDs) => {
@@ -220,11 +246,84 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
               break;
           }
         }}
-        ids={ids ?? []}
-        existingIds={existingIds ?? []}
+        ids={ids}
+        existingIds={existingIds}
         mode={mode}
         menuPortalTarget={document.body}
       />
+    );
+  }
+
+  function renderMultiString(
+    type: "urls",
+    values: string[]
+  ) {
+    const mode = urlMode;
+    const existingValues = existingUrls;
+
+    // Ensure values is always a clean array of strings
+    const cleanValues = React.useMemo(() =>
+      (values || []).filter(v => typeof v === 'string' && v.trim() !== ''),
+      [values]
+    );
+
+    function onSetMode(m: GQL.BulkUpdateIdMode) {
+      if (m === mode) {
+        return;
+      }
+
+      // if going to Set, set the existing values
+      if (m === GQL.BulkUpdateIdMode.Set && existingValues) {
+        setUrls(existingValues.filter(v => v != null && v !== ""));
+        // if going from Set, wipe the values
+      } else if (
+        m !== GQL.BulkUpdateIdMode.Set &&
+        mode === GQL.BulkUpdateIdMode.Set
+      ) {
+        setUrls([]);
+      }
+
+      setUrlMode(m);
+    }
+
+    return (
+      <div className="multi-set">
+        <ButtonGroup className="button-group-above">
+          {[
+            GQL.BulkUpdateIdMode.Set,
+            GQL.BulkUpdateIdMode.Add,
+            GQL.BulkUpdateIdMode.Remove,
+          ].map((m) => (
+            <Button
+              key={m}
+              variant="primary"
+              active={mode === m}
+              size="sm"
+              onClick={() => onSetMode(m)}
+              disabled={isUpdating}
+            >
+              {m === GQL.BulkUpdateIdMode.Set
+                ? intl.formatMessage({ id: "actions.overwrite" })
+                : m === GQL.BulkUpdateIdMode.Add
+                ? intl.formatMessage({ id: "actions.add" })
+                : intl.formatMessage({ id: "actions.remove" })}
+            </Button>
+          ))}
+        </ButtonGroup>
+        <URLListInput
+          key="urls-select"
+          value={cleanValues}
+          setValue={setUrls}
+          readOnly={isUpdating}
+        />
+        {existingValues && existingValues.length > 0 && existingValues.every(v => v != null) && (
+          <div className="existing-values">
+            <small className="text-muted">
+              {intl.formatMessage({ id: "countables.urls" }, { count: existingValues.length })}: {existingValues.join(", ")}
+            </small>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -281,10 +380,11 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
             })}
             <Col xs={9}>
               <StudioSelect
+                key="studio-select"
                 onSelect={(items) =>
                   setStudioId(items.length > 0 ? items[0]?.id : undefined)
                 }
-                ids={studioId ? [studioId] : []}
+                ids={studioIds}
                 isDisabled={isUpdating}
                 menuPortalTarget={document.body}
               />
@@ -310,6 +410,13 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
               <FormattedMessage id="groups" />
             </Form.Label>
             {renderMultiSelect("groups", groupIds)}
+          </Form.Group>
+
+          <Form.Group controlId="urls">
+            <Form.Label>
+              <FormattedMessage id="urls" />
+            </Form.Label>
+            {renderMultiString("urls", urls || [])}
           </Form.Group>
 
           <Form.Group controlId="organized">

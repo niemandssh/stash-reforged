@@ -92,6 +92,11 @@ export function getAggregateGroupIds(state: { groups: IGroup[] }[]) {
   return getAggregateIds(sortedLists);
 }
 
+export function getAggregateURLs(state: { urls: string[] }[]) {
+  const sortedLists = state.map((o) => [...o.urls].sort());
+  return getAggregateIds(sortedLists);
+}
+
 export function makeBulkUpdateIds(
   ids: string[],
   mode: GQL.BulkUpdateIdMode
@@ -99,6 +104,16 @@ export function makeBulkUpdateIds(
   return {
     mode,
     ids,
+  };
+}
+
+export function makeBulkUpdateStrings(
+  values: string[],
+  mode: GQL.BulkUpdateIdMode
+): GQL.BulkUpdateStrings {
+  return {
+    mode,
+    values,
   };
 }
 
@@ -118,6 +133,28 @@ export function getAggregateInputValue<V>(
     // if value is set, then we are setting the value for all
     return inputValue;
   }
+}
+
+export function getAggregateInputStrings(
+  mode: GQL.BulkUpdateIdMode,
+  inputValues: string[] | undefined,
+  aggregateValues: string[]
+) {
+  if (
+    mode === GQL.BulkUpdateIdMode.Set &&
+    (!inputValues || inputValues.length === 0)
+  ) {
+    // and all scenes have the same values,
+    if (aggregateValues.length > 0) {
+      // then unset the values, otherwise ignore
+      return makeBulkUpdateStrings(inputValues || [], mode);
+    }
+  } else {
+    // if values non-empty, then we are setting them
+    return makeBulkUpdateStrings(inputValues || [], mode);
+  }
+
+  return undefined;
 }
 
 // TODO - remove - this is incorrect

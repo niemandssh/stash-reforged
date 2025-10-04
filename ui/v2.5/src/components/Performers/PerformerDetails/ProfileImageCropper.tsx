@@ -62,13 +62,6 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     };
   }, []);
 
-  const handleImageClick = (evt: React.MouseEvent) => {
-    if (cropping) {
-      evt.preventDefault();
-      evt.stopPropagation();
-    }
-  };
-
   const handleCropStart = () => {
     if (!imageRef.current) return;
 
@@ -77,14 +70,22 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     onCroppingChange?.(true);
 
     const cropperOptions: Record<string, unknown> = {
-      viewMode: 1,
+      viewMode: 2, // Restrict the crop box not to exceed the size of the canvas
+      aspectRatio: 308 / 412, // Maintain aspect ratio
       initialAspectRatio: 308 / 412,
-      movable: false,
+      movable: true, // Allow moving the crop box
       rotatable: false,
-      scalable: false,
+      scalable: true, // Allow scaling while maintaining aspect ratio
       zoomable: false,
       zoomOnTouch: false,
       zoomOnWheel: false,
+      cropBoxResizable: true, // Allow resizing the crop box
+      cropBoxMovable: true, // Allow moving the crop box
+      autoCropArea: 0.8, // Start with 80% of the image area
+      responsive: true,
+      restore: false, // Don't restore crop box
+      checkCrossOrigin: false,
+      checkOrientation: false,
       ready() {
         setCropperReady(true);
       },
@@ -97,6 +98,14 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
 
     cropperRef.current = new Cropper(imageRef.current, cropperOptions);
   };
+
+  const handleImageClick = (evt: React.MouseEvent) => {
+    if (cropping) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }
+  };
+
 
   const handleImageUpload = async (imageData: string | null) => {
     if (!imageData) {
@@ -192,6 +201,11 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
 
     try {
       const croppedCanvas = (cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }).getCroppedCanvas();
+
+      if (!croppedCanvas) {
+        throw new Error("Failed to get cropped canvas");
+      }
+
       const imageDataUrl = croppedCanvas.toDataURL();
 
       const result = await updateProfileImage({
@@ -255,11 +269,18 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
             transform: 'scale(1.1)'
           }}
         />
+        <img
+          src={imageSrc}
+          crossOrigin="anonymous"
+          style={{ display: 'none' }}
+          alt="hidden"
+        />
 
         {imageSrc && (
           <img
             ref={imageRef}
             src={imageSrc}
+            crossOrigin="anonymous"
             className="performer"
             alt="Performer Profile Image"
             onClick={handleImageClick}

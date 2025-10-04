@@ -284,5 +284,8 @@
         "title": "Tag Requirements",
         "summary": "Required: {filled}/{total} (minimum {min})",
         "optional_summary": "{count, plural, one {# optional preset} other {# optional presets}}"
+    },
+    "countables": {
+        "urls": "{count, plural, one {# URL} other {# URLs}}"
     }
 }

@@ -20,13 +20,14 @@
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
 - [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 - [x] **Scene tags requirements helper** - if you fill descriptions and requirement status in color presets, you can see tag helper with checklist of fillable tags
+- [x] URLs for bulk edit scene
 - [x] Fake item was added to away enter misclick on scene tags editing, now you can't create tag by do something like "crea"+Enter, now you can create it by "crea"+Key down+Enter (or by click on create element by left click of course)
 - [x] Show current or dead age for performer in the Scene's performer cards
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
 - [x] Tag weights - some tags matter than other (for recommendations)
 - [x] Performer's, Studio's and tag's photo cropper
 - [x] Broken video status for scene (you can add it manually)
-- [x] 10-stars rating by half star
+- [x] 10-stars rating by half star (for numeric rating setting)
 - [x] RIP ribbon for death performers
 - [x] Reorder fields of scene edit (for more comfortable filling)
 - [x] "Merge from/into other scene..." was added in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
@@ -44,6 +45,7 @@
 - [x] Setting for redirect to /scenes from main page if it is turned on
 - [x] Undo/redo for tags field (you can type Ctrl+Z for return accidentally deleted tag)
 - [x] Collapse for scene description in Scene Details tab
+- [x] Normalize tag names on scrapping ("e-girl" becomes "e girl") - resolves scrape problems with XVideos tags (a lot of tags with hyphens)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

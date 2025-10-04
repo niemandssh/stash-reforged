@@ -50,10 +50,13 @@ export const StringInput: React.FC<IListInputComponentProps> = ({
 export const StringListInput: React.FC<IStringListInputProps> = (props) => {
   const Input = props.inputComponent ?? StringInput;
   const AppendComponent = props.appendComponent;
-  const values = props.value.concat("");
+
+  // Ensure all values are strings and filter out null/undefined
+  const cleanValues = props.value.filter(v => v != null && v !== undefined).map(v => String(v));
+  const values = cleanValues.concat("");
 
   function valueChanged(idx: number, value: string) {
-    const newValues = props.value.slice();
+    const newValues = cleanValues.slice();
     newValues[idx] = value;
 
     // if we cleared the last string, delete it from the array entirely
@@ -65,7 +68,7 @@ export const StringListInput: React.FC<IStringListInputProps> = (props) => {
   }
 
   function removeValue(idx: number) {
-    const newValues = props.value.filter((_v, i) => i !== idx);
+    const newValues = cleanValues.filter((_v, i) => i !== idx);
 
     props.setValue(newValues);
   }

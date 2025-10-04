@@ -208,6 +208,12 @@
     }
   }
 
+  &:hover {
+    .dots-indicator {
+      opacity: 1;
+    }
+  }
+
   .image-action-buttons {
     position: absolute;
     bottom: 50px;
@@ -239,7 +245,7 @@
         padding: 4px 8px;
         border-radius: 12px;
         backdrop-filter: blur(2px);
-        opacity: 0.8;
+        opacity: 0.2;
         transition: opacity 0.3s ease;
         pointer-events: auto;
 

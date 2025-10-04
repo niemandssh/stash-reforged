@@ -828,7 +828,8 @@
         "scenes": "{count, plural, one {Сцена} other {Сцены}}",
         "studios": "{count, plural, one {Студия} other {Студии}}",
         "tags": "{count, plural, one {Тег} other {Теги}}",
-        "groups": "{count, plural, one {Группа} other {Группы}}"
+        "groups": "{count, plural, one {Группа} other {Группы}}",
+        "urls": "{count, plural, one {Ссылка} other {Ссылки}}"
     },
     "country": "Страна",
     "cover_image": "Изображение обложки",
