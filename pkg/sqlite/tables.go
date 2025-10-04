@@ -21,6 +21,7 @@ var (
 	galleriesScenesJoinTable     = goqu.T(galleriesScenesTable)
 	galleriesURLsJoinTable       = goqu.T(galleriesURLsTable)
 	galleriesODatesJoinTable     = goqu.T(galleriesODatesTable)
+	galleriesViewDatesJoinTable  = goqu.T(galleriesViewDatesTable)
 
 	scenesFilesJoinTable      = goqu.T(scenesFilesTable)
 	scenesTagsJoinTable       = goqu.T(scenesTagsTable)
@@ -157,6 +158,14 @@ var (
 			idColumn: galleriesODatesJoinTable.Col(galleryIDColumn),
 		},
 		dateColumn: galleriesODatesJoinTable.Col(galleryODateColumn),
+	}
+
+	galleriesViewTableMgr = &viewHistoryTable{
+		table: table{
+			table:    galleriesViewDatesJoinTable,
+			idColumn: galleriesViewDatesJoinTable.Col(galleryIDColumn),
+		},
+		dateColumn: galleriesViewDatesJoinTable.Col(galleryViewDateColumn),
 	}
 )
 

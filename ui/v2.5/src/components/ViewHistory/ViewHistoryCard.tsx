@@ -11,7 +11,9 @@ import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 import GenderIcon from "../Performers/GenderIcon";
 import { PerformerPopover } from "../Performers/PerformerPopover";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
-import { Scene, Gallery, ViewHistoryEntry } from "./types";
+import { Icon } from "../Shared/Icon";
+import { faImage } from "@fortawesome/free-solid-svg-icons";
+import { Scene, Gallery } from "./types";
 import NavUtils from "src/utils/navigation";
 import "./ViewHistoryCard.scss";
 
@@ -99,21 +101,64 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
       const slimGallery = {
         id: gallery!.id,
         title: gallery!.title,
+        code: gallery!.code,
+        date: gallery!.date,
+        urls: [],
+        details: gallery!.details,
+        photographer: gallery!.photographer,
+        rating100: gallery!.rating100,
+        organized: gallery!.organized || false,
+        pinned: gallery!.pinned || false,
+        o_counter: gallery!.o_counter || 0,
+        display_mode: gallery!.display_mode || 0,
         paths: {
           cover: gallery!.paths?.cover || "",
-          preview: gallery!.paths?.cover || "",
+          preview: gallery!.paths?.preview || gallery!.paths?.cover || "",
         },
-        image_count: 0, // We don't have this info in the current structure
+        image_count: gallery!.image_count || 0,
+        files: gallery!.files?.map(file => ({
+          id: file.id,
+          path: file.path,
+          size: file.size,
+          mod_time: file.mod_time,
+          fingerprints: file.fingerprints.map(fp => ({
+            type: fp.type,
+            value: fp.value,
+          })),
+        })) || [],
+        chapters: [],
+        scenes: [],
+        studio: gallery!.studio && gallery!.studio.name ? {
+          id: gallery!.studio.id,
+          name: gallery!.studio.name,
+          image_path: gallery!.studio.image_path,
+        } : null,
+        tags: [],
+        performers: gallery!.performers?.map(performer => ({
+          id: performer.id,
+          name: performer.name || "",
+          gender: performer.gender as any,
+          favorite: false,
+          image_path: null,
+        })) || [],
       };
 
       return (
-        <GalleryPreview
-          gallery={slimGallery}
-          onScrubberClick={(index) => {
-            // Navigate to gallery at specific image
-            history.push(`/galleries/${gallery!.id}?index=${index}`);
-          }}
-        />
+        <>
+          <GalleryPreview
+            gallery={slimGallery}
+            onScrubberClick={(index) => {
+              // Navigate to gallery at specific image
+              history.push(`/galleries/${gallery!.id}?index=${index}`);
+            }}
+          />
+          {gallery!.image_count && gallery!.image_count > 0 && (
+            <div className="view-history-image-count">
+              <Icon icon={faImage} />
+              <span>{gallery!.image_count}</span>
+            </div>
+          )}
+        </>
       );
     }
   };
@@ -130,20 +175,13 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
     if (isScene) {
       return scene!.play_count || 0;
     } else {
-      // Galleries don't have view counts, only o_counts
-      // Return 0 to indicate no view count available
-      return 0;
+      return gallery!.play_count || 0;
     }
   };
 
   const getViewCountText = () => {
     const count = getViewCount();
-    if (isScene) {
-      return `${count} view${count !== 1 ? "s" : ""}`;
-    } else {
-      // For galleries, don't show view count since they don't have views
-      return "";
-    }
+    return `${count} view${count !== 1 ? "s" : ""}`;
   };
 
   return (
@@ -179,20 +217,16 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
           </h3>
         </Link>
 
-        {content!.studio && (
-          <StudioOverlay studio={content!.studio} />
+        {content!.studio && content!.studio.name && (
+          <StudioOverlay studio={content!.studio as any} />
         )}
 
         <div className="view-history-bottom-info">
           <div className="view-history-view-info">
-            {getViewCountText() && (
-              <>
-                <span className="view-history-view-count">
-                  {getViewCountText()}
-                </span>
-                <span className="view-history-separator">•</span>
-              </>
-            )}
+            <span className="view-history-view-count">
+              {getViewCountText()}
+            </span>
+            <span className="view-history-separator">•</span>
             <span className="view-history-view-date">
               {formatViewDate(viewDate)}
             </span>

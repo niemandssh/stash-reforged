@@ -12,6 +12,8 @@ fragment GalleryData on Gallery {
   organized
   o_counter
   o_history
+  play_count
+  view_history
   display_mode
 
   paths {

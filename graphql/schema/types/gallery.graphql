@@ -20,6 +20,8 @@ type Gallery {
   o_counter: Int!
   o_history: [Time!]!
   display_mode: Int!
+  play_count: Int!
+  view_history: [Time!]!
   created_at: Time!
   updated_at: Time!
 

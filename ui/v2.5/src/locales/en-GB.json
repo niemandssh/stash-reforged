@@ -887,7 +887,8 @@
     "performers": "{count, plural, one {Performer} other {Performers}}",
     "scenes": "{count, plural, one {Scene} other {Scenes}}",
     "studios": "{count, plural, one {Studio} other {Studios}}",
-    "tags": "{count, plural, one {Tag} other {Tags}}"
+    "tags": "{count, plural, one {Tag} other {Tags}}",
+    "urls": "{count, plural, one {# URL} other {# URLs}}"
   },
   "country": "Country",
   "cover_image": "Cover Image",
@@ -1640,8 +1641,5 @@
   "no_scenes_to_review": "No scenes without rating, without tags, or unorganised scenes to review",
   "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
   "no_best_scenes_available": "No scenes with rating >= {ratingThreshold}",
-  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video",
-  "countables": {
-    "urls": "{count, plural, one {# URL} other {# URLs}}"
-  }
+  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video"
 }

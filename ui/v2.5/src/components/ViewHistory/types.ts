@@ -39,9 +39,13 @@ export interface Gallery {
   organized?: boolean;
   pinned?: boolean;
   o_counter?: number;
+  play_count?: number;
+  view_history?: string[];
   display_mode?: number;
+  image_count?: number;
   paths?: {
     cover?: string;
+    preview?: string;
   };
   performers?: Array<{
     id: string;
@@ -54,7 +58,14 @@ export interface Gallery {
     image_path?: string;
   };
   files?: Array<{
-    path?: string;
+    id: string;
+    path: string;
+    size: number;
+    mod_time: string;
+    fingerprints: Array<{
+      type: string;
+      value: string;
+    }>;
   }>;
 }
 

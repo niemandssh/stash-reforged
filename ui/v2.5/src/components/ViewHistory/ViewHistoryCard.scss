@@ -36,6 +36,32 @@
     font-size: 0.75rem;
     font-weight: 500;
     z-index: 10;
+    pointer-events: none;
+  }
+
+  .view-history-image-count {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 4px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    pointer-events: none;
+
+    span {
+      line-height: 100%;
+    }
+
+    .fa-icon {
+      font-size: 0.7rem;
+    }
   }
 }
 
@@ -181,6 +207,11 @@
 .view-history-thumbnail-container:hover .scene-card-preview-video {
   top: 0;
   transition-delay: 0.2s;
+}
+
+// Hover scrubber positioning for gallery cards in view history
+.view-history-card.gallery-card .hover-scrubber {
+  bottom: 20px;
 }
 
 // Mobile responsive

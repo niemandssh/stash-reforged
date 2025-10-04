@@ -812,3 +812,129 @@ func (r *mutationResolver) GalleryResetO(ctx context.Context, id string) (int, e
 
 	return ret, nil
 }
+
+func (r *mutationResolver) GalleryIncrementPlay(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.CountViews(ctx, galleryID)
+		if err != nil {
+			return err
+		}
+
+		_, err = qb.AddViews(ctx, galleryID, []time.Time{time.Now()})
+		if err != nil {
+			return err
+		}
+
+		ret++
+		return nil
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) GalleryAddPlay(ctx context.Context, id string, times []*time.Time) (*HistoryMutationResult, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var timeTimes []time.Time
+
+	// convert time.Time to local time
+	for _, t := range times {
+		if t != nil {
+			timeTimes = append(timeTimes, t.Local())
+		}
+	}
+
+	var updatedTimes []time.Time
+
+	var playCount int
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		updatedTimes, err = qb.AddViews(ctx, galleryID, timeTimes)
+		if err != nil {
+			return err
+		}
+
+		playCount, err = qb.CountViews(ctx, galleryID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   playCount,
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
+func (r *mutationResolver) GalleryDeletePlay(ctx context.Context, id string, times []*time.Time) (*HistoryMutationResult, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var timeTimes []time.Time
+
+	// convert time.Time to local time
+	for _, t := range times {
+		if t != nil {
+			timeTimes = append(timeTimes, t.Local())
+		}
+	}
+
+	var updatedTimes []time.Time
+
+	var playCount int
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		updatedTimes, err = qb.DeleteViews(ctx, galleryID, timeTimes)
+		if err != nil {
+			return err
+		}
+
+		playCount, err = qb.CountViews(ctx, galleryID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   playCount,
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
+func (r *mutationResolver) GalleryResetPlayCount(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.DeleteAllViews(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}

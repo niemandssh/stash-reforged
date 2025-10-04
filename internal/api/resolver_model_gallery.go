@@ -246,3 +246,28 @@ func (r *galleryResolver) OHistory(ctx context.Context, obj *models.Gallery) ([]
 
 	return ptrRet, nil
 }
+
+func (r *galleryResolver) PlayCount(ctx context.Context, obj *models.Gallery) (int, error) {
+	ret, err := loaders.From(ctx).GalleryPlayCount.Load(obj.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *galleryResolver) ViewHistory(ctx context.Context, obj *models.Gallery) ([]*time.Time, error) {
+	ret, err := loaders.From(ctx).GalleryViewHistory.Load(obj.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert to pointer slice
+	ptrRet := make([]*time.Time, len(ret))
+	for i, t := range ret {
+		tt := t
+		ptrRet[i] = &tt
+	}
+
+	return ptrRet, nil
+}

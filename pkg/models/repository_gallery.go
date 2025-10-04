@@ -73,6 +73,7 @@ type GalleryReader interface {
 	PerformerIDLoader
 	TagIDLoader
 	FileLoader
+	ViewDateReader
 
 	All(ctx context.Context) ([]*Gallery, error)
 }
@@ -98,6 +99,7 @@ type GalleryWriter interface {
 	GalleryUpdater
 	GalleryDestroyer
 	GalleryOCounter
+	ViewHistoryWriter
 
 	AddFileID(ctx context.Context, id int, fileID FileID) error
 	AddImages(ctx context.Context, galleryID int, imageIDs ...int) error

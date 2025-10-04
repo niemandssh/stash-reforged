@@ -1074,6 +1074,7 @@ export const useSceneSaveActivity = () =>
 
 export const useSceneIncrementPlayCount = () =>
   GQL.useSceneAddPlayMutation({
+    refetchQueries: [GQL.FindScenesDocument],
     update(cache, result, { variables }) {
       const mutationResult = result.data?.sceneAddPlay;
 
@@ -1108,7 +1109,6 @@ export const useSceneIncrementPlayCount = () =>
       }
 
       evictQueries(cache, [
-        GQL.FindScenesDocument, // filter by play count
         GQL.FindSceneDocument, // individual scene page
       ]);
     },
@@ -1116,6 +1116,7 @@ export const useSceneIncrementPlayCount = () =>
 
 export const useSceneDecrementPlayCount = () =>
   GQL.useSceneDeletePlayMutation({
+    refetchQueries: [GQL.FindScenesDocument],
     update(cache, result, { variables }) {
       const mutationResult = result.data?.sceneDeletePlay;
 
@@ -1167,7 +1168,6 @@ export const useSceneDecrementPlayCount = () =>
       }
 
       evictQueries(cache, [
-        GQL.FindScenesDocument, // filter by play count
         GQL.FindSceneDocument, // individual scene page
       ]);
     },
@@ -1175,6 +1175,7 @@ export const useSceneDecrementPlayCount = () =>
 
 export const useSceneResetPlayCount = () =>
   GQL.useSceneResetPlayCountMutation({
+    refetchQueries: [GQL.FindScenesDocument],
     update(cache, result, { variables }) {
       if (!variables) return;
 
@@ -1204,7 +1205,6 @@ export const useSceneResetPlayCount = () =>
       }
 
       evictQueries(cache, [
-        GQL.FindScenesDocument, // filter by play count
         GQL.FindSceneDocument, // individual scene page
       ]);
     },
@@ -1903,7 +1903,7 @@ export const useGalleryResetO = (id: string) =>
         });
       }
 
-      updateStats(cache, "total_o_count", -gallery?.o_counter || 0);
+      updateStats(cache, "total_o_count", -(gallery?.o_counter ?? 0));
 
       // Try using writeFragment to force a complete update
       if (gallery) {
@@ -3295,6 +3295,129 @@ export const mutateRecalculateSceneSimilarities = (sceneID?: string) =>
   client.mutate<GQL.RecalculateSceneSimilaritiesMutation>({
     mutation: GQL.RecalculateSceneSimilaritiesDocument,
     variables: { scene_id: sceneID },
+  });
+
+export const useGalleryIncrementPlayCount = () =>
+  GQL.useGalleryIncrementPlayMutation({
+    refetchQueries: [GQL.FindGalleriesDocument],
+    update(cache, result, { variables }) {
+      if (!result.data?.galleryIncrementPlay || !variables) return;
+
+      const updatedPlayCount = result.data.galleryIncrementPlay;
+      const { id } = variables;
+
+      // Get current gallery data to update view_history
+      const gallery = cache.readFragment<GQL.GalleryDataFragment>({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fragment: GQL.GalleryDataFragmentDoc,
+        fragmentName: "GalleryData",
+      });
+
+      const currentTime = new Date().toISOString();
+      const newViewHistory = gallery ? [currentTime, ...gallery.view_history] : [currentTime];
+
+      // Update the gallery's play_count and view_history in cache
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          play_count() {
+            return updatedPlayCount;
+          },
+          last_played_at() {
+            return currentTime;
+          },
+          view_history() {
+            return newViewHistory;
+          },
+        },
+      });
+
+      // Update stats
+      updateStats(cache, "total_play_count", 1);
+
+      evictQueries(cache, [
+        GQL.FindGalleriesDocument, // filter by play count
+        GQL.FindGalleryDocument, // individual gallery page
+      ]);
+    },
+  });
+
+export const useGalleryDecrementPlayCount = (id: string) =>
+  GQL.useGalleryDeletePlayMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleriesDocument],
+    update(cache, result, { variables }) {
+      const mutationResult = result.data?.galleryDeletePlay;
+
+      if (!mutationResult || !variables) return;
+
+      const { history } = mutationResult;
+      const { times } = variables;
+      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
+      const nRemoved = timeArray?.length ?? 1;
+
+      let lastPlayCount = 0;
+      const playCount = history.length;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          play_count(value) {
+            lastPlayCount = value;
+            return playCount;
+          },
+          view_history() {
+            return history;
+          },
+        },
+      });
+
+      if (lastPlayCount > 0) {
+        updateStats(
+          cache,
+          "total_play_count",
+          nRemoved > lastPlayCount ? -lastPlayCount : -nRemoved
+        );
+      }
+
+      evictQueries(cache, [
+        GQL.FindGalleriesDocument, // filter by play count
+        GQL.FindGalleryDocument, // individual gallery page
+      ]);
+    },
+  });
+
+export const useGalleryResetPlayCount = (id: string) =>
+  GQL.useGalleryResetPlayCountMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleriesDocument],
+    update(cache, result, { variables }) {
+      if (!variables) return;
+
+      let lastPlayCount = 0;
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          play_count(value) {
+            lastPlayCount = value;
+            return 0;
+          },
+          view_history() {
+            const ret: string[] = [];
+            return ret;
+          },
+        },
+      });
+
+      if (lastPlayCount > 0) {
+        updateStats(cache, "total_play_count", -lastPlayCount);
+      }
+
+      evictQueries(cache, [
+        GQL.FindGalleriesDocument, // filter by play count
+        GQL.FindGalleryDocument, // individual gallery page
+      ]);
+    },
   });
 
 /// Misc

@@ -78,8 +78,6 @@ type ViewDateReader interface {
 	GetManyLastViewed(ctx context.Context, ids []int) ([]*time.Time, error)
 	GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]AggregatedView, error)
 	GetAggregatedViewHistoryCount(ctx context.Context) (int, error)
-	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
-	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
 }
 
 // ViewEvent represents a single view event with scene information
@@ -139,6 +137,9 @@ type SceneReader interface {
 	SceneGroupLoader
 	StashIDLoader
 	VideoFileLoader
+
+	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
+	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
 
 	All(ctx context.Context) ([]*Scene, error)
 	AllWithRelationships(ctx context.Context) ([]*Scene, error)

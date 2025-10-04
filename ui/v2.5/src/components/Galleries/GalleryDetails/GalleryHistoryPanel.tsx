@@ -15,6 +15,9 @@ import {
   useGalleryDecrementO,
   useGalleryIncrementO,
   useGalleryResetO,
+  useGalleryIncrementPlayCount,
+  useGalleryDecrementPlayCount,
+  useGalleryResetPlayCount,
 } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
 import { useToast } from "src/hooks/Toast";
@@ -147,7 +150,9 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
   const Toast = useToast();
 
   const [dialogs, setDialogs] = React.useState({
+    playHistory: false,
     oHistory: false,
+    addPlay: false,
     addO: false,
   });
 
@@ -155,6 +160,9 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     setDialogs({ ...dialogs, ...partial });
   }
 
+  const [incrementPlayCount] = useGalleryIncrementPlayCount();
+  const [decrementPlayCount] = useGalleryDecrementPlayCount(gallery.id);
+  const [resetPlayCount] = useGalleryResetPlayCount(gallery.id);
   const [incrementOCount] = useGalleryIncrementO(gallery.id);
   const [decrementOCount] = useGalleryDecrementO(gallery.id);
   const [resetO] = useGalleryResetO(gallery.id);
@@ -165,10 +173,28 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     return date.toISOString();
   }
 
+  function handleAddPlayDate(time?: string) {
+    incrementPlayCount({
+      variables: {
+        id: gallery.id,
+      },
+    });
+  }
+
   function handleAddODate(time?: string) {
     incrementOCount({
       variables: {
+        id: gallery.id,
         times: time ? [time] : undefined,
+      },
+    });
+  }
+
+  function handleDeletePlayDate(time: string) {
+    decrementPlayCount({
+      variables: {
+        id: gallery.id,
+        times: [time],
       },
     });
   }
@@ -176,9 +202,15 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
   function handleDeleteODate(time: string) {
     decrementOCount({
       variables: {
+        id: gallery.id,
         times: [time],
       },
     });
+  }
+
+  function handleClearPlayDates() {
+    setDialogPartial({ playHistory: false });
+    resetPlayCount();
   }
 
   function handleClearODates() {
@@ -190,12 +222,31 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     return (
       <>
         <AlertModal
+          show={dialogs.playHistory}
+          text={intl.formatMessage({ id: "dialogs.clear_play_history_confirm" })}
+          confirmButtonText={intl.formatMessage({ id: "actions.clear" })}
+          onConfirm={() => handleClearPlayDates()}
+          onCancel={() => setDialogPartial({ playHistory: false })}
+        />
+        <AlertModal
           show={dialogs.oHistory}
           text={intl.formatMessage({ id: "dialogs.clear_o_history_confirm" })}
           confirmButtonText={intl.formatMessage({ id: "actions.clear" })}
           onConfirm={() => handleClearODates()}
           onCancel={() => setDialogPartial({ oHistory: false })}
         />
+        {dialogs.addPlay && (
+          <DatePickerModal
+            show
+            onClose={(t) => {
+              const tt = t ? dateStringToISOString(t) : null;
+              if (tt) {
+                handleAddPlayDate(tt);
+              }
+              setDialogPartial({ addPlay: false });
+            }}
+          />
+        )}
         {dialogs.addO && (
           <DatePickerModal
             show
@@ -212,12 +263,46 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     );
   }
 
+  const playHistory = (gallery.view_history ?? []).filter((h) => h != null) as string[];
   const oHistory = (gallery.o_history ?? []).filter((h) => h != null) as string[];
 
   return (
     <div>
       {maybeRenderDialogs()}
-      
+
+      <div className="play-history mb-3">
+        <div className="history-header">
+          <h5>
+            <span>
+              <FormattedMessage id="play_history" />
+              <Counter count={playHistory.length} hideZero />
+            </span>
+            <span>
+              <Button
+                size="sm"
+                variant="minimal"
+                className="add-date-button"
+                title={intl.formatMessage({ id: "actions.add_play" })}
+                onClick={() => handleAddPlayDate()}
+              >
+                <Icon icon={faPlus} />
+              </Button>
+              <HistoryMenu
+                hasHistory={playHistory.length > 0}
+                onAddDate={() => setDialogPartial({ addPlay: true })}
+                onClearDates={() => setDialogPartial({ playHistory: true })}
+              />
+            </span>
+          </h5>
+        </div>
+        <History
+          className="play-history"
+          history={playHistory}
+          onRemove={(date) => handleDeletePlayDate(date)}
+          noneID="playdate_recorded_no"
+        />
+      </div>
+
       <div className="o-history">
         <div className="history-header">
           <h5>

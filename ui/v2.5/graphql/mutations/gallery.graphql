@@ -79,3 +79,18 @@ mutation GalleryDeleteO($id: ID!, $times: [Timestamp!]) {
     history
   }
 }
+
+mutation GalleryIncrementPlay($id: ID!) {
+  galleryIncrementPlay(id: $id)
+}
+
+mutation GalleryDeletePlay($id: ID!, $times: [Timestamp!]) {
+  galleryDeletePlay(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GalleryResetPlayCount($id: ID!) {
+  galleryResetPlayCount(id: $id)
+}

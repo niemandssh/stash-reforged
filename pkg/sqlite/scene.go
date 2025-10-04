@@ -1214,9 +1214,23 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		return err
 	}
 
-	// If no search query, sort pinned items first, then by created_at
+	// If no search query, sort pinned items first, then by selected sort
 	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
-		query.sortAndPagination += " ORDER BY scenes.pinned DESC, scenes.created_at DESC, COALESCE(scenes.title, scenes.id) COLLATE NATURAL_CI ASC"
+		// Handle pinned sorting for non-search queries
+		if sort == "play_count" {
+			query.sortAndPagination += getCountSort(sceneTable, scenesViewDatesTable, sceneIDColumn, direction)
+		} else if sort == "last_played_at" {
+			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesViewDatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
+		} else if sort == "last_o_at" {
+			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
+		} else if sort == "o_counter" {
+			query.sortAndPagination += getCountSort(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+		} else {
+			query.sortAndPagination += getSort(sort, direction, "scenes")
+		}
+
+		// Always add pinned and title as final sorts
+		query.sortAndPagination += ", scenes.pinned DESC, COALESCE(scenes.title, scenes.id) COLLATE NATURAL_CI ASC"
 		return nil
 	}
 
@@ -1562,15 +1576,30 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 		) gv
 	`
 
-	// Galleries from galleries_o_dates
+	// Galleries from galleries_view_dates
 	galleriesQuery := `
 		SELECT
 			'gallery' as content_type,
-			gallery_id as content_id,
-			o_date as view_date,
-			1 as view_count,
-			o_date as o_date
-		FROM galleries_o_dates
+			gv.gallery_id as content_id,
+			gv.view_date,
+			gv.view_count,
+			(
+				SELECT god.o_date
+				FROM galleries_o_dates god
+				WHERE god.gallery_id = gv.gallery_id
+				AND god.o_date > gv.earliest_view_date
+				ORDER BY god.o_date ASC
+				LIMIT 1
+			) as o_date
+		FROM (
+			SELECT
+				gvd.gallery_id,
+				COUNT(*) as view_count,
+				MIN(gvd.view_date) as earliest_view_date,
+				MAX(gvd.view_date) as view_date
+			FROM galleries_view_dates gvd
+			GROUP BY gvd.gallery_id, DATE(gvd.view_date)
+		) gv
 	`
 
 	// Combine both queries with UNION ALL and sort
@@ -1626,9 +1655,9 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 }
 
 func (qb *SceneStore) GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error) {
-	// Count from both tables
-	scenesQuery := "SELECT COUNT(*) FROM (SELECT scene_id FROM scenes_view_dates GROUP BY scene_id, DATE(view_date)) as scenes_count"
-	galleriesQuery := "SELECT COUNT(*) FROM galleries_o_dates"
+	// Count all views from both tables without grouping
+	scenesQuery := "SELECT COUNT(*) FROM scenes_view_dates"
+	galleriesQuery := "SELECT COUNT(*) FROM galleries_view_dates"
 
 	var scenesCount, galleriesCount int
 

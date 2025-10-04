@@ -35,6 +35,18 @@ const sortByOptions = ["date", ...MediaSortByOptions]
       messageID: "zip_file_count",
       value: "file_count",
     },
+    {
+      messageID: "play_count",
+      value: "play_count",
+    },
+    {
+      messageID: "last_played_at",
+      value: "last_played_at",
+    },
+    {
+      messageID: "o_count",
+      value: "o_counter",
+    },
   ]);
 
 const displayModeOptions = [
@@ -73,6 +85,9 @@ const criterionOptions = [
   createDateCriterionOption("date"),
   createMandatoryTimestampCriterionOption("created_at"),
   createMandatoryTimestampCriterionOption("updated_at"),
+  createMandatoryNumberCriterionOption("play_count"),
+  createMandatoryTimestampCriterionOption("last_played_at"),
+  createMandatoryNumberCriterionOption("o_counter"),
 ];
 
 export const GalleryListFilterOptions = new ListFilterOptions(

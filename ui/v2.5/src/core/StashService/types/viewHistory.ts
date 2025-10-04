@@ -45,9 +45,13 @@ export const FIND_VIEW_HISTORY = gql`
           organized
           pinned
           o_counter
+          play_count
+          view_history
           display_mode
+          image_count
           paths {
             cover
+            preview
           }
           performers {
             id
@@ -60,7 +64,14 @@ export const FIND_VIEW_HISTORY = gql`
             image_path
           }
           files {
+            id
             path
+            size
+            mod_time
+            fingerprints {
+              type
+              value
+            }
           }
         }
         viewDate

@@ -17,11 +17,13 @@
 //go:generate go run github.com/vektah/dataloaden CustomFieldsLoader int github.com/stashapp/stash/pkg/models.CustomFieldMap
 //go:generate go run github.com/vektah/dataloaden SceneOCountLoader int int
 //go:generate go run github.com/vektah/dataloaden ScenePlayCountLoader int int
-//go:generate go run github.com/vektah/dataloaden SceneOHistoryLoader int []time.Time
-//go:generate go run github.com/vektah/dataloaden ScenePlayHistoryLoader int []time.Time
-//go:generate go run github.com/vektah/dataloaden SceneLastPlayedLoader int *time.Time
+//go:generate go run github.com/vektah/dataloaden SceneOHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden ScenePlayHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden SceneLastPlayedLoader int github.com/stashapp/stash/internal/api/loaders.TimePtr
 //go:generate go run github.com/vektah/dataloaden GalleryOCountLoader int int
-//go:generate go run github.com/vektah/dataloaden GalleryOHistoryLoader int []time.Time
+//go:generate go run github.com/vektah/dataloaden GalleryOHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden GalleryPlayCountLoader int int
+//go:generate go run github.com/vektah/dataloaden GalleryViewHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
 package loaders
 
 import (
@@ -31,6 +33,9 @@ import (
 
 	"github.com/stashapp/stash/pkg/models"
 )
+
+type TimeSlice = []time.Time
+type TimePtr = *time.Time
 
 type contextKey struct{ name string }
 
@@ -55,10 +60,12 @@ type Loaders struct {
 	ImageFiles   *ImageFileIDsLoader
 	GalleryFiles *GalleryFileIDsLoader
 
-	GalleryByID     *GalleryLoader
-	GalleryOCount   *GalleryOCountLoader
-	GalleryOHistory *GalleryOHistoryLoader
-	ImageByID       *ImageLoader
+	GalleryByID        *GalleryLoader
+	GalleryOCount      *GalleryOCountLoader
+	GalleryOHistory    *GalleryOHistoryLoader
+	GalleryPlayCount   *GalleryPlayCountLoader
+	GalleryViewHistory *GalleryViewHistoryLoader
+	ImageByID          *ImageLoader
 
 	PerformerByID         *PerformerLoader
 	PerformerCustomFields *CustomFieldsLoader
@@ -97,6 +104,16 @@ func (m Middleware) Middleware(next http.Handler) http.Handler {
 				wait:     wait,
 				maxBatch: maxBatch,
 				fetch:    m.fetchGalleriesOHistory(ctx),
+			},
+			GalleryPlayCount: &GalleryPlayCountLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGalleriesPlayCount(ctx),
+			},
+			GalleryViewHistory: &GalleryViewHistoryLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGalleriesViewHistory(ctx),
 			},
 			ImageByID: &ImageLoader{
 				wait:     wait,
@@ -415,6 +432,28 @@ func (m Middleware) fetchGalleriesOHistory(ctx context.Context) func(keys []int)
 		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
 			var err error
 			ret, err = m.Repository.Gallery.GetManyODates(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGalleriesPlayCount(ctx context.Context) func(keys []int) ([]int, []error) {
+	return func(keys []int) (ret []int, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Gallery.GetManyViewCount(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGalleriesViewHistory(ctx context.Context) func(keys []int) ([][]time.Time, []error) {
+	return func(keys []int) (ret [][]time.Time, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Gallery.GetManyViewDates(ctx, keys)
 			return err
 		})
 		return ret, toErrorSlice(err)

@@ -5,12 +5,14 @@ import { WebDisplayMode } from "src/models/list-filter/types";
 import { WebDisplayModeToggle } from "./WebDisplayModeToggle";
 import { useIntersectionObserver } from "src/hooks/useIntersectionObserver";
 import { PageNavigationInput } from "./PageNavigationInput";
+import { useGalleryIncrementPlayCount } from "src/core/StashService";
 
 interface IImageWebViewProps {
   images: GQL.SlimImageDataFragment[];
   onImageClick: (index: number) => void;
   webDisplayMode?: WebDisplayMode;
   onDisplayModeChange?: (mode: WebDisplayMode) => void;
+  galleryId?: string;
 }
 
 export const ImageWebView: React.FC<IImageWebViewProps> = ({
@@ -18,12 +20,16 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   onImageClick,
   webDisplayMode = WebDisplayMode.FitToScreen,
   onDisplayModeChange,
+  galleryId,
 }) => {
   const [imageSizes, setImageSizes] = useState<{ [key: string]: { width: number; height: number } }>({});
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const spacerRefs = useRef<(HTMLDivElement | null)[]>([]);
   const isModeSwitching = useRef<boolean>(false);
+  const hasIncrementedPlayCount = useRef<boolean>(false);
+
+  const [incrementPlayCount] = useGalleryIncrementPlayCount();
 
   const { observe, unobserve, activeIndex } = useIntersectionObserver({
     threshold: 0.5,
@@ -34,8 +40,21 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   useEffect(() => {
     if (images.length > 0) {
       setCurrentImageIndex(0);
+      hasIncrementedPlayCount.current = false;
     }
   }, [images.length]);
+
+  // Track gallery view when user reaches 3rd image
+  useEffect(() => {
+    if (galleryId && activeIndex >= 2 && !hasIncrementedPlayCount.current) {
+      hasIncrementedPlayCount.current = true;
+      incrementPlayCount({
+        variables: {
+          id: galleryId,
+        },
+      });
+    }
+  }, [activeIndex, galleryId, incrementPlayCount]);
 
   useEffect(() => {
     if (activeIndex >= 0 && activeIndex < images.length && !isModeSwitching.current) {

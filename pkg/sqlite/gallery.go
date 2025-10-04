@@ -30,6 +30,8 @@ const (
 	galleriesURLColumn       = "url"
 	galleriesODatesTable     = "galleries_o_dates"
 	galleryODateColumn       = "o_date"
+	galleriesViewDatesTable  = "galleries_view_dates"
+	galleryViewDateColumn    = "view_date"
 )
 
 type galleryRow struct {
@@ -198,6 +200,7 @@ type GalleryStore struct {
 	tableMgr *table
 	oDateManager
 	oCounterManager
+	viewDateManager
 
 	fileStore   *FileStore
 	folderStore *FolderStore
@@ -208,6 +211,7 @@ func NewGalleryStore(fileStore *FileStore, folderStore *FolderStore) *GallerySto
 		tableMgr:        galleryTableMgr,
 		oDateManager:    oDateManager{galleriesOTableMgr},
 		oCounterManager: oCounterManager{galleryTableMgr},
+		viewDateManager: viewDateManager{tableMgr: galleriesViewTableMgr},
 		fileStore:       fileStore,
 		folderStore:     folderStore,
 	}
@@ -793,8 +797,11 @@ var gallerySortOptions = sortOptions{
 	"file_mod_time",
 	"id",
 	"images_count",
+	"last_played_at",
+	"o_counter",
 	"path",
 	"performer_count",
+	"play_count",
 	"random",
 	"rating",
 	"tag_count",
@@ -816,9 +823,21 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 		return err
 	}
 
-	// If no search query, sort pinned items first, then by created_at
+	// If no search query, sort pinned items first, then by selected sort
 	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
-		query.sortAndPagination += " ORDER BY galleries.pinned DESC, galleries.created_at DESC, COALESCE(galleries.title, galleries.id) COLLATE NATURAL_CI ASC"
+		// Handle pinned sorting for non-search queries
+		if sort == "play_count" {
+			query.sortAndPagination += getCountSort(galleryTable, galleriesViewDatesTable, galleryIDColumn, direction)
+		} else if sort == "last_played_at" {
+			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
+		} else if sort == "o_counter" {
+			query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+		} else {
+			query.sortAndPagination += getSort(sort, direction, "galleries")
+		}
+
+		// Always add pinned and title as final sorts
+		query.sortAndPagination += ", galleries.pinned DESC, COALESCE(galleries.title, galleries.id) COLLATE NATURAL_CI ASC"
 		return nil
 	}
 
@@ -860,6 +879,12 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 		query.sortAndPagination += getCountSort(galleryTable, galleriesTagsTable, galleryIDColumn, direction)
 	case "performer_count":
 		query.sortAndPagination += getCountSort(galleryTable, performersGalleriesTable, galleryIDColumn, direction)
+	case "play_count":
+		query.sortAndPagination += getCountSort(galleryTable, galleriesViewDatesTable, galleryIDColumn, direction)
+	case "last_played_at":
+		query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
+	case "o_counter":
+		query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
 	case "path":
 		// special handling for path
 		addFileTable()
@@ -994,4 +1019,114 @@ func (qb *GalleryStore) GetManyOCount(ctx context.Context, ids []int) ([]int, er
 
 func (qb *GalleryStore) GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error) {
 	return qb.oDateManager.GetManyODates(ctx, ids)
+}
+
+func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.AggregatedView, error) {
+	// Get all aggregated view history for galleries
+	query := `
+		SELECT
+			gv.gallery_id,
+			gv.latest_view_date as view_date,
+			gv.view_count,
+			(
+				SELECT god.o_date
+				FROM galleries_o_dates god
+				WHERE god.gallery_id = gv.gallery_id
+				AND god.o_date > gv.earliest_view_date
+				ORDER BY god.o_date ASC
+				LIMIT 1
+			) as o_date
+		FROM (
+			SELECT
+				gvd.gallery_id,
+				COUNT(*) as view_count,
+				MIN(gvd.view_date) as earliest_view_date,
+				MAX(gvd.view_date) as latest_view_date
+			FROM galleries_view_dates gvd
+			GROUP BY gvd.gallery_id, DATE(gvd.view_date)
+			ORDER BY MAX(gvd.view_date) DESC
+		) gv
+	`
+
+	rows, err := dbWrapper.QueryxContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var allResults []models.AggregatedView
+	resultMap := make(map[int]*models.AggregatedView)
+
+	for rows.Next() {
+		var galleryID int
+		var viewDateStr string
+		var viewCount int
+		var oDateStr *string
+
+		err := rows.Scan(&galleryID, &viewDateStr, &viewCount, &oDateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse the view date
+		viewDate, err := time.Parse(time.RFC3339, viewDateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if we already have this gallery
+		if av, exists := resultMap[galleryID]; exists {
+			// If we have o_date, update it (take the first one)
+			if oDateStr != nil && av.ODate == nil {
+				oDate, err := time.Parse(time.RFC3339, *oDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.ODate = &oDate
+			}
+		} else {
+			// Create new entry
+			av := &models.AggregatedView{
+				SceneID:   galleryID, // Using SceneID field for gallery ID
+				ViewDate:  viewDate,
+				ViewCount: viewCount,
+			}
+
+			if oDateStr != nil {
+				oDate, err := time.Parse(time.RFC3339, *oDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.ODate = &oDate
+			}
+
+			resultMap[galleryID] = av
+			allResults = append(allResults, *av)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Apply pagination in Go code
+	offset := (page - 1) * perPage
+	if offset >= len(allResults) {
+		return []models.AggregatedView{}, nil
+	}
+
+	end := offset + perPage
+	if end > len(allResults) {
+		end = len(allResults)
+	}
+
+	return allResults[offset:end], nil
+}
+
+func (qb *GalleryStore) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	query := `SELECT COUNT(*) FROM galleries_view_dates`
+
+	var count int
+	err := dbWrapper.Get(ctx, &count, query)
+	return count, err
 }

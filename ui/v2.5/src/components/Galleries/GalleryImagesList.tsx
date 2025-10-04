@@ -127,6 +127,7 @@ interface IImageListImages {
   slideshowRunning: boolean;
   setSlideshowRunning: (running: boolean) => void;
   chapters?: GQL.GalleryChapterDataFragment[];
+  galleryId?: string;
 }
 
 const ImageListImages: React.FC<IImageListImages> = ({
@@ -139,6 +140,7 @@ const ImageListImages: React.FC<IImageListImages> = ({
   slideshowRunning,
   setSlideshowRunning,
   chapters = [],
+  galleryId,
 }) => {
   const [webDisplayMode, setWebDisplayMode] = React.useState<WebDisplayMode>(WebDisplayMode.FitToScreen);
   const handleLightBoxPage = useCallback(
@@ -252,6 +254,7 @@ const ImageListImages: React.FC<IImageListImages> = ({
         onImageClick={handleImageOpen}
         webDisplayMode={webDisplayMode}
         onDisplayModeChange={(mode) => setWebDisplayMode(mode)}
+        galleryId={galleryId}
       />
     );
   }
@@ -275,6 +278,7 @@ interface IGalleryImagesList {
   chapters?: GQL.GalleryChapterDataFragment[];
   onDisplayModeChange?: (displayMode: DisplayMode) => void;
   currentDisplayMode?: DisplayMode;
+  galleryId?: string;
 }
 
 export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
@@ -285,6 +289,7 @@ export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
   chapters = [],
   onDisplayModeChange,
   currentDisplayMode,
+  galleryId,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -391,6 +396,7 @@ export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
           slideshowRunning={slideshowRunning}
           setSlideshowRunning={setSlideshowRunning}
           chapters={chapters}
+          galleryId={galleryId}
         />
       );
     }

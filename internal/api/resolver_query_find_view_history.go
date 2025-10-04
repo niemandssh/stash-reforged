@@ -66,8 +66,8 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 			}
 		}
 
-		// Get total count for pagination (scenes view history count)
-		totalCount, err := r.repository.Scene.GetAggregatedViewHistoryCount(ctx)
+		// Get total count for pagination (combined scenes and galleries view history count)
+		totalCount, err := r.repository.Scene.GetCombinedAggregatedViewHistoryCount(ctx)
 		if err != nil {
 			return err
 		}

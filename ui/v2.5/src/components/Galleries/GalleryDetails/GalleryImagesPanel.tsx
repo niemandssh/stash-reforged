@@ -153,6 +153,7 @@ export const GalleryImagesPanel: React.FC<IGalleryDetailsProps> = ({
       chapters={gallery.chapters}
       onDisplayModeChange={setDisplayMode}
       currentDisplayMode={displayMode}
+      galleryId={gallery.id}
     />
   );
 };

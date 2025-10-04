@@ -10,6 +10,9 @@ This version will be always in develop branch.
 ### Some new features
 
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
+- [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
+- [x] **Galleries views** - count views like in scenes! View counts automatically only for "Web mode" when you scroll after 3rd image (once per gallery open)
+- [x] **O-Count for galleries!** - now you can add count of times for your comics ;)
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scene views history page** - you can view list of scene views like in YouTube! Grouping of views in a row and o-count marker shows in a history card 
 - [x] **HLS correction** - special checkbox in Scene filters tab that correct sound in HLS MP4 direct stream (these videos is broken but this mode can fix it, buffering delay only on start of play. Original transcodes was very laggy for me)
@@ -17,11 +20,9 @@ This version will be always in develop branch.
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **"Review" button** - fore review unorganised scenes without tags or rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
-- [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
-- [x] **O-Count for galleries!** - now you can add count of times for your comics ;) 
+- [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable) 
 - [x] **O-Count stats and graphics**
 - [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
-- [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] **Primary tag for performer** (will show after name)
 - [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list

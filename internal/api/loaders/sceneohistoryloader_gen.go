@@ -10,7 +10,7 @@ import (
 // SceneOHistoryLoaderConfig captures the config to create a new SceneOHistoryLoader
 type SceneOHistoryLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []int) ([][]time.Time, []error)
+	Fetch func(keys []int) ([]TimeSlice, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -31,7 +31,7 @@ func NewSceneOHistoryLoader(config SceneOHistoryLoaderConfig) *SceneOHistoryLoad
 // SceneOHistoryLoader batches and caches requests
 type SceneOHistoryLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []int) ([][]time.Time, []error)
+	fetch func(keys []int) ([]TimeSlice, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -42,7 +42,7 @@ type SceneOHistoryLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[int][]time.Time
+	cache map[int]TimeSlice
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -54,25 +54,25 @@ type SceneOHistoryLoader struct {
 
 type sceneOHistoryLoaderBatch struct {
 	keys    []int
-	data    [][]time.Time
+	data    []TimeSlice
 	error   []error
 	closing bool
 	done    chan struct{}
 }
 
-// Load a Time by key, batching and caching will be applied automatically
-func (l *SceneOHistoryLoader) Load(key int) ([]time.Time, error) {
+// Load a TimeSlice by key, batching and caching will be applied automatically
+func (l *SceneOHistoryLoader) Load(key int) (TimeSlice, error) {
 	return l.LoadThunk(key)()
 }
 
-// LoadThunk returns a function that when called will block waiting for a Time.
+// LoadThunk returns a function that when called will block waiting for a TimeSlice.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *SceneOHistoryLoader) LoadThunk(key int) func() ([]time.Time, error) {
+func (l *SceneOHistoryLoader) LoadThunk(key int) func() (TimeSlice, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
-		return func() ([]time.Time, error) {
+		return func() (TimeSlice, error) {
 			return it, nil
 		}
 	}
@@ -83,10 +83,10 @@ func (l *SceneOHistoryLoader) LoadThunk(key int) func() ([]time.Time, error) {
 	pos := batch.keyIndex(l, key)
 	l.mu.Unlock()
 
-	return func() ([]time.Time, error) {
+	return func() (TimeSlice, error) {
 		<-batch.done
 
-		var data []time.Time
+		var data TimeSlice
 		if pos < len(batch.data) {
 			data = batch.data[pos]
 		}
@@ -111,51 +111,47 @@ func (l *SceneOHistoryLoader) LoadThunk(key int) func() ([]time.Time, error) {
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *SceneOHistoryLoader) LoadAll(keys []int) ([][]time.Time, []error) {
-	results := make([]func() ([]time.Time, error), len(keys))
+func (l *SceneOHistoryLoader) LoadAll(keys []int) ([]TimeSlice, []error) {
+	results := make([]func() (TimeSlice, error), len(keys))
 
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
 
-	times := make([][]time.Time, len(keys))
+	timeSlices := make([]TimeSlice, len(keys))
 	errors := make([]error, len(keys))
 	for i, thunk := range results {
-		times[i], errors[i] = thunk()
+		timeSlices[i], errors[i] = thunk()
 	}
-	return times, errors
+	return timeSlices, errors
 }
 
-// LoadAllThunk returns a function that when called will block waiting for a Times.
+// LoadAllThunk returns a function that when called will block waiting for a TimeSlices.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *SceneOHistoryLoader) LoadAllThunk(keys []int) func() ([][]time.Time, []error) {
-	results := make([]func() ([]time.Time, error), len(keys))
+func (l *SceneOHistoryLoader) LoadAllThunk(keys []int) func() ([]TimeSlice, []error) {
+	results := make([]func() (TimeSlice, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
 	}
-	return func() ([][]time.Time, []error) {
-		times := make([][]time.Time, len(keys))
+	return func() ([]TimeSlice, []error) {
+		timeSlices := make([]TimeSlice, len(keys))
 		errors := make([]error, len(keys))
 		for i, thunk := range results {
-			times[i], errors[i] = thunk()
+			timeSlices[i], errors[i] = thunk()
 		}
-		return times, errors
+		return timeSlices, errors
 	}
 }
 
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *SceneOHistoryLoader) Prime(key int, value []time.Time) bool {
+func (l *SceneOHistoryLoader) Prime(key int, value TimeSlice) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
-		// make a copy when writing to the cache, its easy to pass a pointer in from a loop var
-		// and end up with the whole cache pointing to the same value.
-		cpy := make([]time.Time, len(value))
-		copy(cpy, value)
-		l.unsafeSet(key, cpy)
+		l.unsafeSet(key, value)
 	}
 	l.mu.Unlock()
 	return !found
@@ -168,9 +164,9 @@ func (l *SceneOHistoryLoader) Clear(key int) {
 	l.mu.Unlock()
 }
 
-func (l *SceneOHistoryLoader) unsafeSet(key int, value []time.Time) {
+func (l *SceneOHistoryLoader) unsafeSet(key int, value TimeSlice) {
 	if l.cache == nil {
-		l.cache = map[int][]time.Time{}
+		l.cache = map[int]TimeSlice{}
 	}
 	l.cache[key] = value
 }

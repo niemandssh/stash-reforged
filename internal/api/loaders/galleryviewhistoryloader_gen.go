@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// ScenePlayHistoryLoaderConfig captures the config to create a new ScenePlayHistoryLoader
-type ScenePlayHistoryLoaderConfig struct {
+// GalleryViewHistoryLoaderConfig captures the config to create a new GalleryViewHistoryLoader
+type GalleryViewHistoryLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
 	Fetch func(keys []int) ([]TimeSlice, []error)
 
@@ -19,17 +19,17 @@ type ScenePlayHistoryLoaderConfig struct {
 	MaxBatch int
 }
 
-// NewScenePlayHistoryLoader creates a new ScenePlayHistoryLoader given a fetch, wait, and maxBatch
-func NewScenePlayHistoryLoader(config ScenePlayHistoryLoaderConfig) *ScenePlayHistoryLoader {
-	return &ScenePlayHistoryLoader{
+// NewGalleryViewHistoryLoader creates a new GalleryViewHistoryLoader given a fetch, wait, and maxBatch
+func NewGalleryViewHistoryLoader(config GalleryViewHistoryLoaderConfig) *GalleryViewHistoryLoader {
+	return &GalleryViewHistoryLoader{
 		fetch:    config.Fetch,
 		wait:     config.Wait,
 		maxBatch: config.MaxBatch,
 	}
 }
 
-// ScenePlayHistoryLoader batches and caches requests
-type ScenePlayHistoryLoader struct {
+// GalleryViewHistoryLoader batches and caches requests
+type GalleryViewHistoryLoader struct {
 	// this method provides the data for the loader
 	fetch func(keys []int) ([]TimeSlice, []error)
 
@@ -46,13 +46,13 @@ type ScenePlayHistoryLoader struct {
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
-	batch *scenePlayHistoryLoaderBatch
+	batch *galleryViewHistoryLoaderBatch
 
 	// mutex to prevent races
 	mu sync.Mutex
 }
 
-type scenePlayHistoryLoaderBatch struct {
+type galleryViewHistoryLoaderBatch struct {
 	keys    []int
 	data    []TimeSlice
 	error   []error
@@ -61,14 +61,14 @@ type scenePlayHistoryLoaderBatch struct {
 }
 
 // Load a TimeSlice by key, batching and caching will be applied automatically
-func (l *ScenePlayHistoryLoader) Load(key int) (TimeSlice, error) {
+func (l *GalleryViewHistoryLoader) Load(key int) (TimeSlice, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a TimeSlice.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ScenePlayHistoryLoader) LoadThunk(key int) func() (TimeSlice, error) {
+func (l *GalleryViewHistoryLoader) LoadThunk(key int) func() (TimeSlice, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -77,7 +77,7 @@ func (l *ScenePlayHistoryLoader) LoadThunk(key int) func() (TimeSlice, error) {
 		}
 	}
 	if l.batch == nil {
-		l.batch = &scenePlayHistoryLoaderBatch{done: make(chan struct{})}
+		l.batch = &galleryViewHistoryLoaderBatch{done: make(chan struct{})}
 	}
 	batch := l.batch
 	pos := batch.keyIndex(l, key)
@@ -111,7 +111,7 @@ func (l *ScenePlayHistoryLoader) LoadThunk(key int) func() (TimeSlice, error) {
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *ScenePlayHistoryLoader) LoadAll(keys []int) ([]TimeSlice, []error) {
+func (l *GalleryViewHistoryLoader) LoadAll(keys []int) ([]TimeSlice, []error) {
 	results := make([]func() (TimeSlice, error), len(keys))
 
 	for i, key := range keys {
@@ -129,7 +129,7 @@ func (l *ScenePlayHistoryLoader) LoadAll(keys []int) ([]TimeSlice, []error) {
 // LoadAllThunk returns a function that when called will block waiting for a TimeSlices.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ScenePlayHistoryLoader) LoadAllThunk(keys []int) func() ([]TimeSlice, []error) {
+func (l *GalleryViewHistoryLoader) LoadAllThunk(keys []int) func() ([]TimeSlice, []error) {
 	results := make([]func() (TimeSlice, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -147,7 +147,7 @@ func (l *ScenePlayHistoryLoader) LoadAllThunk(keys []int) func() ([]TimeSlice, [
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *ScenePlayHistoryLoader) Prime(key int, value TimeSlice) bool {
+func (l *GalleryViewHistoryLoader) Prime(key int, value TimeSlice) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -158,13 +158,13 @@ func (l *ScenePlayHistoryLoader) Prime(key int, value TimeSlice) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *ScenePlayHistoryLoader) Clear(key int) {
+func (l *GalleryViewHistoryLoader) Clear(key int) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *ScenePlayHistoryLoader) unsafeSet(key int, value TimeSlice) {
+func (l *GalleryViewHistoryLoader) unsafeSet(key int, value TimeSlice) {
 	if l.cache == nil {
 		l.cache = map[int]TimeSlice{}
 	}
@@ -173,7 +173,7 @@ func (l *ScenePlayHistoryLoader) unsafeSet(key int, value TimeSlice) {
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *scenePlayHistoryLoaderBatch) keyIndex(l *ScenePlayHistoryLoader, key int) int {
+func (b *galleryViewHistoryLoaderBatch) keyIndex(l *GalleryViewHistoryLoader, key int) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i
@@ -197,7 +197,7 @@ func (b *scenePlayHistoryLoaderBatch) keyIndex(l *ScenePlayHistoryLoader, key in
 	return pos
 }
 
-func (b *scenePlayHistoryLoaderBatch) startTimer(l *ScenePlayHistoryLoader) {
+func (b *galleryViewHistoryLoaderBatch) startTimer(l *GalleryViewHistoryLoader) {
 	time.Sleep(l.wait)
 	l.mu.Lock()
 
@@ -213,7 +213,7 @@ func (b *scenePlayHistoryLoaderBatch) startTimer(l *ScenePlayHistoryLoader) {
 	b.end(l)
 }
 
-func (b *scenePlayHistoryLoaderBatch) end(l *ScenePlayHistoryLoader) {
+func (b *galleryViewHistoryLoaderBatch) end(l *GalleryViewHistoryLoader) {
 	b.data, b.error = l.fetch(b.keys)
 	close(b.done)
 }

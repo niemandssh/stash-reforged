@@ -15,6 +15,7 @@ import {
   useFindGallery,
   useGalleryUpdate,
   useGalleryIncrementO,
+  useGalleryIncrementPlayCount,
 } from "src/core/StashService";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -46,6 +47,7 @@ import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ConfigurationContext } from "src/hooks/Config";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { OCounterButton } from "src/components/Scenes/SceneDetails/OCounterButton";
+import { ViewCountButton } from "src/components/Shared/CountButton";
 
 interface IProps {
   gallery: GQL.GalleryDataFragment;
@@ -79,6 +81,7 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
   const path = useMemo(() => galleryPath(gallery), [gallery]);
 
   const [updateGallery] = useGalleryUpdate();
+  const [incrementPlayCount] = useGalleryIncrementPlayCount();
 
   const [organizedLoading, setOrganizedLoading] = useState(false);
 
@@ -456,6 +459,16 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
               />
             </span>
             <span className="gallery-toolbar-group">
+              <span>
+                <ViewCountButton
+                  value={gallery.play_count ?? 0}
+                  onIncrement={() => incrementPlayCount({
+                    variables: {
+                      id: gallery.id,
+                    },
+                  })}
+                />
+              </span>
               <span>
                 <OCounterButton
                   value={gallery.o_counter ?? 0}
