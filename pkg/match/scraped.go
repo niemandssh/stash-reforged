@@ -3,12 +3,19 @@ package match
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/performer"
 	"github.com/stashapp/stash/pkg/studio"
 	"github.com/stashapp/stash/pkg/tag"
 )
+
+// normalizeTagName normalizes tag names by replacing dashes with spaces
+// This makes tags like "big-dick" equivalent to "big dick"
+func normalizeTagName(name string) string {
+	return strings.ReplaceAll(name, "-", " ")
+}
 
 type PerformerFinder interface {
 	models.PerformerQueryer
@@ -195,14 +202,14 @@ func ScrapedTag(ctx context.Context, qb models.TagQueryer, s *models.ScrapedTag)
 		return nil
 	}
 
+	// First try exact name match
 	t, err := tag.ByName(ctx, qb, s.Name)
-
 	if err != nil {
 		return err
 	}
 
 	if t == nil {
-		// try matching by alias
+		// Try matching by alias
 		t, err = tag.ByAlias(ctx, qb, s.Name)
 		if err != nil {
 			return err
@@ -210,7 +217,30 @@ func ScrapedTag(ctx context.Context, qb models.TagQueryer, s *models.ScrapedTag)
 	}
 
 	if t == nil {
-		// ignore - cannot match
+		// Try normalized name (dashes to spaces)
+		normalizedName := normalizeTagName(s.Name)
+		if normalizedName != s.Name {
+			t, err = tag.ByName(ctx, qb, normalizedName)
+			if err != nil {
+				return err
+			}
+
+			if t == nil {
+				// Try normalized name as alias
+				t, err = tag.ByAlias(ctx, qb, normalizedName)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	if t == nil {
+		// If no match found, normalize the tag name for potential creation
+		normalizedName := normalizeTagName(s.Name)
+		if normalizedName != s.Name {
+			s.Name = normalizedName
+		}
 		return nil
 	}
 

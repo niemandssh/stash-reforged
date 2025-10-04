@@ -46,18 +46,24 @@ export function autoTranslateToEnglish(text: string): string {
 
 export function generateSearchVariants(text: string): string[] {
   const variants = new Set<string>();
-  
+
   variants.add(text);
-  
+
+  // Add normalized version (dashes to spaces)
+  const normalized = text.replace(/-/g, ' ');
+  if (normalized !== text) {
+    variants.add(normalized);
+  }
+
   if (containsRussian(text)) {
     const englishTranslation = translateRussianToEnglish(text);
     variants.add(englishTranslation);
   }
-  
+
   if (containsEnglish(text)) {
     const russianTranslation = translateEnglishToRussian(text);
     variants.add(russianTranslation);
   }
-  
+
   return Array.from(variants);
 }

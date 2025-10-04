@@ -239,10 +239,28 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       return false;
     }
 
+    // Check if any existing tag matches (including normalized versions)
+    const normalizedInput = inputValue.replace(/-/g, ' ');
+
     return !options.some((o) => {
+      const tagName = o.name.toLowerCase();
+      const normalizedTagName = tagName.replace(/-/g, ' ');
+
       return (
-        o.name.toLowerCase() === inputValue.toLowerCase() ||
-        o.aliases?.some((a) => a.toLowerCase() === inputValue.toLowerCase())
+        tagName === inputValue.toLowerCase() ||
+        tagName === normalizedInput.toLowerCase() ||
+        normalizedTagName === inputValue.toLowerCase() ||
+        normalizedTagName === normalizedInput.toLowerCase() ||
+        o.aliases?.some((a) => {
+          const aliasName = a.toLowerCase();
+          const normalizedAliasName = aliasName.replace(/-/g, ' ');
+          return (
+            aliasName === inputValue.toLowerCase() ||
+            aliasName === normalizedInput.toLowerCase() ||
+            normalizedAliasName === inputValue.toLowerCase() ||
+            normalizedAliasName === normalizedInput.toLowerCase()
+          );
+        })
       );
     });
   }, []);
