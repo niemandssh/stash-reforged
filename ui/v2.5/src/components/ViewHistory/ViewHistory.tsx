@@ -119,8 +119,9 @@ export const ViewHistory: React.FC = () => {
                 <div className="view-history-items-list">
                   {dateItems.map((item) => (
                     <ViewHistoryCard
-                      key={`${item.scene.id}-${item.viewDate}`}
+                      key={`${item.scene?.id || item.gallery?.id}-${item.viewDate}`}
                       scene={item.scene}
+                      gallery={item.gallery}
                       viewDate={item.viewDate}
                       oDate={item.oDate}
                       viewCount={item.viewCount}

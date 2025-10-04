@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
@@ -1531,4 +1532,115 @@ func (qb *SceneStore) GetAggregatedViewHistory(ctx context.Context, page, perPag
 
 func (qb *SceneStore) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
 	return qb.viewDateManager.GetAggregatedViewHistoryCount(ctx)
+}
+
+func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.CombinedAggregatedView, error) {
+	// Create a combined query that unions scenes and galleries view history
+	// Scenes from scenes_view_dates
+	scenesQuery := `
+		SELECT
+			'scene' as content_type,
+			gv.scene_id as content_id,
+			gv.view_date,
+			gv.view_count,
+			(
+				SELECT sod.o_date
+				FROM scenes_o_dates sod
+				WHERE sod.scene_id = gv.scene_id
+				AND sod.o_date > gv.earliest_view_date
+				ORDER BY sod.o_date ASC
+				LIMIT 1
+			) as o_date
+		FROM (
+			SELECT
+				svd.scene_id,
+				COUNT(*) as view_count,
+				MIN(svd.view_date) as earliest_view_date,
+				MAX(svd.view_date) as view_date
+			FROM scenes_view_dates svd
+			GROUP BY svd.scene_id, DATE(svd.view_date)
+		) gv
+	`
+
+	// Galleries from galleries_o_dates
+	galleriesQuery := `
+		SELECT
+			'gallery' as content_type,
+			gallery_id as content_id,
+			o_date as view_date,
+			1 as view_count,
+			o_date as o_date
+		FROM galleries_o_dates
+	`
+
+	// Combine both queries with UNION ALL and sort
+	combinedQuery := fmt.Sprintf(`
+		SELECT * FROM (
+			%s
+			UNION ALL
+			%s
+		) combined
+		ORDER BY view_date DESC
+	`, scenesQuery, galleriesQuery)
+
+	// Add pagination
+	if perPage > 0 {
+		offset := (page - 1) * perPage
+		combinedQuery += fmt.Sprintf(" LIMIT %d OFFSET %d", perPage, offset)
+	}
+
+	rows, err := dbWrapper.QueryxContext(ctx, combinedQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []models.CombinedAggregatedView
+	for rows.Next() {
+		var result models.CombinedAggregatedView
+		var viewDateStr string
+		var oDateStr *string
+
+		err := rows.Scan(&result.ContentType, &result.ContentID, &viewDateStr, &result.ViewCount, &oDateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		result.ViewDate, err = time.Parse(time.RFC3339, viewDateStr)
+		if err != nil {
+			return nil, err
+		}
+
+		if oDateStr != nil && *oDateStr != "" {
+			oDate, err := time.Parse(time.RFC3339, *oDateStr)
+			if err != nil {
+				return nil, err
+			}
+			result.ODate = &oDate
+		}
+
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+func (qb *SceneStore) GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	// Count from both tables
+	scenesQuery := "SELECT COUNT(*) FROM (SELECT scene_id FROM scenes_view_dates GROUP BY scene_id, DATE(view_date)) as scenes_count"
+	galleriesQuery := "SELECT COUNT(*) FROM galleries_o_dates"
+
+	var scenesCount, galleriesCount int
+
+	err := dbWrapper.Get(ctx, &scenesCount, scenesQuery)
+	if err != nil {
+		return 0, err
+	}
+
+	err = dbWrapper.Get(ctx, &galleriesCount, galleriesQuery)
+	if err != nil {
+		return 0, err
+	}
+
+	return scenesCount + galleriesCount, nil
 }

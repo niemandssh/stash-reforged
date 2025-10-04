@@ -78,6 +78,8 @@ type ViewDateReader interface {
 	GetManyLastViewed(ctx context.Context, ids []int) ([]*time.Time, error)
 	GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]AggregatedView, error)
 	GetAggregatedViewHistoryCount(ctx context.Context) (int, error)
+	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
+	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
 }
 
 // ViewEvent represents a single view event with scene information
@@ -93,6 +95,23 @@ type AggregatedView struct {
 	ViewDate  time.Time  `json:"view_date"`
 	ODate     *time.Time `json:"o_date"`
 	ViewCount int        `json:"view_count"`
+}
+
+// AggregatedGalleryView represents aggregated gallery view data for history
+type AggregatedGalleryView struct {
+	GalleryID int        `json:"gallery_id"`
+	ViewDate  time.Time  `json:"view_date"`
+	ODate     *time.Time `json:"o_date"`
+	ViewCount int        `json:"view_count"`
+}
+
+// CombinedAggregatedView represents combined aggregated view data for scenes and galleries
+type CombinedAggregatedView struct {
+	ContentType string     `json:"content_type"` // "scene" or "gallery"
+	ContentID   int        `json:"content_id"`
+	ViewDate    time.Time  `json:"view_date"`
+	ODate       *time.Time `json:"o_date"`
+	ViewCount   int        `json:"view_count"`
 }
 
 type ODateReader interface {

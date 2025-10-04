@@ -19,8 +19,8 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 			}
 		}
 
-		// Get aggregated view history directly from database with single query
-		aggregatedViews, err := r.repository.Scene.GetAggregatedViewHistory(ctx, page, perPage)
+		// Get combined aggregated view history for scenes and galleries
+		combinedViews, err := r.repository.Scene.GetCombinedAggregatedViewHistory(ctx, page, perPage)
 		if err != nil {
 			return err
 		}
@@ -28,26 +28,45 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 		// Convert to ViewHistoryEntry format
 		var entries []*ViewHistoryEntry
 
-		for _, av := range aggregatedViews {
-			// Get scene data
-			scene, err := r.repository.Scene.Find(ctx, av.SceneID)
-			if err != nil {
-				return err
-			}
-			if scene == nil {
-				continue
-			}
+		for _, cv := range combinedViews {
+			if cv.ContentType == "scene" {
+				// Get scene data
+				scene, err := r.repository.Scene.Find(ctx, cv.ContentID)
+				if err != nil {
+					return err
+				}
+				if scene == nil {
+					continue
+				}
 
-			entry := &ViewHistoryEntry{
-				Scene:     scene,
-				ViewDate:  av.ViewDate,
-				ODate:     av.ODate,
-				ViewCount: &av.ViewCount,
+				entry := &ViewHistoryEntry{
+					Scene:     scene,
+					ViewDate:  cv.ViewDate,
+					ODate:     cv.ODate,
+					ViewCount: &cv.ViewCount,
+				}
+				entries = append(entries, entry)
+			} else if cv.ContentType == "gallery" {
+				// Get gallery data
+				gallery, err := r.repository.Gallery.Find(ctx, cv.ContentID)
+				if err != nil {
+					return err
+				}
+				if gallery == nil {
+					continue
+				}
+
+				entry := &ViewHistoryEntry{
+					Gallery:   gallery,
+					ViewDate:  cv.ViewDate,
+					ODate:     cv.ODate,
+					ViewCount: &cv.ViewCount,
+				}
+				entries = append(entries, entry)
 			}
-			entries = append(entries, entry)
 		}
 
-		// Get total count for pagination
+		// Get total count for pagination (scenes view history count)
 		totalCount, err := r.repository.Scene.GetAggregatedViewHistoryCount(ctx)
 		if err != nil {
 			return err

@@ -1,5 +1,6 @@
 type ViewHistoryEntry {
-  scene: Scene!
+  scene: Scene
+  gallery: Gallery
   viewDate: Time!
   """Время o-count если он был в близком промежутке времени (в пределах 5 минут после просмотра)"""
   oDate: Time

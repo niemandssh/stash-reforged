@@ -283,7 +283,7 @@ type Query {
   latestversion: LatestVersion!
 
   # View History
-  "Get view history for scenes"
+  "Get view history for scenes and galleries"
   findViewHistory(
     history_filter: ViewHistoryFilter
     filter: FindFilterType

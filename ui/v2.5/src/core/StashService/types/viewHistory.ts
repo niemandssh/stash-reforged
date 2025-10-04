@@ -34,6 +34,35 @@ export const FIND_VIEW_HISTORY = gql`
             image_path
           }
         }
+        gallery {
+          id
+          title
+          code
+          date
+          details
+          photographer
+          rating100
+          organized
+          pinned
+          o_counter
+          display_mode
+          paths {
+            cover
+          }
+          performers {
+            id
+            name
+            gender
+          }
+          studio {
+            id
+            name
+            image_path
+          }
+          files {
+            path
+          }
+        }
         viewDate
         oDate
         viewCount

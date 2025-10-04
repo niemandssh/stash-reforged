@@ -3,6 +3,7 @@ import { Link, useHistory } from "react-router-dom";
 import { useIntl } from "react-intl";
 import TextUtils from "src/utils/text";
 import { ScenePreview } from "../Scenes/SceneCard";
+import { GalleryPreview } from "../Galleries/GalleryCard";
 import { SweatDrops } from "../Shared/SweatDrops";
 import { HLSBadge } from "../Shared/HLSBadge";
 import { BrokenBadge } from "../Shared/BrokenBadge";
@@ -10,11 +11,13 @@ import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 import GenderIcon from "../Performers/GenderIcon";
 import { PerformerPopover } from "../Performers/PerformerPopover";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
-import { Scene } from "./types";
+import { Scene, Gallery, ViewHistoryEntry } from "./types";
+import NavUtils from "src/utils/navigation";
 import "./ViewHistoryCard.scss";
 
 interface ViewHistoryCardProps {
-  scene: Scene;
+  scene?: Scene;
+  gallery?: Gallery;
   viewDate: string;
   oDate?: string;
   viewCount?: number;
@@ -22,17 +25,21 @@ interface ViewHistoryCardProps {
 
 export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
   scene,
+  gallery,
   viewDate,
   oDate,
   viewCount,
 }) => {
   const intl = useIntl();
   const history = useHistory();
-  const file = scene.files?.[0];
-  const duration = file?.duration || 0;
-  const scenePath = `/scenes/${scene.id}`;
 
-  console.log(`ViewHistoryCard for scene ${scene.id}: viewCount = ${viewCount}`);
+  // Determine content type and set variables accordingly
+  const isScene = !!scene;
+  const content = scene || gallery;
+  const contentPath = isScene ? `/scenes/${scene!.id}` : NavUtils.makeGalleryUrl(gallery!);
+  const file = isScene ? scene!.files?.[0] : gallery!.files?.[0];
+
+  console.log(`ViewHistoryCard for ${isScene ? 'scene' : 'gallery'} ${content!.id}: viewCount = ${viewCount}`);
 
   const formatViewDate = (date: string) => {
     const viewDateTime = new Date(date);
@@ -55,56 +62,116 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
     }
   };
 
-  const thumbnailUrl = scene.paths?.screenshot || "";
-  const previewUrl = scene.paths?.preview || "";
-  const vttPath = scene.paths?.vtt || "";
+  const renderPreview = () => {
+    if (isScene) {
+      const thumbnailUrl = scene!.paths?.screenshot || "";
+      const previewUrl = scene!.paths?.preview || "";
+      const vttPath = scene!.paths?.vtt || "";
+      const duration = scene!.files?.[0]?.duration || 0;
 
-  return (
-    <div className="view-history-card card scene-card">
-      <Link to={scenePath} className="view-history-thumbnail-container">
-        <ScenePreview
-          image={thumbnailUrl}
-          video={previewUrl}
-          vttPath={vttPath}
-          isPortrait={false}
-          soundActive={false}
-          onScrubberClick={(timestamp) => {
-            // Navigate to scene at specific timestamp
-            history.push(`/scenes/${scene.id}?t=${timestamp}`);
+      return (
+        <>
+          <ScenePreview
+            image={thumbnailUrl}
+            video={previewUrl}
+            vttPath={vttPath}
+            isPortrait={false}
+            soundActive={false}
+            onScrubberClick={(timestamp) => {
+              // Navigate to scene at specific timestamp
+              history.push(`/scenes/${scene!.id}?t=${timestamp}`);
+            }}
+          />
+          {scene!.resume_time && scene!.resume_time > 0 && duration > 0 && (
+            <div title={Math.round((scene!.resume_time / duration) * 100) + "%"} className="progress-bar">
+              <div style={{ width: `${(scene!.resume_time / duration) * 100}%` }} className="progress-indicator" />
+            </div>
+          )}
+          {duration > 0 && (
+            <span className="view-history-duration">
+              {TextUtils.secondsToTimestamp(duration)}
+            </span>
+          )}
+        </>
+      );
+    } else {
+      // For gallery, use GalleryPreview with cover image
+      const slimGallery = {
+        id: gallery!.id,
+        title: gallery!.title,
+        paths: {
+          cover: gallery!.paths?.cover || "",
+          preview: gallery!.paths?.cover || "",
+        },
+        image_count: 0, // We don't have this info in the current structure
+      };
+
+      return (
+        <GalleryPreview
+          gallery={slimGallery}
+          onScrubberClick={(index) => {
+            // Navigate to gallery at specific image
+            history.push(`/galleries/${gallery!.id}?index=${index}`);
           }}
         />
-        {scene.resume_time && scene.resume_time > 0 && duration > 0 && (
-          <div title={Math.round((scene.resume_time / duration) * 100) + "%"} className="progress-bar">
-            <div style={{ width: `${(scene.resume_time / duration) * 100}%` }} className="progress-indicator" />
-          </div>
-        )}
-        {duration > 0 && (
-          <span className="view-history-duration">
-            {TextUtils.secondsToTimestamp(duration)}
-          </span>
-        )}
+      );
+    }
+  };
+
+  const getTitle = () => {
+    if (isScene) {
+      return scene!.title || TextUtils.fileNameFromPath(file?.path || "");
+    } else {
+      return gallery!.title || TextUtils.fileNameFromPath(file?.path || "");
+    }
+  };
+
+  const getViewCount = () => {
+    if (isScene) {
+      return scene!.play_count || 0;
+    } else {
+      // Galleries don't have view counts, only o_counts
+      // Return 0 to indicate no view count available
+      return 0;
+    }
+  };
+
+  const getViewCountText = () => {
+    const count = getViewCount();
+    if (isScene) {
+      return `${count} view${count !== 1 ? "s" : ""}`;
+    } else {
+      // For galleries, don't show view count since they don't have views
+      return "";
+    }
+  };
+
+  return (
+    <div className={`view-history-card card ${isScene ? 'scene-card' : 'gallery-card'}`}>
+      <Link to={contentPath} className="view-history-thumbnail-container">
+        {renderPreview()}
       </Link>
 
       <div className="view-history-content">
-        <Link to={scenePath} className="view-history-title-link">
+        <Link to={contentPath} className="view-history-title-link">
           <h3 className="view-history-title">
-            {scene.title || TextUtils.fileNameFromPath(file?.path || "")}
+            {getTitle()}
             {viewCount && viewCount > 1 && (
               <span className="view-history-view-count-chip">
                 {intl.formatMessage({ id: "consecutive_views" }, { count: viewCount })}
               </span>
             )}
-            {scene.force_hls && (
+            {isScene && scene!.force_hls && (
               <span className="view-history-status-chip">
                 <HLSBadge />
               </span>
             )}
-            {scene.is_broken && !scene.is_not_broken && (
+            {isScene && scene!.is_broken && !scene!.is_not_broken && (
               <span className="view-history-status-chip">
                 <BrokenBadge />
               </span>
             )}
-            {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && (
+            {isScene && !scene!.is_broken && scene!.is_probably_broken && !scene!.is_not_broken && (
               <span className="view-history-status-chip">
                 <ProbablyBrokenBadge />
               </span>
@@ -112,24 +179,28 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
           </h3>
         </Link>
 
-        {scene.studio && (
-          <StudioOverlay studio={scene.studio} />
+        {content!.studio && (
+          <StudioOverlay studio={content!.studio} />
         )}
 
         <div className="view-history-bottom-info">
           <div className="view-history-view-info">
-            <span className="view-history-view-count">
-              {scene.play_count || 0} view{(scene.play_count || 0) !== 1 ? "s" : ""}
-            </span>
-            <span className="view-history-separator">•</span>
+            {getViewCountText() && (
+              <>
+                <span className="view-history-view-count">
+                  {getViewCountText()}
+                </span>
+                <span className="view-history-separator">•</span>
+              </>
+            )}
             <span className="view-history-view-date">
               {formatViewDate(viewDate)}
             </span>
           </div>
 
-          {scene.performers && scene.performers.length > 0 && (
+          {content!.performers && content!.performers.length > 0 && (
             <div className="view-history-performers">
-              {scene.performers.slice(0, 3).map((performer) => (
+              {content!.performers.slice(0, 3).map((performer) => (
                 <PerformerPopover key={performer.id} id={performer.id}>
                   <Link
                     to={`/performers/${performer.id}`}
@@ -140,9 +211,9 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
                   </Link>
                 </PerformerPopover>
               ))}
-              {scene.performers.length > 3 && (
+              {content!.performers.length > 3 && (
                 <span className="view-history-more-performers">
-                  +{scene.performers.length - 3} more
+                  +{content!.performers.length - 3} more
                 </span>
               )}
             </div>

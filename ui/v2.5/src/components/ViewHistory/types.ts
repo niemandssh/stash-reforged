@@ -28,8 +28,39 @@ export interface Scene {
   };
 }
 
+export interface Gallery {
+  id: string;
+  title?: string;
+  code?: string;
+  date?: string;
+  details?: string;
+  photographer?: string;
+  rating100?: number;
+  organized?: boolean;
+  pinned?: boolean;
+  o_counter?: number;
+  display_mode?: number;
+  paths?: {
+    cover?: string;
+  };
+  performers?: Array<{
+    id: string;
+    name?: string;
+    gender?: string;
+  }>;
+  studio?: {
+    id: string;
+    name?: string;
+    image_path?: string;
+  };
+  files?: Array<{
+    path?: string;
+  }>;
+}
+
 export interface ViewHistoryEntry {
-  scene: Scene;
+  scene?: Scene;
+  gallery?: Gallery;
   viewDate: string;
   oDate?: string;
   viewCount?: number;
