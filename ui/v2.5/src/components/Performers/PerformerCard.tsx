@@ -228,20 +228,8 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
         return null;
       }
 
-      // If we have ageFromDate, only show chip if current age is different from production age
-      if (ageFromDate) {
-        const productionAge = TextUtils.age(
-          performer.birthdate,
-          ageFromDate
-        );
-
-        // Only show if different from production age
-        if (currentAge === productionAge) {
-          return null;
-        }
-      }
-
-      // If performer is dead, show "Dead at X yo" instead of current age
+      // Always show chip for deceased performers
+      // For living performers, always show current age chip when age > 0
       const isDead = !!performer.death_date;
       let chipText = "";
 
