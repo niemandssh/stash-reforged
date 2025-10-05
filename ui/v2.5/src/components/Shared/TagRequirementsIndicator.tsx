@@ -1,8 +1,30 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Badge } from "react-bootstrap";
-import { FormattedMessage } from "react-intl";
+import { FormattedMessage, useIntl } from "react-intl";
 import { HoverPopover } from "./HoverPopover";
 import { Tag, ColorPreset } from "src/core/generated-graphql";
+
+const getContrastColor = (backgroundColor: string): string => {
+  if (!backgroundColor) return "#000000";
+
+  let r = 0, g = 0, b = 0;
+
+  if (backgroundColor.startsWith("#")) {
+    const hex = backgroundColor.replace("#", "");
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    }
+  }
+
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 128 ? "#000000" : "#ffffff";
+};
 
 interface ITagRequirementsIndicatorProps {
   tags: Tag[];
@@ -13,6 +35,9 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
   tags,
   colorPresets,
 }) => {
+  const intl = useIntl();
+  const listRef = useRef<HTMLDivElement>(null);
+
   // Filter presets that have tag requirements description
   const presetsWithRequirements = colorPresets.filter(
     preset => preset.tag_requirements_description && preset.tag_requirements_description.trim() !== ""
@@ -21,6 +46,29 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
   // Separate required and optional presets
   const requiredPresets = presetsWithRequirements.filter(preset => preset.required_for_requirements ?? true);
   const optionalPresets = presetsWithRequirements.filter(preset => !preset.required_for_requirements);
+
+  // Calculate max chip width and apply to all chips
+  useEffect(() => {
+    if (listRef.current) {
+      const chips = listRef.current.querySelectorAll('.tag-preset-name-block span');
+      let maxWidth = 0;
+
+      // Find maximum width
+      chips.forEach((chip) => {
+        const width = (chip as HTMLElement).offsetWidth;
+        if (width > maxWidth) {
+          maxWidth = width;
+        }
+      });
+
+      // Apply maximum width to all chips
+      if (maxWidth > 0) {
+        chips.forEach((chip) => {
+          (chip as HTMLElement).style.width = `${maxWidth}px`;
+        });
+      }
+    }
+  }, [presetsWithRequirements]); // Re-run when presets change
 
   // If no presets at all, don't show anything
   if (colorPresets.length === 0) {
@@ -88,7 +136,7 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
             <FormattedMessage id="tag_requirements.title" />
           </strong>
         </div>
-        <div className="tag-requirements-list">
+        <div className="tag-requirements-list" ref={listRef}>
           {presetsWithRequirements
             .sort((a, b) => a.sort - b.sort)
             .map(preset => {
@@ -106,15 +154,23 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
               return (
                 <div key={preset.id} className={rowClass}>
                   <span className={`requirement-indicator ${
-                    isRequired 
+                    isRequired
                       ? (isFilled ? 'filled' : 'empty')
                       : (isFilled ? 'optional-filled' : 'optional-empty')
                   }`}>
-                    {isRequired 
+                    {isRequired
                       ? (isFilled ? '✓' : '✗')
                       : '~'
                     }
                   </span>
+                  <div className="tag-preset-name-block">
+                    <span
+                      style={{ backgroundColor: preset.color, color: getContrastColor(preset.color) }}
+                      title={intl.formatMessage({ id: "preset" }, { preset: preset.name })}
+                    >
+                      {preset.name}
+                    </span>
+                  </div>
                   <span className="requirement-description">
                     {preset.tag_requirements_description}
                   </span>
@@ -148,7 +204,8 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
   return (
     <HoverPopover
       content={popoverContent}
-      placement="bottom"
+      placement="right"
+      offset={[10, 0]}
       enterDelay={300}
       leaveDelay={200}
     >

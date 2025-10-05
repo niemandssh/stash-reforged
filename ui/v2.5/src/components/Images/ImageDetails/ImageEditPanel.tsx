@@ -62,15 +62,18 @@ export const ImageEditPanel: React.FC<IProps> = ({
   const isNew = image.id === undefined;
 
   useEffect(() => {
-    setGalleries(
-      image.galleries?.map((g) => ({
-        id: g.id,
-        title: galleryTitle(g),
-        files: g.files,
-        folder: g.folder,
-      })) ?? []
-    );
-  }, [image.galleries]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setGalleries(
+        image.galleries?.map((g) => ({
+          id: g.id,
+          title: galleryTitle(g),
+          files: g.files,
+          folder: g.folder,
+        })) ?? []
+      );
+    }
+  }, [image.galleries, isVisible]);
 
   const scrapers = useListImageScrapers();
   const [scrapedImage, setScrapedImage] = useState<GQL.ScrapedImage | null>();
@@ -105,7 +108,7 @@ export const ImageEditPanel: React.FC<IProps> = ({
 
   const formik = useFormik<InputValues>({
     initialValues,
-    enableReinitialize: true,
+    enableReinitialize: false, // Don't auto-reinitialize to prevent losing user changes
     validate: yupFormikValidate(schema),
     onSubmit: (values) => onSave(schema.cast(values)),
   });
@@ -113,7 +116,8 @@ export const ImageEditPanel: React.FC<IProps> = ({
   const { tags, updateTagsStateFromScraper, tagsControl } = useTagsEdit(
     image.tags,
     (ids) => formik.setFieldValue("tag_ids", ids),
-    image.id
+    image.id,
+    !isVisible
   );
 
   function onSetGalleries(items: Gallery[]) {
@@ -138,12 +142,18 @@ export const ImageEditPanel: React.FC<IProps> = ({
   }
 
   useEffect(() => {
-    setPerformers(image.performers ?? []);
-  }, [image.performers]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setPerformers(image.performers ?? []);
+    }
+  }, [image.performers, isVisible]);
 
   useEffect(() => {
-    setStudio(image.studio ?? null);
-  }, [image.studio]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setStudio(image.studio ?? null);
+    }
+  }, [image.studio, isVisible]);
 
   useEffect(() => {
     if (isVisible) {

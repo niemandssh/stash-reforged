@@ -597,7 +597,7 @@ input[type="range"].blue-slider {
     background-color: #202b33;
     position: sticky;
     top: 0;
-    z-index: 3;
+    z-index: 11;
 
     @media (min-width: 575px) and (max-width: 1199px) {
       top: 3rem;

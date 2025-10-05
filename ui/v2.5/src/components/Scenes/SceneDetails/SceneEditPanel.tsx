@@ -94,34 +94,54 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const [selectedPoseTagIds, setSelectedPoseTagIds] = useState<string[]>([]);
   const [hasUserInteractedWithPoseTags, setHasUserInteractedWithPoseTags] = useState(false);
   const [hasUserInteractedWithTags, setHasUserInteractedWithTags] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    setGalleries(
-      scene.galleries?.map((g) => ({
-        id: g.id,
-        title: galleryTitle(g),
-        files: g.files,
-        folder: g.folder,
-      })) ?? []
-    );
-  }, [scene.galleries]);
+    // Update galleries when edit tab is not visible OR when first initializing
+    if (!isVisible || !hasInitialized) {
+      setGalleries(
+        scene.galleries?.map((g) => ({
+          id: g.id,
+          title: galleryTitle(g),
+          files: g.files,
+          folder: g.folder,
+        })) ?? []
+      );
+    }
+  }, [scene.galleries, isVisible, hasInitialized]);
 
   useEffect(() => {
-    setPerformers(scene.performers ?? []);
-  }, [scene.performers]);
+    // Update performers when edit tab is not visible OR when first initializing
+    if (!isVisible || !hasInitialized) {
+      setPerformers(scene.performers ?? []);
+    }
+  }, [scene.performers, isVisible, hasInitialized]);
 
   useEffect(() => {
-    setGroups(scene.groups?.map((m) => m.group) ?? []);
-  }, [scene.groups]);
+    // Update groups when edit tab is not visible OR when first initializing
+    if (!isVisible || !hasInitialized) {
+      setGroups(scene.groups?.map((m) => m.group) ?? []);
+    }
+  }, [scene.groups, isVisible, hasInitialized]);
 
   useEffect(() => {
-    setStudio(scene.studio ?? null);
-  }, [scene.studio]);
+    // Update studio when edit tab is not visible OR when first initializing
+    if (!isVisible || !hasInitialized) {
+      setStudio(scene.studio ?? null);
+    }
+  }, [scene.studio, isVisible, hasInitialized]);
 
   const { configuration: stashConfig } = React.useContext(ConfigurationContext);
 
   // Network state
   const [isLoading, setIsLoading] = useState(false);
+
+  // Mark as initialized when edit tab becomes visible
+  useEffect(() => {
+    if (isVisible && !hasInitialized) {
+      setHasInitialized(true);
+    }
+  }, [isVisible, hasInitialized]);
   const { trimEnabled, setTrimEnabled } = useTrimContext();
 
   const schema = yup.object({
@@ -187,11 +207,14 @@ export const SceneEditPanel: React.FC<IProps> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
+  // Time fields are not automatically updated - they only update when form is reinitialized
+
+
   const { tags, updateTagsStateFromScraper, tagsControl, onSetTags, undoTags, redoTags, clearHistory } = useTagsEdit(
     scene.tags,
     (ids) => formik.setFieldValue("tag_ids", ids),
     scene.id,
-    !hasUserInteractedWithTags && !hasUserInteractedWithPoseTags && !formik.dirty
+    !isVisible || !hasInitialized // Update when edit tab is not visible OR when first initializing
   );
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
@@ -201,6 +224,14 @@ export const SceneEditPanel: React.FC<IProps> = ({
       setHasUserInteractedWithTags(true);
     }
   }, [formik.touched.tag_ids]);
+
+  // Reset interaction flags when switching away from edit tab
+  useEffect(() => {
+    if (!isVisible) {
+      setHasUserInteractedWithTags(false);
+      setHasUserInteractedWithPoseTags(false);
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     const loadAllTags = async () => {
@@ -221,16 +252,18 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }, []);
 
   useEffect(() => {
-    if (scene.tags) {
+    // Always update pose tags from scene data, but only if user hasn't interacted with them
+    if (scene.tags && !hasUserInteractedWithPoseTags) {
       const poseTagIds = scene.tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
       setSelectedPoseTagIds(poseTagIds);
     }
-  }, [scene.tags]);
+  }, [scene.tags, hasUserInteractedWithPoseTags]);
 
   useEffect(() => {
-    if (allTags.length > 0 && tags.length > 0) {
+    // Always sync pose tags between tags and selectedPoseTagIds, but only if user hasn't interacted with them
+    if (allTags.length > 0 && tags.length > 0 && !hasUserInteractedWithPoseTags) {
       const poseTagIdsFromTags = tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
@@ -239,7 +272,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
         setSelectedPoseTagIds(poseTagIdsFromTags);
       }
     }
-  }, [tags, allTags, selectedPoseTagIds]);
+  }, [tags, allTags, selectedPoseTagIds, hasUserInteractedWithPoseTags]);
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
@@ -377,7 +410,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
     setIsLoading(true);
     try {
       await onSubmit(input);
-      formik.resetForm();
+      // Reset form state properly to clear dirty state and prevent unsaved changes warning
+      formik.resetForm({
+        values: formik.values, // Keep current values
+        touched: {}, // Clear touched state
+        errors: {}, // Clear errors
+        status: undefined, // Clear status
+      });
       clearHistory();
       setHasUserInteractedWithPoseTags(false);
       setHasUserInteractedWithTags(false);

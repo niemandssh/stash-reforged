@@ -106,7 +106,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
 
   const formik = useFormik<InputValues>({
     initialValues,
-    enableReinitialize: true,
+    enableReinitialize: false, // Don't auto-reinitialize to prevent losing user changes
     validate: yupFormikValidate(schema),
     onSubmit: (values) => onSave(schema.cast(values)),
   });
@@ -114,7 +114,8 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } = useTagsEdit(
     gallery.tags,
     (ids) => formik.setFieldValue("tag_ids", ids),
-    gallery.id
+    gallery.id,
+    !isVisible
   );
 
   function onSetScenes(items: Scene[]) {
@@ -156,16 +157,25 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   }
 
   useEffect(() => {
-    setPerformers(gallery.performers ?? []);
-  }, [gallery.performers]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setPerformers(gallery.performers ?? []);
+    }
+  }, [gallery.performers, isVisible]);
 
   useEffect(() => {
-    setStudio(gallery.studio ?? null);
-  }, [gallery.studio]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setStudio(gallery.studio ?? null);
+    }
+  }, [gallery.studio, isVisible]);
 
   useEffect(() => {
-    setScenes(gallery.scenes ?? []);
-  }, [gallery.scenes]);
+    // Only update form data when edit panel is not visible
+    if (!isVisible) {
+      setScenes(gallery.scenes ?? []);
+    }
+  }, [gallery.scenes, isVisible]);
 
   // Загружаем все теги для поз тегов
   useEffect(() => {

@@ -91,7 +91,17 @@ export function useTagsEdit(
         const updatedTags = currentTags.filter(tag => srcTagIds.has(tag.id));
 
         const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
-        updatedTags.push(...newTags);
+        // Convert GQL.Tag to Tag type for TagSelect
+        const convertedNewTags = newTags.map(tag => ({
+          id: tag.id,
+          name: tag.name,
+          sort_name: tag.sort_name,
+          aliases: tag.aliases,
+          image_path: tag.image_path,
+          is_pose_tag: tag.is_pose_tag,
+          color: tag.color
+        }));
+        updatedTags.push(...convertedNewTags);
 
         return updatedTags;
       });
@@ -122,6 +132,7 @@ export function useTagsEdit(
             name: toCreate.name ?? "",
             aliases: [],
             is_pose_tag: false,
+            color: undefined, // New tags don't have color initially
           },
         ])
       );
@@ -166,6 +177,7 @@ export function useTagsEdit(
           name: p.name ?? "",
           aliases: [],
           is_pose_tag: false,
+          color: undefined, // Scraped tags don't have color info
         };
       })
     );

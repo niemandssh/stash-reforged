@@ -163,6 +163,25 @@
     font-weight: bold;
     white-space: pre;
   }
+
+  // Colored tag chips
+  .colored-multi-value .react-select__multi-value {
+    background-color: var(--tag-bg-color, inherit) !important;
+    color: var(--tag-text-color, inherit) !important;
+  }
+
+  // Colored tag text and remove button inherit color from parent
+  .colored-multi-value .react-select__multi-value__label {
+    color: inherit !important;
+  }
+
+  .colored-multi-value .react-select__multi-value__remove {
+    color: inherit !important;
+  }
+
+  .colored-multi-value .react-select__multi-value__remove {
+    color: currentColor;
+  }
 }
 
 .tag-select-image {

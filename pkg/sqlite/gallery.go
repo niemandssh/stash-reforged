@@ -823,26 +823,7 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 		return err
 	}
 
-	// If no search query, sort pinned items first, then by selected sort
-	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
-		// Handle pinned sorting for non-search queries
-		if sort == "play_count" {
-			query.sortAndPagination += getCountSort(galleryTable, galleriesViewDatesTable, galleryIDColumn, direction)
-		} else if sort == "last_played_at" {
-			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
-		} else if sort == "o_counter" {
-			query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
-		} else {
-			query.sortAndPagination += getSort(sort, direction, "galleries")
-		}
-
-		// Always add pinned and title as final sorts
-		query.sortAndPagination += ", galleries.pinned DESC, COALESCE(galleries.title, galleries.id) COLLATE NATURAL_CI ASC"
-		return nil
-	}
-
-	// If there is a search query, use normal sorting
-
+	// Define helper functions for adding joins
 	addFileTable := func() {
 		query.addJoins(
 			join{
@@ -869,6 +850,31 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 			},
 		)
 	}
+
+	// If no search query, sort pinned items first, then by selected sort
+	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
+		// Handle pinned sorting for non-search queries
+		if sort == "play_count" {
+			query.sortAndPagination += getCountSort(galleryTable, galleriesViewDatesTable, galleryIDColumn, direction)
+		} else if sort == "last_played_at" {
+			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
+		} else if sort == "o_counter" {
+			query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+		} else if sort == "path" {
+			// special handling for path
+			addFileTable()
+			addFolderTable()
+			query.sortAndPagination += fmt.Sprintf(" ORDER BY COALESCE(folders.path, '') || COALESCE(file_folder.path, '') || COALESCE(files.basename, '') COLLATE NATURAL_CI %s", direction)
+		} else {
+			query.sortAndPagination += getSort(sort, direction, "galleries")
+		}
+
+		// Always add pinned and title as final sorts
+		query.sortAndPagination += ", galleries.pinned DESC, COALESCE(galleries.title, galleries.id) COLLATE NATURAL_CI ASC"
+		return nil
+	}
+
+	// If there is a search query, use normal sorting
 
 	switch sort {
 	case "file_count":

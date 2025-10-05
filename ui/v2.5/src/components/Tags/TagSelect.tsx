@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   OptionProps,
-  components as reactSelectComponents,
+  components,
   MultiValueGenericProps,
   MultiValueProps,
   SingleValueProps,
@@ -34,6 +34,28 @@ import { sortByRelevance } from "src/utils/query";
 import { PatchComponent, PatchFunction } from "src/patch";
 import { generateSearchVariants, translateRussianToEnglish, translateEnglishToRussian } from "src/utils/keyboardLayout";
 
+const getContrastColor = (backgroundColor: string): string => {
+  if (!backgroundColor) return "#000000";
+  
+  let r = 0, g = 0, b = 0;
+  
+  if (backgroundColor.startsWith("#")) {
+    const hex = backgroundColor.replace("#", "");
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substr(0, 2), 16);
+      g = parseInt(hex.substr(2, 2), 16);
+      b = parseInt(hex.substr(4, 2), 16);
+    }
+  }
+  
+  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+  return brightness > 128 ? "#000000" : "#ffffff";
+};
+
 export type SelectObject = {
   id: string;
   name?: string | null;
@@ -42,7 +64,7 @@ export type SelectObject = {
 
 export type Tag = Pick<
   GQL.Tag,
-  "id" | "name" | "sort_name" | "aliases" | "image_path" | "is_pose_tag"
+  "id" | "name" | "sort_name" | "aliases" | "image_path" | "is_pose_tag" | "color"
 >;
 type Option = SelectOption<Tag>;
 
@@ -76,7 +98,7 @@ const TagCustomInput = (inputProps: InputProps<{value: string; object: Tag}, boo
     inputProps.onKeyDown?.(e);
   };
 
-  return <reactSelectComponents.Input {...inputProps} onKeyDown={handleKeyDown} />;
+  return <components.Input {...inputProps} onKeyDown={handleKeyDown} />;
 };
 
 const _TagSelect: React.FC<TagSelectProps> = (props) => {
@@ -137,7 +159,14 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       ...optionProps,
       children: (
         <TagPopover id={object.id} placement={props.hoverPlacement ?? "right"}>
-          <span className="react-select-image-option">
+          <span className="react-select-image-option d-flex align-items-center">
+            {object.color && (
+              <span
+                className="tag-color-indicator tag-color-indicator-sm mx-2"
+                style={{ backgroundColor: object.color }}
+                title={`Цвет тега: ${object.color}`}
+              />
+            )}
             <span>{name}</span>
             {alias && <span className="alias">&nbsp;({alias})</span>}
           </span>
@@ -145,7 +174,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       ),
     };
 
-    return <reactSelectComponents.Option {...thisOptionProps} />;
+    return <components.Option {...thisOptionProps} />;
   };
 
   const TagMultiValue: React.FC<
@@ -175,9 +204,13 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     let thisOptionProps = {
       ...optionProps,
       className: `${optionProps.className || ""} ${highlightedClass}`.trim(),
+      style: object.color ? {
+        backgroundColor: object.color,
+        color: getContrastColor(object.color)
+      } : undefined,
     };
 
-    return <reactSelectComponents.MultiValue {...thisOptionProps} />;
+    return <components.MultiValue {...thisOptionProps} />;
   };
 
   const TagMultiValueLabel: React.FC<
@@ -192,12 +225,29 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
           id={object.id}
           placement={props.hoverPlacementLabel ?? "top"}
         >
-          <span>{object.name}</span>
+          <span className="d-flex align-items-center">
+            {object.color && (
+              <span
+                className="tag-color-indicator tag-color-indicator-sm mr-1"
+                style={{ backgroundColor: object.color }}
+                title={`Цвет тега: ${object.color}`}
+              />
+            )}
+            <span>{object.name}</span>
+          </span>
         </TagPopover>
       ),
     };
 
-    return <reactSelectComponents.MultiValueLabel {...thisOptionProps} />;
+    return <components.MultiValueLabel {...thisOptionProps} />;
+  };
+
+  const TagMultiValueRemove: React.FC<
+    any
+  > = (optionProps) => {
+    const { object } = optionProps.data;
+
+    return <components.MultiValueRemove {...optionProps} />;
   };
 
   const TagValueLabel: React.FC<SingleValueProps<Option, boolean>> = (
@@ -210,7 +260,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       children: <>{object.name}</>,
     };
 
-    return <reactSelectComponents.SingleValue {...thisOptionProps} />;
+    return <components.SingleValue {...thisOptionProps} />;
   };
 
   const onCreate = async (name: string) => {
@@ -239,6 +289,26 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       return false;
     }
 
+    // Check if input exactly matches any selected tag
+    const exactMatchWithSelected = props.values?.some(selectedTag => {
+      const selectedName = selectedTag.name.toLowerCase();
+      const inputLower = inputValue.toLowerCase();
+      const normalizedInput = inputLower.replace(/-/g, ' ');
+      const normalizedSelected = selectedName.replace(/-/g, ' ');
+      
+      return (
+        selectedName === inputLower ||
+        selectedName === normalizedInput ||
+        normalizedSelected === inputLower ||
+        normalizedSelected === normalizedInput
+      );
+    });
+
+    // If input exactly matches a selected tag, don't allow creation
+    if (exactMatchWithSelected) {
+      return false;
+    }
+
     // Check if any existing tag matches (including normalized versions)
     const normalizedInput = inputValue.replace(/-/g, ' ');
 
@@ -263,20 +333,56 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         })
       );
     });
-  }, []);
+  }, [props.values]);
 
   // Wrap loadOptions to add a dummy "no match" option when no results found
   const loadTagsWithDummy = React.useCallback(async (input: string) => {
     const results = await loadTags(input);
 
-    // Add dummy option only when there are no search results but input exists
-    if (input && results.length === 0) {
-      // Add a dummy non-selectable option
+    // If no input, return results as is
+    if (!input) {
+      return results;
+    }
+
+    // Check if input exactly matches any selected tag
+    const exactMatchWithSelected = props.values?.some(selectedTag => {
+      const selectedName = selectedTag.name.toLowerCase();
+      const inputLower = input.toLowerCase();
+      const normalizedInput = inputLower.replace(/-/g, ' ');
+      const normalizedSelected = selectedName.replace(/-/g, ' ');
+      
+      return (
+        selectedName === inputLower ||
+        selectedName === normalizedInput ||
+        normalizedSelected === inputLower ||
+        normalizedSelected === normalizedInput
+      );
+    });
+
+    // If input exactly matches a selected tag, don't show anything
+    if (exactMatchWithSelected) {
+      return [];
+    }
+
+    // If there are search results, return them without dummy
+    if (results.length > 0) {
+      return results;
+    }
+
+    // If no search results but input exists, check if it's a superset of selected tags
+    const isSupersetOfSelected = props.values?.some(selectedTag => {
+      const selectedName = selectedTag.name.toLowerCase();
+      const inputLower = input.toLowerCase();
+      return inputLower.includes(selectedName) && inputLower !== selectedName;
+    });
+
+    // If it's a superset of selected tags, show dummy
+    if (isSupersetOfSelected) {
       const dummyOption: Option = {
         value: "__no_match__",
         object: {
           id: "__no_match__",
-          name: `No results found. Use Tab or click to create "${input}"`,
+          name: `Not found. Click below button to create tag`,
           aliases: [],
           is_pose_tag: false,
         },
@@ -284,8 +390,18 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       return [dummyOption];
     }
 
-    return results;
-  }, []);
+    // For completely new input with no results, show create option
+    const dummyOption: Option = {
+      value: "__no_match__",
+      object: {
+        id: "__no_match__",
+        name: `No results found. Use Tab or click to create "${input}"`,
+        aliases: [],
+        is_pose_tag: false,
+      },
+    };
+    return [dummyOption];
+  }, [props.values]);
 
   // Custom Option that handles the dummy option
   const CustomTagOption: React.FC<OptionProps<Option, boolean>> = (optionProps) => {
@@ -344,6 +460,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       Option: CustomTagOption,
       MultiValue: TagMultiValue,
       MultiValueLabel: TagMultiValueLabel,
+      MultiValueRemove: TagMultiValueRemove,
       SingleValue: TagValueLabel,
       Input: TagCustomInput,
     },

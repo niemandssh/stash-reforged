@@ -275,8 +275,7 @@ button.collapse-button {
 }
 
 .hover-popover-content {
-  max-width: 32rem;
-  text-align: center;
+  max-width: 50rem;
 }
 
 
@@ -1318,6 +1317,44 @@ $sticky-header-height: calc(50px + 3.3rem);
   }
 }
 
+// Tag Color Indicator Styles
+.tag-color-indicator {
+  display: inline-block;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+
+  &.tag-color-indicator-sm {
+    width: 12px;
+    height: 12px;
+  }
+
+  &.tag-color-indicator-md {
+    width: 16px;
+    height: 16px;
+  }
+
+  &.tag-color-indicator-lg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Tag Preset Name Block Styles
+.tag-preset-name-block {
+  min-width: 200px;
+
+  span {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-right: 0.5rem;
+  }
+}
+
 // Tag Requirements Indicator Styles
 .tag-requirements-indicator {
   font-size: 0.8em;
@@ -1332,9 +1369,10 @@ $sticky-header-height: calc(50px + 3.3rem);
 }
 
 .tag-requirements-popover {
-  max-width: 400px;
+  width: 700px;
   padding: 1rem;
   font-size: 1.1em;
+  text-align: left;
 
   .tag-requirements-list {
     max-height: 250px;
@@ -1342,7 +1380,7 @@ $sticky-header-height: calc(50px + 3.3rem);
 
     .tag-requirement-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       margin-bottom: 0.35rem;
       font-size: 1em;
 
@@ -1365,8 +1403,11 @@ $sticky-header-height: calc(50px + 3.3rem);
       .requirement-indicator {
         flex-shrink: 0;
         margin-right: 0.75rem;
+        margin-left: 0.5rem;
         font-weight: bold;
         font-size: 1.1em;
+        margin-top: 0.1em;
+        width: 16px;
 
         &.filled {
           color: #28a745;
