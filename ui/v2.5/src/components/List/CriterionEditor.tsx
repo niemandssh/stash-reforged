@@ -48,6 +48,8 @@ import { PathCriterion } from "src/models/list-filter/criteria/path";
 import { ModifierSelectorButtons } from "./ModifierSelect";
 import { CustomFieldsCriterion } from "src/models/list-filter/criteria/custom-fields";
 import { CustomFieldsFilter } from "./Filters/CustomFieldsFilter";
+import { ColorPresetCriterion } from "src/models/list-filter/criteria/color-preset";
+import { ColorPresetFilter } from "./Filters/ColorPresetFilter";
 
 interface IGenericCriterionEditor {
   criterion: ModifierCriterion<CriterionValue>;
@@ -242,6 +244,11 @@ const GenericCriterionEditor: React.FC<IGenericCriterionEditor> = ({
           onChange={(v) => onValueChanged(v)}
           menuPortalTarget={document.body}
         />
+      );
+    }
+    if (criterion instanceof ColorPresetCriterion) {
+      return (
+        <ColorPresetFilter criterion={criterion} setCriterion={setCriterion} />
       );
     }
     return (

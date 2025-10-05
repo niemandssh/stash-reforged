@@ -14,6 +14,7 @@ import {
   ParentTagsCriterionOption,
 } from "./criteria/tags";
 import { FavoriteTagCriterionOption } from "./criteria/favorite";
+import { ColorPresetCriterionOption } from "./criteria/color-preset";
 
 const defaultSortBy = "name";
 const sortByOptions = ["name", "random"]
@@ -47,6 +48,10 @@ const sortByOptions = ["name", "random"]
       messageID: "studio_count",
       value: "studios_count",
     },
+    {
+      messageID: "color_preset.title",
+      value: "color_preset",
+    },
   ]);
 
 const displayModeOptions = [DisplayMode.Grid, DisplayMode.List];
@@ -72,6 +77,7 @@ const criterionOptions = [
   new MandatoryNumberCriterionOption("sub_tag_count", "child_count"),
   createMandatoryTimestampCriterionOption("created_at"),
   createMandatoryTimestampCriterionOption("updated_at"),
+  new ColorPresetCriterionOption(),
 ];
 
 export const TagListFilterOptions = new ListFilterOptions(

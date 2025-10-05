@@ -605,6 +605,9 @@ input TagFilterType {
   "Filter by pose tag value"
   is_pose_tag: Boolean
 
+  "Filter by color preset"
+  color_preset: StringCriterionInput
+
   "Filter by related scenes that meet this criteria"
   scenes_filter: SceneFilterType
   "Filter by related images that meet this criteria"

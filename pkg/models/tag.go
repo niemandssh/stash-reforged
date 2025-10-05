@@ -44,6 +44,8 @@ type TagFilterType struct {
 	IsPoseTag *bool `json:"is_pose_tag"`
 	// Filter by suggestions ignore value
 	IgnoreSuggestions *bool `json:"ignore_suggestions"`
+	// Filter by color preset
+	ColorPreset *StringCriterionInput `json:"color_preset"`
 	// Filter by related scenes that meet this criteria
 	ScenesFilter *SceneFilterType `json:"scenes_filter"`
 	// Filter by related images that meet this criteria

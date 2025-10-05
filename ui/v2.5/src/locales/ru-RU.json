@@ -1556,6 +1556,7 @@
         "name": "Название",
         "color": "Цвет",
         "sort": "Сортировка",
+        "title": "Пресет цвета",
         "tag_requirements_description": "Описание требований к тегам",
         "tag_requirements_description_placeholder": "Опишите, какие теги должны быть добавлены для этой категории",
         "tag_requirements_description_help": "Это описание будет показано как подсказка при добавлении тегов к сценам",
@@ -1573,6 +1574,7 @@
         "sort_by_count": "По количеству",
         "sort_by_color": "По цвету"
     },
+    "no_color": "Без цвета",
     "o_count_stats": {
         "title": "Статистика O-Count по дням",
         "current_month": "Этот месяц",

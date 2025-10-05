@@ -70,6 +70,7 @@ func (qb *tagFilterHandler) criterionHandler() criterionHandler {
 		boolCriterionHandler(tagFilter.IgnoreAutoTag, tagTable+".ignore_auto_tag", nil),
 		boolCriterionHandler(tagFilter.IsPoseTag, tagTable+".is_pose_tag", nil),
 		boolCriterionHandler(tagFilter.IgnoreSuggestions, tagTable+".ignore_suggestions", nil),
+		qb.colorPresetCriterionHandler(tagFilter.ColorPreset),
 
 		qb.isMissingCriterionHandler(tagFilter.IsMissing),
 		qb.sceneCountCriterionHandler(tagFilter.SceneCount),
@@ -219,6 +220,31 @@ func (qb *tagFilterHandler) markerCountCriterionHandler(markerCount *models.IntC
 			clause, args := getIntCriterionWhereClause("count(distinct scene_markers.id)", *markerCount)
 
 			f.addHaving(clause, args...)
+		}
+	}
+}
+
+func (qb *tagFilterHandler) colorPresetCriterionHandler(colorPreset *models.StringCriterionInput) criterionHandlerFunc {
+	return func(ctx context.Context, f *filterBuilder) {
+		if colorPreset != nil {
+			f.addLeftJoin("color_presets", "", "color_presets.color = tags.color")
+
+			if colorPreset.Value == "null" {
+				switch colorPreset.Modifier {
+				case models.CriterionModifierEquals:
+					f.addWhere("tags.color IS NULL")
+				case models.CriterionModifierNotEquals:
+					f.addWhere("tags.color IS NOT NULL")
+				default:
+					if colorPreset.Modifier == models.CriterionModifierIsNull {
+						f.addWhere("tags.color IS NULL")
+					} else {
+						f.addWhere("tags.color IS NOT NULL")
+					}
+				}
+			} else {
+				stringCriterionHandler(colorPreset, "tags.color")(ctx, f)
+			}
 		}
 	}
 }

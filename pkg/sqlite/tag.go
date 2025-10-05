@@ -627,6 +627,10 @@ func (qb *TagStore) Query(ctx context.Context, tagFilter *models.TagFilterType, 
 		query.parseQueryString(searchColumns, *q)
 	}
 
+	if findFilter != nil && findFilter.GetSort("name") == "color_preset" {
+		query.join(colorPresetTable, "", "color_presets.color = tags.color")
+	}
+
 	filter := filterBuilderFromHandler(ctx, &tagFilterHandler{
 		tagFilter: tagFilter,
 	})
@@ -656,6 +660,7 @@ func (qb *TagStore) Query(ctx context.Context, tagFilter *models.TagFilterType, 
 
 var tagSortOptions = sortOptions{
 	"created_at",
+	"color_preset",
 	"galleries_count",
 	"groups_count",
 	"id",
@@ -694,6 +699,17 @@ func (qb *TagStore) getTagSort(query *queryBuilder, findFilter *models.FindFilte
 	switch sort {
 	case "name":
 		sortQuery += fmt.Sprintf(" ORDER BY COALESCE(tags.sort_name, tags.name) COLLATE NATURAL_CI %s", getSortDirection(direction))
+	case "color_preset":
+		// Sort by color preset order, then by color, then by name
+		sortQuery += fmt.Sprintf(` ORDER BY 
+			CASE 
+				WHEN tags.color IS NULL THEN 1 
+				ELSE 0 
+			END %s,
+			COALESCE(color_presets.sort, 999999) %s,
+			COALESCE(color_presets.color, '') %s,
+			COALESCE(tags.sort_name, tags.name) COLLATE NATURAL_CI %s`,
+			getSortDirection(direction), getSortDirection(direction), getSortDirection(direction), getSortDirection(direction))
 	case "scenes_count":
 		sortQuery += getCountSort(tagTable, scenesTagsTable, tagIDColumn, direction)
 	case "scene_markers_count":

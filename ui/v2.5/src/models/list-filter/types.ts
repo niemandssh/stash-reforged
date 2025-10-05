@@ -222,4 +222,5 @@ export type CriterionType =
   | "disambiguation"
   | "has_chapters"
   | "sort_name"
-  | "custom_fields";
+  | "custom_fields"
+  | "color_preset";

@@ -212,6 +212,7 @@
         "name": "Name",
         "color": "Color",
         "sort": "Sort",
+        "title": "Color Preset",
         "tag_requirements_description": "Tag Requirements Description",
         "tag_requirements_description_placeholder": "Describe what tags should be added for this category",
         "tag_requirements_description_help": "This description will be shown as a hint when tagging scenes",
@@ -231,6 +232,7 @@
         "sort_by_count": "By Count",
         "sort_by_color": "By Color"
     },
+    "no_color": "No Color",
     "o_count_stats": {
         "title": "O-Count Daily Statistics",
         "current_month": "This Month",
