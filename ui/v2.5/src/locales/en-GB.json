@@ -1605,6 +1605,8 @@
     "started_generating": "Started generating",
     "started_importing": "Started importing",
     "updated_entity": "Updated {entity}",
+    "primary_file_set": "Set {fileName} as primary file",
+    "error_setting_primary_file": "Error setting primary file: {error}",
     "url_image_load_failed": "Failed to load image from URL",
     "scene_with_similars_updated": "Scene with similars was updated",
     "similarity_recalculation_started": "Started similarity recalculation for scene {sceneId}",

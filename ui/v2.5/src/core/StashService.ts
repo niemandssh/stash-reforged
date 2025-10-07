@@ -977,6 +977,57 @@ export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
     update(cache, result) {
       if (!result.data?.sceneUpdate) return;
 
+      try {
+        // Update the scene in cache to reflect the new primary file
+        const sceneId = `Scene:${id}`;
+        
+        // Try to read the existing scene from cache
+        let existingScene: GQL.SceneDataFragment | null = null;
+        try {
+          existingScene = cache.readFragment<GQL.SceneDataFragment>({
+            id: sceneId,
+            fragment: GQL.SceneDataFragmentDoc,
+          });
+        } catch (error) {
+          // Scene not in cache, that's okay - we'll just evict queries
+          console.warn('Scene not found in cache, skipping cache update:', error);
+        }
+
+        if (existingScene && existingScene.files) {
+          // Find the new primary file
+          const newPrimaryFile = existingScene.files.find(file => file.id === fileID);
+          if (newPrimaryFile) {
+            // Reorder files to put the new primary file first
+            const otherFiles = existingScene.files.filter(file => file.id !== fileID);
+            const reorderedFiles = [newPrimaryFile, ...otherFiles];
+
+            try {
+              // Update the scene fragment with reordered files
+              cache.writeFragment({
+                id: sceneId,
+                fragment: GQL.SceneDataFragmentDoc,
+                data: {
+                  ...existingScene,
+                  files: reorderedFiles,
+                },
+              });
+
+              // Also update the scene in any queries that might contain it
+              cache.modify({
+                id: sceneId,
+                fields: {
+                  files: () => reorderedFiles,
+                },
+              });
+            } catch (error) {
+              console.warn('Failed to write scene fragment to cache:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error updating scene cache:', error);
+      }
+
       evictQueries(cache, [
         GQL.FindScenesDocument, // sort by primary basename when missing title
       ]);
@@ -1475,6 +1526,48 @@ export const mutateImageSetPrimaryFile = (id: string, fileID: string) =>
     },
     update(cache, result) {
       if (!result.data?.imageUpdate) return;
+
+      try {
+        // Update the image in cache to reflect the new primary file
+        const imageId = `Image:${id}`;
+        
+        // Try to read the existing image from cache
+        let existingImage: GQL.ImageDataFragment | null = null;
+        try {
+          existingImage = cache.readFragment<GQL.ImageDataFragment>({
+            id: imageId,
+            fragment: GQL.ImageDataFragmentDoc,
+          });
+        } catch (error) {
+          // Image not in cache, that's okay - we'll just evict queries
+          console.warn('Image not found in cache, skipping cache update:', error);
+        }
+
+        if (existingImage && existingImage.visual_files) {
+          // Find the new primary file
+          const newPrimaryFile = existingImage.visual_files.find(file => file.id === fileID);
+          if (newPrimaryFile) {
+            // Reorder files to put the new primary file first
+            const otherFiles = existingImage.visual_files.filter(file => file.id !== fileID);
+            const reorderedFiles = [newPrimaryFile, ...otherFiles];
+
+            try {
+              cache.writeFragment({
+                id: imageId,
+                fragment: GQL.ImageDataFragmentDoc,
+                data: {
+                  ...existingImage,
+                  visual_files: reorderedFiles,
+                },
+              });
+            } catch (error) {
+              console.warn('Failed to write image fragment to cache:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error updating image cache:', error);
+      }
 
       evictQueries(cache, [
         GQL.FindImagesDocument, // sort by primary basename when missing title
@@ -2095,6 +2188,48 @@ export const mutateGallerySetPrimaryFile = (id: string, fileID: string) =>
     update(cache, result) {
       if (!result.data?.galleryUpdate) return;
 
+      try {
+        // Update the gallery in cache to reflect the new primary file
+        const galleryId = `Gallery:${id}`;
+        
+        // Try to read the existing gallery from cache
+        let existingGallery: GQL.GalleryDataFragment | null = null;
+        try {
+          existingGallery = cache.readFragment<GQL.GalleryDataFragment>({
+            id: galleryId,
+            fragment: GQL.GalleryDataFragmentDoc,
+          });
+        } catch (error) {
+          // Gallery not in cache, that's okay - we'll just evict queries
+          console.warn('Gallery not found in cache, skipping cache update:', error);
+        }
+
+        if (existingGallery && existingGallery.files) {
+          // Find the new primary file
+          const newPrimaryFile = existingGallery.files.find(file => file.id === fileID);
+          if (newPrimaryFile) {
+            // Reorder files to put the new primary file first
+            const otherFiles = existingGallery.files.filter(file => file.id !== fileID);
+            const reorderedFiles = [newPrimaryFile, ...otherFiles];
+
+            try {
+              cache.writeFragment({
+                id: galleryId,
+                fragment: GQL.GalleryDataFragmentDoc,
+                data: {
+                  ...existingGallery,
+                  files: reorderedFiles,
+                },
+              });
+            } catch (error) {
+              console.warn('Failed to write gallery fragment to cache:', error);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error updating gallery cache:', error);
+      }
+
       evictQueries(cache, [
         GQL.FindGalleriesDocument, // sort by primary basename when missing title
       ]);
@@ -2574,18 +2709,52 @@ export const mutateDeleteFiles = (ids: string[]) =>
     update(cache, result) {
       if (!result.data?.deleteFiles) return;
 
-      // we don't know which type the files are,
-      // so evict all of them
-      for (const id of ids) {
-        cache.evict({
-          id: cache.identify({ __typename: "VideoFile", id }),
-        });
-        cache.evict({
-          id: cache.identify({ __typename: "ImageFile", id }),
-        });
-        cache.evict({
-          id: cache.identify({ __typename: "GalleryFile", id }),
-        });
+      try {
+        // we don't know which type the files are,
+        // so evict all of them
+        for (const id of ids) {
+          cache.evict({
+            id: cache.identify({ __typename: "VideoFile", id }),
+          });
+          cache.evict({
+            id: cache.identify({ __typename: "ImageFile", id }),
+          });
+          cache.evict({
+            id: cache.identify({ __typename: "GalleryFile", id }),
+          });
+        }
+
+        // Also try to update any scenes that might contain these files
+        // This is a more aggressive approach to ensure UI updates
+        try {
+          cache.modify({
+            fields: {
+              findScenes: (existingScenes, { readField }) => {
+                if (!existingScenes) return existingScenes;
+                
+                return {
+                  ...existingScenes,
+                  scenes: existingScenes.scenes.filter((scene: any) => {
+                    const sceneFiles = readField('files', scene);
+                    if (!sceneFiles || !Array.isArray(sceneFiles)) return true;
+                    
+                    // Check if any of the deleted files are in this scene
+                    const hasDeletedFile = sceneFiles.some((file: any) => {
+                      const fileId = readField('id', file);
+                      return fileId && typeof fileId === 'string' && ids.includes(fileId);
+                    });
+                    
+                    return !hasDeletedFile;
+                  })
+                };
+              }
+            }
+          });
+        } catch (modifyError) {
+          console.warn('Error modifying cache after file deletion:', modifyError);
+        }
+      } catch (error) {
+        console.warn('Error updating cache after file deletion:', error);
       }
 
       evictQueries(cache, [

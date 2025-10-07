@@ -1387,6 +1387,8 @@
         "started_generating": "Генерация запущена",
         "started_importing": "Импортирование начато",
         "updated_entity": "Обновлен {entity}",
+        "primary_file_set": "Установлен {fileName} как главный файл",
+        "error_setting_primary_file": "Ошибка установки главного файла: {error}",
         "url_image_load_failed": "Не удалось загрузить изображение из URL",
         "scene_with_similars_updated": "Сцена с похожими была обновлена",
         "image_index_too_large": "Ошибка: индекс изображения больше, чем количество изображений в Галерее",

@@ -13,6 +13,7 @@ interface IFile {
 interface IDeleteSceneDialogProps {
   selected: IFile[];
   onClose: (confirmed: boolean) => void;
+  onRefetch?: () => void;
 }
 
 export const DeleteFilesDialog: React.FC<IDeleteSceneDialogProps> = (
@@ -44,6 +45,12 @@ export const DeleteFilesDialog: React.FC<IDeleteSceneDialogProps> = (
     setIsDeleting(true);
     try {
       await mutateDeleteFiles(props.selected.map((f) => f.id));
+      
+      // Refetch data to update the UI
+      if (props.onRefetch) {
+        await props.onRefetch();
+      }
+      
       Toast.success(toastMessage);
       props.onClose(true);
     } catch (e) {

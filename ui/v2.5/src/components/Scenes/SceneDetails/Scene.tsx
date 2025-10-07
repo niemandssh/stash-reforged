@@ -721,7 +721,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             className="file-info-panel"
             eventKey="scene-file-info-panel"
           >
-            <SceneFileInfoPanel scene={scene} />
+            <SceneFileInfoPanel scene={scene} onRefetch={props.onSaved} />
           </Tab.Pane>
           <Tab.Pane eventKey="scene-edit-panel" mountOnEnter>
             <SceneEditPanel

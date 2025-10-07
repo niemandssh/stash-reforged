@@ -184,12 +184,14 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
 
 interface ISceneFileInfoPanelProps {
   scene: GQL.SceneDataFragment;
+  onRefetch?: () => void;
 }
 
 const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
   props: ISceneFileInfoPanelProps
 ) => {
   const Toast = useToast();
+  const intl = useIntl();
 
   const [loading, setLoading] = useState(false);
   const [deletingFile, setDeletingFile] = useState<GQL.VideoFileDataFragment>();
@@ -259,8 +261,30 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
       try {
         setLoading(true);
         await mutateSceneSetPrimaryFile(props.scene.id, fileID);
+        
+        // Get the file name for the success message
+        const targetFile = props.scene.files.find(f => f.id === fileID);
+        const fileName = targetFile ? TextUtils.fileNameFromPath(targetFile.path) : "Unknown file";
+        
+        // Refetch the scene data to update the UI
+        if (props.onRefetch) {
+          await props.onRefetch();
+        }
+        
+        Toast.success(
+          intl.formatMessage(
+            { id: "toast.primary_file_set" },
+            { fileName }
+          )
+        );
       } catch (e) {
-        Toast.error(e);
+        console.error('Error setting primary file:', e);
+        Toast.error(
+          intl.formatMessage(
+            { id: "toast.error_setting_primary_file" },
+            { error: e instanceof Error ? e.message : String(e) }
+          )
+        );
       } finally {
         setLoading(false);
       }
@@ -272,6 +296,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
           <DeleteFilesDialog
             onClose={() => setDeletingFile(undefined)}
             selected={[deletingFile]}
+            onRefetch={props.onRefetch}
           />
         )}
         {reassigningFile && (
