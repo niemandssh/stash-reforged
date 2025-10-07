@@ -76,7 +76,7 @@ export const StringListInput: React.FC<IStringListInputProps> = (props) => {
   return (
     <>
       <div className={`string-list-input ${props.errors ? "is-invalid" : ""}`}>
-        <Form.Group>
+        <Form.Group className="mb-0">
           {values.map((v, i) => (
             <InputGroup className={props.className} key={i}>
               <Input

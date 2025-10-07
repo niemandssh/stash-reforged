@@ -7,7 +7,7 @@ import { queryFindTags } from "src/core/StashService";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { PoseTagIcon } from "./PoseTagIcon";
 import { Icon } from "./Icon";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
 interface IPoseTagSelectorProps {
   selectedTagIds: string[];
@@ -23,6 +23,23 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const history = useHistory();
   const [poseTags, setPoseTags] = useState<GQL.Tag[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const STORAGE_KEY = 'pose-tag-selector-collapsed';
+
+  // Load collapsed state from localStorage on component mount
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState !== null) {
+      setIsCollapsed(JSON.parse(savedState));
+    }
+  }, []);
+
+  // Save collapsed state to localStorage when it changes
+  const toggleCollapsed = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+  };
 
   useEffect(() => {
     const loadPoseTags = async () => {
@@ -82,7 +99,15 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   if (loading) {
     return (
       <div className="pose-tag-selector">
-        <Form.Label>
+        <Form.Label 
+          className="pose-tag-selector-header"
+          onClick={toggleCollapsed}
+          style={{ cursor: 'pointer', userSelect: 'none' }}
+        >
+          <Icon 
+            icon={isCollapsed ? faChevronRight : faChevronDown} 
+            className="ml-0 mr-2"
+          />
           <FormattedMessage id="pose_tags" />
         </Form.Label>
         <div className="text-center p-3">
@@ -94,10 +119,25 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
 
   return (
     <div className="pose-tag-selector">
-      <Form.Label>
+      <Form.Label 
+        className="pose-tag-selector-header"
+        onClick={toggleCollapsed}
+        style={{ cursor: 'pointer', userSelect: 'none' }}
+      >
+        <Icon 
+          icon={isCollapsed ? faChevronRight : faChevronDown} 
+          className="ml-0 mr-2"
+        />
         <FormattedMessage id="pose_tags" />
       </Form.Label>
-      <div className="pose-tag-list">
+      <div 
+        className={`pose-tag-list ${isCollapsed ? 'collapsed' : 'expanded'}`}
+        style={{
+          maxHeight: isCollapsed ? '0' : '225px',
+          overflow: 'hidden',
+          transition: 'max-height 0.3s ease-in-out'
+        }}
+      >
         <ListGroup variant="flush">
           {poseTags.map((tag) => {
             const isSelected = selectedTagIds.includes(tag.id);

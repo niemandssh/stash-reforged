@@ -972,12 +972,16 @@ export const SceneEditPanel: React.FC<IProps> = ({
         </Row>
         <Row className="form-container px-3">
           <Col lg={7} xl={12}>
-            {renderInputField("title")}
-            {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
+            <div className="mb-n2">
+              {renderInputField("title")}
+            </div>
 
-            {renderPoseTagsField()}
             {renderTagsField()}
+            {renderPoseTagsField()}
+
+
             {renderPerformersField()}
+            {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
 
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}

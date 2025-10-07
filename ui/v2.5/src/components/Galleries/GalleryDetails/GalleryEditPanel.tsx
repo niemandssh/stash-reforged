@@ -539,8 +539,8 @@ export const GalleryEditPanel: React.FC<IProps> = ({
             {renderDateField("date")}
 
             {renderPerformersField()}
-            {renderPoseTagsField()}
             {renderTagsField()}
+            {renderPoseTagsField()}
             {renderInputField("code", "text", "scene_code")}
             {renderInputField("photographer")}
             {renderScenesField()}
