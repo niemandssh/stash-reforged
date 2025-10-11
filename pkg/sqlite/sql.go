@@ -137,6 +137,65 @@ func getCountSort(primaryTable, joinTable, primaryFK, direction string) string {
 	return fmt.Sprintf(" ORDER BY (SELECT COUNT(*) FROM %s AS sort WHERE sort.%s = %s.id) %s", joinTable, primaryFK, primaryTable, getSortDirection(direction))
 }
 
+func getCountSortWithoutOrderBy(primaryTable, joinTable, primaryFK, direction string) string {
+	return fmt.Sprintf(", (SELECT COUNT(*) FROM %s AS sort WHERE sort.%s = %s.id) %s", joinTable, primaryFK, primaryTable, getSortDirection(direction))
+}
+
+func getSortWithoutOrderBy(sort string, direction string, tableName string) string {
+	direction = getSortDirection(direction)
+
+	switch {
+	case strings.HasSuffix(sort, "_count"):
+		var relationTableName = strings.TrimSuffix(sort, "_count") // TODO: pluralize?
+		colName := getColumn(relationTableName, "id")
+		return ", COUNT(distinct " + colName + ") " + direction
+	case strings.Compare(sort, "filesize") == 0:
+		colName := getColumn(tableName, "size")
+		return ", " + colName + " " + direction
+	case strings.HasPrefix(sort, randomSeedPrefix):
+		// seed as a parameter from the UI
+		seedStr := sort[len(randomSeedPrefix):]
+		seed, err := strconv.ParseUint(seedStr, 10, 64)
+		if err != nil {
+			// fallback to a random seed
+			seed = rand.Uint64()
+		}
+		return getRandomSortWithoutOrderBy(tableName, direction, seed)
+	case strings.Compare(sort, "random") == 0:
+		return getRandomSortWithoutOrderBy(tableName, direction, rand.Uint64())
+	default:
+		colName := getColumn(tableName, sort)
+		if strings.Contains(sort, ".") {
+			colName = sort
+		}
+		if strings.Compare(sort, "name") == 0 {
+			return ", " + colName + " COLLATE NATURAL_CI " + direction
+		}
+		if strings.Compare(sort, "title") == 0 {
+			return ", " + colName + " COLLATE NATURAL_CI " + direction
+		}
+
+		return ", " + colName + " " + direction
+	}
+}
+
+func getRandomSortWithoutOrderBy(tableName string, direction string, seed uint64) string {
+	// cap seed at 10^8
+	seed %= 1e8
+
+	colName := getColumn(tableName, "id")
+
+	// https://stackoverflow.com/questions/21949795#comment33255354_21949859
+	// p1 := 52959209
+	// p2 := 1047483763
+	// p3 := 2147483647
+	// n := <colName>
+	// ORDER BY ((n+seed)*(n+seed)*p1 + (n+seed)*p2) % p3
+	// since sqlite converts overflowing numbers to reals, a custom db function that uses uints with overflow should be faster,
+	// however in practice the overhead of calling a custom function vastly outweighs the benefits
+	return ", mod((" + colName + " + " + strconv.FormatUint(seed, 10) + ") * (" + colName + " + " + strconv.FormatUint(seed, 10) + ") * 52959209 + (" + colName + " + " + strconv.FormatUint(seed, 10) + ") * 1047483763, 2147483647) " + direction
+}
+
 func getStringSearchClause(columns []string, q string, not bool) sqlClause {
 	var likeClauses []string
 	var args []interface{}

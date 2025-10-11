@@ -1216,21 +1216,30 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 
 	// If no search query, sort pinned items first, then by selected sort
 	if findFilter == nil || findFilter.Q == nil || *findFilter.Q == "" {
+		// Always start with pinned sorting first
+		query.sortAndPagination += " ORDER BY scenes.pinned DESC"
+
 		// Handle pinned sorting for non-search queries
 		if sort == "play_count" {
-			query.sortAndPagination += getCountSort(sceneTable, scenesViewDatesTable, sceneIDColumn, direction)
+			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesViewDatesTable, sceneIDColumn, direction)
 		} else if sort == "last_played_at" {
-			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesViewDatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
+			query.sortAndPagination += fmt.Sprintf(", (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesViewDatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
 		} else if sort == "last_o_at" {
-			query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
+			query.sortAndPagination += fmt.Sprintf(", (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
 		} else if sort == "o_counter" {
-			query.sortAndPagination += getCountSort(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+		} else if sort == "group_scene_number" {
+			query.join(groupsScenesTable, "scene_group", "scenes.id = scene_group.scene_id")
+			query.sortAndPagination += getSortWithoutOrderBy("scene_index", direction, "scene_group")
+		} else if sort == "movie_scene_number" {
+			query.join(groupsScenesTable, "", "scenes.id = groups_scenes.scene_id")
+			query.sortAndPagination += getSortWithoutOrderBy("scene_index", direction, groupsScenesTable)
 		} else {
-			query.sortAndPagination += getSort(sort, direction, "scenes")
+			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, "scenes")
 		}
 
-		// Always add pinned and title as final sorts
-		query.sortAndPagination += ", scenes.pinned DESC, COALESCE(scenes.title, scenes.id) COLLATE NATURAL_CI ASC"
+		// Add title as final sort
+		query.sortAndPagination += ", COALESCE(scenes.title, scenes.id) COLLATE NATURAL_CI ASC"
 		return nil
 	}
 
