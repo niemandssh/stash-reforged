@@ -56,6 +56,7 @@ import { lazyComponent } from "src/utils/lazyComponent";
 import cx from "classnames";
 import { PatchComponent, PatchContainerComponent } from "src/patch";
 import { isHLSVideo } from "src/utils/hlsDetection";
+import isEqual from "lodash-es/isEqual";
 
 const SubmitStashBoxDraft = lazyComponent(
   () => import("src/components/Dialogs/SubmitDraft")
@@ -88,6 +89,7 @@ const SceneVideoFilterPanel = lazyComponent(
   () => import("./SceneVideoFilterPanel")
 );
 import { SceneMergeModal } from "../SceneMergeDialog";
+import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
 
 const VideoFrameRateResolution: React.FC<{
   width?: number;
@@ -218,6 +220,70 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isMergeIntoDialogOpen, setIsMergeIntoDialogOpen] = useState(false);
   const [isMergeFromDialogOpen, setIsMergeFromDialogOpen] = useState(false);
+  const [showDataUpdateNotification, setShowDataUpdateNotification] = useState(false);
+  const [lastSceneData, setLastSceneData] = useState<GQL.SceneDataFragment | null>(null);
+
+  // Track scene data changes to show update notification
+  useEffect(() => {
+    if (lastSceneData) {
+      // Check if scene data has changed (excluding similar scenes and file info)
+      const hasChanged = 
+        lastSceneData.title !== scene.title ||
+        lastSceneData.details !== scene.details ||
+        lastSceneData.date !== scene.date ||
+        lastSceneData.rating100 !== scene.rating100 ||
+        lastSceneData.studio?.id !== scene.studio?.id ||
+        lastSceneData.director !== scene.director ||
+        lastSceneData.code !== scene.code ||
+        lastSceneData.urls !== scene.urls ||
+        lastSceneData.organized !== scene.organized ||
+        lastSceneData.is_broken !== scene.is_broken ||
+        lastSceneData.is_not_broken !== scene.is_not_broken ||
+        lastSceneData.start_time !== scene.start_time ||
+        lastSceneData.end_time !== scene.end_time ||
+        !isEqual(
+          lastSceneData.tags?.map(t => t.id).sort(),
+          scene.tags?.map(t => t.id).sort()
+        ) ||
+        !isEqual(
+          lastSceneData.performers?.map(p => p.id).sort(),
+          scene.performers?.map(p => p.id).sort()
+        ) ||
+        !isEqual(
+          lastSceneData.galleries?.map(g => g.id).sort(),
+          scene.galleries?.map(g => g.id).sort()
+        ) ||
+        !isEqual(
+          lastSceneData.groups?.map(g => g.group.id).sort(),
+          scene.groups?.map(g => g.group.id).sort()
+        ) ||
+        !isEqual(
+          lastSceneData.stash_ids?.map(s => s.stash_id).sort(),
+          scene.stash_ids?.map(s => s.stash_id).sort()
+        );
+
+      if (hasChanged) {
+        setShowDataUpdateNotification(true);
+      }
+    }
+    
+    // Update last scene data only when not showing notification
+    if (!showDataUpdateNotification && scene) {
+      setLastSceneData(scene as GQL.SceneDataFragment);
+    }
+  }, [scene, lastSceneData, showDataUpdateNotification]);
+
+  // Function to force refresh scene data
+  const forceRefreshSceneData = () => {
+    setShowDataUpdateNotification(false);
+    if (scene) {
+      setLastSceneData(scene as GQL.SceneDataFragment);
+    }
+    // Trigger a refetch of the scene data
+    if (onSaved) {
+      onSaved();
+    }
+  };
 
   const onIncrementOClick = async () => {
     try {
@@ -451,7 +517,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   function maybeRenderDeleteDialog() {
     if (isDeleteAlertOpen) {
       return (
-        <DeleteScenesDialog selected={[scene]} onClose={onDeleteDialogClosed} />
+        <DeleteScenesDialog selected={[scene as any]} onClose={onDeleteDialogClosed} />
       );
     }
   }
@@ -728,6 +794,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               isVisible={activeTabKey === "scene-edit-panel"}
               scene={scene}
               onSubmit={onSave}
+              onForceRefresh={forceRefreshSceneData}
               onDelete={() => setIsDeleteAlertOpen(true)}
             />
           </Tab.Pane>
@@ -764,6 +831,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           collapsed ? "collapsed" : ""
         }`}
       >
+        <SceneDataUpdateNotification 
+          visible={showDataUpdateNotification}
+          onRefresh={forceRefreshSceneData}
+        />
         <div>
           <div className="scene-header-container">
             {scene.studio && (

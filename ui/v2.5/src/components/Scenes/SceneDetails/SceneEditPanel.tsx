@@ -60,6 +60,7 @@ interface IProps {
   isNew?: boolean;
   isVisible: boolean;
   onSubmit: (input: GQL.SceneCreateInput) => Promise<void>;
+  onForceRefresh?: () => void;
   onDelete?: () => void;
 }
 
@@ -69,6 +70,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
   isNew = false,
   isVisible,
   onSubmit,
+  onForceRefresh,
   onDelete,
 }) => {
   const intl = useIntl();
@@ -96,9 +98,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const [hasUserInteractedWithTags, setHasUserInteractedWithTags] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Function to force refresh form data
+  const forceRefreshForm = () => {
+    setHasInitialized(false);
+    // Reset interaction flags to allow data updates
+    setHasUserInteractedWithTags(false);
+    setHasUserInteractedWithPoseTags(false);
+    // Call parent refresh function
+    if (onForceRefresh) {
+      onForceRefresh();
+    }
+  };
+
   useEffect(() => {
-    // Update galleries when edit tab is not visible OR when first initializing
-    if (!isVisible || !hasInitialized) {
+    // Update galleries only when first initializing or when forced refresh
+    if (!hasInitialized) {
       setGalleries(
         scene.galleries?.map((g) => ({
           id: g.id,
@@ -108,28 +122,28 @@ export const SceneEditPanel: React.FC<IProps> = ({
         })) ?? []
       );
     }
-  }, [scene.galleries, isVisible, hasInitialized]);
+  }, [scene.galleries, hasInitialized]);
 
   useEffect(() => {
-    // Update performers when edit tab is not visible OR when first initializing
-    if (!isVisible || !hasInitialized) {
+    // Update performers only when first initializing or when forced refresh
+    if (!hasInitialized) {
       setPerformers(scene.performers ?? []);
     }
-  }, [scene.performers, isVisible, hasInitialized]);
+  }, [scene.performers, hasInitialized]);
 
   useEffect(() => {
-    // Update groups when edit tab is not visible OR when first initializing
-    if (!isVisible || !hasInitialized) {
+    // Update groups only when first initializing or when forced refresh
+    if (!hasInitialized) {
       setGroups(scene.groups?.map((m) => m.group) ?? []);
     }
-  }, [scene.groups, isVisible, hasInitialized]);
+  }, [scene.groups, hasInitialized]);
 
   useEffect(() => {
-    // Update studio when edit tab is not visible OR when first initializing
-    if (!isVisible || !hasInitialized) {
+    // Update studio only when first initializing or when forced refresh
+    if (!hasInitialized) {
       setStudio(scene.studio ?? null);
     }
-  }, [scene.studio, isVisible, hasInitialized]);
+  }, [scene.studio, hasInitialized]);
 
   const { configuration: stashConfig } = React.useContext(ConfigurationContext);
 
@@ -142,6 +156,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       setHasInitialized(true);
     }
   }, [isVisible, hasInitialized]);
+
   const { trimEnabled, setTrimEnabled } = useTrimContext();
 
   const schema = yup.object({
@@ -202,7 +217,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   const formik = useFormik<InputValues>({
     initialValues,
-    enableReinitialize: false, // Don't auto-reinitialize to prevent losing user changes
+    enableReinitialize: true, // Allow reinitialization when forced
     validate: yupFormikValidate(schema),
     onSubmit: (values) => onSave(schema.cast(values)),
   });
@@ -214,7 +229,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     scene.tags,
     (ids) => formik.setFieldValue("tag_ids", ids),
     scene.id,
-    !isVisible || !hasInitialized // Update when edit tab is not visible OR when first initializing
+    !hasInitialized // Update only when first initializing or when forced refresh
   );
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
@@ -252,18 +267,18 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }, []);
 
   useEffect(() => {
-    // Always update pose tags from scene data, but only if user hasn't interacted with them
-    if (scene.tags && !hasUserInteractedWithPoseTags) {
+    // Update pose tags from scene data only when first initializing or when forced refresh, and only if user hasn't interacted with them
+    if (scene.tags && !hasUserInteractedWithPoseTags && !hasInitialized) {
       const poseTagIds = scene.tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
       setSelectedPoseTagIds(poseTagIds);
     }
-  }, [scene.tags, hasUserInteractedWithPoseTags]);
+  }, [scene.tags, hasUserInteractedWithPoseTags, hasInitialized]);
 
   useEffect(() => {
-    // Always sync pose tags between tags and selectedPoseTagIds, but only if user hasn't interacted with them
-    if (allTags.length > 0 && tags.length > 0 && !hasUserInteractedWithPoseTags) {
+    // Sync pose tags between tags and selectedPoseTagIds only when first initializing or when forced refresh, and only if user hasn't interacted with them
+    if (allTags.length > 0 && tags.length > 0 && !hasUserInteractedWithPoseTags && !hasInitialized) {
       const poseTagIdsFromTags = tags
         .filter(tag => tag.is_pose_tag)
         .map(tag => tag.id);
@@ -272,7 +287,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
         setSelectedPoseTagIds(poseTagIdsFromTags);
       }
     }
-  }, [tags, allTags, selectedPoseTagIds, hasUserInteractedWithPoseTags]);
+  }, [tags, allTags, selectedPoseTagIds, hasUserInteractedWithPoseTags, hasInitialized]);
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
@@ -918,7 +933,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
       {renderScrapeQueryModal()}
       {maybeRenderScrapeDialog()}
-      <Form noValidate onSubmit={formik.handleSubmit}>
+      <Form key={hasInitialized ? 'initialized' : 'not-initialized'} noValidate onSubmit={formik.handleSubmit}>
         <Row className="form-container edit-buttons-container px-3 pt-3">
           <div className="edit-buttons mb-3 pl-0">
             <Button

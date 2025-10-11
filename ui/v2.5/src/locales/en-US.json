@@ -170,6 +170,7 @@
         "view_history": "View History"
     },
     "actions_name": "Actions",
+    "scene_data_updated_notification": "Scene data has been updated, click here to refresh",
     "config": {
         "tools": {
             "scene_filename_parser": {
