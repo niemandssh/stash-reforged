@@ -341,13 +341,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     };
   });
 
-  async function onSave(input: GQL.SceneCreateInput) {
+  async function onSave(input: GQL.SceneUpdateInput) {
+    // Debug: log the input data
+    console.log("Scene onSave input:", input);
+    console.log("performer_tag_ids:", input.performer_tag_ids);
+    
     await updateScene({
       variables: {
-        input: {
-          id: scene.id,
-          ...input,
-        },
+        input: input,
       },
     });
 
@@ -791,6 +792,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           </Tab.Pane>
           <Tab.Pane eventKey="scene-edit-panel" mountOnEnter>
             <SceneEditPanel
+              key={scene.id}
               isVisible={activeTabKey === "scene-edit-panel"}
               scene={scene}
               onSubmit={onSave}

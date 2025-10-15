@@ -410,6 +410,12 @@ func (qb *SceneStore) Create(ctx context.Context, newObject *models.Scene, fileI
 		}
 	}
 
+	if newObject.PerformerTagIDs.Loaded() {
+		if err := scenesPerformerTagsTableMgr.insertPerformerTags(ctx, newObject.PerformerTagIDs.List()); err != nil {
+			return err
+		}
+	}
+
 	if newObject.GalleryIDs.Loaded() {
 		if err := scenesGalleriesTableMgr.insertJoins(ctx, id, newObject.GalleryIDs.List()); err != nil {
 			return err
@@ -468,6 +474,11 @@ func (qb *SceneStore) UpdatePartial(ctx context.Context, id int, partial models.
 			return nil, err
 		}
 	}
+	if partial.PerformerTagIDs != nil {
+		if err := scenesPerformerTagsTableMgr.modifyPerformerTags(ctx, id, partial.PerformerTagIDs.PerformerTags, partial.PerformerTagIDs.Mode); err != nil {
+			return nil, err
+		}
+	}
 	if partial.GalleryIDs != nil {
 		if err := scenesGalleriesTableMgr.modifyJoins(ctx, id, partial.GalleryIDs.IDs, partial.GalleryIDs.Mode); err != nil {
 			return nil, err
@@ -514,6 +525,12 @@ func (qb *SceneStore) Update(ctx context.Context, updatedObject *models.Scene) e
 
 	if updatedObject.TagIDs.Loaded() {
 		if err := scenesTagsTableMgr.replaceJoins(ctx, updatedObject.ID, updatedObject.TagIDs.List()); err != nil {
+			return err
+		}
+	}
+
+	if updatedObject.PerformerTagIDs.Loaded() {
+		if err := scenesPerformerTagsTableMgr.replacePerformerTags(ctx, updatedObject.ID, updatedObject.PerformerTagIDs.List()); err != nil {
 			return err
 		}
 	}
@@ -1461,7 +1478,26 @@ func (qb *SceneStore) GetPerformerIDs(ctx context.Context, id int) ([]int, error
 }
 
 func (qb *SceneStore) GetTagIDs(ctx context.Context, id int) ([]int, error) {
-	return sceneRepository.tags.getIDs(ctx, id)
+	// Only return tags where performer_id IS NULL (general scene tags)
+	// Exclude performer-specific tags (where performer_id IS NOT NULL)
+	var result []struct {
+		Int int `db:"tag_id"`
+	}
+
+	query := `SELECT tag_id FROM scenes_tags WHERE scene_id = ? AND performer_id IS NULL ORDER BY tag_id`
+	if err := dbWrapper.Select(ctx, &result, query, id); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return nil, err
+	}
+
+	ret := make([]int, len(result))
+	for i, v := range result {
+		ret[i] = v.Int
+	}
+	return ret, nil
+}
+
+func (qb *SceneStore) GetPerformerTagIDs(ctx context.Context, id int) ([]models.ScenesTagsPerformer, error) {
+	return scenesPerformerTagsTableMgr.getPerformerTags(ctx, id)
 }
 
 func (qb *SceneStore) GetGalleryIDs(ctx context.Context, id int) ([]int, error) {

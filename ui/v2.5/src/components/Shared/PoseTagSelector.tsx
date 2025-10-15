@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FormattedMessage } from "react-intl";
 import { ListGroup, Form } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
@@ -25,6 +25,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const STORAGE_KEY = 'pose-tag-selector-collapsed';
+  const isMountedRef = useRef(true);
 
   // Load collapsed state from localStorage on component mount
   useEffect(() => {
@@ -32,6 +33,13 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
     if (savedState !== null) {
       setIsCollapsed(JSON.parse(savedState));
     }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   // Save collapsed state to localStorage when it changes
@@ -66,11 +74,15 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
           return bCount - aCount;
         });
 
-        setPoseTags(sortedPoseTags);
+        if (isMountedRef.current) {
+          setPoseTags(sortedPoseTags);
+        }
       } catch (error) {
         console.error("Error loading pose tags:", error);
       } finally {
-        setLoading(false);
+        if (isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
@@ -80,15 +92,17 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const handleTagToggle = (tagId: string) => {
     if (disabled) return;
 
-    const isSelected = selectedTagIds.includes(tagId);
+    const validSelectedTagIds = selectedTagIds.filter(id => id && typeof id === 'string');
+    const isSelected = validSelectedTagIds.includes(tagId);
 
+    let newSelection;
     if (isSelected) {
-      const newSelection = selectedTagIds.filter(id => id !== tagId);
-      onSelectionChange(newSelection);
+      newSelection = validSelectedTagIds.filter(id => id !== tagId);
     } else {
-      const newSelection = [...selectedTagIds, tagId];
-      onSelectionChange(newSelection);
+      newSelection = [...validSelectedTagIds, tagId];
     }
+
+    onSelectionChange(newSelection);
   };
 
   const handleImageClick = (e: React.MouseEvent, tagId: string) => {
@@ -140,7 +154,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
       >
         <ListGroup variant="flush">
           {poseTags.map((tag) => {
-            const isSelected = selectedTagIds.includes(tag.id);
+            const isSelected = selectedTagIds.filter(id => id && typeof id === 'string').includes(tag.id);
             return (
               <ListGroup.Item
                 key={tag.id}

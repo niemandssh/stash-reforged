@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button, Form, Col, Row, ButtonGroup } from "react-bootstrap";
 import Mousetrap from "mousetrap";
@@ -11,6 +11,7 @@ import {
   mutateReloadScrapers,
   queryScrapeSceneQueryFragment,
   queryFindTags,
+  useFindTags,
 } from "src/core/StashService";
 import { Icon } from "src/components/Shared/Icon";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -40,12 +41,13 @@ import {
   Performer,
   PerformerSelect,
 } from "src/components/Performers/PerformerSelect";
+import { PerformerPopover } from "src/components/Performers/PerformerPopover";
 import { formikUtils } from "src/utils/form";
 import { Studio, StudioSelect } from "src/components/Studios/StudioSelect";
 import { Gallery, GallerySelect } from "src/components/Galleries/GallerySelect";
 import { Group } from "src/components/Groups/GroupSelect";
 import { useTagsEdit } from "src/hooks/tagsEdit";
-import { Tag } from "src/components/Tags/TagSelect";
+import { Tag, TagSelect } from "src/components/Tags/TagSelect";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
 import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
@@ -54,12 +56,64 @@ import { useFindColorPresets } from "src/core/StashService";
 const SceneScrapeDialog = lazyComponent(() => import("./SceneScrapeDialog"));
 const SceneQueryModal = lazyComponent(() => import("./SceneQueryModal"));
 
+interface PerformerTagFieldProps {
+  performer: Performer;
+  tags: Tag[];
+  onTagsChange: (tags: Tag[]) => void;
+  sceneId?: string;
+  hasInitialized: boolean;
+  allTags: Tag[];
+  fullWidthProps: {
+    labelProps: { column: boolean; sm: number };
+    fieldProps: { sm: number };
+  };
+}
+
+const PerformerTagField: React.FC<PerformerTagFieldProps> = ({
+  performer,
+  tags,
+  onTagsChange,
+  sceneId,
+  hasInitialized,
+  allTags,
+  fullWidthProps,
+}) => {
+  // Simple onSelect handler for performer tags
+  const onSelectPerformerTags = React.useCallback((selectedTags: Tag[]) => {
+    onTagsChange(selectedTags);
+  }, [onTagsChange]);
+
+  const title = (
+    <>
+      <FormattedMessage id="tags" />
+      <PerformerPopover id={performer.id}>
+        <span className="ml-2 text-muted">({performer.name})</span>
+      </PerformerPopover>
+    </>
+  );
+
+  return (
+    <Form.Group key={performer.id} controlId={`performer_tags_${performer.id}`} as={Row}>
+      <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
+      <Col {...fullWidthProps.fieldProps}>
+        <div key={`tag-select-${performer.id}`}>
+          <TagSelect
+            values={tags}
+            onSelect={onSelectPerformerTags}
+            isMulti
+          />
+        </div>
+      </Col>
+    </Form.Group>
+  );
+};
+
 interface IProps {
   scene: Partial<GQL.SceneDataFragment>;
   initialCoverImage?: string;
   isNew?: boolean;
   isVisible: boolean;
-  onSubmit: (input: GQL.SceneCreateInput) => Promise<void>;
+  onSubmit: (input: GQL.SceneUpdateInput) => Promise<void>;
   onForceRefresh?: () => void;
   onDelete?: () => void;
 }
@@ -80,7 +134,6 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const [performers, setPerformers] = useState<Performer[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [studio, setStudio] = useState<Studio | null>(null);
-
   const Scrapers = useListSceneScrapers();
   const [fragmentScrapers, setFragmentScrapers] = useState<GQL.Scraper[]>([]);
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
@@ -96,7 +149,15 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const [selectedPoseTagIds, setSelectedPoseTagIds] = useState<string[]>([]);
   const [hasUserInteractedWithPoseTags, setHasUserInteractedWithPoseTags] = useState(false);
   const [hasUserInteractedWithTags, setHasUserInteractedWithTags] = useState(false);
+  const [hasUserInteractedWithPerformerTags, setHasUserInteractedWithPerformerTags] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Function to force refresh form data
   const forceRefreshForm = () => {
@@ -104,17 +165,20 @@ export const SceneEditPanel: React.FC<IProps> = ({
     // Reset interaction flags to allow data updates
     setHasUserInteractedWithTags(false);
     setHasUserInteractedWithPoseTags(false);
+    setHasUserInteractedWithPerformerTags(false);
     // Call parent refresh function
     if (onForceRefresh) {
       onForceRefresh();
     }
   };
 
+  const stableSceneGalleries = useMemo(() => scene.galleries, [scene.galleries?.map(g => `${g.id}-${galleryTitle(g)}`).join(',')]);
+
   useEffect(() => {
     // Update galleries only when first initializing or when forced refresh
     if (!hasInitialized) {
       setGalleries(
-        scene.galleries?.map((g) => ({
+        stableSceneGalleries?.map((g) => ({
           id: g.id,
           title: galleryTitle(g),
           files: g.files,
@@ -122,28 +186,34 @@ export const SceneEditPanel: React.FC<IProps> = ({
         })) ?? []
       );
     }
-  }, [scene.galleries, hasInitialized]);
+  }, [stableSceneGalleries, hasInitialized]);
+
+  const stableScenePerformers = useMemo(() => scene.performers, [scene.performers?.map(p => p.id).join(',')]);
 
   useEffect(() => {
     // Update performers only when first initializing or when forced refresh
     if (!hasInitialized) {
-      setPerformers(scene.performers ?? []);
+      setPerformers(stableScenePerformers ?? []);
     }
-  }, [scene.performers, hasInitialized]);
+  }, [stableScenePerformers, hasInitialized]);
+
+  const stableSceneGroups = useMemo(() => scene.groups, [scene.groups?.map(m => `${m.group.id}-${m.scene_index}`).join(',')]);
 
   useEffect(() => {
     // Update groups only when first initializing or when forced refresh
     if (!hasInitialized) {
-      setGroups(scene.groups?.map((m) => m.group) ?? []);
+      setGroups(stableSceneGroups?.map((m) => m.group) ?? []);
     }
-  }, [scene.groups, hasInitialized]);
+  }, [stableSceneGroups, hasInitialized]);
+
+  const stableSceneStudio = useMemo(() => scene.studio, [scene.studio?.id]);
 
   useEffect(() => {
     // Update studio only when first initializing or when forced refresh
     if (!hasInitialized) {
-      setStudio(scene.studio ?? null);
+      setStudio(stableSceneStudio ?? null);
     }
-  }, [scene.studio, hasInitialized]);
+  }, [stableSceneStudio, hasInitialized]);
 
   const { configuration: stashConfig } = React.useContext(ConfigurationContext);
 
@@ -178,6 +248,12 @@ export const SceneEditPanel: React.FC<IProps> = ({
       )
       .defined(),
     tag_ids: yup.array(yup.string().required()).defined(),
+    performer_tag_ids: yup.array(
+      yup.object({
+        performer_id: yup.string().required(),
+        tag_ids: yup.array(yup.string().required()).defined(),
+      })
+    ).defined(),
     stash_ids: yup.mixed<GQL.StashIdInput[]>().defined(),
     details: yup.string().ensure(),
     cover_image: yup.string().nullable().optional(),
@@ -201,7 +277,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
       groups: (scene.groups ?? []).map((m) => {
         return { group_id: m.group.id, scene_index: m.scene_index ?? null };
       }),
-      tag_ids: (scene.tags ?? []).map((t) => t.id),
+      tag_ids: Array.from(new Set((scene.tags ?? []).map((t) => t.id))),
+      performer_tag_ids: (scene.performer_tag_ids ?? [])
+        .filter((pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null') // Filter out entries with invalid performer_id
+        .map((pt: any) => ({
+          performer_id: pt.performer_id,
+          tag_ids: pt.tag_ids || []
+        })),
       stash_ids: getStashIDs(scene.stash_ids),
       details: scene.details ?? "",
       cover_image: initialCoverImage,
@@ -217,7 +299,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   const formik = useFormik<InputValues>({
     initialValues,
-    enableReinitialize: true, // Allow reinitialization when forced
+    enableReinitialize: false, // Disable automatic reinitialization to preserve dirty state
     validate: yupFormikValidate(schema),
     onSubmit: (values) => onSave(schema.cast(values)),
   });
@@ -245,6 +327,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     if (!isVisible) {
       setHasUserInteractedWithTags(false);
       setHasUserInteractedWithPoseTags(false);
+      setHasUserInteractedWithPerformerTags(false);
     }
   }, [isVisible]);
 
@@ -276,6 +359,31 @@ export const SceneEditPanel: React.FC<IProps> = ({
     }
   }, [scene.tags, hasUserInteractedWithPoseTags, hasInitialized]);
 
+  // Function to update performer tags and mark form as dirty
+  const updatePerformerTags = useCallback((performerId: string, tags: Tag[]) => {
+    // Mark that user has interacted with performer tags
+    setHasUserInteractedWithPerformerTags(true);
+
+    // Get current performer tags from formik
+    const currentPerformerTags = formik.values.performer_tag_ids || [];
+
+    // Remove any existing entries for this performer (to avoid duplicates)
+    let updatedPerformerTags = currentPerformerTags.filter((pt: any) => pt.performer_id !== performerId);
+
+    // Add the updated entry
+    updatedPerformerTags = [...updatedPerformerTags, {
+      performer_id: performerId,
+      tag_ids: Array.from(new Set(tags.map(tag => tag.id))) // Remove duplicates
+    }];
+
+    // Keep all entries, even with empty tag arrays - backend will filter them out
+
+    formik.setFieldValue("performer_tag_ids", updatedPerformerTags, true);
+    formik.setFieldTouched("performer_tag_ids", true);
+  }, [formik]);
+
+
+
   useEffect(() => {
     // Sync pose tags between tags and selectedPoseTagIds only when first initializing or when forced refresh, and only if user hasn't interacted with them
     if (allTags.length > 0 && tags.length > 0 && !hasUserInteractedWithPoseTags && !hasInitialized) {
@@ -288,6 +396,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       }
     }
   }, [tags, allTags, selectedPoseTagIds, hasUserInteractedWithPoseTags, hasInitialized]);
+
 
   const coverImagePreview = useMemo(() => {
     const sceneImage = scene.paths?.screenshot;
@@ -327,6 +436,19 @@ export const SceneEditPanel: React.FC<IProps> = ({
       "performer_ids",
       items.map((item) => item.id)
     );
+
+    // Update performer tags - remove entries for performers that are no longer selected
+    const currentPerformerIds = new Set(items.map(p => p.id));
+    const currentPerformerTags = formik.values.performer_tag_ids || [];
+    const updatedPerformerTags = currentPerformerTags.filter((pt: any) =>
+      currentPerformerIds.has(pt.performer_id)
+    );
+
+    formik.setFieldValue("performer_tag_ids", updatedPerformerTags);
+
+    // Mark form as dirty when performers change
+    formik.setFieldTouched("performer_ids", true);
+    formik.setFieldTouched("performer_tag_ids", true);
   }
 
   function onSetStudio(item: Studio | null) {
@@ -335,7 +457,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   function onPoseTagSelectionChange(poseTagIds: string[]) {
-    setSelectedPoseTagIds(poseTagIds);
+    // Filter out invalid poseTagIds
+    const filteredPoseTagIds = Array.from(new Set(poseTagIds.filter(id => id && typeof id === 'string' && id.trim() !== '')));
+    setSelectedPoseTagIds(filteredPoseTagIds);
     setHasUserInteractedWithPoseTags(true);
 
     // Получаем текущие теги из useTagsEdit (включая новосозданные)
@@ -345,11 +469,14 @@ export const SceneEditPanel: React.FC<IProps> = ({
     const nonPoseTags = currentTags.filter(tag => !tag.is_pose_tag);
 
     // Добавляем выбранные теги позы
-    const poseTagObjects = poseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
+    const poseTagObjects = filteredPoseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
 
     const newTags = [...nonPoseTags, ...poseTagObjects];
 
     onSetTags(newTags);
+
+    // Ensure form recognizes the change
+    formik.setFieldTouched("tag_ids", true);
   }
 
   useEffect(() => {
@@ -422,23 +549,37 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   async function onSave(input: InputValues) {
-    setIsLoading(true);
     try {
-      await onSubmit(input);
+      // performer_tag_ids are already in the input from formik
+      const inputWithPerformerTags: GQL.SceneUpdateInput = {
+        ...input,
+        id: scene.id!,
+        performer_tag_ids: input.performer_tag_ids,
+      };
+
+      await onSubmit(inputWithPerformerTags);
       // Reset form state properly to clear dirty state and prevent unsaved changes warning
-      formik.resetForm({
-        values: formik.values, // Keep current values
-        touched: {}, // Clear touched state
-        errors: {}, // Clear errors
-        status: undefined, // Clear status
-      });
-      clearHistory();
-      setHasUserInteractedWithPoseTags(false);
-      setHasUserInteractedWithTags(false);
+      if (isMountedRef.current) {
+        formik.resetForm({
+          values: formik.values, // Keep current values
+          touched: {}, // Clear touched state
+          errors: {}, // Clear errors
+          status: undefined, // Clear status
+        });
+        clearHistory();
+        setHasUserInteractedWithPoseTags(false);
+        setHasUserInteractedWithTags(false);
+        setHasUserInteractedWithPerformerTags(false);
+      }
     } catch (e) {
       Toast.error(e);
     }
-    setIsLoading(false);
+    // Delay setting loading to false to avoid state updates during component re-render
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }, 0);
   }
 
   const encodingImage = ImageUtils.usePasteImage(onImageLoad);
@@ -452,7 +593,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   async function onScrapeClicked(s: GQL.ScraperSourceInput) {
-    setIsLoading(true);
+    if (isMountedRef.current) {
+      setIsLoading(true);
+    }
     try {
       const result = await queryScrapeScene(s, scene.id!);
       if (!result.data || !result.data.scrapeSingleScene?.length) {
@@ -465,7 +608,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
     } catch (e) {
       Toast.error(e);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -473,7 +618,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
     s: GQL.ScraperSourceInput,
     fragment: GQL.ScrapedSceneDataFragment
   ) {
-    setIsLoading(true);
+    if (isMountedRef.current) {
+      setIsLoading(true);
+    }
     try {
       const input: GQL.ScrapedSceneInput = {
         date: fragment.date,
@@ -495,7 +642,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
     } catch (e) {
       Toast.error(e);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -506,13 +655,17 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   async function onReloadScrapers() {
-    setIsLoading(true);
+    if (isMountedRef.current) {
+      setIsLoading(true);
+    }
     try {
       await mutateReloadScrapers();
     } catch (e) {
       Toast.error(e);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -698,7 +851,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
     if (!url) {
       return;
     }
-    setIsLoading(true);
+    if (isMountedRef.current) {
+      setIsLoading(true);
+    }
     try {
       const result = await queryScrapeSceneURL(url);
       if (!result.data || !result.data.scrapeSceneURL) {
@@ -708,7 +863,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
     } catch (e) {
       Toast.error(e);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -831,29 +988,61 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("groups", title, control);
   }
 
+  // Include both scene tags and performer tags for requirements checking
+  // Use current form values to show requirements for unsaved changes
+  const allSceneTags = useMemo(() => {
+    const currentSceneTagIds = new Set((formik.values.tag_ids || tags.map(t => t.id)));
+    const currentPerformerTagIds = new Set<string>();
+
+    // Use current performer tag IDs from form or scene data
+    const sourcePerformerTags = formik.values.performer_tag_ids?.length > 0
+      ? formik.values.performer_tag_ids
+      : scene.performer_tag_ids;
+
+    // Add all performer tag IDs
+    (sourcePerformerTags || []).forEach((pt: any) => {
+      if (pt.tag_ids) {
+        pt.tag_ids.forEach((tagId: string) => currentPerformerTagIds.add(tagId));
+      }
+    });
+
+    // Combine and deduplicate
+    const allTagIds = new Set([...currentSceneTagIds, ...currentPerformerTagIds]);
+
+    // Convert back to Tag objects
+    return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
+  }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, scene.performer_tag_ids, allTags]);
+
   function renderTagsField() {
     const title = (
       <div className="d-flex align-items-center w-100 justify-content-between" style={{ paddingRight: "15px" }}>
         <FormattedMessage id="tags" />
-        <TagRequirementsIndicator tags={tags as GQL.Tag[]} colorPresets={colorPresets} />
+        <TagRequirementsIndicator tags={allSceneTags} colorPresets={colorPresets} />
       </div>
     );
 
     return (
       <Form.Group controlId="tag_ids" as={Row}>
         <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
-        <Col {...fullWidthProps.fieldProps}>{tagsControl()}</Col>
+        <Col {...fullWidthProps.fieldProps}>
+          <div key="main-tag-select">
+            {tagsControl()}
+          </div>
+        </Col>
       </Form.Group>
     );
   }
 
+
   function renderPoseTagsField() {
     return (
-      <PoseTagSelector
-        selectedTagIds={selectedPoseTagIds}
-        onSelectionChange={onPoseTagSelectionChange}
-        disabled={isLoading}
-      />
+      <div key="pose-tag-selector">
+        <PoseTagSelector
+          selectedTagIds={selectedPoseTagIds}
+          onSelectionChange={onPoseTagSelectionChange}
+          disabled={isLoading}
+        />
+      </div>
     );
   }
 
@@ -936,16 +1125,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
       <Form key={hasInitialized ? 'initialized' : 'not-initialized'} noValidate onSubmit={formik.handleSubmit}>
         <Row className="form-container edit-buttons-container px-3 pt-3">
           <div className="edit-buttons mb-3 pl-0">
-            <Button
-              className="edit-button"
-              variant="primary"
-              disabled={
-                (!isNew && !formik.dirty) || !isEqual(formik.errors, {})
-              }
-              onClick={() => formik.submitForm()}
-            >
-              <FormattedMessage id="actions.save" />
-            </Button>
+        <Button
+          className="edit-button"
+          variant="primary"
+          disabled={
+            (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) || !isEqual(formik.errors, {})
+          }
+          title={
+            (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) ? "No changes to save" :
+            !isEqual(formik.errors, {}) ? `Validation errors: ${Object.keys(formik.errors).join(', ')}` :
+            ""
+          }
+          onClick={() => formik.submitForm()}
+        >
+          <FormattedMessage id="actions.save" />
+        </Button>
             {onDelete && (
               <Button
                 className="edit-button"
@@ -992,8 +1186,50 @@ export const SceneEditPanel: React.FC<IProps> = ({
             </div>
 
             {renderTagsField()}
-            {renderPoseTagsField()}
 
+            {(() => {
+              // Precompute currentTags for all performers to avoid hook order issues
+              const sourceTagIds = formik.values.performer_tag_ids?.length > 0 ? formik.values.performer_tag_ids : scene.performer_tag_ids;
+              const validPerformerTagIds = sourceTagIds?.filter(
+                (pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null'
+              ) || [];
+
+              // Precompute performer tag data without useMemo to avoid hook order issues
+              const performerTagDataMap = new Map<string, any>();
+              (scene.performers || []).filter(performer => !performer.small_role && performer.id && performer.id !== 'undefined' && performer.id !== 'null').forEach(performer => {
+                const performerTagData = validPerformerTagIds.find(
+                  (pt: any) => pt.performer_id === performer.id
+                );
+                performerTagDataMap.set(performer.id, performerTagData);
+              });
+
+              return (scene.performers || []).filter(performer => !performer.small_role && performer.id && performer.id !== 'undefined' && performer.id !== 'null').map(performer => {
+                const performerTagData = performerTagDataMap.get(performer.id);
+                const currentTags = performerTagData ? (Array.from(new Set(performerTagData.tag_ids
+                  .filter((id: string) => id && typeof id === 'string' && id !== 'undefined' && id.trim() !== '') // Filter out invalid IDs
+                ))
+                  // @ts-ignore
+                  .map((id: string) => allTags.find(t => t.id === id))
+                  .filter((t): t is GQL.Tag => !!t)) as Tag[] : [];
+
+                return (
+                  <PerformerTagField
+                    key={performer.id}
+                    performer={performer}
+                    tags={currentTags}
+                    sceneId={scene.id}
+                    hasInitialized={hasInitialized}
+                    allTags={allTags}
+                    fullWidthProps={fullWidthProps}
+                    onTagsChange={(tags) => {
+                      updatePerformerTags(performer.id, tags);
+                    }}
+                  />
+                );
+              });
+            })()}
+
+            {renderPoseTagsField()}
 
             {renderPerformersField()}
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}

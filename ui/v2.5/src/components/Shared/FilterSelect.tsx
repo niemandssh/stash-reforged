@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import {
   OnChangeValue,
   StylesConfig,
@@ -15,6 +15,9 @@ import cx from "classnames";
 import { useToast } from "src/hooks/Toast";
 import { useDebounce } from "src/hooks/debounce";
 import { IHasID } from "src/utils/data";
+
+// Global counter for unique IDs
+let filterSelectCounter = 0;
 
 export type Option<T> = { value: string; object: T };
 
@@ -113,6 +116,7 @@ const SelectComponent = <T, IsMulti extends boolean>(
 export interface IFilterValueProps<T> {
   values?: T[];
   onSelect?: (item: T[]) => void;
+  instanceId?: string;
 }
 
 export interface IFilterProps {
@@ -151,7 +155,22 @@ export const FilterSelectComponent = <
     isValidNewOption,
     getNamedObject,
     loadOptions,
+    instanceId,
   } = props;
+
+  // Generate unique prefix for this instance
+  const uniquePrefixRef = useRef<string | null>(null);
+  if (uniquePrefixRef.current === null) {
+    if (instanceId) {
+      uniquePrefixRef.current = `filter-${instanceId}`;
+    } else {
+      filterSelectCounter++;
+      uniquePrefixRef.current = `filter-${filterSelectCounter}`;
+    }
+  }
+  const uniquePrefix = uniquePrefixRef.current;
+
+
   const [loading, setLoading] = useState(false);
   const Toast = useToast();
 
@@ -161,7 +180,7 @@ export const FilterSelectComponent = <
         (value) =>
           ({
             object: value,
-            value: value.id,
+            value: `${uniquePrefix}-${value.id}`,
           } as Option<T>)
       ) as unknown as OnChangeValue<Option<T>, IsMulti>;
     }
@@ -169,10 +188,10 @@ export const FilterSelectComponent = <
     if (values?.length) {
       return {
         object: values[0],
-        value: values[0].id,
+        value: `${uniquePrefix}-${values[0].id}`,
       } as OnChangeValue<Option<T>, IsMulti>;
     }
-  }, [values, isMulti]);
+  }, [values, isMulti, uniquePrefix]);
 
   const onChange = (selectedItems: OnChangeValue<Option<T>, boolean>) => {
     const selected = getSelectedItems(selectedItems);

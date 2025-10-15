@@ -198,3 +198,85 @@ func (u *UpdateGroupDescriptions) applyRemove(existing []GroupIDDescription) []G
 
 	return ret
 }
+
+type UpdateGroupIDs struct {
+	Groups []GroupsScenes         `json:"groups"`
+	Mode   RelationshipUpdateMode `json:"mode"`
+}
+
+func (u *UpdateGroupIDs) SceneMovieInputs() []SceneMovieInput {
+	if u == nil {
+		return nil
+	}
+
+	ret := make([]SceneMovieInput, 0, len(u.Groups))
+	for _, id := range u.Groups {
+		ret = append(ret, id.SceneMovieInput())
+	}
+
+	return ret
+}
+
+func (u *UpdateGroupIDs) AddUnique(v GroupsScenes) {
+	for _, vv := range u.Groups {
+		if vv.GroupID == v.GroupID {
+			return
+		}
+	}
+
+	u.Groups = append(u.Groups, v)
+}
+
+type UpdatePerformerTags struct {
+	PerformerTags []ScenesTagsPerformer  `json:"performer_tags"`
+	Mode          RelationshipUpdateMode `json:"mode"`
+}
+
+// Apply applies the update to a list of existing performer tags, returning the result.
+func (u *UpdatePerformerTags) Apply(existing []ScenesTagsPerformer) []ScenesTagsPerformer {
+	if u == nil {
+		return existing
+	}
+
+	switch u.Mode {
+	case RelationshipUpdateModeAdd:
+		return append(existing, u.PerformerTags...)
+	case RelationshipUpdateModeRemove:
+		return removePerformerTags(existing, u.PerformerTags)
+	case RelationshipUpdateModeSet:
+		return u.PerformerTags
+	}
+
+	return existing
+}
+
+func removePerformerTags(existing []ScenesTagsPerformer, toRemove []ScenesTagsPerformer) []ScenesTagsPerformer {
+	ret := make([]ScenesTagsPerformer, 0, len(existing))
+
+	for _, v := range existing {
+		found := false
+		for _, r := range toRemove {
+			// Compare performer IDs, handling NULL values
+			var performerIDsEqual bool
+			if v.PerformerID == nil && r.PerformerID == nil {
+				performerIDsEqual = true
+			} else if v.PerformerID != nil && r.PerformerID != nil {
+				performerIDsEqual = *v.PerformerID == *r.PerformerID
+			} else {
+				performerIDsEqual = false
+			}
+
+			if v.SceneID == r.SceneID && v.TagID == r.TagID && performerIDsEqual {
+				found = true
+				break
+			}
+		}
+
+		// if not found in the remove list, keep it
+		if !found {
+			ret = append(ret, v)
+		}
+	}
+
+	return ret
+}

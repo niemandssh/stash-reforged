@@ -52,12 +52,13 @@ type Scene struct {
 	VideoFilters    *VideoFilters    `json:"video_filters"`
 	VideoTransforms *VideoTransforms `json:"video_transforms"`
 
-	URLs         RelatedStrings  `json:"urls"`
-	GalleryIDs   RelatedIDs      `json:"gallery_ids"`
-	TagIDs       RelatedIDs      `json:"tag_ids"`
-	PerformerIDs RelatedIDs      `json:"performer_ids"`
-	Groups       RelatedGroups   `json:"groups"`
-	StashIDs     RelatedStashIDs `json:"stash_ids"`
+	URLs            RelatedStrings       `json:"urls"`
+	GalleryIDs      RelatedIDs           `json:"gallery_ids"`
+	TagIDs          RelatedIDs           `json:"tag_ids"`
+	PerformerIDs    RelatedIDs           `json:"performer_ids"`
+	PerformerTagIDs RelatedPerformerTags `json:"performer_tag_ids"`
+	Groups          RelatedGroups        `json:"groups"`
+	StashIDs        RelatedStashIDs      `json:"stash_ids"`
 }
 
 func NewScene() Scene {
@@ -97,13 +98,14 @@ type ScenePartial struct {
 	VideoFilters    *VideoFilters
 	VideoTransforms *VideoTransforms
 
-	URLs          *UpdateStrings
-	GalleryIDs    *UpdateIDs
-	TagIDs        *UpdateIDs
-	PerformerIDs  *UpdateIDs
-	GroupIDs      *UpdateGroupIDs
-	StashIDs      *UpdateStashIDs
-	PrimaryFileID *FileID
+	URLs            *UpdateStrings
+	GalleryIDs      *UpdateIDs
+	TagIDs          *UpdateIDs
+	PerformerIDs    *UpdateIDs
+	PerformerTagIDs *UpdatePerformerTags
+	GroupIDs        *UpdateGroupIDs
+	StashIDs        *UpdateStashIDs
+	PrimaryFileID   *FileID
 }
 
 func NewScenePartial() ScenePartial {
@@ -179,6 +181,12 @@ func (s *Scene) LoadStashIDs(ctx context.Context, l StashIDLoader) error {
 	})
 }
 
+func (s *Scene) LoadPerformerTagIDs(ctx context.Context, l PerformerTagIDLoader) error {
+	return s.PerformerTagIDs.load(func() ([]ScenesTagsPerformer, error) {
+		return l.GetPerformerTagIDs(ctx, s.ID)
+	})
+}
+
 func (s *Scene) LoadRelationships(ctx context.Context, l SceneReader) error {
 	if err := s.LoadURLs(ctx, l); err != nil {
 		return err
@@ -201,6 +209,10 @@ func (s *Scene) LoadRelationships(ctx context.Context, l SceneReader) error {
 	}
 
 	if err := s.LoadStashIDs(ctx, l); err != nil {
+		return err
+	}
+
+	if err := s.LoadPerformerTagIDs(ctx, l); err != nil {
 		return err
 	}
 

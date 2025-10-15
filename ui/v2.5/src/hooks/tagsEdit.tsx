@@ -51,19 +51,29 @@ export function useTagsEdit(
   } = useTagsHistory(sceneId || undefined);
 
   function onSetTags(items: Tag[]) {
-    setTags(items);
+    // Remove duplicates by id
+    const uniqueItems = items.filter((item, index, arr) =>
+      arr.findIndex(t => t.id === item.id) === index
+    );
+    setTags(uniqueItems);
     if (setFieldValue) {
-      setFieldValue(items.map((item) => item.id));
+      const tagIds = uniqueItems.map((item) => item.id);
+      setFieldValue(tagIds);
     }
-    addToHistory(items);
+    addToHistory(uniqueItems);
   }
 
   function undoTags() {
     const previousTags = undo();
     if (previousTags) {
-      setTags(previousTags);
+      // Remove duplicates by id
+      const uniquePreviousTags = previousTags.filter((item, index, arr) =>
+        arr.findIndex(t => t.id === item.id) === index
+      );
+      setTags(uniquePreviousTags);
       if (setFieldValue) {
-        setFieldValue(previousTags.map((item) => item.id));
+        const tagIds = uniquePreviousTags.map((item) => item.id);
+        setFieldValue(tagIds);
       }
     }
     return previousTags;
@@ -72,41 +82,89 @@ export function useTagsEdit(
   function redoTags() {
     const nextTags = redo();
     if (nextTags) {
-      setTags(nextTags);
+      // Remove duplicates by id
+      const uniqueNextTags = nextTags.filter((item, index, arr) =>
+        arr.findIndex(t => t.id === item.id) === index
+      );
+      setTags(uniqueNextTags);
       if (setFieldValue) {
-        setFieldValue(nextTags.map((item) => item.id));
+        const tagIds = uniqueNextTags.map((item) => item.id);
+        setFieldValue(tagIds);
       }
     }
     return nextTags;
   }
 
   useEffect(() => {
-    if (finalShouldUpdateFromSrc !== false && srcTags) {
-      console.log('🏷️ useTagsEdit: updating tags from srcTags, count:', srcTags?.length);
+    // Update from srcTags if provided, regardless of user interaction
+    // But only merge if user hasn't interacted, to avoid conflicts
+    if (srcTags) {
+      if (finalShouldUpdateFromSrc) {
+        // User hasn't interacted - full sync
+        setTags(currentTags => {
+          const currentTagIds = new Set(currentTags.map(t => t.id));
+          const srcTagIds = new Set(srcTags.map(t => t.id));
 
-      setTags(currentTags => {
-        const currentTagIds = new Set(currentTags.map(t => t.id));
-        const srcTagIds = new Set(srcTags.map(t => t.id));
+          // Check if we actually need to update
+          const hasChanges = srcTags.some(tag => !currentTagIds.has(tag.id)) || 
+                           currentTags.some(tag => !srcTagIds.has(tag.id));
+          
+          if (!hasChanges) {
+            return currentTags; // No changes, return same reference to prevent re-renders
+          }
 
-        const updatedTags = currentTags.filter(tag => srcTagIds.has(tag.id));
+          const updatedTags = currentTags.filter(tag => srcTagIds.has(tag.id));
 
-        const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
-        // Convert GQL.Tag to Tag type for TagSelect
-        const convertedNewTags = newTags.map(tag => ({
-          id: tag.id,
-          name: tag.name,
-          sort_name: tag.sort_name,
-          aliases: tag.aliases,
-          image_path: tag.image_path,
-          is_pose_tag: tag.is_pose_tag,
-          color: tag.color
-        }));
-        updatedTags.push(...convertedNewTags);
+          const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
+          // Convert GQL.Tag to Tag type for TagSelect
+          const convertedNewTags = newTags.map(tag => ({
+            id: tag.id,
+            name: tag.name,
+            sort_name: tag.sort_name,
+            aliases: tag.aliases,
+            image_path: tag.image_path,
+            is_pose_tag: tag.is_pose_tag,
+            color: tag.color
+          }));
+          updatedTags.push(...convertedNewTags);
 
-        return updatedTags;
-      });
-    } else {
-      console.log('🚫 useTagsEdit: NOT updating tags from srcTags (user has modified)');
+          // Remove duplicates
+          const uniqueUpdatedTags = updatedTags.filter((tag, index, arr) =>
+            arr.findIndex(t => t.id === tag.id) === index
+          );
+
+          return uniqueUpdatedTags;
+        });
+      } else {
+        // User has interacted - only add missing tags from srcTags, don't remove existing
+        setTags(currentTags => {
+          const currentTagIds = new Set(currentTags.map(t => t.id));
+          const srcTagIds = new Set(srcTags.map(t => t.id));
+
+          const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
+          if (newTags.length > 0) {
+            // Convert GQL.Tag to Tag type for TagSelect
+            const convertedNewTags = newTags.map(tag => ({
+              id: tag.id,
+              name: tag.name,
+              sort_name: tag.sort_name,
+              aliases: tag.aliases,
+              image_path: tag.image_path,
+              is_pose_tag: tag.is_pose_tag,
+              color: tag.color
+            }));
+
+            const combinedTags = [...currentTags, ...convertedNewTags];
+            // Remove duplicates
+            const uniqueCombinedTags = combinedTags.filter((tag, index, arr) =>
+              arr.findIndex(t => t.id === tag.id) === index
+            );
+            return uniqueCombinedTags;
+          }
+
+          return currentTags;
+        });
+      }
     }
   }, [srcTags, finalShouldUpdateFromSrc]);
 
@@ -224,7 +282,14 @@ export function useTagsEdit(
   function tagsControl(props?: TagSelectProps) {
     return (
       <>
-        <TagSelect isMulti onSelect={onSetTags} values={tags} {...props} />
+        <TagSelect
+          key={`tag-select-${sceneId || 'unknown'}`}
+          isMulti
+          onSelect={onSetTags}
+          values={tags}
+          instanceId={sceneId || 'new-scene'}
+          {...props}
+        />
         {renderNewTags()}
       </>
     );

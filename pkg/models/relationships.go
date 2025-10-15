@@ -26,6 +26,10 @@ type TagIDLoader interface {
 	GetTagIDs(ctx context.Context, relatedID int) ([]int, error)
 }
 
+type PerformerTagIDLoader interface {
+	GetPerformerTagIDs(ctx context.Context, sceneID int) ([]ScenesTagsPerformer, error)
+}
+
 type TagRelationLoader interface {
 	GetParentIDs(ctx context.Context, relatedID int) ([]int, error)
 	GetChildIDs(ctx context.Context, relatedID int) ([]int, error)
@@ -644,6 +648,84 @@ func (r *RelatedPerformerProfileImages) load(fn func() ([]PerformerProfileImage,
 
 	if values == nil {
 		values = []PerformerProfileImage{}
+	}
+
+	r.list = values
+
+	return nil
+}
+
+type RelatedPerformerTags struct {
+	list []ScenesTagsPerformer
+}
+
+// NewRelatedPerformerTags returns a loaded RelatedPerformerTags object with the provided values.
+// Loaded will return true when called on the returned object if the provided slice is not nil.
+func NewRelatedPerformerTags(values []ScenesTagsPerformer) RelatedPerformerTags {
+	return RelatedPerformerTags{
+		list: values,
+	}
+}
+
+// Loaded returns true if the related performer tags have been loaded.
+func (r RelatedPerformerTags) Loaded() bool {
+	return r.list != nil
+}
+
+func (r RelatedPerformerTags) mustLoaded() {
+	if !r.Loaded() {
+		panic("list has not been loaded")
+	}
+}
+
+// List returns the list of performer tags. Panics if not loaded.
+func (r RelatedPerformerTags) List() []ScenesTagsPerformer {
+	r.mustLoaded()
+	return r.list
+}
+
+// Add appends the given performer tag to the list. Panics if not loaded.
+func (r RelatedPerformerTags) Add(v ScenesTagsPerformer) {
+	r.mustLoaded()
+	r.list = append(r.list, v)
+}
+
+// Remove removes the given performer tag from the list. Panics if not loaded.
+func (r RelatedPerformerTags) Remove(v ScenesTagsPerformer) {
+	r.mustLoaded()
+	for i, vv := range r.list {
+		// Compare performer IDs, handling NULL values
+		var performerIDsEqual bool
+		if vv.PerformerID == nil && v.PerformerID == nil {
+			performerIDsEqual = true
+		} else if vv.PerformerID != nil && v.PerformerID != nil {
+			performerIDsEqual = *vv.PerformerID == *v.PerformerID
+		} else {
+			performerIDsEqual = false
+		}
+
+		if vv.SceneID == v.SceneID && vv.TagID == v.TagID && performerIDsEqual {
+			r.list = append(r.list[:i], r.list[i+1:]...)
+			break
+		}
+	}
+}
+
+// Set sets the list to the given slice. Panics if not loaded.
+func (r RelatedPerformerTags) Set(list []ScenesTagsPerformer) {
+	r.mustLoaded()
+	r.list = list
+}
+
+// load sets the list by calling the provided function.
+func (r *RelatedPerformerTags) load(fn func() ([]ScenesTagsPerformer, error)) error {
+	values, err := fn()
+	if err != nil {
+		return err
+	}
+
+	if values == nil {
+		values = []ScenesTagsPerformer{}
 	}
 
 	r.list = values

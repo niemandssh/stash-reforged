@@ -6,6 +6,7 @@ import * as GQL from "src/core/generated-graphql";
 import TextUtils from "src/utils/text";
 import { TagLink } from "src/components/Shared/TagLink";
 import { PerformerCard } from "src/components/Performers/PerformerCard";
+import { PerformerPopover } from "src/components/Performers/PerformerPopover";
 import { sortPerformers } from "src/core/performers";
 import { DirectorLink } from "src/components/Shared/Link";
 import { SimilarScenes } from "./SimilarScenes";
@@ -13,6 +14,8 @@ import { URLsField } from "src/utils/field";
 import { PoseTagsDisplay } from "./PoseTagsDisplay";
 import GenderIcon from "src/components/Performers/GenderIcon";
 import { useFindColorPresets } from "src/core/StashService";
+import { ListFilterModel } from "src/models/list-filter/filter";
+import { useApolloClient } from "@apollo/client";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -23,9 +26,23 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   const [isDescriptionCollapsed, setIsDescriptionCollapsed] = React.useState(true);
   const [shouldShowToggle, setShouldShowToggle] = React.useState(false);
   const textRef = React.useRef<HTMLParagraphElement>(null);
+  const apolloClient = useApolloClient();
 
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
+
+  // Create a map of tags that are already in the scene for quick lookup
+  const sceneTagMap = React.useMemo(() => {
+    const map = new Map<string, GQL.TagDataFragment>();
+    props.scene.tags?.forEach(tag => map.set(tag.id, tag));
+    return map;
+  }, [props.scene.tags]);
+
+  // For performer tags, try to find them in scene tags first
+  const getTagById = React.useCallback((tagId: string): GQL.TagDataFragment | undefined => {
+    // First check scene tags
+    return sceneTagMap.get(tagId);
+  }, [sceneTagMap]);
 
   React.useLayoutEffect(() => {
     if (textRef.current && props.scene.details) {
@@ -82,9 +99,25 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     );
   }
 
-  function renderTags() {
-    const regularTags = props.scene.tags.filter(tag => !tag.is_pose_tag);
-    if (regularTags.length === 0) return;
+  function renderGeneralTags() {
+    // Get all tags from performer_tag_ids to determine which are performer-specific
+    const performerSpecificTagIds = new Set<string>();
+    if (props.scene.performer_tag_ids) {
+      props.scene.performer_tag_ids.forEach((pt: any) => {
+        // Only exclude tags that have a specific performer_id (not null)
+        if (pt.performer_id && pt.tag_ids) {
+          pt.tag_ids.forEach((tagId: string) => performerSpecificTagIds.add(tagId));
+        }
+      });
+    }
+
+    // Filter out performer-specific tags, keep only general tags
+    const generalTags = props.scene.tags.filter(tag => 
+      !tag.is_pose_tag && !performerSpecificTagIds.has(tag.id)
+    );
+    
+    
+    if (generalTags.length === 0) return null;
 
     // Create a map of colors to presets for quick lookup
     const colorToPreset = new Map<string, GQL.ColorPreset>();
@@ -96,7 +129,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     // 1. By preset sort order (ascending)
     // 2. If same sort, by preset color (ascending)
     // 3. Tags without color go to the end, sorted alphabetically
-    const sortedTags = [...regularTags].sort((a, b) => {
+    const sortedTags = [...generalTags].sort((a, b) => {
       const aColor = a.color?.toLowerCase();
       const bColor = b.color?.toLowerCase();
 
@@ -129,11 +162,64 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
           <h4>
             <FormattedMessage
               id="countables.tags"
-              values={{ count: regularTags.length }}
+              values={{ count: generalTags.length }}
             />
+            <span className="text-muted"> ({generalTags.length})</span>
           </h4>
         </div>
         {tags}
+      </>
+    );
+  }
+
+  function renderPerformerTags() {
+    if (!props.scene.performers || props.scene.performers.length === 0) return;
+
+    // Show tags for each performer in the order of performers list (exclude small role performers)
+    const performerTags = props.scene.performers.filter(performer => !performer.small_role).map(performer => {
+      const performerTagData = props.scene.performer_tag_ids?.find((pt: any) =>
+        pt.performer_id === performer.id
+      );
+
+      if (!performerTagData || !performerTagData.tag_ids || performerTagData.tag_ids.length === 0) {
+        return null; // No tags for this performer
+      }
+
+      // Get tag objects using getTagById function
+      const tags = performerTagData.tag_ids.map((tagId: string) =>
+        getTagById(tagId)
+      ).filter(Boolean) as GQL.TagDataFragment[];
+
+      if (tags.length === 0) {
+        return null; // Skip performers whose tags are not loaded yet
+      }
+
+      return { performer, tags };
+    }).filter((item): item is { performer: GQL.PerformerDataFragment, tags: GQL.TagDataFragment[] } => item !== null);
+
+    if (performerTags.length === 0) return;
+
+    return (
+      <>
+        {performerTags.map(({ performer, tags }) => (
+          <div key={performer.id} className="mt-3 mb-3">
+            <h4>
+              <FormattedMessage
+                id="countables.tags"
+                values={{ count: 0 }}
+              />
+              <PerformerPopover id={performer.id}>
+                <span className="badge badge-secondary ml-2" style={{ display: 'inline-block' }}>{performer.name}</span>
+              </PerformerPopover>
+              <span className="text-muted"> ({tags.length})</span>
+            </h4>
+            <div>
+              {tags.map((tag: GQL.TagDataFragment) => (
+                <TagLink key={`${performer.id}-${tag.id}`} tag={tag} linkType="details" />
+              ))}
+            </div>
+          </div>
+        ))}
       </>
     );
   }
@@ -275,7 +361,8 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
         <div className="col-12">
           {renderDetails()}
           <PoseTagsDisplay scene={props.scene} />
-          {renderTags()}
+          {renderGeneralTags()}
+          {renderPerformerTags()}
           {renderPerformers()}
         </div>
       </div>

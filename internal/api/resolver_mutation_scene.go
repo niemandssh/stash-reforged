@@ -280,6 +280,10 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	if err != nil {
 		return nil, fmt.Errorf("converting tag ids: %w", err)
 	}
+	updatedScene.PerformerTagIDs, err = translator.updatePerformerTags(input.PerformerTagIds, "performer_tag_ids")
+	if err != nil {
+		return nil, fmt.Errorf("converting performer tag ids: %w", err)
+	}
 	updatedScene.GalleryIDs, err = translator.updateIds(input.GalleryIds, "gallery_ids")
 	if err != nil {
 		return nil, fmt.Errorf("converting gallery ids: %w", err)

@@ -64,6 +64,7 @@ export const PerformerPopover: React.FC<IPeroformerPopoverProps> = ({
       enterDelay={500}
       leaveDelay={100}
       content={<PerformerPopoverCard id={id} />}
+      className="d-inline-block"
     >
       {children}
     </HoverPopover>

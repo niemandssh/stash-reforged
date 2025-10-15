@@ -132,6 +132,7 @@ type Scene {
   groups: [SceneGroup!]!
   movies: [SceneMovie!]! @deprecated(reason: "Use groups")
   tags: [Tag!]!
+  performer_tag_ids: [PerformerTag!]!
   performers: [Performer!]!
   stash_ids: [StashID!]!
 
@@ -162,6 +163,16 @@ type SimilarityScoreData {
 input SceneMovieInput {
   movie_id: ID!
   scene_index: Int
+}
+
+input PerformerTagInput {
+  performer_id: ID
+  tag_ids: [ID!]!
+}
+
+type PerformerTag {
+  performer_id: ID
+  tag_ids: [ID!]!
 }
 
 input SceneGroupInput {
@@ -228,6 +239,7 @@ input SceneUpdateInput {
   groups: [SceneGroupInput!]
   movies: [SceneMovieInput!] @deprecated(reason: "Use groups")
   tag_ids: [ID!]
+  performer_tag_ids: [PerformerTagInput!]
   "This should be a URL or a base64 encoded data URL"
   cover_image: String
   stash_ids: [StashIDInput!]

@@ -166,7 +166,7 @@ export const TagRequirementsIndicator: React.FC<ITagRequirementsIndicatorProps> 
                   <div className="tag-preset-name-block">
                     <span
                       style={{ backgroundColor: preset.color, color: getContrastColor(preset.color) }}
-                      title={intl.formatMessage({ id: "preset" }, { preset: preset.name })}
+                      title={intl.formatMessage({ id: "color_preset.preset" }, { preset: preset.name })}
                     >
                       {preset.name}
                     </span>

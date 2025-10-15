@@ -88,6 +88,7 @@ export type TagSelectProps = IFilterProps &
     hoverPlacement?: Placement;
     hoverPlacementLabel?: Placement;
     excludeIds?: string[];
+    instanceId?: string;
   };
 
 const TagCustomInput = (inputProps: InputProps<{value: string; object: Tag}, boolean, GroupBase<{value: string; object: Tag}>>) => {
@@ -210,7 +211,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       } : undefined,
     };
 
-    return <components.MultiValue {...thisOptionProps} />;
+    return <components.MultiValue {...thisOptionProps} key={`multi-value-${object.id}`} />;
   };
 
   const TagMultiValueLabel: React.FC<

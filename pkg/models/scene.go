@@ -177,32 +177,43 @@ type SceneCreateInput struct {
 	FileIds []string `json:"file_ids"`
 }
 
+type PerformerTagInput struct {
+	PerformerID string   `json:"performer_id"`
+	TagIds      []string `json:"tag_ids"`
+}
+
+type PerformerTag struct {
+	PerformerID *string  `json:"performer_id"`
+	TagIds      []string `json:"tag_ids"`
+}
+
 type SceneUpdateInput struct {
-	ClientMutationID   *string           `json:"clientMutationId"`
-	ID                 string            `json:"id"`
-	Title              *string           `json:"title"`
-	Code               *string           `json:"code"`
-	Details            *string           `json:"details"`
-	Director           *string           `json:"director"`
-	URL                *string           `json:"url"`
-	Urls               []string          `json:"urls"`
-	Date               *string           `json:"date"`
-	ShootDate          *string           `json:"shoot_date"`
-	Rating100          *int              `json:"rating100"`
-	OCounter           *int              `json:"o_counter"`
-	Organized          *bool             `json:"organized"`
-	Pinned             *bool             `json:"pinned"`
-	IsBroken           *bool             `json:"is_broken"`
-	IsNotBroken        *bool             `json:"is_not_broken"`
-	AudioOffsetMs      *int              `json:"audio_offset_ms"`
-	AudioPlaybackSpeed *float64          `json:"audio_playback_speed"`
-	ForceHLS           *bool             `json:"force_hls"`
-	StudioID           *string           `json:"studio_id"`
-	GalleryIds         []string          `json:"gallery_ids"`
-	PerformerIds       []string          `json:"performer_ids"`
-	Movies             []SceneMovieInput `json:"movies"`
-	Groups             []SceneGroupInput `json:"groups"`
-	TagIds             []string          `json:"tag_ids"`
+	ClientMutationID   *string              `json:"clientMutationId"`
+	ID                 string               `json:"id"`
+	Title              *string              `json:"title"`
+	Code               *string              `json:"code"`
+	Details            *string              `json:"details"`
+	Director           *string              `json:"director"`
+	URL                *string              `json:"url"`
+	Urls               []string             `json:"urls"`
+	Date               *string              `json:"date"`
+	ShootDate          *string              `json:"shoot_date"`
+	Rating100          *int                 `json:"rating100"`
+	OCounter           *int                 `json:"o_counter"`
+	Organized          *bool                `json:"organized"`
+	Pinned             *bool                `json:"pinned"`
+	IsBroken           *bool                `json:"is_broken"`
+	IsNotBroken        *bool                `json:"is_not_broken"`
+	AudioOffsetMs      *int                 `json:"audio_offset_ms"`
+	AudioPlaybackSpeed *float64             `json:"audio_playback_speed"`
+	ForceHLS           *bool                `json:"force_hls"`
+	StudioID           *string              `json:"studio_id"`
+	GalleryIds         []string             `json:"gallery_ids"`
+	PerformerIds       []string             `json:"performer_ids"`
+	Movies             []SceneMovieInput    `json:"movies"`
+	Groups             []SceneGroupInput    `json:"groups"`
+	TagIds             []string             `json:"tag_ids"`
+	PerformerTagIds    []*PerformerTagInput `json:"performer_tag_ids"`
 	// This should be a URL or a base64 encoded data URL
 	CoverImage      *string          `json:"cover_image"`
 	StashIds        []StashIDInput   `json:"stash_ids"`

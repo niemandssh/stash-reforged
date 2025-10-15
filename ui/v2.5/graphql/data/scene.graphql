@@ -91,6 +91,11 @@ fragment SceneData on Scene {
     ...SlimTagData
   }
 
+  performer_tag_ids {
+    performer_id
+    tag_ids
+  }
+
   performers {
     ...PerformerData
   }

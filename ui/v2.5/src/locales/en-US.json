@@ -206,6 +206,7 @@
         "placeholder": "Enter your notes..."
     },
     "color_preset": {
+        "preset": "Color Preset",
         "presets": "Color Presets",
         "manage": "Manage Presets",
         "create": "Create Preset",
@@ -300,6 +301,7 @@
         "scenes": "{count, plural, one {Scene} other {Scenes}}",
         "studios": "{count, plural, one {Studio} other {Studios}}",
         "tags": "{count, plural, one {Tag} other {Tags}}",
+        "general_tags": "General Tags",
         "urls": "{count, plural, one {# URL} other {# URLs}}"
     }
 }

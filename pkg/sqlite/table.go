@@ -186,6 +186,183 @@ func (t *joinTable) invert() *joinTable {
 	}
 }
 
+// performerTagsJoinTable represents a join table with scene_id, tag_id, and performer_id columns
+type performerTagsJoinTable struct {
+	table
+	tagColumn       exp.IdentifierExpression
+	performerColumn exp.IdentifierExpression
+
+	// required for ordering
+	foreignTable *table
+	orderBy      exp.OrderedExpression
+}
+
+func (t *performerTagsJoinTable) getPerformerTags(ctx context.Context, sceneID int) ([]models.ScenesTagsPerformer, error) {
+	q := dialect.Select(t.table.idColumn, t.tagColumn, t.performerColumn).
+		From(t.table.table).
+		Where(t.table.idColumn.Eq(sceneID))
+
+	if t.orderBy != nil {
+		if t.foreignTable != nil {
+			q = q.InnerJoin(t.foreignTable.table, goqu.On(t.foreignTable.idColumn.Eq(t.tagColumn)))
+		}
+		q = q.Order(t.orderBy)
+	}
+
+	const single = false
+	var ret []models.ScenesTagsPerformer
+	if err := queryFunc(ctx, q, single, func(rows *sqlx.Rows) error {
+		var sceneID, tagID int
+		var performerID *int
+		if err := rows.Scan(&sceneID, &tagID, &performerID); err != nil {
+			return err
+		}
+
+		ret = append(ret, models.ScenesTagsPerformer{
+			SceneID:     sceneID,
+			TagID:       tagID,
+			PerformerID: performerID,
+		})
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("getting performer tags from %s: %w", t.table.table.GetTable(), err)
+	}
+
+	return ret, nil
+}
+
+func (t *performerTagsJoinTable) insertPerformerTags(ctx context.Context, performerTags []models.ScenesTagsPerformer) error {
+	if len(performerTags) == 0 {
+		return nil
+	}
+
+	// eliminate duplicates first
+	uniqueTags := make([]models.ScenesTagsPerformer, 0, len(performerTags))
+	seen := make(map[string]bool)
+	for _, pt := range performerTags {
+		var performerIDStr string
+		if pt.PerformerID != nil {
+			performerIDStr = fmt.Sprintf("%d", *pt.PerformerID)
+		} else {
+			performerIDStr = "NULL"
+		}
+		key := fmt.Sprintf("%d-%d-%s", pt.SceneID, pt.TagID, performerIDStr)
+		if !seen[key] {
+			seen[key] = true
+			uniqueTags = append(uniqueTags, pt)
+		}
+	}
+	performerTags = uniqueTags
+
+	// Use INSERT OR IGNORE to handle duplicates gracefully
+	// This works even with NULL values in performer_id
+	q := fmt.Sprintf("INSERT OR IGNORE INTO %s (%s, %s, %s) VALUES (?, ?, ?)",
+		t.table.table.GetTable(),
+		t.table.idColumn.GetCol(),
+		t.tagColumn.GetCol(),
+		t.performerColumn.GetCol())
+
+	stmt, err := dbWrapper.Prepare(ctx, q)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, pt := range performerTags {
+		if _, err := dbWrapper.ExecStmt(ctx, stmt, pt.SceneID, pt.TagID, pt.PerformerID); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *performerTagsJoinTable) replacePerformerTags(ctx context.Context, sceneID int, performerTags []models.ScenesTagsPerformer) error {
+	if err := t.destroyPerformerTags(ctx, sceneID); err != nil {
+		return err
+	}
+
+	return t.insertPerformerTags(ctx, performerTags)
+}
+
+func (t *performerTagsJoinTable) modifyPerformerTags(ctx context.Context, sceneID int, performerTags []models.ScenesTagsPerformer, mode models.RelationshipUpdateMode) error {
+	// Set sceneID for all performer tags
+	for i := range performerTags {
+		performerTags[i].SceneID = sceneID
+	}
+
+	switch mode {
+	case models.RelationshipUpdateModeSet:
+		return t.replacePerformerTags(ctx, sceneID, performerTags)
+	case models.RelationshipUpdateModeAdd:
+		return t.addPerformerTags(ctx, sceneID, performerTags)
+	case models.RelationshipUpdateModeRemove:
+		return t.destroySpecificPerformerTags(ctx, performerTags)
+	}
+
+	return nil
+}
+
+func (t *performerTagsJoinTable) addPerformerTags(ctx context.Context, sceneID int, performerTags []models.ScenesTagsPerformer) error {
+	// get existing performer tags
+	existing, err := t.getPerformerTags(ctx, sceneID)
+	if err != nil {
+		return err
+	}
+
+	// only add performer tags that are not already present
+	var toAdd []models.ScenesTagsPerformer
+	for _, pt := range performerTags {
+		found := false
+		for _, e := range existing {
+			if e.SceneID == pt.SceneID && e.TagID == pt.TagID && e.PerformerID == pt.PerformerID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			toAdd = append(toAdd, pt)
+		}
+	}
+
+	return t.insertPerformerTags(ctx, toAdd)
+}
+
+func (t *performerTagsJoinTable) destroyPerformerTags(ctx context.Context, sceneID int) error {
+	// Only delete performer tags (where performer_id is NOT NULL)
+	// Keep general scene tags (where performer_id IS NULL)
+	q := dialect.Delete(t.table.table).
+		Where(t.table.idColumn.Eq(sceneID)).
+		Where(t.performerColumn.IsNotNull())
+
+	if _, err := exec(ctx, q); err != nil {
+		return fmt.Errorf("destroying performer tags from %s: %w", t.table.table.GetTable(), err)
+	}
+
+	return nil
+}
+
+func (t *performerTagsJoinTable) destroySpecificPerformerTags(ctx context.Context, performerTags []models.ScenesTagsPerformer) error {
+	if len(performerTags) == 0 {
+		return nil
+	}
+
+	for _, pt := range performerTags {
+		q := dialect.Delete(t.table.table).Where(
+			t.table.idColumn.Eq(pt.SceneID),
+			t.tagColumn.Eq(pt.TagID),
+			t.performerColumn.Eq(pt.PerformerID),
+		)
+
+		if _, err := exec(ctx, q); err != nil {
+			return fmt.Errorf("destroying specific performer tag from %s: %w", t.table.table.GetTable(), err)
+		}
+	}
+
+	return nil
+}
+
 func (t *joinTable) get(ctx context.Context, id int) ([]int, error) {
 	q := dialect.Select(t.fkColumn).From(t.table.table).Where(t.idColumn.Eq(id))
 
@@ -215,6 +392,12 @@ func (t *joinTable) get(ctx context.Context, id int) ([]int, error) {
 }
 
 func (t *joinTable) insertJoins(ctx context.Context, id int, foreignIDs []int) error {
+	// Check if this is scenes_tags table with performer_id column
+	// If so, use INSERT OR IGNORE with NULL performer_id
+	if t.table.table.GetTable() == "scenes_tags" {
+		return t.insertSceneTags(ctx, id, foreignIDs)
+	}
+
 	// manually create SQL so that we can prepare once
 	// ignore duplicates
 	q := fmt.Sprintf("INSERT INTO %s (%s, %s) VALUES (?, ?) ON CONFLICT (%[2]s, %s) DO NOTHING", t.table.table.GetTable(), t.idColumn.GetCol(), t.fkColumn.GetCol())
@@ -230,6 +413,32 @@ func (t *joinTable) insertJoins(ctx context.Context, id int, foreignIDs []int) e
 
 	for _, fk := range foreignIDs {
 		if _, err := dbWrapper.ExecStmt(ctx, stmt, id, fk); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *joinTable) insertSceneTags(ctx context.Context, sceneID int, tagIDs []int) error {
+	if len(tagIDs) == 0 {
+		return nil
+	}
+
+	// eliminate duplicates
+	tagIDs = sliceutil.AppendUniques(nil, tagIDs)
+
+	// Use INSERT OR IGNORE for scenes_tags with NULL performer_id
+	q := "INSERT OR IGNORE INTO scenes_tags (scene_id, tag_id, performer_id) VALUES (?, ?, NULL)"
+
+	stmt, err := dbWrapper.Prepare(ctx, q)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for _, tagID := range tagIDs {
+		if _, err := dbWrapper.ExecStmt(ctx, stmt, sceneID, tagID); err != nil {
 			return err
 		}
 	}

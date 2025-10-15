@@ -23,34 +23,6 @@ func (s GroupsScenes) Equal(o GroupsScenes) bool {
 		(o.SceneIndex != nil && s.SceneIndex != nil && *o.SceneIndex == *s.SceneIndex))
 }
 
-type UpdateGroupIDs struct {
-	Groups []GroupsScenes         `json:"movies"`
-	Mode   RelationshipUpdateMode `json:"mode"`
-}
-
-func (u *UpdateGroupIDs) SceneMovieInputs() []SceneMovieInput {
-	if u == nil {
-		return nil
-	}
-
-	ret := make([]SceneMovieInput, 0, len(u.Groups))
-	for _, id := range u.Groups {
-		ret = append(ret, id.SceneMovieInput())
-	}
-
-	return ret
-}
-
-func (u *UpdateGroupIDs) AddUnique(v GroupsScenes) {
-	for _, vv := range u.Groups {
-		if vv.GroupID == v.GroupID {
-			return
-		}
-	}
-
-	u.Groups = append(u.Groups, v)
-}
-
 func GroupsScenesFromInput(input []SceneMovieInput) ([]GroupsScenes, error) {
 	ret := make([]GroupsScenes, len(input))
 
@@ -67,6 +39,12 @@ func GroupsScenesFromInput(input []SceneMovieInput) ([]GroupsScenes, error) {
 	}
 
 	return ret, nil
+}
+
+type ScenesTagsPerformer struct {
+	SceneID     int  `json:"scene_id"`
+	TagID       int  `json:"tag_id"`
+	PerformerID *int `json:"performer_id"`
 }
 
 type GroupIDDescription struct {

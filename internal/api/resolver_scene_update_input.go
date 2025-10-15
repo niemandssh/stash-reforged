@@ -57,3 +57,8 @@ func (r *sceneUpdateInputResolver) ForceHLS(ctx context.Context, obj *models.Sce
 	obj.ForceHLS = data
 	return nil
 }
+
+func (r *sceneUpdateInputResolver) PerformerTagIds(ctx context.Context, obj *models.SceneUpdateInput, data []*models.PerformerTagInput) error {
+	obj.PerformerTagIds = data
+	return nil
+}

@@ -197,6 +197,17 @@ var (
 		orderBy:      goqu.COALESCE(tagTableMgr.table.Col("sort_name"), tagTableMgr.table.Col("name")).Asc(),
 	}
 
+	scenesPerformerTagsTableMgr = &performerTagsJoinTable{
+		table: table{
+			table:    scenesTagsJoinTable,
+			idColumn: scenesTagsJoinTable.Col(sceneIDColumn),
+		},
+		tagColumn:       scenesTagsJoinTable.Col(tagIDColumn),
+		performerColumn: scenesTagsJoinTable.Col("performer_id"),
+		foreignTable:    tagTableMgr,
+		orderBy:         goqu.COALESCE(tagTableMgr.table.Col("sort_name"), tagTableMgr.table.Col("name")).Asc(),
+	}
+
 	scenesPerformersTableMgr = &joinTable{
 		table: table{
 			table:    scenesPerformersJoinTable,

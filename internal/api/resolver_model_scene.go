@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/stashapp/stash/internal/api/loaders"
@@ -284,9 +285,76 @@ func (r *sceneResolver) Tags(ctx context.Context, obj *models.Scene) (ret []*mod
 		}
 	}
 
+	// Get regular scene tags
+	tagIDs := obj.TagIDs.List()
+
+	// Also include performer tags in the scene tags for GraphQL
+	if !obj.PerformerTagIDs.Loaded() {
+		if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+			return obj.LoadPerformerTagIDs(ctx, r.repository.Scene)
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	// Add performer tag IDs to the list
+	for _, pt := range obj.PerformerTagIDs.List() {
+		tagIDs = append(tagIDs, pt.TagID)
+	}
+
+	// Remove duplicates
+	seen := make(map[int]bool)
+	var uniqueTagIDs []int
+	for _, id := range tagIDs {
+		if !seen[id] {
+			seen[id] = true
+			uniqueTagIDs = append(uniqueTagIDs, id)
+		}
+	}
+
 	var errs []error
-	ret, errs = loaders.From(ctx).TagByID.LoadAll(obj.TagIDs.List())
+	ret, errs = loaders.From(ctx).TagByID.LoadAll(uniqueTagIDs)
 	return ret, firstError(errs)
+}
+
+func (r *sceneResolver) PerformerTagIds(ctx context.Context, obj *models.Scene) (ret []*models.PerformerTag, err error) {
+	if !obj.PerformerTagIDs.Loaded() {
+		if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+			return obj.LoadPerformerTagIDs(ctx, r.repository.Scene)
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	// Group tags by performer
+	performerTagsMap := make(map[string][]string)
+	for _, pt := range obj.PerformerTagIDs.List() {
+		var performerKey string
+		if pt.PerformerID != nil {
+			performerKey = strconv.Itoa(*pt.PerformerID)
+		} else {
+			performerKey = "null" // For general scene tags
+		}
+
+		tagIDStr := strconv.Itoa(pt.TagID)
+		performerTagsMap[performerKey] = append(performerTagsMap[performerKey], tagIDStr)
+	}
+
+	// Convert map to PerformerTag slice
+	ret = make([]*models.PerformerTag, 0, len(performerTagsMap))
+	for performerKey, tagIDs := range performerTagsMap {
+		var performerID *string
+		if performerKey != "null" {
+			performerID = &performerKey
+		}
+
+		ret = append(ret, &models.PerformerTag{
+			PerformerID: performerID,
+			TagIds:      tagIDs,
+		})
+	}
+
+	return ret, nil
 }
 
 func (r *sceneResolver) Performers(ctx context.Context, obj *models.Scene) (ret []*models.Performer, err error) {

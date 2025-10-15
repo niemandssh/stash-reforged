@@ -273,6 +273,47 @@ func (t changesetTranslator) updateIdsBulk(value *BulkUpdateIds, field string) (
 	}, nil
 }
 
+func (t changesetTranslator) updatePerformerTags(value []*models.PerformerTagInput, field string) (*models.UpdatePerformerTags, error) {
+	if !t.hasField(field) {
+		return nil, nil
+	}
+
+	var performerTags []models.ScenesTagsPerformer
+	for _, pt := range value {
+		// Skip entries with empty tag arrays
+		if len(pt.TagIds) == 0 {
+			continue
+		}
+
+		var performerID *int
+		if pt.PerformerID != "" {
+			id, err := strconv.Atoi(pt.PerformerID)
+			if err != nil {
+				return nil, fmt.Errorf("converting performer id %s: %w", pt.PerformerID, err)
+			}
+			performerID = &id
+		}
+
+		for _, tagIDStr := range pt.TagIds {
+			tagID, err := strconv.Atoi(tagIDStr)
+			if err != nil {
+				return nil, fmt.Errorf("converting tag id %s: %w", tagIDStr, err)
+			}
+
+			performerTags = append(performerTags, models.ScenesTagsPerformer{
+				SceneID:     0, // Will be set when processing the update
+				TagID:       tagID,
+				PerformerID: performerID,
+			})
+		}
+	}
+
+	return &models.UpdatePerformerTags{
+		PerformerTags: performerTags,
+		Mode:          models.RelationshipUpdateModeSet,
+	}, nil
+}
+
 func (t changesetTranslator) optionalURLs(value []string, legacyValue *string) *models.UpdateStrings {
 	const (
 		legacyField = "url"
