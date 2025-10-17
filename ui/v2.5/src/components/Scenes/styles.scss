@@ -1340,3 +1340,47 @@ input[type="range"].blue-slider {
     }
   }
 }
+
+// Performer table styles
+.performer-table {
+  background: #26333d;
+  padding: 12px 0;
+  border-radius: 8px;
+}
+
+.performer-row {
+  padding: 0 16px;
+}
+
+.performer-table-header {
+  padding: 0 16px;
+  font-size: 12px;
+}
+
+// Performer role description styles
+.performer-role-description {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: $text-muted;
+  font-style: italic;
+  
+  strong {
+    color: $text-color;
+    font-weight: 600;
+  }
+}
+
+// Performer card title alignment
+.performer-card .card-section-title.flex-aligned {
+  align-items: flex-start;
+}
+
+.performer-role-description-small {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  
+  strong {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}

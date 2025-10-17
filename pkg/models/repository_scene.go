@@ -136,6 +136,7 @@ type SceneReader interface {
 	TagIDLoader
 	PerformerTagIDLoader
 	SceneGroupLoader
+	ScenePerformerLoader
 	StashIDLoader
 	VideoFileLoader
 

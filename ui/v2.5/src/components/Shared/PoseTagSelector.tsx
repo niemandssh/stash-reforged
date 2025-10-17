@@ -113,13 +113,13 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   if (loading) {
     return (
       <div className="pose-tag-selector">
-        <Form.Label 
+        <Form.Label
           className="pose-tag-selector-header"
           onClick={toggleCollapsed}
           style={{ cursor: 'pointer', userSelect: 'none' }}
         >
-          <Icon 
-            icon={isCollapsed ? faChevronRight : faChevronDown} 
+          <Icon
+            icon={isCollapsed ? faChevronRight : faChevronDown}
             className="ml-0 mr-2"
           />
           <FormattedMessage id="pose_tags" />
@@ -133,13 +133,13 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
 
   return (
     <div className="pose-tag-selector">
-      <Form.Label 
+      <Form.Label
         className="pose-tag-selector-header"
         onClick={toggleCollapsed}
         style={{ cursor: 'pointer', userSelect: 'none' }}
       >
-        <Icon 
-          icon={isCollapsed ? faChevronRight : faChevronDown} 
+        <Icon
+          icon={isCollapsed ? faChevronRight : faChevronDown}
           className="ml-0 mr-2"
         />
         <FormattedMessage id="pose_tags" />

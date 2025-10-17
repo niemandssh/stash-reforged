@@ -400,7 +400,13 @@ func (qb *SceneStore) Create(ctx context.Context, newObject *models.Scene, fileI
 	}
 
 	if newObject.PerformerIDs.Loaded() {
-		if err := scenesPerformersTableMgr.insertJoins(ctx, id, newObject.PerformerIDs.List()); err != nil {
+		if err := sceneRepository.performers.insert(ctx, id, newObject.PerformerIDs.List()...); err != nil {
+			return err
+		}
+	}
+
+	if newObject.ScenePerformers.Loaded() {
+		if err := scenesPerformersTableMgr.insertJoins(ctx, id, newObject.ScenePerformers.List()); err != nil {
 			return err
 		}
 	}
@@ -465,7 +471,12 @@ func (qb *SceneStore) UpdatePartial(ctx context.Context, id int, partial models.
 		}
 	}
 	if partial.PerformerIDs != nil {
-		if err := scenesPerformersTableMgr.modifyJoins(ctx, id, partial.PerformerIDs.IDs, partial.PerformerIDs.Mode); err != nil {
+		if err := sceneRepository.performers.replace(ctx, id, partial.PerformerIDs.IDs); err != nil {
+			return nil, err
+		}
+	}
+	if partial.ScenePerformers != nil {
+		if err := scenesPerformersTableMgr.replaceJoins(ctx, id, partial.ScenePerformers.ScenePerformers); err != nil {
 			return nil, err
 		}
 	}
@@ -518,7 +529,13 @@ func (qb *SceneStore) Update(ctx context.Context, updatedObject *models.Scene) e
 	}
 
 	if updatedObject.PerformerIDs.Loaded() {
-		if err := scenesPerformersTableMgr.replaceJoins(ctx, updatedObject.ID, updatedObject.PerformerIDs.List()); err != nil {
+		if err := sceneRepository.performers.replace(ctx, updatedObject.ID, updatedObject.PerformerIDs.List()); err != nil {
+			return err
+		}
+	}
+
+	if updatedObject.ScenePerformers.Loaded() {
+		if err := scenesPerformersTableMgr.replaceJoins(ctx, updatedObject.ID, updatedObject.ScenePerformers.List()); err != nil {
 			return err
 		}
 	}
@@ -628,6 +645,10 @@ func (qb *SceneStore) FindMany(ctx context.Context, ids []int) ([]*models.Scene,
 	for i := range scenes {
 		if scenes[i] == nil {
 			return nil, fmt.Errorf("scene with id %d not found", ids[i])
+		}
+		// Load relationships for each scene
+		if err := scenes[i].LoadRelationships(ctx, qb); err != nil {
+			return nil, err
 		}
 	}
 
@@ -1251,6 +1272,18 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		} else if sort == "movie_scene_number" {
 			query.join(groupsScenesTable, "", "scenes.id = groups_scenes.scene_id")
 			query.sortAndPagination += getSortWithoutOrderBy("scene_index", direction, groupsScenesTable)
+		} else if sort == "filesize" {
+			query.addJoins(
+				join{
+					table:    scenesFilesTable,
+					onClause: "scenes_files.scene_id = scenes.id",
+				},
+				join{
+					table:    fileTable,
+					onClause: "scenes_files.file_id = files.id",
+				},
+			)
+			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, fileTable)
 		} else {
 			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, "scenes")
 		}
@@ -1475,6 +1508,14 @@ func (qb *SceneStore) AddFileID(ctx context.Context, id int, fileID models.FileI
 
 func (qb *SceneStore) GetPerformerIDs(ctx context.Context, id int) ([]int, error) {
 	return sceneRepository.performers.getIDs(ctx, id)
+}
+
+func (qb *SceneStore) GetScenePerformers(ctx context.Context, id int) ([]models.PerformerScenes, error) {
+	result, err := scenesPerformersTableMgr.get(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("GetScenePerformers failed for scene %d: %w", id, err)
+	}
+	return result, nil
 }
 
 func (qb *SceneStore) GetTagIDs(ctx context.Context, id int) ([]int, error) {

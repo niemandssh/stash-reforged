@@ -51,3 +51,10 @@ type GroupIDDescription struct {
 	GroupID     int    `json:"group_id"`
 	Description string `json:"description"`
 }
+
+type PerformerScenes struct {
+	PerformerID     int     `json:"performer_id"`
+	SceneID         int     `json:"scene_id"`
+	SmallRole       bool    `json:"small_role"`
+	RoleDescription *string `json:"role_description"`
+}

@@ -39,6 +39,7 @@ export const PoseTagsDisplay: React.FC<IPoseTagsDisplayProps> = ({ scene }) => {
             defaultMessage="Pose Tags"
             values={{ count: poseTags.length }}
           />
+          <span className="text-muted ml-2">({poseTags.length})</span>
         </h4>
       </div>
       <div className="pose-tags-display">

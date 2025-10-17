@@ -100,6 +100,14 @@ fragment SceneData on Scene {
     ...PerformerData
   }
 
+  scene_performers {
+    performer {
+      ...PerformerData
+    }
+    small_role
+    role_description
+  }
+
   stash_ids {
     endpoint
     stash_id

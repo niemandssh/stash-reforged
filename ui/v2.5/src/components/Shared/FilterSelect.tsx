@@ -131,12 +131,13 @@ export interface IFilterProps {
 }
 
 export interface IFilterComponentProps<T> extends IFilterProps {
-  loadOptions: (inputValue: string) => Promise<Option<T>[]>;
+  loadOptions: (inputValue: string, excludeIds?: string[]) => Promise<Option<T>[]>;
   onCreate?: (
     name: string
   ) => Promise<{ value: string; item: T; message: string }>;
   getNamedObject?: (id: string, name: string) => T;
   isValidNewOption?: (inputValue: string, options: T[]) => boolean;
+  excludeIds?: string[];
 }
 
 export const FilterSelectComponent = <
@@ -258,7 +259,7 @@ export const FilterSelectComponent = <
 
   const debounceDelay = 100;
   const debounceLoadOptions = useDebounce((inputValue, callback) => {
-    loadOptions(inputValue).then(callback);
+    loadOptions(inputValue, props.excludeIds).then(callback);
   }, debounceDelay);
 
   return (

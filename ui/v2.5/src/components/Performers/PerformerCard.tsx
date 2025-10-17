@@ -42,6 +42,7 @@ interface IPerformerCardProps {
   zoomIndex?: number;
   onSelectedChanged?: (selected: boolean, shiftKey: boolean) => void;
   extraCriteria?: IPerformerCardExtraCriteria;
+  roleDescription?: string;
 }
 
 const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
@@ -334,7 +335,7 @@ const PerformerCardImage: React.FC<IPerformerCardProps> = PatchComponent(
 
 const PerformerCardTitle: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Title",
-  ({ performer }) => {
+  ({ performer, roleDescription }) => {
     return (
       <div className="performer-title-container">
         <span className="performer-name">{performer.name}</span>
@@ -349,6 +350,11 @@ const PerformerCardTitle: React.FC<IPerformerCardProps> = PatchComponent(
           <span className="performer-disambiguation">
             {` (${performer.disambiguation})`}
           </span>
+        )}
+        {roleDescription && (
+          <div className="performer-role-description">
+            <strong>Role:</strong> {roleDescription}
+          </div>
         )}
       </div>
     );

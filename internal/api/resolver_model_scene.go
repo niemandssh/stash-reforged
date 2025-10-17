@@ -276,6 +276,47 @@ func (r *sceneResolver) Groups(ctx context.Context, obj *models.Scene) (ret []*S
 	return ret, nil
 }
 
+func (r *sceneResolver) ScenePerformers(ctx context.Context, obj *models.Scene) (ret []*ScenePerformer, err error) {
+	if !obj.ScenePerformers.Loaded() {
+		if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+			qb := r.repository.Scene
+			// Call GetScenePerformers directly instead of using interface
+			scenePerformers, err := qb.GetScenePerformers(ctx, obj.ID)
+			if err != nil {
+				return err
+			}
+			obj.ScenePerformers = models.NewRelatedScenePerformers(scenePerformers)
+			return nil
+		}); err != nil {
+			return nil, err
+		}
+	}
+
+	// If ScenePerformers is not loaded or empty, return empty array
+	if !obj.ScenePerformers.Loaded() {
+		return []*ScenePerformer{}, nil
+	}
+
+	loader := loaders.From(ctx).PerformerByID
+
+	for _, sp := range obj.ScenePerformers.List() {
+		performer, err := loader.Load(sp.PerformerID)
+		if err != nil {
+			return nil, err
+		}
+
+		scenePerformer := &ScenePerformer{
+			Performer:       performer,
+			SmallRole:       sp.SmallRole,
+			RoleDescription: sp.RoleDescription,
+		}
+
+		ret = append(ret, scenePerformer)
+	}
+
+	return ret, nil
+}
+
 func (r *sceneResolver) Tags(ctx context.Context, obj *models.Scene) (ret []*models.Tag, err error) {
 	if !obj.TagIDs.Loaded() {
 		if err := r.withReadTxn(ctx, func(ctx context.Context) error {

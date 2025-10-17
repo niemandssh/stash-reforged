@@ -52,13 +52,14 @@ type Scene struct {
 	VideoFilters    *VideoFilters    `json:"video_filters"`
 	VideoTransforms *VideoTransforms `json:"video_transforms"`
 
-	URLs            RelatedStrings       `json:"urls"`
-	GalleryIDs      RelatedIDs           `json:"gallery_ids"`
-	TagIDs          RelatedIDs           `json:"tag_ids"`
-	PerformerIDs    RelatedIDs           `json:"performer_ids"`
-	PerformerTagIDs RelatedPerformerTags `json:"performer_tag_ids"`
-	Groups          RelatedGroups        `json:"groups"`
-	StashIDs        RelatedStashIDs      `json:"stash_ids"`
+	URLs            RelatedStrings         `json:"urls"`
+	GalleryIDs      RelatedIDs             `json:"gallery_ids"`
+	TagIDs          RelatedIDs             `json:"tag_ids"`
+	PerformerIDs    RelatedIDs             `json:"performer_ids"`
+	ScenePerformers RelatedScenePerformers `json:"scene_performers"`
+	PerformerTagIDs RelatedPerformerTags   `json:"performer_tag_ids"`
+	Groups          RelatedGroups          `json:"groups"`
+	StashIDs        RelatedStashIDs        `json:"stash_ids"`
 }
 
 func NewScene() Scene {
@@ -102,6 +103,7 @@ type ScenePartial struct {
 	GalleryIDs      *UpdateIDs
 	TagIDs          *UpdateIDs
 	PerformerIDs    *UpdateIDs
+	ScenePerformers *UpdateScenePerformers
 	PerformerTagIDs *UpdatePerformerTags
 	GroupIDs        *UpdateGroupIDs
 	StashIDs        *UpdateStashIDs
@@ -162,6 +164,12 @@ func (s *Scene) LoadPerformerIDs(ctx context.Context, l PerformerIDLoader) error
 	})
 }
 
+func (s *Scene) LoadScenePerformers(ctx context.Context, l ScenePerformerLoader) error {
+	return s.ScenePerformers.load(func() ([]PerformerScenes, error) {
+		return l.GetScenePerformers(ctx, s.ID)
+	})
+}
+
 func (s *Scene) LoadTagIDs(ctx context.Context, l TagIDLoader) error {
 	return s.TagIDs.load(func() ([]int, error) {
 		ids, err := l.GetTagIDs(ctx, s.ID)
@@ -213,6 +221,10 @@ func (s *Scene) LoadRelationships(ctx context.Context, l SceneReader) error {
 	}
 
 	if err := s.LoadPerformerTagIDs(ctx, l); err != nil {
+		return err
+	}
+
+	if err := s.LoadScenePerformers(ctx, l); err != nil {
 		return err
 	}
 

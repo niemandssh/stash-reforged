@@ -80,3 +80,11 @@ func nullIntFromFolderIDPtr(i *models.FolderID) null.Int {
 
 	return null.IntFrom(int64(*i))
 }
+
+func nullStringPtr(i null.String) *string {
+	if !i.Valid {
+		return nil
+	}
+
+	return &i.String
+}

@@ -208,12 +208,11 @@ var (
 		orderBy:         goqu.COALESCE(tagTableMgr.table.Col("sort_name"), tagTableMgr.table.Col("name")).Asc(),
 	}
 
-	scenesPerformersTableMgr = &joinTable{
+	scenesPerformersTableMgr = &scenePerformersTable{
 		table: table{
 			table:    scenesPerformersJoinTable,
 			idColumn: scenesPerformersJoinTable.Col(sceneIDColumn),
 		},
-		fkColumn: scenesPerformersJoinTable.Col(performerIDColumn),
 	}
 
 	scenesGalleriesTableMgr = galleriesScenesTableMgr.invert()

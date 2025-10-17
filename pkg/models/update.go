@@ -280,3 +280,47 @@ func removePerformerTags(existing []ScenesTagsPerformer, toRemove []ScenesTagsPe
 
 	return ret
 }
+
+type UpdateScenePerformers struct {
+	ScenePerformers []PerformerScenes     `json:"scene_performers"`
+	Mode            RelationshipUpdateMode `json:"mode"`
+}
+
+// Apply applies the update to a list of existing scene performers, returning the result.
+func (u *UpdateScenePerformers) Apply(existing []PerformerScenes) []PerformerScenes {
+	if u == nil {
+		return existing
+	}
+
+	switch u.Mode {
+	case RelationshipUpdateModeAdd:
+		return append(existing, u.ScenePerformers...)
+	case RelationshipUpdateModeRemove:
+		return removeScenePerformers(existing, u.ScenePerformers)
+	case RelationshipUpdateModeSet:
+		return u.ScenePerformers
+	}
+
+	return existing
+}
+
+func removeScenePerformers(existing []PerformerScenes, toRemove []PerformerScenes) []PerformerScenes {
+	ret := make([]PerformerScenes, 0, len(existing))
+
+	for _, v := range existing {
+		found := false
+		for _, r := range toRemove {
+			if v.PerformerID == r.PerformerID {
+				found = true
+				break
+			}
+		}
+
+		// if not found in the remove list, keep it
+		if !found {
+			ret = append(ret, v)
+		}
+	}
+
+	return ret
+}

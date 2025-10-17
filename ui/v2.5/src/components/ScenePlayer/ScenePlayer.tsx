@@ -668,7 +668,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       }
 
       function seeking(this: VideoJsPlayer) {
-        console.log('SEEKING called');
+        console.log('SEEKING called', this.currentTime());
         // Track that seeking has started
         isSeeking.current = true;
         lastSeekTime.current = this.currentTime();
@@ -677,6 +677,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       function seeked(this: VideoJsPlayer) {
         // Seeking completed - check if seeking backward
         const currentTime = this.currentTime();
+        console.log('SEEKED called', this.currentTime());
         if (showNextSceneOverlay && currentTime < lastSeekTime.current) {
           console.log('SEEKED BACKWARD:', { currentTime, lastSeekTime: lastSeekTime.current });
           setShowNextSceneOverlay(false);

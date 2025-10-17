@@ -175,8 +175,8 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   function renderPerformerTags() {
     if (!props.scene.performers || props.scene.performers.length === 0) return;
 
-    // Show tags for each performer in the order of performers list (exclude small role performers)
-    const performerTags = props.scene.performers.filter(performer => !performer.small_role).map(performer => {
+    // Show tags for each performer in the order of performers list (include all performers)
+    const performerTags = props.scene.performers.map(performer => {
       const performerTagData = props.scene.performer_tag_ids?.find((pt: any) =>
         pt.performer_id === performer.id
       );
@@ -225,23 +225,52 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   }
 
   function renderPerformers() {
-    if (props.scene.performers.length === 0) return;
+    // Use scene_performers if available, otherwise fall back to performers
+    const performersData = (props.scene as any).scene_performers || props.scene.performers;
+    if (performersData.length === 0) return;
 
     // Separate performers into two groups
-    const mainPerformers = props.scene.performers.filter(p => !p.small_role);
-    const smallRolePerformers = props.scene.performers.filter(p => p.small_role);
+    // For scene_performers: check both performer.small_role (from performer card) and scene.small_role (from scene data)
+    // For performers: check only performer.small_role
+    const mainPerformers = performersData.filter((p: any) => {
+      if (p.performer) {
+        // scene_performers format
+        return !(p.small_role || p.performer.small_role);
+      } else {
+        // performers format
+        return !p.small_role;
+      }
+    });
+    const smallRolePerformers = performersData.filter((p: any) => {
+      if (p.performer) {
+        // scene_performers format
+        return p.small_role || p.performer.small_role;
+      } else {
+        // performers format
+        return p.small_role;
+      }
+    });
 
     // Sort main performers
-    const sortedMainPerformers = sortPerformers(mainPerformers);
+    const sortedMainPerformers = sortPerformers(mainPerformers.map((p: any) => p.performer || p));
 
     // Create cards for main performers
-    const mainCards = sortedMainPerformers.map((performer) => (
-      <PerformerCard
-        key={performer.id}
-        performer={performer}
-        ageFromDate={props.scene.date ?? undefined}
-      />
-    ));
+    const mainCards = sortedMainPerformers.map((performer: any) => {
+      // Find the corresponding scene_performer data for role_description
+      const scenePerformerData = performersData.find((sp: any) => 
+        (sp.performer ? sp.performer.id : sp.id) === performer.id
+      );
+      const roleDescription = scenePerformerData?.role_description;
+      
+      return (
+        <PerformerCard
+          key={performer.id}
+          performer={performer}
+          ageFromDate={props.scene.date ?? undefined}
+          roleDescription={roleDescription}
+        />
+      );
+    });
 
     // Create list for performers with small role
     const smallRoleList = smallRolePerformers.length > 0 ? (
@@ -250,16 +279,17 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
           <FormattedMessage id="scene_performers.small_role" defaultMessage="Also starring:" />
         </h6>
         <div className="scene-performers-small-role">
-          {smallRolePerformers.map((performer) => {
+          {smallRolePerformers.map((performer: any) => {
+            const performerData = performer.performer || performer;
+            const roleDescription = performer.role_description;
             const currentAge = TextUtils.age(
-              performer.birthdate,
-              performer.death_date
+              performerData.birthdate,
+              performerData.death_date
             );
             const productionAge = TextUtils.age(
-              performer.birthdate,
+              performerData.birthdate,
               props.scene.date ?? undefined
             );
-            const intl = useIntl();
             const ageShortString = intl.formatMessage({
               id: "years_old_short",
               defaultMessage: "yo",
@@ -274,20 +304,25 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
             return (
               <Link
-                key={performer.id}
-                to={`/performers/${performer.id}`}
+                key={performerData.id}
+                to={`/performers/${performerData.id}`}
                 className="scene-performer-small-role-tag"
               >
                 <div className="performer-info">
                   <div className="performer-header">
-                    <GenderIcon gender={performer.gender} className="gender-icon-small" />
-                    <span className="performer-name">{performer.name}</span>
+                    <GenderIcon gender={performerData.gender} className="gender-icon-small" />
+                    <span className="performer-name">{performerData.name}</span>
                     {currentAgeString && (
                       <span className="performer-age-small">({currentAgeString})</span>
                     )}
                   </div>
                   {productionAgeString && (
                     <div className="performer-age-at-production">{productionAgeString}</div>
+                  )}
+                  {roleDescription && (
+                    <div className="performer-role-description-small">
+                      <strong>Role:</strong> {roleDescription}
+                    </div>
                   )}
                 </div>
               </Link>
@@ -322,21 +357,11 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     <>
       <div className="row">
         <div className={`${sceneDetailsWidth} col-12 scene-details`}>
-          <URLsField id="urls" urls={props.scene.urls} truncate />
-
-          <div className="mb-2">
-            <h6 className="font-weight-bold d-inline-block mr-1">
-              <FormattedMessage id="created_at" />:{" "}
-            </h6>
-            {TextUtils.formatDateTime(intl, props.scene.created_at)}{" "}
-          </div>
-
-          <div className="mb-2">
-            <h6 className="font-weight-bold d-inline-block mr-1">
-              <FormattedMessage id="updated_at" />:{" "}
-            </h6>
-            {TextUtils.formatDateTime(intl, props.scene.updated_at)}{" "}
-          </div>
+          {props.scene.urls && props.scene.urls.length > 0 && (
+            <div className="mb-n3">
+              <URLsField id="urls" urls={props.scene.urls} truncate />
+            </div>
+          )}
 
           {props.scene.code && (
             <div className="mb-2">
@@ -369,6 +394,25 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       <div className="row">
         <div className="col-12">
           <SimilarScenes scene={props.scene} />
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-12">
+          <div className="mt-3">
+            <div className="mb-2">
+              <h6 className="font-weight-bold d-inline-block mr-1">
+                <FormattedMessage id="created_at" />:{" "}
+              </h6>
+              {TextUtils.formatDateTime(intl, props.scene.created_at)}{" "}
+            </div>
+
+            <div className="mb-2">
+              <h6 className="font-weight-bold d-inline-block mr-1">
+                <FormattedMessage id="updated_at" />:{" "}
+              </h6>
+              {TextUtils.formatDateTime(intl, props.scene.updated_at)}{" "}
+            </div>
+          </div>
         </div>
       </div>
     </>

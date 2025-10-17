@@ -117,6 +117,9 @@ func (r *Resolver) ConfigResult() ConfigResultResolver {
 func (r *Resolver) SceneUpdateInput() SceneUpdateInputResolver {
 	return &sceneUpdateInputResolver{r}
 }
+func (r *Resolver) SceneCreateInput() SceneCreateInputResolver {
+	return &sceneCreateInputResolver{r}
+}
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
@@ -141,6 +144,7 @@ type videoFileResolver struct{ *Resolver }
 type imageFileResolver struct{ *Resolver }
 type basicFileResolver struct{ *Resolver }
 type sceneUpdateInputResolver struct{ *Resolver }
+type sceneCreateInputResolver struct{ *Resolver }
 type folderResolver struct{ *Resolver }
 type savedFilterResolver struct{ *Resolver }
 type pluginResolver struct{ *Resolver }

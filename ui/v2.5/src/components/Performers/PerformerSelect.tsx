@@ -50,6 +50,7 @@ export type Performer = Pick<
   | "primary_image_path"
   | "birthdate"
   | "death_date"
+  | "small_role"
 >;
 type Option = SelectOption<Performer>;
 
@@ -80,6 +81,7 @@ const _PerformerSelect: React.FC<
       ageFromDate?: string | null;
       hoverPlacementLabel?: Placement;
       hoverPlacementOptions?: Placement;
+      excludeIds?: string[];
     }
 > = (props) => {
   const [createPerformer] = usePerformerCreate();
@@ -91,7 +93,7 @@ const _PerformerSelect: React.FC<
   const defaultCreatable =
     !configuration?.interface.disableDropdownCreate.performer ?? true;
 
-  async function loadPerformers(input: string): Promise<Option[]> {
+  async function loadPerformers(input: string, excludeIds?: string[]): Promise<Option[]> {
     const filter = new ListFilterModel(GQL.FilterMode.Performers);
     filter.searchTerm = input;
     filter.currentPage = 1;
@@ -99,9 +101,16 @@ const _PerformerSelect: React.FC<
     filter.sortBy = "name";
     filter.sortDirection = GQL.SortDirectionEnum.Asc;
     const query = await queryFindPerformersForSelect(filter);
+    
+    // Filter out excluded performers
+    let performers = query.data.findPerformers.performers.slice();
+    if (excludeIds && excludeIds.length > 0) {
+      performers = performers.filter(performer => !excludeIds.includes(performer.id));
+    }
+    
     return performerSelectSort(
       input,
-      query.data.findPerformers.performers.slice()
+      performers
     ).map((performer) => ({
       value: performer.id,
       object: performer,
@@ -302,6 +311,7 @@ const _PerformerSelect: React.FC<
       )}
       loadOptions={loadPerformers}
       getNamedObject={getNamedObject}
+      excludeIds={props.excludeIds}
       isValidNewOption={isValidNewOption}
       components={{
         Option: PerformerOption,

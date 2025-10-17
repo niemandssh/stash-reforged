@@ -43,6 +43,10 @@ type SceneGroupLoader interface {
 	GetGroups(ctx context.Context, id int) ([]GroupsScenes, error)
 }
 
+type ScenePerformerLoader interface {
+	GetScenePerformers(ctx context.Context, id int) ([]PerformerScenes, error)
+}
+
 type ContainingGroupLoader interface {
 	GetContainingGroupDescriptions(ctx context.Context, id int) ([]GroupIDDescription, error)
 }
@@ -196,6 +200,77 @@ func (r *RelatedGroups) load(fn func() ([]GroupsScenes, error)) error {
 
 	if ids == nil {
 		ids = []GroupsScenes{}
+	}
+
+	r.list = ids
+
+	return nil
+}
+
+// RelatedScenePerformers represents a list of related Scene Performers.
+type RelatedScenePerformers struct {
+	list []PerformerScenes
+}
+
+// NewRelatedScenePerformers returns a loaded RelatedScenePerformers object with the provided performers.
+// Loaded will return true when called on the returned object if the provided slice is not nil.
+func NewRelatedScenePerformers(list []PerformerScenes) RelatedScenePerformers {
+	return RelatedScenePerformers{
+		list: list,
+	}
+}
+
+// Loaded returns true if the relationship has been loaded.
+func (r RelatedScenePerformers) Loaded() bool {
+	return r.list != nil
+}
+
+func (r RelatedScenePerformers) mustLoaded() {
+	if !r.Loaded() {
+		panic("list has not been loaded")
+	}
+}
+
+// List returns the related Scene Performers. Panics if the relationship has not been loaded.
+func (r RelatedScenePerformers) List() []PerformerScenes {
+	r.mustLoaded()
+
+	return r.list
+}
+
+// Add adds the provided performers to the list. Panics if the relationship has not been loaded.
+func (r *RelatedScenePerformers) Add(performers ...PerformerScenes) {
+	r.mustLoaded()
+
+	r.list = append(r.list, performers...)
+}
+
+// ForID returns the PerformerScenes object for the given performer ID. Returns nil if not found.
+func (r *RelatedScenePerformers) ForID(id int) *PerformerScenes {
+	r.mustLoaded()
+
+	for _, performer := range r.list {
+		if performer.PerformerID == id {
+			return &performer
+		}
+	}
+
+	return nil
+}
+
+// load loads the relationship using the provided function. Panics if the relationship has already been loaded.
+func (r *RelatedScenePerformers) load(fn func() ([]PerformerScenes, error)) error {
+	if r.Loaded() {
+		panic("list has already been loaded")
+	}
+
+	ids, err := fn()
+	if err != nil {
+		return err
+	}
+
+	if ids == nil {
+		ids = []PerformerScenes{}
 	}
 
 	r.list = ids

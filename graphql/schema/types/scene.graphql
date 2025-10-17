@@ -1,3 +1,9 @@
+type ScenePerformer {
+  performer: Performer!
+  small_role: Boolean!
+  role_description: String
+}
+
 type SceneFileType {
   size: String
   duration: Float
@@ -133,7 +139,8 @@ type Scene {
   movies: [SceneMovie!]! @deprecated(reason: "Use groups")
   tags: [Tag!]!
   performer_tag_ids: [PerformerTag!]!
-  performers: [Performer!]!
+  performers: [Performer!]! @deprecated(reason: "Use scene_performers")
+  scene_performers: [ScenePerformer!]!
   stash_ids: [StashID!]!
 
   "Return valid stream paths"
@@ -180,6 +187,12 @@ input SceneGroupInput {
   scene_index: Int
 }
 
+input ScenePerformerInput {
+  performer_id: ID!
+  small_role: Boolean!
+  role_description: String
+}
+
 input SceneCreateInput {
   title: String
   code: String
@@ -195,7 +208,8 @@ input SceneCreateInput {
   is_broken: Boolean
   studio_id: ID
   gallery_ids: [ID!]
-  performer_ids: [ID!]
+  performer_ids: [ID!] @deprecated(reason: "Use scene_performers")
+  scene_performers: [ScenePerformerInput!]
   groups: [SceneGroupInput!]
   movies: [SceneMovieInput!] @deprecated(reason: "Use groups")
   tag_ids: [ID!]
@@ -235,7 +249,8 @@ input SceneUpdateInput {
   force_hls: Boolean
   studio_id: ID
   gallery_ids: [ID!]
-  performer_ids: [ID!]
+  performer_ids: [ID!] @deprecated(reason: "Use scene_performers")
+  scene_performers: [ScenePerformerInput!]
   groups: [SceneGroupInput!]
   movies: [SceneMovieInput!] @deprecated(reason: "Use groups")
   tag_ids: [ID!]

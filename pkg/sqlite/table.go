@@ -1465,3 +1465,128 @@ func querySimple(ctx context.Context, query *goqu.SelectDataset, out interface{}
 // 	}
 // 	return ret
 // }
+
+type scenePerformersTable struct {
+	table
+}
+
+type scenePerformersRow struct {
+	SceneID         null.Int    `db:"scene_id"`
+	PerformerID     null.Int    `db:"performer_id"`
+	SmallRole       null.Bool   `db:"small_role"`
+	RoleDescription null.String `db:"role_description"`
+}
+
+func (r scenePerformersRow) resolve(sceneID int) models.PerformerScenes {
+	return models.PerformerScenes{
+		SceneID:         sceneID,
+		PerformerID:     int(r.PerformerID.Int64),
+		SmallRole:       r.SmallRole.Bool,
+		RoleDescription: nullStringPtr(r.RoleDescription),
+	}
+}
+
+func (t *scenePerformersTable) get(ctx context.Context, id int) ([]models.PerformerScenes, error) {
+	q := dialect.Select("performer_id", "small_role", "role_description").From(t.table.table).Where(t.idColumn.Eq(id))
+
+	const single = false
+	var ret []models.PerformerScenes
+	if err := queryFunc(ctx, q, single, func(rows *sqlx.Rows) error {
+		var v scenePerformersRow
+		if err := rows.StructScan(&v); err != nil {
+			return err
+		}
+
+		ret = append(ret, v.resolve(id))
+
+		return nil
+	}); err != nil {
+		return nil, fmt.Errorf("getting scene performers from %s for scene %d: %w", t.table.table.GetTable(), id, err)
+	}
+
+	return ret, nil
+}
+
+func (t *scenePerformersTable) insertJoin(ctx context.Context, id int, v models.PerformerScenes) (sql.Result, error) {
+	q := dialect.Insert(t.table.table).Cols(t.idColumn.GetCol(), "performer_id", "small_role", "role_description").Vals(
+		goqu.Vals{id, v.PerformerID, v.SmallRole, v.RoleDescription},
+	)
+	ret, err := exec(ctx, q)
+	if err != nil {
+		return nil, fmt.Errorf("inserting into %s: %w", t.table.table.GetTable(), err)
+	}
+
+	return ret, nil
+}
+
+func (t *scenePerformersTable) insertJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
+	for _, fk := range v {
+		if _, err := t.insertJoin(ctx, id, fk); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (t *scenePerformersTable) replaceJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
+	if err := t.destroy(ctx, []int{id}); err != nil {
+		return err
+	}
+
+	return t.insertJoins(ctx, id, v)
+}
+
+func (t *scenePerformersTable) addJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
+	// get existing foreign keys
+	fks, err := t.get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// only add values that are not already present
+	var filtered []models.PerformerScenes
+	for _, vv := range v {
+		found := false
+
+		for _, e := range fks {
+			if vv.PerformerID == e.PerformerID {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			filtered = append(filtered, vv)
+		}
+	}
+	return t.insertJoins(ctx, id, filtered)
+}
+
+func (t *scenePerformersTable) destroyJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
+	for _, vv := range v {
+		q := dialect.Delete(t.table.table).Where(
+			t.idColumn.Eq(id),
+			t.table.table.Col("performer_id").Eq(vv.PerformerID),
+		)
+
+		if _, err := exec(ctx, q); err != nil {
+			return fmt.Errorf("destroying %s: %w", t.table.table.GetTable(), err)
+		}
+	}
+
+	return nil
+}
+
+func (t *scenePerformersTable) modifyJoins(ctx context.Context, id int, v []models.PerformerScenes, mode models.RelationshipUpdateMode) error {
+	switch mode {
+	case models.RelationshipUpdateModeSet:
+		return t.replaceJoins(ctx, id, v)
+	case models.RelationshipUpdateModeAdd:
+		return t.addJoins(ctx, id, v)
+	case models.RelationshipUpdateModeRemove:
+		return t.destroyJoins(ctx, id, v)
+	}
+
+	return nil
+}

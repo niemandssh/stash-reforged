@@ -129,6 +129,11 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 		}
 	}
 
+	// Handle scene performers
+	if len(input.ScenePerformers) > 0 {
+		newScene.ScenePerformers = models.NewRelatedScenePerformers(input.ScenePerformers)
+	}
+
 	var coverImageData []byte
 	if input.CoverImage != nil {
 		var err error
@@ -301,6 +306,14 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 		}
 	}
 
+	// Handle scene performers
+	if translator.hasField("scene_performers") {
+		updatedScene.ScenePerformers = &models.UpdateScenePerformers{
+			ScenePerformers: input.ScenePerformers,
+			Mode:            models.RelationshipUpdateModeSet,
+		}
+	}
+
 	return &updatedScene, nil
 }
 
@@ -398,7 +411,18 @@ outer:
 		r.scheduleSimilarityRecalculation(ctx, sceneID)
 	}
 
-	return scene, nil
+	// Load the updated scene with all relationships
+	finalScene, err := qb.Find(ctx, sceneID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Load all relationships for the updated scene
+	if err := finalScene.LoadRelationships(ctx, qb); err != nil {
+		return nil, err
+	}
+
+	return finalScene, nil
 }
 
 func (r *mutationResolver) sceneUpdateCoverImage(ctx context.Context, s *models.Scene, coverImageData []byte) error {

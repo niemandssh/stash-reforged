@@ -26,11 +26,21 @@ func (r *queryResolver) FindScene(ctx context.Context, id *string, checksum *str
 			if err != nil {
 				return err
 			}
+			if scene != nil {
+				if err := scene.LoadRelationships(ctx, qb); err != nil {
+					return err
+				}
+			}
 		} else if checksum != nil {
 			var scenes []*models.Scene
 			scenes, err = qb.FindByChecksum(ctx, *checksum)
 			if len(scenes) > 0 {
 				scene = scenes[0]
+				if scene != nil {
+					if err := scene.LoadRelationships(ctx, qb); err != nil {
+						return err
+					}
+				}
 			}
 		}
 

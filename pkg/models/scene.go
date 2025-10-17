@@ -151,23 +151,24 @@ type SceneGroupInput struct {
 }
 
 type SceneCreateInput struct {
-	Title        *string           `json:"title"`
-	Code         *string           `json:"code"`
-	Details      *string           `json:"details"`
-	Director     *string           `json:"director"`
-	URL          *string           `json:"url"`
-	Urls         []string          `json:"urls"`
-	Date         *string           `json:"date"`
-	ShootDate    *string           `json:"shoot_date"`
-	Rating100    *int              `json:"rating100"`
-	Organized    *bool             `json:"organized"`
-	IsBroken     *bool             `json:"is_broken"`
-	StudioID     *string           `json:"studio_id"`
-	GalleryIds   []string          `json:"gallery_ids"`
-	PerformerIds []string          `json:"performer_ids"`
-	Movies       []SceneMovieInput `json:"movies"`
-	Groups       []SceneGroupInput `json:"groups"`
-	TagIds       []string          `json:"tag_ids"`
+	Title           *string           `json:"title"`
+	Code            *string           `json:"code"`
+	Details         *string           `json:"details"`
+	Director        *string           `json:"director"`
+	URL             *string           `json:"url"`
+	Urls            []string          `json:"urls"`
+	Date            *string           `json:"date"`
+	ShootDate       *string           `json:"shoot_date"`
+	Rating100       *int              `json:"rating100"`
+	Organized       *bool             `json:"organized"`
+	IsBroken        *bool             `json:"is_broken"`
+	StudioID        *string           `json:"studio_id"`
+	GalleryIds      []string          `json:"gallery_ids"`
+	PerformerIds    []string          `json:"performer_ids"`
+	ScenePerformers []PerformerScenes `json:"scene_performers"`
+	Movies          []SceneMovieInput `json:"movies"`
+	Groups          []SceneGroupInput `json:"groups"`
+	TagIds          []string          `json:"tag_ids"`
 	// This should be a URL or a base64 encoded data URL
 	CoverImage *string        `json:"cover_image"`
 	StashIds   []StashIDInput `json:"stash_ids"`
@@ -210,6 +211,7 @@ type SceneUpdateInput struct {
 	StudioID           *string              `json:"studio_id"`
 	GalleryIds         []string             `json:"gallery_ids"`
 	PerformerIds       []string             `json:"performer_ids"`
+	ScenePerformers    []PerformerScenes    `json:"scene_performers"`
 	Movies             []SceneMovieInput    `json:"movies"`
 	Groups             []SceneGroupInput    `json:"groups"`
 	TagIds             []string             `json:"tag_ids"`

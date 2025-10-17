@@ -303,5 +303,7 @@
         "tags": "{count, plural, one {Tag} other {Tags}}",
         "general_tags": "General Tags",
         "urls": "{count, plural, one {# URL} other {# URLs}}"
-    }
+    },
+    "role_description": "Role Description",
+    "role_description_placeholder": "Role description"
 }

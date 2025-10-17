@@ -1593,5 +1593,7 @@
     "tag_requirements": {
         "title": "Требования к тегам",
         "summary": "Заполнено: {filled}/{total} (минимум {min})"
-    }
+    },
+    "role_description": "Описание роли",
+    "role_description_placeholder": "Описание роли"
 }

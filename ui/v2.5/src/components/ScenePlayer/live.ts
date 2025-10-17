@@ -170,6 +170,7 @@ function offsetMiddleware(player: VideoJsPlayer) {
         const end = buffers.end(i);
         // seek point is in buffer, just seek normally
         if (start <= offsetSeconds && offsetSeconds <= end) {
+          console.log('SETCURRENTTIME: Seeking to offset seconds', offsetSeconds);
           return offsetSeconds;
         }
       }

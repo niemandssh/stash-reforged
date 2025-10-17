@@ -27,6 +27,7 @@ import { Prompt } from "react-router-dom";
 import { ConfigurationContext } from "src/hooks/Config";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { IGroupEntry, SceneGroupTable } from "./SceneGroupTable";
+import { IPerformerEntry, ScenePerformerTable } from "./ScenePerformerTable";
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { objectTitle } from "src/core/files";
 import { galleryTitle } from "src/core/galleries";
@@ -101,6 +102,7 @@ const PerformerTagField: React.FC<PerformerTagFieldProps> = ({
             values={tags}
             onSelect={onSelectPerformerTags}
             isMulti
+            creatable
           />
         </div>
       </Col>
@@ -132,8 +134,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [performers, setPerformers] = useState<Performer[]>([]);
+  const [performerEntries, setPerformerEntries] = useState<IPerformerEntry[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [studio, setStudio] = useState<Studio | null>(null);
+  const [allPerformerTags, setAllPerformerTags] = useState<Map<string, string[]>>(new Map());
+  
   const Scrapers = useListSceneScrapers();
   const [fragmentScrapers, setFragmentScrapers] = useState<GQL.Scraper[]>([]);
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
@@ -194,8 +199,28 @@ export const SceneEditPanel: React.FC<IProps> = ({
     // Update performers only when first initializing or when forced refresh
     if (!hasInitialized) {
       setPerformers(stableScenePerformers ?? []);
+      
+      // Initialize performerEntries from scene_performers if available
+      if ((scene as any).scene_performers) {
+        setPerformerEntries(
+          (scene as any).scene_performers.map((sp: any) => ({
+            performer: sp.performer,
+            small_role: sp.performer.small_role || sp.small_role,
+            role_description: sp.role_description ?? null,
+          }))
+        );
+      }
+
+      // Initialize allPerformerTags from scene data
+      const initialPerformerTags = new Map<string, string[]>();
+      (scene.performer_tag_ids || []).forEach((pt: any) => {
+        if (pt.performer_id && pt.tag_ids) {
+          initialPerformerTags.set(pt.performer_id, pt.tag_ids);
+        }
+      });
+      setAllPerformerTags(initialPerformerTags);
     }
-  }, [stableScenePerformers, hasInitialized]);
+  }, [stableScenePerformers, hasInitialized, (scene as any).scene_performers]);
 
   const stableSceneGroups = useMemo(() => scene.groups, [scene.groups?.map(m => `${m.group.id}-${m.scene_index}`).join(',')]);
 
@@ -239,6 +264,15 @@ export const SceneEditPanel: React.FC<IProps> = ({
     gallery_ids: yup.array(yup.string().required()).defined(),
     studio_id: yup.string().required().nullable(),
     performer_ids: yup.array(yup.string().required()).defined(),
+    scene_performers: yup
+      .array(
+        yup.object({
+          performer_id: yup.string().required(),
+          small_role: yup.boolean().required(),
+          role_description: yup.string().nullable().optional(),
+        })
+      )
+      .defined(),
     groups: yup
       .array(
         yup.object({
@@ -274,12 +308,40 @@ export const SceneEditPanel: React.FC<IProps> = ({
       gallery_ids: (scene.galleries ?? []).map((g) => g.id),
       studio_id: scene.studio?.id ?? null,
       performer_ids: (scene.performers ?? []).map((p) => p.id),
+      scene_performers: ((scene as any).scene_performers ?? []).map((sp: any) => ({
+        performer_id: sp.performer.id,
+        small_role: sp.performer.small_role || sp.small_role,
+        role_description: sp.role_description ?? null,
+      })),
       groups: (scene.groups ?? []).map((m) => {
         return { group_id: m.group.id, scene_index: m.scene_index ?? null };
       }),
-      tag_ids: Array.from(new Set((scene.tags ?? []).map((t) => t.id))),
+      tag_ids: (() => {
+        const allSceneTags = scene.tags ?? [];
+        const performerTagIds = new Set<string>();
+
+
+        // Collect all tag IDs used in performer tags
+        (scene.performer_tag_ids ?? []).forEach((pt: any) => {
+          if (pt.tag_ids) {
+            pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
+          }
+        });
+
+
+        // Include ALL tags (both scene tags and performer tags)
+        const allTagIds = new Set<string>();
+        
+        // Add scene tags
+        allSceneTags.forEach(tag => allTagIds.add(tag.id));
+        
+        // Add performer tags
+        performerTagIds.forEach(tagId => allTagIds.add(tagId));
+
+        return Array.from(allTagIds);
+      })(),
       performer_tag_ids: (scene.performer_tag_ids ?? [])
-        .filter((pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null') // Filter out entries with invalid performer_id
+        .filter((pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null')
         .map((pt: any) => ({
           performer_id: pt.performer_id,
           tag_ids: pt.tag_ids || []
@@ -307,12 +369,55 @@ export const SceneEditPanel: React.FC<IProps> = ({
   // Time fields are not automatically updated - they only update when form is reinitialized
 
 
+  // Calculate regular scene tags (excluding performer tags for display purposes only)
+  const regularSceneTags = useMemo(() => {
+    const allSceneTags = scene.tags ?? [];
+
+    // Convert GQL.TagDataFragment to Tag format for TagSelect
+    const convertedSceneTags = allSceneTags.map(tag => ({
+      id: tag.id,
+      name: tag.name,
+      sort_name: tag.sort_name,
+      aliases: tag.aliases,
+      image_path: tag.image_path,
+      is_pose_tag: tag.is_pose_tag,
+      color: tag.color
+    }));
+
+    const performerTagIds = new Set<string>();
+
+    // Only filter if performer_tag_ids data is actually loaded and has valid structure
+    if (scene.performer_tag_ids && Array.isArray(scene.performer_tag_ids)) {
+      // Collect all tag IDs used in performer tags
+      scene.performer_tag_ids.forEach((pt: any) => {
+        // Check if this is a valid performer tag entry (has performer_id and tag_ids)
+        if (pt && pt.performer_id && pt.tag_ids && Array.isArray(pt.tag_ids)) {
+          pt.tag_ids.forEach((tagId: string) => {
+            if (tagId && typeof tagId === 'string') {
+              performerTagIds.add(tagId);
+            }
+          });
+        }
+      });
+    }
+
+    // Filter out performer tag IDs from scene tags only if we have performer tag data
+    if (performerTagIds.size > 0) {
+      return convertedSceneTags.filter((t) => !performerTagIds.has(t.id));
+    } else {
+      // If no performer tag data loaded yet, show all scene tags
+      return convertedSceneTags;
+    }
+  }, [scene.tags, scene.performer_tag_ids]);
+
   const { tags, updateTagsStateFromScraper, tagsControl, onSetTags, undoTags, redoTags, clearHistory } = useTagsEdit(
-    scene.tags,
+    regularSceneTags,
     (ids) => formik.setFieldValue("tag_ids", ids),
     scene.id,
-    !hasInitialized // Update only when first initializing or when forced refresh
+    false // Disable automatic synchronization - only manual refresh
   );
+
+
 
   const [allTags, setAllTags] = useState<GQL.Tag[]>([]);
 
@@ -376,10 +481,27 @@ export const SceneEditPanel: React.FC<IProps> = ({
       tag_ids: Array.from(new Set(tags.map(tag => tag.id))) // Remove duplicates
     }];
 
-    // Keep all entries, even with empty tag arrays - backend will filter them out
-
+    // Update performer_tag_ids
     formik.setFieldValue("performer_tag_ids", updatedPerformerTags, true);
     formik.setFieldTouched("performer_tag_ids", true);
+
+    // Update allPerformerTags to preserve tags even when performer is removed
+    const tagIds = tags.map(tag => tag.id);
+    setAllPerformerTags(prev => {
+      const newMap = new Map(prev);
+      newMap.set(performerId, tagIds);
+      return newMap;
+    });
+
+    // Update main tag_ids to include all tags (regular + performer tags)
+    const currentMainTags = formik.values.tag_ids || [];
+    const performerTagIds = new Set(tags.map(tag => tag.id));
+    
+    // Add performer tags to main tags if not already present
+    const updatedMainTags = Array.from(new Set([...currentMainTags, ...performerTagIds]));
+    
+    formik.setFieldValue("tag_ids", updatedMainTags, true);
+    formik.setFieldTouched("tag_ids", true);
   }, [formik]);
 
 
@@ -411,6 +533,20 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return sceneImage;
   }, [formik.values.cover_image, scene.paths?.screenshot]);
 
+  const performerEntriesFromFormik = useMemo(() => {
+    return formik.values.scene_performers
+      .map((sp) => {
+        const performer = performerEntries.find((p) => p.performer.id === sp.performer_id);
+        if (!performer) return null;
+        return {
+          performer: performer.performer,
+          small_role: sp.small_role,
+          role_description: sp.role_description,
+        };
+      })
+      .filter((p) => p !== null) as IPerformerEntry[];
+  }, [formik.values.scene_performers, performerEntries]);
+
   const groupEntries = useMemo(() => {
     return formik.values.groups
       .map((m) => {
@@ -437,6 +573,22 @@ export const SceneEditPanel: React.FC<IProps> = ({
       items.map((item) => item.id)
     );
 
+    // Update performerEntries to match the new performers
+    const newPerformerEntries = items.map((performer) => ({
+      performer,
+      small_role: performer.small_role || false,
+      role_description: null,
+    }));
+    setPerformerEntries(newPerformerEntries);
+
+    // Update scene_performers in formik
+    const newScenePerformers = items.map((performer) => ({
+      performer_id: performer.id,
+      small_role: performer.small_role || false,
+      role_description: null,
+    }));
+    formik.setFieldValue("scene_performers", newScenePerformers);
+
     // Update performer tags - remove entries for performers that are no longer selected
     const currentPerformerIds = new Set(items.map(p => p.id));
     const currentPerformerTags = formik.values.performer_tag_ids || [];
@@ -449,6 +601,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     // Mark form as dirty when performers change
     formik.setFieldTouched("performer_ids", true);
     formik.setFieldTouched("performer_tag_ids", true);
+    formik.setFieldTouched("scene_performers", true);
   }
 
   function onSetStudio(item: Studio | null) {
@@ -550,26 +703,66 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   async function onSave(input: InputValues) {
     try {
-      // performer_tag_ids are already in the input from formik
+      
+      // Clean up performer tags for performers that are no longer in the scene
+      const currentPerformerIds = new Set((performerEntries || []).map(p => p.performer.id));
+      const cleanedPerformerTagIds = (input.performer_tag_ids || []).filter((pt: any) => 
+        currentPerformerIds.has(pt.performer_id)
+      );
+      
+      // Get tag IDs that should be removed (from deleted performers) using allPerformerTags
+      const removedPerformerTagIds = new Set<string>();
+      Array.from(allPerformerTags.entries()).forEach(([performerId, tagIds]) => {
+        if (!currentPerformerIds.has(performerId)) {
+          tagIds.forEach(tagId => removedPerformerTagIds.add(tagId));
+        }
+      });
+      
+      // Remove tags of deleted performers from main tag_ids
+      const cleanedTagIds = (input.tag_ids || []).filter(tagId => !removedPerformerTagIds.has(tagId));
+      
+      // Sync performer_ids with scene_performers to avoid data inconsistency
+      const syncedPerformerIds = (input.scene_performers || []).map(sp => sp.performer_id);
+      
+      // Extract scene_performers from input to handle it separately
+      const { scene_performers, ...inputWithoutScenePerformers } = input;
+      
       const inputWithPerformerTags: GQL.SceneUpdateInput = {
-        ...input,
+        ...inputWithoutScenePerformers,
         id: scene.id!,
-        performer_tag_ids: input.performer_tag_ids,
+        tag_ids: cleanedTagIds,
+        performer_ids: syncedPerformerIds,
+        performer_tag_ids: cleanedPerformerTagIds,
+        scene_performers: scene_performers || [],
       };
 
       await onSubmit(inputWithPerformerTags);
-      // Reset form state properly to clear dirty state and prevent unsaved changes warning
+      // Clear form dirty state after successful save
       if (isMountedRef.current) {
+        // Get current values to preserve them
+        const currentValues = { ...formik.values };
+        
+        // Force a complete form reset by calling resetForm with current values
         formik.resetForm({
-          values: formik.values, // Keep current values
-          touched: {}, // Clear touched state
-          errors: {}, // Clear errors
-          status: undefined, // Clear status
+          values: currentValues,
+          touched: {},
+          errors: {},
+          status: undefined
         });
+        
+        // Additional cleanup
         clearHistory();
-        setHasUserInteractedWithPoseTags(false);
         setHasUserInteractedWithTags(false);
+        setHasUserInteractedWithPoseTags(false);
         setHasUserInteractedWithPerformerTags(false);
+        
+        // Force a re-render to ensure formik state is updated
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            formik.setTouched({});
+            formik.setErrors({});
+          }
+        }, 100);
       }
     } catch (e) {
       Toast.error(e);
@@ -891,8 +1084,6 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return <div></div>;
   }, [encodingImage, coverImagePreview, intl]);
 
-  if (isLoading) return <LoadingIndicator />;
-
   const splitProps = {
     labelProps: {
       column: true,
@@ -957,15 +1148,91 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
     const title = intl.formatMessage({ id: "performers" });
     const control = (
-      <PerformerSelect
-        isMulti
-        onSelect={onSetPerformers}
-        values={performers}
+      <ScenePerformerTable
+        value={performerEntries}
+        onUpdate={onSetPerformerEntries}
+        onFieldUpdate={onSetPerformerFieldUpdate}
         ageFromDate={date}
       />
     );
 
-    return renderField("performer_ids", title, control, fullWidthProps);
+    return renderField("scene_performers", title, control, fullWidthProps);
+  }
+
+  function onSetPerformerFieldUpdate(input: IPerformerEntry[]) {
+    // Update only the performer entries and scene_performers without touching tags
+    setPerformerEntries(input);
+
+    const scenePerformers = input.map((p) => ({
+      performer_id: p.performer.id,
+      small_role: p.small_role,
+      role_description: p.role_description ?? null,
+    }));
+
+    formik.setFieldValue("scene_performers", scenePerformers);
+    formik.setFieldTouched("scene_performers", true);
+  }
+
+  function onSetPerformerEntries(input: IPerformerEntry[]) {
+    setPerformerEntries(input);
+
+    const scenePerformers = input.map((p) => ({
+      performer_id: p.performer.id,
+      small_role: p.small_role,
+      role_description: p.role_description ?? null,
+    }));
+
+    formik.setFieldValue("scene_performers", scenePerformers);
+    formik.setFieldTouched("scene_performers", true);
+
+    // Handle performer tags - preserve existing tags and add new performers
+    const currentPerformerTags = formik.values.performer_tag_ids || [];
+    const currentPerformerIds = new Set(currentPerformerTags.map((pt: any) => pt.performer_id));
+    const inputPerformerIds = new Set(input.map(p => p.performer.id));
+    
+    // Keep existing performer tags for performers that are still in the input
+    const preservedPerformerTags = currentPerformerTags.filter((pt: any) => 
+      inputPerformerIds.has(pt.performer_id)
+    );
+    
+    // Find new performers that don't have tags yet
+    const newPerformers = input.filter(p => !currentPerformerIds.has(p.performer.id));
+    
+    // Add performer tag entries for new performers (use saved tags if available)
+    const newPerformerTags = newPerformers.map(p => {
+      const savedTags = allPerformerTags.get(p.performer.id);
+      return {
+        performer_id: p.performer.id,
+        tag_ids: savedTags || []
+      };
+    });
+    
+    // Combine preserved and new performer tags
+    const updatedPerformerTags = [...preservedPerformerTags, ...newPerformerTags];
+    
+    // Final performer tags (newPerformerTags already includes restored tags)
+    const finalPerformerTags = updatedPerformerTags;
+    
+    // Update main tag_ids to include all performer tags
+    const currentMainTags = formik.values.tag_ids || [];
+    const allPerformerTagIds = new Set<string>();
+    finalPerformerTags.forEach((pt: any) => {
+      if (pt.tag_ids) {
+        pt.tag_ids.forEach((tagId: string) => allPerformerTagIds.add(tagId));
+      }
+    });
+    
+    // Add performer tags to main tags if not already present
+    const updatedMainTags = Array.from(new Set([...currentMainTags, ...allPerformerTagIds]));
+    
+    
+    formik.setFieldValue("performer_tag_ids", finalPerformerTags, true);
+    formik.setFieldTouched("performer_tag_ids", true);
+    formik.setFieldValue("tag_ids", updatedMainTags, true);
+    formik.setFieldTouched("tag_ids", true);
+    
+    // Force formik to re-render by triggering validation
+    formik.validateForm();
   }
 
   function onSetGroupEntries(input: IGroupEntry[]) {
@@ -994,10 +1261,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
     const currentSceneTagIds = new Set((formik.values.tag_ids || tags.map(t => t.id)));
     const currentPerformerTagIds = new Set<string>();
 
-    // Use current performer tag IDs from form or scene data
-    const sourcePerformerTags = formik.values.performer_tag_ids?.length > 0
-      ? formik.values.performer_tag_ids
-      : scene.performer_tag_ids;
+    // Always use formik values to prevent overwriting user changes
+    const sourcePerformerTags = formik.values.performer_tag_ids || [];
 
     // Add all performer tag IDs
     (sourcePerformerTags || []).forEach((pt: any) => {
@@ -1013,11 +1278,73 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
   }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, scene.performer_tag_ids, allTags]);
 
+  // For TagRequirementsIndicator - use all scene tags including original data
+  const allSceneTagsForRequirements = useMemo(() => {
+    const sceneTagIds = new Set((scene.tags || []).map(tag => tag.id));
+    const performerTagIds = new Set<string>();
+
+    // Add all performer tag IDs from scene data
+    (scene.performer_tag_ids || []).forEach((pt: any) => {
+      if (pt.tag_ids) {
+        pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
+      }
+    });
+
+    // Combine and deduplicate
+    const allTagIds = new Set([...sceneTagIds, ...performerTagIds]);
+
+    // Convert back to Tag objects
+    return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
+  }, [scene.tags, scene.performer_tag_ids, allTags]);
+
+  // Memoize performer tag fields to avoid unnecessary re-renders
+  const performerTagFields = useMemo(() => {
+    // Always use formik values to prevent overwriting user changes
+    const sourceTagIds = formik.values.performer_tag_ids || [];
+    const validPerformerTagIds = sourceTagIds?.filter(
+      (pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null'
+    ) || [];
+
+    // Precompute performer tag data
+    const performerTagDataMap = new Map<string, any>();
+    (performerEntries || []).filter(performer => performer.performer.id && performer.performer.id !== 'undefined' && performer.performer.id !== 'null').forEach(performer => {
+      const performerTagData = validPerformerTagIds.find(
+        (pt: any) => pt.performer_id === performer.performer.id
+      );
+      performerTagDataMap.set(performer.performer.id, performerTagData);
+    });
+
+    return (performerEntries || []).filter(performer => performer.performer.id && performer.performer.id !== 'undefined' && performer.performer.id !== 'null').map(performer => {
+      const performerTagData = performerTagDataMap.get(performer.performer.id);
+      const currentTags = performerTagData ? (Array.from(new Set(performerTagData.tag_ids
+        .filter((id: string) => id && typeof id === 'string' && id !== 'undefined' && id.trim() !== '') // Filter out invalid IDs
+      ))
+        // @ts-ignore
+        .map((id: string) => allTags.find(t => t.id === id))
+        .filter((t): t is GQL.Tag => !!t)) as Tag[] : [];
+
+      return (
+        <PerformerTagField
+          key={`${performer.performer.id}-${performer.performer.name}-${currentTags.length}`}
+          performer={performer.performer}
+          tags={currentTags}
+          sceneId={scene.id}
+          hasInitialized={hasInitialized}
+          allTags={allTags}
+          fullWidthProps={fullWidthProps}
+          onTagsChange={(tags) => {
+            updatePerformerTags(performer.performer.id, tags);
+          }}
+        />
+      );
+    });
+  }, [performerEntries, formik.values.performer_tag_ids, allTags, scene.id, hasInitialized, fullWidthProps, updatePerformerTags]);
+
   function renderTagsField() {
     const title = (
       <div className="d-flex align-items-center w-100 justify-content-between" style={{ paddingRight: "15px" }}>
         <FormattedMessage id="tags" />
-        <TagRequirementsIndicator tags={allSceneTags} colorPresets={colorPresets} />
+        <TagRequirementsIndicator tags={allSceneTagsForRequirements} colorPresets={colorPresets} />
       </div>
     );
 
@@ -1113,6 +1440,10 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField(fieldName, title, control);
   }
 
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
   return (
     <div id="scene-edit-details">
       <Prompt
@@ -1187,47 +1518,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
             {renderTagsField()}
 
-            {(() => {
-              // Precompute currentTags for all performers to avoid hook order issues
-              const sourceTagIds = formik.values.performer_tag_ids?.length > 0 ? formik.values.performer_tag_ids : scene.performer_tag_ids;
-              const validPerformerTagIds = sourceTagIds?.filter(
-                (pt: any) => pt.performer_id && pt.performer_id !== 'undefined' && pt.performer_id !== 'null'
-              ) || [];
-
-              // Precompute performer tag data without useMemo to avoid hook order issues
-              const performerTagDataMap = new Map<string, any>();
-              (scene.performers || []).filter(performer => !performer.small_role && performer.id && performer.id !== 'undefined' && performer.id !== 'null').forEach(performer => {
-                const performerTagData = validPerformerTagIds.find(
-                  (pt: any) => pt.performer_id === performer.id
-                );
-                performerTagDataMap.set(performer.id, performerTagData);
-              });
-
-              return (scene.performers || []).filter(performer => !performer.small_role && performer.id && performer.id !== 'undefined' && performer.id !== 'null').map(performer => {
-                const performerTagData = performerTagDataMap.get(performer.id);
-                const currentTags = performerTagData ? (Array.from(new Set(performerTagData.tag_ids
-                  .filter((id: string) => id && typeof id === 'string' && id !== 'undefined' && id.trim() !== '') // Filter out invalid IDs
-                ))
-                  // @ts-ignore
-                  .map((id: string) => allTags.find(t => t.id === id))
-                  .filter((t): t is GQL.Tag => !!t)) as Tag[] : [];
-
-                return (
-                  <PerformerTagField
-                    key={performer.id}
-                    performer={performer}
-                    tags={currentTags}
-                    sceneId={scene.id}
-                    hasInitialized={hasInitialized}
-                    allTags={allTags}
-                    fullWidthProps={fullWidthProps}
-                    onTagsChange={(tags) => {
-                      updatePerformerTags(performer.id, tags);
-                    }}
-                  />
-                );
-              });
-            })()}
+            {performerTagFields}
 
             {renderPoseTagsField()}
 
