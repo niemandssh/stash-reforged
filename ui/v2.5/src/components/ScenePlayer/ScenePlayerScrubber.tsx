@@ -21,6 +21,7 @@ interface IScenePlayerScrubberProps {
   time: number;
   onSeek: (seconds: number) => void;
   onScroll: () => void;
+  tagColors: { [tag: string]: string };
 }
 
 interface ISceneSpriteItem {
@@ -34,6 +35,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   time,
   onSeek,
   onScroll,
+  tagColors,
 }) => {
   const contentEl = useRef<HTMLDivElement>(null);
   const indicatorEl = useRef<HTMLDivElement>(null);
@@ -364,6 +366,34 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     return segments;
   }
 
+  function renderMarkerSegments() {
+    if (!file.duration || file.duration <= 0) return null;
+
+    const { duration } = file;
+    const totalWidth = width;
+
+    return scene.scene_markers
+      .filter((marker) => marker.end_seconds)
+      .map((marker) => {
+        const left = (marker.seconds / duration) * totalWidth;
+        const segmentWidth =
+          ((marker.end_seconds! - marker.seconds) / duration) * totalWidth;
+        const color = tagColors[marker.primary_tag.name];
+
+        return (
+          <div
+            key={`segment-${marker.id}`}
+            className="scrubber-marker-segment"
+            style={{
+              left: `${left}px`,
+              width: `${segmentWidth}px`,
+              backgroundColor: color,
+            }}
+          />
+        );
+      });
+  }
+
   return (
     <div className="scrubber-wrapper">
       <Button
@@ -385,9 +415,12 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
         />
         <div className="scrubber-trimmed-segments">
           {renderTrimmedSegments()}
+          {renderMarkerSegments()}
         </div>
         <div ref={indicatorEl} id="scrubber-position-indicator" />
-        <div id="scrubber-current-position" />
+        <div id="scrubber-current-position">
+          <span>{TextUtils.secondsToTimestamp(time)}</span>
+        </div>
         <div className="scrubber-viewport">
           <div ref={sliderEl} className="scrubber-slider">
             <div className="scrubber-tags">{renderTags()}</div>

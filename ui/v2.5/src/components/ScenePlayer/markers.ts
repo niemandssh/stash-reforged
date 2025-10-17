@@ -23,7 +23,7 @@ class MarkersPlugin extends videojs.getPlugin("plugin") {
 
   private layerHeight: number = 9;
 
-  private tagColors: { [tag: string]: string } = {};
+  public tagColors: { [tag: string]: string } = {};
 
   constructor(player: VideoJsPlayer) {
     super(player);

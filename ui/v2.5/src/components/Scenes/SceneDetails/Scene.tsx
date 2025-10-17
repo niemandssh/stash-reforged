@@ -141,7 +141,7 @@ const VideoFrameRateResolution: React.FC<{
 
 interface IProps {
   scene: GQL.SceneDataFragment;
-  setTimestamp: (num: number) => void;
+  setTimestamp: (num: number, programmatic?: boolean) => void;
   queueScenes: QueuedScene[];
   onQueueNext: () => void;
   onQueuePrevious: () => void;
@@ -157,6 +157,10 @@ interface IProps {
   setCollapsed: (state: boolean) => void;
   setContinuePlaylist: (value: boolean) => void;
   onSaved?: () => Promise<void> | void;
+  onPlayMarkers: (markers: GQL.SceneMarkerDataFragment[]) => void;
+  onStopMarkers: () => void;
+  playingTagId?: string;
+  onPlayAllMarkers: (markers: GQL.SceneMarkerDataFragment[]) => void;
 }
 
 interface ISceneParams {
@@ -187,6 +191,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     setCollapsed,
     setContinuePlaylist,
     onSaved,
+    onPlayMarkers,
+    onStopMarkers,
+    playingTagId,
+    onPlayAllMarkers,
   } = props;
 
   const Toast = useToast();
@@ -382,7 +390,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   };
 
   function onClickMarker(marker: GQL.SceneMarkerDataFragment) {
-    setTimestamp(marker.seconds);
+    setTimestamp(marker.seconds, true);
   }
 
   async function onRescan() {
@@ -767,6 +775,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <SceneMarkersPanel
               sceneId={scene.id}
               onClickMarker={onClickMarker}
+              onPlayMarkers={onPlayMarkers}
+              onStopMarkers={onStopMarkers}
+              playingTagId={playingTagId}
+              onPlayAllMarkers={onPlayAllMarkers}
               isVisible={activeTabKey === "scene-markers-panel"}
             />
           </Tab.Pane>
@@ -982,8 +994,14 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const [hideScrubber, setHideScrubber] = useState(
     !(configuration?.interface.showScrubber ?? true)
   );
+  const [markerPlaylist, setMarkerPlaylist] = useState<
+    GQL.SceneMarkerDataFragment[] | undefined
+  >();
+  const [playingTagId, setPlayingTagId] = useState<string | undefined>();
+  const [initialPlaylistIndex, setInitialPlaylistIndex] = useState<number>(0);
 
-  const _setTimestamp = useRef<(value: number) => void>();
+  const _setTimestamp =
+    useRef<(value: number, programmatic?: boolean) => void>();
   const initialTimestamp = useMemo(() => {
     const t = queryParams.get("t");
     if (!t) return 0;
@@ -1005,15 +1023,133 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     [queueScenes, id]
   );
 
-  function getSetTimestamp(fn: (value: number) => void) {
+  function getSetTimestamp(
+    fn: (value: number, programmatic?: boolean) => void
+  ) {
     _setTimestamp.current = fn;
   }
 
-  function setTimestamp(value: number) {
+  function setTimestamp(value: number, programmatic?: boolean) {
     if (_setTimestamp.current) {
-      _setTimestamp.current(value);
+      _setTimestamp.current(value, programmatic);
     }
   }
+
+  function onPlayMarkers(markers: GQL.SceneMarkerDataFragment[]) {
+    const sortedMarkers = [...markers].sort((a, b) => a.seconds - b.seconds);
+    if (sortedMarkers.length === 0) return;
+
+    const newTagId = sortedMarkers[0].primary_tag.id;
+    if (playingTagId === newTagId) {
+      // Already playing this tag, do nothing
+      return;
+    }
+
+    // If switching from "Play All" to a specific tag, always start from the first marker
+    if (playingTagId === "__ALL__") {
+      setMarkerPlaylist(sortedMarkers);
+      setPlayingTagId(newTagId);
+      setInitialPlaylistIndex(0);
+      setTimestamp(sortedMarkers[0].seconds, true);
+      return;
+    }
+
+    const getMarkerEndTime = (
+      marker: GQL.SceneMarkerDataFragment,
+      index: number
+    ) => {
+      if (marker.end_seconds) {
+        return marker.end_seconds;
+      }
+      if (index < sortedMarkers.length - 1) {
+        return sortedMarkers[index + 1].seconds;
+      }
+      return marker.seconds + 5; // Default duration for last point marker
+    };
+
+    const currentTime = getPlayerPosition();
+
+    // Check if we are already inside one of the markers for this tag
+    const currentMarkerIndex = sortedMarkers.findIndex((marker, index) => {
+      const endTime = getMarkerEndTime(marker, index);
+      return currentTime >= marker.seconds && currentTime < endTime;
+    });
+
+    if (currentMarkerIndex !== -1) {
+      // We are inside a marker, just start the playlist mode without seeking
+      setMarkerPlaylist(sortedMarkers);
+      setPlayingTagId(sortedMarkers[currentMarkerIndex].primary_tag.id);
+      setInitialPlaylistIndex(currentMarkerIndex);
+    } else {
+      // We are not in a marker, find the next one to play
+      let nextMarkerToPlay = sortedMarkers.find(
+        (m) => m.seconds >= currentTime
+      );
+      let startIndex = sortedMarkers.findIndex(
+        (m) => m.seconds >= currentTime
+      );
+
+      if (!nextMarkerToPlay) {
+        // Current time is after all markers, loop back to the first one
+        nextMarkerToPlay = sortedMarkers[0];
+        startIndex = 0;
+      }
+
+      setMarkerPlaylist(sortedMarkers);
+      setPlayingTagId(nextMarkerToPlay.primary_tag.id);
+      setInitialPlaylistIndex(startIndex);
+      setTimestamp(nextMarkerToPlay.seconds, true);
+    }
+  }
+
+  const onPlayAllMarkers = (allMarkers: GQL.SceneMarkerDataFragment[]) => {
+    const markers = allMarkers.filter((m) => m.end_seconds != null);
+    if (markers.length === 0) return;
+
+    // Sort by start time
+    const sortedMarkers = [...markers].sort((a, b) => a.seconds - b.seconds);
+
+    // Merge overlapping intervals
+    const mergedMarkers: GQL.SceneMarkerDataFragment[] = [];
+    if (sortedMarkers.length > 0) {
+      let currentMerge = { ...sortedMarkers[0] };
+
+      for (let i = 1; i < sortedMarkers.length; i++) {
+        const nextMarker = sortedMarkers[i];
+        if (nextMarker.seconds <= currentMerge.end_seconds!) {
+          // Overlap or contiguous, extend the current merge
+          currentMerge.end_seconds = Math.max(
+            currentMerge.end_seconds!,
+            nextMarker.end_seconds!
+          );
+        } else {
+          // No overlap, push the current merge and start a new one
+          mergedMarkers.push(currentMerge);
+          currentMerge = { ...nextMarker };
+        }
+      }
+      mergedMarkers.push(currentMerge);
+    }
+
+    const currentTime = getPlayerPosition();
+    let nextMarkerToPlay = mergedMarkers.find((m) => m.seconds >= currentTime);
+    let startIndex = mergedMarkers.findIndex((m) => m.seconds >= currentTime);
+
+    if (!nextMarkerToPlay) {
+      nextMarkerToPlay = mergedMarkers[0];
+      startIndex = 0;
+    }
+
+    setMarkerPlaylist(mergedMarkers);
+    setPlayingTagId("__ALL__");
+    setInitialPlaylistIndex(startIndex === -1 ? 0 : startIndex);
+    setTimestamp(nextMarkerToPlay.seconds, true);
+  };
+
+  const onStopMarkers = () => {
+    setMarkerPlaylist(undefined);
+    setPlayingTagId(undefined);
+  };
 
   // set up hotkeys
   useEffect(() => {
@@ -1219,6 +1355,10 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
         collapsed={collapsed}
         setCollapsed={setCollapsed}
         setContinuePlaylist={setContinuePlaylist}
+        onPlayMarkers={onPlayMarkers}
+        onStopMarkers={onStopMarkers}
+        playingTagId={playingTagId}
+        onPlayAllMarkers={onPlayAllMarkers}
         onSaved={async () => {
           // force refetch immediately after save to provide latest data to form
           await refetch();
@@ -1239,6 +1379,9 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           onPlayScene={(sceneId) => loadScene(sceneId, true)}
           viewedScenes={viewedScenes}
           onMarkSceneViewed={handleMarkSceneViewed}
+          markerPlaylist={markerPlaylist}
+          initialPlaylistIndex={initialPlaylistIndex}
+          onClearMarkerPlaylist={onStopMarkers}
         />
       </div>
     </div>

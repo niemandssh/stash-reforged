@@ -30,6 +30,13 @@ $sceneTabWidth: 450px;
   position: relative;
   width: 100%;
 
+  .stop-playlist-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+  }
+
   @media (min-width: 1200px) {
     height: 100%;
   }
@@ -486,6 +493,22 @@ $sceneTabWidth: 450px;
   position: absolute;
   width: 2px;
   z-index: 1;
+
+  span {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    color: #fff;
+    font-size: 11px;
+    left: 50%;
+    padding: 3px 9px;
+    position: absolute;
+    top: 94px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    font-weight: 600;
+  }
 }
 
 .scrubber-viewport {
@@ -499,6 +522,7 @@ $sceneTabWidth: 450px;
   left: 0;
   position: absolute;
   width: 100%;
+  z-index: 10;
 }
 
 .scrubber-tags {
@@ -521,6 +545,13 @@ $sceneTabWidth: 450px;
   left: 0;
   position: absolute;
   right: 0;
+}
+
+.scrubber-marker-segment {
+  height: 100%;
+  position: absolute;
+  top: 0;
+  opacity: 0.7;
 }
 
 .scrubber-trimmed-segments {
@@ -672,14 +703,17 @@ $sceneTabWidth: 450px;
   position: absolute;
   transform: translateX(-50%);
   white-space: nowrap;
+  opacity: 0.6;
+  transition: 0.2s ease;
 
   &:hover {
-    background-color: #444;
+    opacity: 1;
+    background-color: #000;
     z-index: 1;
   }
 
   &:hover::after {
-    border-top: solid 5px #444;
+    border-top-color: #000;
     z-index: 1;
   }
 

@@ -7,6 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { Button } from "react-bootstrap";
+import { FormattedMessage } from "react-intl";
 import videojs, { VideoJsPlayer, VideoJsPlayerOptions } from "video.js";
 import useScript from "src/hooks/useScript";
 import "videojs-contrib-dash";
@@ -18,6 +20,8 @@ import "./PlaylistButtons";
 import "./source-selector";
 import "./persist-volume";
 import MarkersPlugin, { type IMarker } from "./markers";
+import { Icon } from "src/components/Shared/Icon";
+import { faStop } from "@fortawesome/free-solid-svg-icons";
 void MarkersPlugin;
 import "./vtt-thumbnails";
 import "./big-buttons";
@@ -229,13 +233,18 @@ interface IScenePlayerProps {
   autoplay?: boolean;
   permitLoop?: boolean;
   initialTimestamp: number;
-  sendSetTimestamp: (setTimestamp: (value: number) => void) => void;
+  sendSetTimestamp: (
+    setTimestamp: (value: number, programmatic?: boolean) => void
+  ) => void;
   onComplete: () => void;
   onNext: () => void;
   onPrevious: () => void;
   onPlayScene?: (sceneId: string) => void;
   viewedScenes?: Set<string>;
   onMarkSceneViewed?: (sceneId: string) => void;
+  markerPlaylist?: GQL.SceneDataFragment["scene_markers"];
+  initialPlaylistIndex?: number;
+  onClearMarkerPlaylist: () => void;
 }
 
 export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
@@ -253,6 +262,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     onPlayScene,
     viewedScenes = new Set(),
     onMarkSceneViewed,
+    markerPlaylist,
+    initialPlaylistIndex = 0,
+    onClearMarkerPlaylist,
   }) => {
     const { configuration } = useContext(ConfigurationContext);
     const interfaceConfig = configuration?.interface;
@@ -283,6 +295,36 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const [fullscreen, setFullscreen] = useState(false);
     const [showScrubber, setShowScrubber] = useState(false);
     const [showNextSceneOverlay, setShowNextSceneOverlay] = useState(false);
+    const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
+    const activePlaylist = useRef<GQL.SceneDataFragment["scene_markers"]>();
+    const programmaticSeek = useRef(false);
+    const [tagColors, setTagColors] = useState<{ [tag: string]: string }>({});
+
+    const getMarkerEndTime = (
+      marker: GQL.SceneMarkerDataFragment,
+      nextMarker?: GQL.SceneMarkerDataFragment
+    ) => {
+      if (marker.end_seconds) {
+        return marker.end_seconds;
+      }
+      if (nextMarker) {
+        return nextMarker.seconds;
+      }
+      // For last marker if it's a point marker, give it 5 seconds.
+      return marker.seconds + 5;
+    };
+
+    useEffect(() => {
+      activePlaylist.current = markerPlaylist;
+      if (markerPlaylist) {
+        setCurrentPlaylistIndex(initialPlaylistIndex);
+      }
+    }, [markerPlaylist, initialPlaylistIndex]);
+
+    const stopPlaylist = useCallback(() => {
+      activePlaylist.current = undefined;
+      onClearMarkerPlaylist();
+    }, [onClearMarkerPlaylist]);
 
     const started = useRef(false);
     const auto = useRef(false);
@@ -362,9 +404,12 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     }, [hideScrubberOverride, fullscreen]);
 
     useEffect(() => {
-      sendSetTimestamp((value: number) => {
+      sendSetTimestamp((value: number, programmatic?: boolean) => {
         const player = getPlayer();
         if (player && value >= 0) {
+          if (programmatic) {
+            programmaticSeek.current = true;
+          }
           if (player.hasStarted() && player.paused()) {
             player.currentTime(value);
           } else {
@@ -677,14 +722,67 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       function seeked(this: VideoJsPlayer) {
         // Seeking completed - check if seeking backward
         const currentTime = this.currentTime();
-        console.log('SEEKED called', this.currentTime());
+        console.log("SEEKED called", this.currentTime());
         if (showNextSceneOverlay && currentTime < lastSeekTime.current) {
-          console.log('SEEKED BACKWARD:', { currentTime, lastSeekTime: lastSeekTime.current });
+          console.log("SEEKED BACKWARD:", {
+            currentTime,
+            lastSeekTime: lastSeekTime.current,
+          });
           setShowNextSceneOverlay(false);
         }
         isSeeking.current = false;
-      }
 
+        if (programmaticSeek.current) {
+          programmaticSeek.current = false;
+          return;
+        }
+
+        if (!activePlaylist.current) return;
+
+        const playlist = activePlaylist.current;
+
+        // Check if seek is within any marker of the playlist
+        for (let i = 0; i < playlist.length; i++) {
+          const marker = playlist[i];
+          const nextMarker =
+            i < playlist.length - 1 ? playlist[i + 1] : undefined;
+          const endTime = getMarkerEndTime(marker, nextMarker);
+
+          if (currentTime >= marker.seconds && currentTime <= endTime) {
+            // Seek is inside a marker, just update index and we're good.
+            if (i !== currentPlaylistIndex) {
+              setCurrentPlaylistIndex(i);
+            }
+            return;
+          }
+        }
+
+        // If we got here, the seek was outside of any marker in the playlist.
+        // Find the closest marker to jump to.
+        let closestMarker = null;
+        let minDistance = Infinity;
+
+        for (const marker of playlist) {
+          const distance = Math.abs(marker.seconds - currentTime);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestMarker = marker;
+          }
+        }
+
+        if (closestMarker) {
+          const newIndex = playlist.indexOf(closestMarker);
+          if (newIndex !== -1) {
+            programmaticSeek.current = true;
+            this.currentTime(closestMarker.seconds);
+            setCurrentPlaylistIndex(newIndex);
+          } else {
+            stopPlaylist();
+          }
+        } else {
+          stopPlaylist();
+        }
+      }
 
       // Additional seek backward detection for progress bar interactions
       function onProgressInteraction(this: VideoJsPlayer) {
@@ -700,6 +798,32 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       function timeupdate(this: VideoJsPlayer) {
         const currentTime = this.currentTime();
         setTime(currentTime);
+
+        if (activePlaylist.current && activePlaylist.current.length > 0) {
+          const playlist = activePlaylist.current;
+          const currentMarker = playlist[currentPlaylistIndex];
+
+          if (!currentMarker) return;
+
+          const nextMarker =
+            currentPlaylistIndex < playlist.length - 1
+              ? playlist[currentPlaylistIndex + 1]
+              : undefined;
+
+          const endTime = getMarkerEndTime(currentMarker, nextMarker);
+
+          if (currentTime >= endTime) {
+            if (currentPlaylistIndex < playlist.length - 1) {
+              const nextMarkerToPlay = playlist[currentPlaylistIndex + 1];
+              programmaticSeek.current = true;
+              this.currentTime(nextMarkerToPlay.seconds);
+              setCurrentPlaylistIndex(currentPlaylistIndex + 1);
+            } else {
+              stopPlaylist();
+              this.pause();
+            }
+          }
+        }
 
         // Check for seeking backward - close overlay on ANY backward movement
         if (showNextSceneOverlay && currentTime < previousTime.current) {
@@ -1004,6 +1128,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       // Wait for colors
       markers.findColors(uniqueTagNames);
+      setTagColors(markers.tagColors);
 
       const showRangeTags =
         !ScreenUtils.isMobile() && (uiConfig?.showRangeMarkers ?? true);
@@ -1237,6 +1362,15 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         onClick={handleVideoPlayerClick}
       >
         <div className="video-wrapper" ref={videoRef}>
+          {markerPlaylist && (
+            <Button
+              className="stop-playlist-button btn-danger"
+              onClick={stopPlaylist}
+            >
+              <Icon icon={faStop} className="mr-2" />
+              <FormattedMessage id="actions.exit_fragment_mode" />
+            </Button>
+          )}
           {showNextSceneOverlay && nextScene && (
             <NextSceneOverlay
               nextScene={nextScene}
@@ -1256,6 +1390,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             time={time}
             onSeek={onScrubberSeek}
             onScroll={onScrubberScroll}
+            tagColors={tagColors}
           />
         )}
         {isInTrimmedSegment && (

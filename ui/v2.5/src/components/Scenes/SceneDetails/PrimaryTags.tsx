@@ -4,17 +4,25 @@ import * as GQL from "src/core/generated-graphql";
 import { Button, Badge, Card } from "react-bootstrap";
 import TextUtils from "src/utils/text";
 import { markerTitle } from "src/core/markers";
+import { Icon } from "src/components/Shared/Icon";
+import { faPlay, faStop } from "@fortawesome/free-solid-svg-icons";
 
 interface IPrimaryTags {
   sceneMarkers: GQL.SceneMarkerDataFragment[];
   onClickMarker: (marker: GQL.SceneMarkerDataFragment) => void;
   onEdit: (marker: GQL.SceneMarkerDataFragment) => void;
+  onPlay: (markers: GQL.SceneMarkerDataFragment[]) => void;
+  onStop: () => void;
+  playingTagId?: string;
 }
 
 export const PrimaryTags: React.FC<IPrimaryTags> = ({
   sceneMarkers,
   onClickMarker,
   onEdit,
+  onPlay,
+  onStop,
+  playingTagId,
 }) => {
   if (!sceneMarkers?.length) return <div />;
 
@@ -63,9 +71,22 @@ export const PrimaryTags: React.FC<IPrimaryTags> = ({
       );
     });
 
+    const isPlaying = playingTagId === id;
+
     return (
       <Card className="primary-card col-12 col-sm-6 col-xl-6" key={id}>
-        <h3>{primaryTagNames[id]}</h3>
+        <div className="d-flex">
+          <h3>{primaryTagNames[id]}</h3>
+          <Button
+            variant="link"
+            className="ml-auto"
+            onClick={() =>
+              isPlaying ? onStop() : onPlay(markersByTag[id])
+            }
+          >
+            <Icon icon={isPlaying ? faStop : faPlay} />
+          </Button>
+        </div>
         <Card.Body className="primary-card-body">{markers}</Card.Body>
       </Card>
     );
