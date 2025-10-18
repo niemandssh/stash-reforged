@@ -35,7 +35,6 @@ const minHeight int = 480
 func (f *FFMpeg) InitHWSupport(ctx context.Context) {
 	var hwCodecSupport []VideoCodec
 
-	// Note that the first compatible codec is returned, so order is important
 	for _, codec := range []VideoCodec{
 		VideoCodecN264H,
 		VideoCodecN264,
@@ -49,17 +48,20 @@ func (f *FFMpeg) InitHWSupport(ctx context.Context) {
 	} {
 		var args Args
 		args = append(args, "-hide_banner")
-		args = args.LogLevel(LogLevelWarning)
-		args = f.hwDeviceInit(args, codec, false)
+		args = args.LogLevel(LogLevelError)
 		args = args.Format("lavfi")
-		vFile := &models.VideoFile{Width: 1280, Height: 720}
-		args = args.Input(fmt.Sprintf("color=c=red:s=%dx%d", vFile.Width, vFile.Height))
+		args = args.Input("color=c=red:s=640x480")
 		args = args.Duration(0.1)
+		args = args.VideoCodec(codec)
 
-		// Test scaling
-		videoFilter := f.hwMaxResFilter(codec, vFile, minHeight, false)
-		args = append(args, CodecInit(codec)...)
-		args = args.VideoFilter(videoFilter)
+		switch codec {
+		case VideoCodecN264, VideoCodecN264H:
+			args = append(args, "-preset", "fast")
+		case VideoCodecI264, VideoCodecI264C:
+			args = append(args, "-preset", "fast")
+		case VideoCodecV264:
+		case VideoCodecM264:
+		}
 
 		args = args.Format("null")
 		args = args.Output("-")
@@ -69,24 +71,18 @@ func (f *FFMpeg) InitHWSupport(ctx context.Context) {
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
-		if err := cmd.Run(); err != nil {
-			errOutput := stderr.String()
-
-			if len(errOutput) == 0 {
-				errOutput = err.Error()
-			}
-
-			logger.Debugf("[InitHWSupport] Codec %s not supported. Error output:\n%s", codec, errOutput)
-		} else {
+		if err := cmd.Run(); err == nil {
 			hwCodecSupport = append(hwCodecSupport, codec)
 		}
 	}
 
-	outstr := fmt.Sprintf("[InitHWSupport] Supported HW codecs [%d]:\n", len(hwCodecSupport))
-	for _, codec := range hwCodecSupport {
-		outstr += fmt.Sprintf("\t%s - %s\n", codec.Name, codec.CodeName)
+	if len(hwCodecSupport) > 0 {
+		outstr := fmt.Sprintf("[InitHWSupport] Found %d hardware codec(s):", len(hwCodecSupport))
+		for _, codec := range hwCodecSupport {
+			outstr += fmt.Sprintf(" %s", codec.CodeName)
+		}
+		logger.Info(outstr)
 	}
-	logger.Info(outstr)
 
 	f.hwCodecSupport = hwCodecSupport
 }
@@ -392,4 +388,16 @@ func (f *FFMpeg) hwCodecWEBMCompatible() *VideoCodec {
 		}
 	}
 	return nil
+}
+
+func (f *FFMpeg) HWCodecMP4Compatible() *VideoCodec {
+	return f.hwCodecMP4Compatible()
+}
+
+func (f *FFMpeg) HWCodecHLSCompatible() *VideoCodec {
+	return f.hwCodecHLSCompatible()
+}
+
+func (f *FFMpeg) HWCodecWEBMCompatible() *VideoCodec {
+	return f.hwCodecWEBMCompatible()
 }

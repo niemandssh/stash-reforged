@@ -661,7 +661,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
-        {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || (scene.is_broken && !isHLSVideo(scene))) && (
+        {scene.files.length > 0 && (scene.files[0]?.format !== "mp4" || scene.files[0]?.video_codec !== "h264" || (scene.is_broken && !isHLSVideo(scene))) && (
           <Dropdown.Item
             key="convert-to-mp4"
             className="bg-secondary text-white"
@@ -921,7 +921,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           </div>
 
           <div className="scene-subheader">
-            <span className="date" data-value={scene.date}>
+            <span className="date mr-3" data-value={scene.date}>
               {!!scene.date && (
                 <FormattedDate
                   value={scene.date}

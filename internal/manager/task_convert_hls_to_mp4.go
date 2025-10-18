@@ -319,6 +319,118 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 	return nil
 }
 
+func (t *ConvertHLSToMP4Task) getHardwareCodecForConversion() *ffmpeg.VideoCodec {
+	codecs := []ffmpeg.VideoCodec{
+		ffmpeg.VideoCodecN264,
+		ffmpeg.VideoCodecI264,
+		ffmpeg.VideoCodecV264,
+		ffmpeg.VideoCodecA264,
+	}
+
+	for _, codec := range codecs {
+		logger.Infof("[convert] testing hardware codec for HLS: %s (%s)", codec.Name, codec.CodeName)
+		if t.testHardwareCodec(codec) {
+			logger.Infof("[convert] ✓ hardware codec %s is available for HLS", codec.Name)
+			return &codec
+		}
+	}
+
+	logger.Infof("[convert] no hardware codec available for HLS")
+	return nil
+}
+
+func (t *ConvertHLSToMP4Task) testHardwareCodec(codec ffmpeg.VideoCodec) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var args ffmpeg.Args
+	args = append(args, "-hide_banner", "-loglevel", "error")
+	args = args.Format("lavfi")
+	args = args.Input("color=c=black:s=320x240")
+	args = append(args, "-t", "0.1")
+	args = args.VideoCodec(codec)
+
+	switch codec {
+	case ffmpeg.VideoCodecN264:
+		args = append(args, "-preset", "fast", "-b:v", "1M")
+	case ffmpeg.VideoCodecI264:
+		args = append(args, "-preset", "fast", "-global_quality", "20")
+	case ffmpeg.VideoCodecV264:
+		args = append(args, "-qp", "20")
+	case ffmpeg.VideoCodecA264:
+		args = append(args, "-quality", "balanced")
+	}
+
+	args = args.Format("null")
+	args = args.Output("-")
+
+	cmd := t.FFMpeg.Command(ctx, args)
+	err := cmd.Run()
+
+	return err == nil
+}
+
+func (t *ConvertHLSToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h int) ffmpeg.Args {
+	var videoArgs ffmpeg.Args
+
+	if w != 0 && h != 0 {
+		var videoFilter ffmpeg.VideoFilter
+		videoFilter = videoFilter.ScaleDimensions(w, h)
+		videoArgs = videoArgs.VideoFilter(videoFilter)
+	}
+
+	switch codec {
+	case ffmpeg.VideoCodecN264, ffmpeg.VideoCodecN264H:
+		videoArgs = append(videoArgs,
+			"-rc", "vbr",
+			"-cq", "18",
+			"-preset", "p4",
+			"-tune", "hq",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecI264, ffmpeg.VideoCodecI264C:
+		videoArgs = append(videoArgs,
+			"-global_quality", "18",
+			"-preset", "medium",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecV264:
+		videoArgs = append(videoArgs,
+			"-qp", "18",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecM264:
+		videoArgs = append(videoArgs,
+			"-b:v", "0",
+			"-q:v", "65",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecA264:
+		videoArgs = append(videoArgs,
+			"-quality", "balanced",
+			"-rc", "vbr_latency",
+			"-qp_i", "18",
+			"-qp_p", "18",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	default:
+		videoArgs = append(videoArgs,
+			"-pix_fmt", "yuv420p",
+			"-profile:v", "high",
+			"-level", "4.2",
+			"-preset", "medium",
+			"-crf", "18",
+		)
+	}
+
+	return videoArgs
+}
+
 func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context, inputPath, outputPath string, progress *job.Progress) error {
 	ffprobe := t.FFProbe
 	videoFile, err := ffprobe.NewVideoFile(inputPath)
@@ -331,6 +443,59 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 
 	if transcodeSize.GetMaxResolution() > 0 {
 		w, h = videoFile.TranscodeScale(transcodeSize.GetMaxResolution())
+	}
+
+	audioArgs := ffmpeg.Args{
+		"-c:a", "aac",
+		"-ac", "2",
+		"-ar", "44100",
+		"-ab", "128k",
+		"-strict", "-2",
+		"-async", "1",
+		"-af", "aresample=async=1",
+		"-fflags", "+genpts+igndts",
+		"-avoid_negative_ts", "make_zero",
+	}
+
+	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
+		"-fflags", "+genpts",
+		"-avoid_negative_ts", "make_zero",
+	)
+
+	hwCodec := t.getHardwareCodecForConversion()
+
+	if hwCodec != nil {
+		logger.Infof("[convert] attempting hardware acceleration for HLS with codec: %s", hwCodec.Name)
+
+		videoArgs := t.getVideoArgsForCodec(*hwCodec, w, h)
+
+		args := transcoder.Transcode(inputPath, transcoder.TranscodeOptions{
+			OutputPath:      outputPath,
+			VideoCodec:      *hwCodec,
+			VideoArgs:       videoArgs,
+			AudioCodec:      ffmpeg.AudioCodecAAC,
+			AudioArgs:       audioArgs,
+			Format:          ffmpeg.FormatMP4,
+			ExtraInputArgs:  extraInputArgs,
+			ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
+		})
+
+		logger.Infof("[convert] running hardware-accelerated ffmpeg command for HLS: %v", args)
+		logger.Infof("[convert] HLS video duration: %.2f seconds", videoFile.FileDuration)
+
+		err := t.FFMpeg.GenerateWithProgress(ctx, args, progress, videoFile.FileDuration)
+		if err == nil {
+			logger.Infof("[convert] hardware acceleration successful for HLS")
+			return nil
+		}
+
+		logger.Warnf("[convert] hardware acceleration failed for HLS: %v, falling back to software encoding", err)
+
+		if _, removeErr := os.Stat(outputPath); removeErr == nil {
+			os.Remove(outputPath)
+		}
+	} else {
+		logger.Infof("[convert] no hardware acceleration available for HLS, using software encoding")
 	}
 
 	var videoArgs ffmpeg.Args
@@ -348,26 +513,6 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 		"-crf", "18",
 	)
 
-	// Special audio args for HLS videos to fix sync issues
-	audioArgs := ffmpeg.Args{
-		"-c:a", "aac",
-		"-ac", "2",
-		"-ar", "44100",
-		"-ab", "128k",
-		"-strict", "-2",
-		// Audio sync fixes for HLS videos
-		"-async", "1",
-		"-af", "aresample=async=1",
-		"-fflags", "+genpts+igndts",
-		"-avoid_negative_ts", "make_zero",
-	}
-
-	// Extra input args for problematic HLS files
-	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
-		"-fflags", "+genpts",
-		"-avoid_negative_ts", "make_zero",
-	)
-
 	args := transcoder.Transcode(inputPath,
 		transcoder.TranscodeOptions{
 			VideoCodec:      ffmpeg.VideoCodecLibX264,
@@ -381,7 +526,7 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 		},
 	)
 
-	logger.Infof("[convert] running ffmpeg command for HLS conversion: %v", args)
+	logger.Infof("[convert] running software ffmpeg command for HLS: %v", args)
 	logger.Infof("[convert] HLS video duration: %.2f seconds", videoFile.FileDuration)
 	return t.FFMpeg.GenerateWithProgress(ctx, args, progress, videoFile.FileDuration)
 }
