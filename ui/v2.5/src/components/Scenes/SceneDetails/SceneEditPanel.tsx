@@ -1277,24 +1277,27 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
   }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, scene.performer_tag_ids, allTags]);
 
-  // For TagRequirementsIndicator - use all scene tags including original data
+  // For TagRequirementsIndicator - use current form values to show requirements for unsaved changes
   const allSceneTagsForRequirements = useMemo(() => {
-    const sceneTagIds = new Set((scene.tags || []).map(tag => tag.id));
-    const performerTagIds = new Set<string>();
+    const currentSceneTagIds = new Set((formik.values.tag_ids || tags.map(t => t.id)));
+    const currentPerformerTagIds = new Set<string>();
 
-    // Add all performer tag IDs from scene data
-    (scene.performer_tag_ids || []).forEach((pt: any) => {
+    // Always use formik values to reflect current user changes
+    const sourcePerformerTags = formik.values.performer_tag_ids || [];
+
+    // Add all performer tag IDs
+    (sourcePerformerTags || []).forEach((pt: any) => {
       if (pt.tag_ids) {
-        pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
+        pt.tag_ids.forEach((tagId: string) => currentPerformerTagIds.add(tagId));
       }
     });
 
     // Combine and deduplicate
-    const allTagIds = new Set([...sceneTagIds, ...performerTagIds]);
+    const allTagIds = new Set([...currentSceneTagIds, ...currentPerformerTagIds]);
 
     // Convert back to Tag objects
     return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
-  }, [scene.tags, scene.performer_tag_ids, allTags]);
+  }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, allTags]);
 
   // Memoize performer tag fields to avoid unnecessary re-renders
   const performerTagFields = useMemo(() => {

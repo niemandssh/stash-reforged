@@ -27,6 +27,7 @@ import "./vtt-thumbnails";
 import "./big-buttons";
 import "./track-activity";
 import "./vrmode";
+import "./control-bar-toggle";
 import cx from "classnames";
 import {
   useSceneSaveActivity,
@@ -489,6 +490,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             pauseBeforeLooping: false,
             createButtons: uiConfig?.showAbLoopControls ?? false,
           },
+          controlBarToggle: {},
         },
       };
 
