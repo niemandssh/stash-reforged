@@ -92,9 +92,16 @@
 }
 
 .scene-subheader {
+  align-items: center;
+  background-color: var(--body-color);
   display: flex;
   justify-content: space-between;
   margin-top: 0.5rem;
+  padding: 0.5rem 0;
+  position: -webkit-sticky; // Safari support
+  position: sticky;
+  top: 0;
+  z-index: 999;
 
   .date {
     color: $text-muted;

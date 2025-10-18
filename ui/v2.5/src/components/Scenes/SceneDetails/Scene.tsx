@@ -22,6 +22,7 @@ import {
   useSceneIncrementPlayCount,
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
+  useFindColorPresets,
 } from "src/core/StashService";
 
 import { SceneEditPanel } from "./SceneEditPanel";
@@ -32,6 +33,7 @@ import { Counter } from "src/components/Shared/Counter";
 import { BrokenBadge } from "src/components/Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "src/components/Shared/ProbablyBrokenBadge";
 import { HLSBadge } from "src/components/Shared/HLSBadge";
+import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
 import { useToast } from "src/hooks/Toast";
 import SceneQueue, { QueuedScene } from "src/models/sceneQueue";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -211,6 +213,48 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
+  
+  const { data: presetsData } = useFindColorPresets();
+  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
+
+  const [organizedLoading, setOrganizedLoading] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState("scene-details-panel");
+  const [editingTags, setEditingTags] = useState<GQL.Tag[] | null>(null);
+  const [editingPerformerTagIds, setEditingPerformerTagIds] = useState<any[] | null>(null);
+
+  // Combine scene tags and performer tags for TagRequirementsIndicator
+  // Use editing tags if in edit mode, otherwise use saved scene tags
+  const allSceneTags = useMemo(() => {
+    // If we're editing and have editing tags, use those
+    if (activeTabKey === "scene-edit-panel" && editingTags) {
+      return editingTags;
+    }
+
+    // Otherwise use saved scene data
+    const sceneTagIds = new Set((scene.tags || []).map(tag => tag.id));
+    const performerTagIds = new Set<string>();
+
+    // Add all performer tag IDs from scene data
+    (scene.performer_tag_ids || []).forEach((pt: any) => {
+      if (pt.tag_ids) {
+        pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
+      }
+    });
+
+    // Combine and deduplicate
+    const allTagIds = new Set([...sceneTagIds, ...performerTagIds]);
+
+    // Convert back to Tag objects
+    return Array.from(allTagIds).map(id => (scene.tags || []).find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
+  }, [scene.tags, scene.performer_tag_ids, activeTabKey, editingTags]);
+
+  // Reset editing tags when leaving edit panel
+  useEffect(() => {
+    if (activeTabKey !== "scene-edit-panel") {
+      setEditingTags(null);
+      setEditingPerformerTagIds(null);
+    }
+  }, [activeTabKey]);
 
   function incrementPlayCount() {
     incrementPlay({
@@ -219,10 +263,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       },
     });
   }
-
-  const [organizedLoading, setOrganizedLoading] = useState(false);
-
-  const [activeTabKey, setActiveTabKey] = useState("scene-details-panel");
 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
@@ -810,6 +850,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               onSubmit={onSave}
               onForceRefresh={forceRefreshSceneData}
               onDelete={() => setIsDeleteAlertOpen(true)}
+              onTagsChange={(tags, performerTagIds) => {
+                setEditingTags(tags);
+                setEditingPerformerTagIds(performerTagIds);
+              }}
             />
           </Tab.Pane>
           <Tab.Pane eventKey="scene-history-panel">
@@ -891,6 +935,9 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               height={file?.height}
               frameRate={file?.frame_rate}
             />
+            <div className="ml-auto">
+              <TagRequirementsIndicator tags={allSceneTags} colorPresets={colorPresets} />
+            </div>
           </div>
 
           <div className="scene-toolbar">

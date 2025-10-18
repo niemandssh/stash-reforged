@@ -11,7 +11,6 @@ import {
   useListGalleryScrapers,
   mutateReloadScrapers,
   queryFindTags,
-  useFindColorPresets,
 } from "src/core/StashService";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { useToast } from "src/hooks/Toast";
@@ -35,7 +34,6 @@ import { ListFilterModel } from "src/models/list-filter/filter";
 import { useTagsEdit } from "src/hooks/tagsEdit";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
-import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
 import { Tag } from "src/components/Tags/TagSelect";
 
 interface IProps {
@@ -63,9 +61,6 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   const isNew = gallery.id === undefined;
 
   const scrapers = useListGalleryScrapers();
-
-  const { data: presetsData } = useFindColorPresets();
-  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   const [scrapedGallery, setScrapedGallery] =
     useState<GQL.ScrapedGallery | null>();
@@ -455,12 +450,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   }
 
   function renderTagsField() {
-    const title = (
-      <div className="d-flex align-items-center w-100 justify-content-between" style={{ paddingRight: "15px" }}>
-        <FormattedMessage id="tags" />
-        <TagRequirementsIndicator tags={tags as GQL.Tag[]} colorPresets={colorPresets} />
-      </div>
-    );
+    const title = intl.formatMessage({ id: "tags" });
     return renderField("tag_ids", title, tagsControl(), fullWidthProps);
   }
 

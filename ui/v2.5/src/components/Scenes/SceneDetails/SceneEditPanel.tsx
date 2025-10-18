@@ -51,8 +51,6 @@ import { useTagsEdit } from "src/hooks/tagsEdit";
 import { Tag, TagSelect } from "src/components/Tags/TagSelect";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
-import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
-import { useFindColorPresets } from "src/core/StashService";
 
 const SceneScrapeDialog = lazyComponent(() => import("./SceneScrapeDialog"));
 const SceneQueryModal = lazyComponent(() => import("./SceneQueryModal"));
@@ -117,6 +115,7 @@ interface IProps {
   onSubmit: (input: GQL.SceneUpdateInput) => Promise<void>;
   onForceRefresh?: () => void;
   onDelete?: () => void;
+  onTagsChange?: (tags: GQL.Tag[], performerTagIds: any[]) => void;
 }
 
 export const SceneEditPanel: React.FC<IProps> = ({
@@ -127,6 +126,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
   onSubmit,
   onForceRefresh,
   onDelete,
+  onTagsChange,
 }) => {
   const intl = useIntl();
   const Toast = useToast();
@@ -141,9 +141,6 @@ export const SceneEditPanel: React.FC<IProps> = ({
   const Scrapers = useListSceneScrapers();
   const [fragmentScrapers, setFragmentScrapers] = useState<GQL.Scraper[]>([]);
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
-
-  const { data: presetsData } = useFindColorPresets();
-  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   const [scraper, setScraper] = useState<GQL.ScraperSourceInput>();
   const [isScraperQueryModalOpen, setIsScraperQueryModalOpen] =
@@ -1277,27 +1274,12 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
   }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, scene.performer_tag_ids, allTags]);
 
-  // For TagRequirementsIndicator - use current form values to show requirements for unsaved changes
-  const allSceneTagsForRequirements = useMemo(() => {
-    const currentSceneTagIds = new Set((formik.values.tag_ids || tags.map(t => t.id)));
-    const currentPerformerTagIds = new Set<string>();
-
-    // Always use formik values to reflect current user changes
-    const sourcePerformerTags = formik.values.performer_tag_ids || [];
-
-    // Add all performer tag IDs
-    (sourcePerformerTags || []).forEach((pt: any) => {
-      if (pt.tag_ids) {
-        pt.tag_ids.forEach((tagId: string) => currentPerformerTagIds.add(tagId));
-      }
-    });
-
-    // Combine and deduplicate
-    const allTagIds = new Set([...currentSceneTagIds, ...currentPerformerTagIds]);
-
-    // Convert back to Tag objects
-    return Array.from(allTagIds).map(id => allTags.find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
-  }, [formik.values.tag_ids, formik.values.performer_tag_ids, tags, allTags]);
+  // Notify parent component when tags change
+  useEffect(() => {
+    if (onTagsChange && allSceneTags.length > 0) {
+      onTagsChange(allSceneTags, formik.values.performer_tag_ids || []);
+    }
+  }, [allSceneTags, formik.values.performer_tag_ids, onTagsChange]);
 
   // Memoize performer tag fields to avoid unnecessary re-renders
   const performerTagFields = useMemo(() => {
@@ -1343,16 +1325,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }, [performerEntries, formik.values.performer_tag_ids, allTags, scene.id, hasInitialized, fullWidthProps, updatePerformerTags]);
 
   function renderTagsField() {
-    const title = (
-      <div className="d-flex align-items-center w-100 justify-content-between" style={{ paddingRight: "15px" }}>
-        <FormattedMessage id="tags" />
-        <TagRequirementsIndicator tags={allSceneTagsForRequirements} colorPresets={colorPresets} />
-      </div>
-    );
-
     return (
       <Form.Group controlId="tag_ids" as={Row}>
-        <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
+        <Form.Label {...fullWidthProps.labelProps}>
+          <FormattedMessage id="tags" />
+        </Form.Label>
         <Col {...fullWidthProps.fieldProps}>
           <div key="main-tag-select">
             {tagsControl()}
