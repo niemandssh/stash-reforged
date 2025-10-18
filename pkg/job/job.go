@@ -64,6 +64,7 @@ type Job struct {
 	outerCtx   context.Context
 	exec       JobExec
 	cancelFunc context.CancelFunc
+	isStarted  bool // true if job was started via Start(), false if via Add()
 }
 
 // TimeElapsed returns the total time elapsed for the job.

@@ -93,6 +93,7 @@ func (m *Manager) Start(ctx context.Context, description string, e JobExec) int 
 		AddTime:     t,
 		exec:        e,
 		outerCtx:    ctx,
+		isStarted:   true,
 	}
 
 	m.queue = append(m.queue, &j)
@@ -227,6 +228,11 @@ func (m *Manager) onJobFinish(job *Job) {
 	}
 	t := time.Now()
 	job.EndTime = &t
+
+	// Remove jobs that were started via Start() from the queue
+	if job.isStarted {
+		m.removeJob(job)
+	}
 }
 
 func (m *Manager) removeJob(job *Job) {
@@ -254,6 +260,9 @@ func (m *Manager) removeJob(job *Job) {
 		default:
 		}
 	}
+
+	// Notify dispatcher that queue has changed and there might be new jobs to process
+	m.notEmpty.Broadcast()
 }
 
 func (m *Manager) getJob(list []*Job, id int) (index int, job *Job) {
