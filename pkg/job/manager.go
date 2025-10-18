@@ -97,6 +97,9 @@ func (m *Manager) Start(ctx context.Context, description string, e JobExec) int 
 
 	m.queue = append(m.queue, &j)
 
+	// Notify subscribers about the new job
+	m.notifyNewJob(&j)
+
 	m.dispatch(ctx, &j)
 
 	return j.ID

@@ -85,10 +85,8 @@ func (t *ConvertToMP4Task) Execute(ctx context.Context, progress *job.Progress) 
 		taskQueue := job.NewTaskQueue(ctx, progress, 100, 1)
 		go t.monitorFileSizeWithQueue(tempFile, originalSize, taskQueue, done)
 
-		// Wrap conversion in transaction
-		conversionErr = t.Repository.WithTxn(ctx, func(ctx context.Context) error {
-			return t.convertToMP4(ctx, f, progress, done)
-		})
+		// Perform conversion without transaction to avoid blocking
+		conversionErr = t.convertToMP4(ctx, f, progress, done)
 		if conversionErr != nil {
 			logger.Errorf("[convert] error converting scene %d: %v", t.Scene.ID, conversionErr)
 			return conversionErr
@@ -232,8 +230,14 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 
 	// Backup copy of original file was already created before conversion
 
-	newFile, isUpdated, err := t.createNewVideoFile(ctx, tempFile)
-	if err != nil {
+	// Create new video file in separate transaction
+	var newFile *models.VideoFile
+	var isUpdated bool
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		var err error
+		newFile, isUpdated, err = t.createNewVideoFile(ctx, tempFile)
+		return err
+	}); err != nil {
 		return fmt.Errorf("failed to create new video file: %w", err)
 	}
 
@@ -293,7 +297,9 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 
 		logger.Infof("[convert] successfully moved file to %s", finalPath)
 
-		if err := t.updateFilePath(ctx, newFile, finalPath); err != nil {
+		if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			return t.updateFilePath(ctx, newFile, finalPath)
+		}); err != nil {
 			return fmt.Errorf("failed to update file path: %w", err)
 		}
 
@@ -312,7 +318,9 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		}
 
 		// Delete the old file record from database
-		if err := t.deleteOldFileRecord(ctx, f); err != nil {
+		if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			return t.deleteOldFileRecord(ctx, f)
+		}); err != nil {
 			logger.Warnf("[convert] failed to delete old file record: %v", err)
 		} else {
 			logger.Infof("[convert] deleted old file record from database")
@@ -327,7 +335,9 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 		finalPath = t.getFinalPath(newFile)
 	}
 
-	if err := t.recalculateFileHashes(ctx, newFile, finalPath); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.recalculateFileHashes(ctx, newFile, finalPath)
+	}); err != nil {
 		logger.Warnf("[convert] failed to recalculate file hashes: %v", err)
 	} else {
 		logger.Infof("[convert] recalculated file hashes")
@@ -335,13 +345,17 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 
 	// Regenerate sprites with new hash after conversion (oldHash saved at start of function)
 	logger.Infof("[convert] regenerating sprites for converted file")
-	if err := t.regenerateSprites(ctx, oldHash); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.regenerateSprites(ctx, oldHash)
+	}); err != nil {
 		logger.Warnf("[convert] failed to regenerate sprites: %v", err)
 		// Don't fail the conversion if sprite generation fails
 	}
 
 	// Generate VTT file for the new video if it doesn't exist
-	if err := t.generateVTTFile(ctx, newFile, finalPath); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.generateVTTFile(ctx, newFile, finalPath)
+	}); err != nil {
 		logger.Warnf("[convert] failed to generate VTT file: %v", err)
 	} else {
 		logger.Infof("[convert] generated VTT file")
@@ -854,25 +868,28 @@ func (t *ConvertToMP4Task) createNewVideoFile(ctx context.Context, filePath stri
 }
 
 func (t *ConvertToMP4Task) updateSceneWithNewFile(ctx context.Context, newFile *models.VideoFile) error {
-	// Associate the new file with the scene
-	fileIDs := []models.FileID{newFile.ID}
-	if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
-		return fmt.Errorf("failed to associate file with scene: %w", err)
-	}
+	// Use separate transaction for scene update to avoid blocking
+	return t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		// Associate the new file with the scene
+		fileIDs := []models.FileID{newFile.ID}
+		if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
+			return fmt.Errorf("failed to associate file with scene: %w", err)
+		}
 
-	// Update scene to remove broken status and set new primary file
-	scenePartial := models.NewScenePartial()
-	scenePartial.IsBroken = models.NewOptionalBool(false) // Remove broken status
-	scenePartial.PrimaryFileID = &newFile.ID              // Set new primary file
+		// Update scene to remove broken status and set new primary file
+		scenePartial := models.NewScenePartial()
+		scenePartial.IsBroken = models.NewOptionalBool(false) // Remove broken status
+		scenePartial.PrimaryFileID = &newFile.ID              // Set new primary file
 
-	// Update scene in database
-	_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
-	if err != nil {
-		return fmt.Errorf("failed to update scene metadata: %w", err)
-	}
+		// Update scene in database
+		_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
+		if err != nil {
+			return fmt.Errorf("failed to update scene metadata: %w", err)
+		}
 
-	logger.Infof("[convert] updated scene %d metadata and removed broken status", t.Scene.ID)
-	return nil
+		logger.Infof("[convert] updated scene %d metadata and removed broken status", t.Scene.ID)
+		return nil
+	})
 }
 
 func (t *ConvertToMP4Task) getFinalPath(file *models.VideoFile) string {

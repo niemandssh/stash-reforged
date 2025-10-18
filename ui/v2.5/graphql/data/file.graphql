@@ -15,6 +15,7 @@ fragment VideoFileData on VideoFile {
   height
   frame_rate
   bit_rate
+  format
   fingerprints {
     type
     value

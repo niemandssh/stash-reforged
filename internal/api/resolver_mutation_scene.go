@@ -13,6 +13,7 @@ import (
 	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/file"
+	"github.com/stashapp/stash/pkg/job"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/plugin"
@@ -1340,7 +1341,10 @@ func (r *mutationResolver) SceneConvertToMp4(ctx context.Context, id string) (st
 	}
 
 	// Запускаем задачу в отдельном потоке через JobManager
-	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
 
 	return strconv.Itoa(jobID), nil
 }
@@ -1423,7 +1427,10 @@ func (r *mutationResolver) SceneConvertHLSToMp4(ctx context.Context, id string) 
 	}
 
 	// Start the task in separate thread via JobManager
-	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
 
 	return strconv.Itoa(jobID), nil
 }
@@ -1508,7 +1515,10 @@ func (r *mutationResolver) SceneReduceResolution(ctx context.Context, input mode
 	}
 
 	// Start the task in separate thread via JobManager
-	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
 
 	return strconv.Itoa(jobID), nil
 }

@@ -104,10 +104,8 @@ func (t *ReduceResolutionTask) Execute(ctx context.Context, progress *job.Progre
 	taskQueue := job.NewTaskQueue(ctx, progress, 100, 1)
 	go t.monitorFileSizeWithQueue(tempFile, originalSize, taskQueue, done)
 
-	// Wrap conversion in transaction
-	conversionErr = t.Repository.WithTxn(ctx, func(ctx context.Context) error {
-		return t.reduceResolution(ctx, targetFile, progress, done)
-	})
+	// Perform conversion without transaction to avoid blocking
+	conversionErr = t.reduceResolution(ctx, targetFile, progress, done)
 	if conversionErr != nil {
 		logger.Errorf("[reduce-res] error reducing resolution of scene %d: %v", t.Scene.ID, conversionErr)
 		return conversionErr
@@ -208,8 +206,14 @@ func (t *ReduceResolutionTask) reduceResolution(ctx context.Context, f *models.V
 		return fmt.Errorf("reduced file validation failed: %w", err)
 	}
 
-	newFile, isUpdated, err := t.createNewVideoFile(ctx, tempFile)
-	if err != nil {
+	// Create new video file in separate transaction
+	var newFile *models.VideoFile
+	var isUpdated bool
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		var err error
+		newFile, isUpdated, err = t.createNewVideoFile(ctx, tempFile)
+		return err
+	}); err != nil {
 		return fmt.Errorf("failed to create new video file: %w", err)
 	}
 
@@ -288,7 +292,9 @@ func (t *ReduceResolutionTask) reduceResolution(ctx context.Context, f *models.V
 		}
 
 		// Delete the old file record from database
-		if err := t.deleteOldFileRecord(ctx, f); err != nil {
+		if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			return t.deleteOldFileRecord(ctx, f)
+		}); err != nil {
 			logger.Warnf("[reduce-res] failed to delete old file record: %v", err)
 		} else {
 			logger.Infof("[reduce-res] deleted old file record from database")
@@ -311,13 +317,17 @@ func (t *ReduceResolutionTask) reduceResolution(ctx context.Context, f *models.V
 
 	// Regenerate sprites with new hash after reduction (oldHash saved at start of function)
 	logger.Infof("[reduce-res] regenerating sprites for reduced file")
-	if err := t.regenerateSprites(ctx, oldHash); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.regenerateSprites(ctx, oldHash)
+	}); err != nil {
 		logger.Warnf("[reduce-res] failed to regenerate sprites: %v", err)
 		// Don't fail the conversion if sprite generation fails
 	}
 
 	// Generate VTT file for the new video if it doesn't exist
-	if err := t.generateVTTFile(ctx, newFile, finalPath); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.generateVTTFile(ctx, newFile, finalPath)
+	}); err != nil {
 		logger.Warnf("[reduce-res] failed to generate VTT file: %v", err)
 	} else {
 		logger.Infof("[reduce-res] generated VTT file")
@@ -832,24 +842,27 @@ func (t *ReduceResolutionTask) createNewVideoFile(ctx context.Context, filePath 
 }
 
 func (t *ReduceResolutionTask) updateSceneWithNewFile(ctx context.Context, newFile *models.VideoFile) error {
-	// Associate the new file with the scene
-	fileIDs := []models.FileID{newFile.ID}
-	if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
-		return fmt.Errorf("failed to associate file with scene: %w", err)
-	}
+	// Use separate transaction for scene update to avoid blocking
+	return t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		// Associate the new file with the scene
+		fileIDs := []models.FileID{newFile.ID}
+		if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
+			return fmt.Errorf("failed to associate file with scene: %w", err)
+		}
 
-	// Update scene to set new primary file
-	scenePartial := models.NewScenePartial()
-	scenePartial.PrimaryFileID = &newFile.ID
+		// Update scene to set new primary file
+		scenePartial := models.NewScenePartial()
+		scenePartial.PrimaryFileID = &newFile.ID
 
-	// Update scene in database
-	_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
-	if err != nil {
-		return fmt.Errorf("failed to update scene metadata: %w", err)
-	}
+		// Update scene in database
+		_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
+		if err != nil {
+			return fmt.Errorf("failed to update scene metadata: %w", err)
+		}
 
-	logger.Infof("[reduce-res] updated scene %d metadata with new file", t.Scene.ID)
-	return nil
+		logger.Infof("[reduce-res] updated scene %d metadata with new file", t.Scene.ID)
+		return nil
+	})
 }
 
 func (t *ReduceResolutionTask) getFinalPath(file *models.VideoFile) string {

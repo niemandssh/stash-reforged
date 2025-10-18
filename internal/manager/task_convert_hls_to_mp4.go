@@ -87,10 +87,8 @@ func (t *ConvertHLSToMP4Task) Execute(ctx context.Context, progress *job.Progres
 		taskQueue := job.NewTaskQueue(ctx, progress, 100, 1)
 		go t.monitorFileSizeWithQueue(tempFile, originalSize, taskQueue, done)
 
-		// Wrap conversion in transaction
-		conversionErr = t.Repository.WithTxn(ctx, func(ctx context.Context) error {
-			return t.convertToMP4(ctx, pf, progress)
-		})
+		// Perform conversion without transaction to avoid blocking
+		conversionErr = t.convertToMP4(ctx, pf, progress)
 		if conversionErr != nil {
 			logger.Errorf("[convert] error converting HLS scene %d: %v", scene.ID, conversionErr)
 			return conversionErr
@@ -257,8 +255,13 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 
 	// Backup copy of original HLS file was already created before conversion
 
-	newFile, err := t.createNewVideoFile(ctx, tempFile)
-	if err != nil {
+	// Create new video file in separate transaction
+	var newFile *models.VideoFile
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		var err error
+		newFile, err = t.createNewVideoFile(ctx, tempFile)
+		return err
+	}); err != nil {
 		return fmt.Errorf("failed to create new video file: %w", err)
 	}
 
@@ -299,7 +302,9 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 	}
 
 	// Recalculate hashes for the updated file
-	if err := t.recalculateFileHashes(ctx, newFile, originalPath); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.recalculateFileHashes(ctx, newFile, originalPath)
+	}); err != nil {
 		logger.Warnf("[convert] failed to recalculate HLS file hashes: %v", err)
 	} else {
 		logger.Infof("[convert] recalculated HLS file hashes")
@@ -307,13 +312,17 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 
 	// Regenerate sprites with new hash after HLS conversion (oldHash saved at start of function)
 	logger.Infof("[convert] regenerating sprites for converted HLS file")
-	if err := t.regenerateSprites(ctx, oldHash); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.regenerateSprites(ctx, oldHash)
+	}); err != nil {
 		logger.Warnf("[convert] failed to regenerate HLS sprites: %v", err)
 		// Don't fail the conversion if sprite generation fails
 	}
 
 	// Generate VTT file for the updated video if it doesn't exist
-	if err := t.generateVTTFile(ctx, newFile, originalPath); err != nil {
+	if err := t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		return t.generateVTTFile(ctx, newFile, originalPath)
+	}); err != nil {
 		logger.Warnf("[convert] failed to generate VTT file for HLS: %v", err)
 	} else {
 		logger.Infof("[convert] generated VTT file for HLS")
@@ -645,25 +654,28 @@ func (t *ConvertHLSToMP4Task) createNewVideoFile(ctx context.Context, filePath s
 }
 
 func (t *ConvertHLSToMP4Task) updateSceneWithNewFile(ctx context.Context, newFile *models.VideoFile) error {
-	// Ensure the file is associated with the scene
-	fileIDs := []models.FileID{newFile.ID}
-	if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
-		return fmt.Errorf("failed to associate HLS file with scene: %w", err)
-	}
+	// Use separate transaction for scene update to avoid blocking
+	return t.Repository.WithTxn(ctx, func(ctx context.Context) error {
+		// Ensure the file is associated with the scene
+		fileIDs := []models.FileID{newFile.ID}
+		if err := t.Repository.Scene.AssignFiles(ctx, t.Scene.ID, fileIDs); err != nil {
+			return fmt.Errorf("failed to associate HLS file with scene: %w", err)
+		}
 
-	// Update scene to remove broken status and ensure primary file is set
-	scenePartial := models.NewScenePartial()
-	scenePartial.IsBroken = models.NewOptionalBool(false) // Remove broken status
-	scenePartial.PrimaryFileID = &newFile.ID              // Set primary file ID
+		// Update scene to remove broken status and ensure primary file is set
+		scenePartial := models.NewScenePartial()
+		scenePartial.IsBroken = models.NewOptionalBool(false) // Remove broken status
+		scenePartial.PrimaryFileID = &newFile.ID              // Set primary file ID
 
-	// Update scene in database
-	_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
-	if err != nil {
-		return fmt.Errorf("failed to update HLS scene metadata: %w", err)
-	}
+		// Update scene in database
+		_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)
+		if err != nil {
+			return fmt.Errorf("failed to update HLS scene metadata: %w", err)
+		}
 
-	logger.Infof("[convert] updated HLS scene %d metadata and removed broken status", t.Scene.ID)
-	return nil
+		logger.Infof("[convert] updated HLS scene %d metadata and removed broken status", t.Scene.ID)
+		return nil
+	})
 }
 
 func (t *ConvertHLSToMP4Task) recalculateFileHashes(ctx context.Context, file *models.VideoFile, filePath string) error {
