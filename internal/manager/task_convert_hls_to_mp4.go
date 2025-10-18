@@ -383,29 +383,32 @@ func (t *ConvertHLSToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h
 	case ffmpeg.VideoCodecN264, ffmpeg.VideoCodecN264H:
 		videoArgs = append(videoArgs,
 			"-rc", "vbr",
-			"-cq", "18",
+			"-cq", "23",
 			"-preset", "p4",
 			"-tune", "hq",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-b:v", "0",
 		)
 	case ffmpeg.VideoCodecI264, ffmpeg.VideoCodecI264C:
 		videoArgs = append(videoArgs,
-			"-global_quality", "18",
+			"-global_quality", "23",
 			"-preset", "medium",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-look_ahead", "1",
 		)
 	case ffmpeg.VideoCodecV264:
 		videoArgs = append(videoArgs,
-			"-qp", "18",
+			"-qp", "23",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-quality", "1",
 		)
 	case ffmpeg.VideoCodecM264:
 		videoArgs = append(videoArgs,
 			"-b:v", "0",
-			"-q:v", "65",
+			"-q:v", "70",
 			"-profile:v", "high",
 			"-level", "4.2",
 		)
@@ -413,8 +416,8 @@ func (t *ConvertHLSToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h
 		videoArgs = append(videoArgs,
 			"-quality", "balanced",
 			"-rc", "vbr_latency",
-			"-qp_i", "18",
-			"-qp_p", "18",
+			"-qp_i", "23",
+			"-qp_p", "23",
 			"-profile:v", "high",
 			"-level", "4.2",
 		)
@@ -424,7 +427,7 @@ func (t *ConvertHLSToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h
 			"-profile:v", "high",
 			"-level", "4.2",
 			"-preset", "medium",
-			"-crf", "18",
+			"-crf", "23",
 		)
 	}
 
@@ -449,7 +452,7 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 		"-c:a", "aac",
 		"-ac", "2",
 		"-ar", "44100",
-		"-ab", "128k",
+		"-ab", "96k",
 		"-strict", "-2",
 		"-async", "1",
 		"-af", "aresample=async=1",
@@ -460,6 +463,10 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
 		"-fflags", "+genpts",
 		"-avoid_negative_ts", "make_zero",
+	)
+
+	extraOutputArgs := append(t.Config.GetTranscodeOutputArgs(),
+		"-movflags", "+faststart",
 	)
 
 	hwCodec := t.getHardwareCodecForConversion()
@@ -477,7 +484,7 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 			AudioArgs:       audioArgs,
 			Format:          ffmpeg.FormatMP4,
 			ExtraInputArgs:  extraInputArgs,
-			ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
+			ExtraOutputArgs: extraOutputArgs,
 		})
 
 		logger.Infof("[convert] running hardware-accelerated ffmpeg command for HLS: %v", args)
@@ -510,7 +517,7 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 		"-profile:v", "high",
 		"-level", "4.2",
 		"-preset", "medium",
-		"-crf", "18",
+		"-crf", "23",
 	)
 
 	args := transcoder.Transcode(inputPath,
@@ -520,7 +527,7 @@ func (t *ConvertHLSToMP4Task) performConversionWithProgress(ctx context.Context,
 			VideoArgs:       videoArgs,
 			AudioArgs:       audioArgs,
 			ExtraInputArgs:  extraInputArgs,
-			ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
+			ExtraOutputArgs: extraOutputArgs,
 			Format:          "mp4",
 			OutputPath:      outputPath,
 		},
@@ -910,6 +917,17 @@ func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context) error {
 
 	if updatedScene == nil {
 		return fmt.Errorf("updated scene not found")
+	}
+
+	sceneHash := updatedScene.GetHash(t.FileNamingAlgorithm)
+	spriteImagePath := t.Paths.Scene.GetSpriteImageFilePath(sceneHash)
+	spriteVttPath := t.Paths.Scene.GetSpriteVttFilePath(sceneHash)
+
+	if _, err := os.Stat(spriteImagePath); err == nil {
+		if _, err := os.Stat(spriteVttPath); err == nil {
+			logger.Infof("[convert] sprites already exist for HLS scene %d, skipping regeneration", t.Scene.ID)
+			return nil
+		}
 	}
 
 	spriteTask := GenerateSpriteTask{

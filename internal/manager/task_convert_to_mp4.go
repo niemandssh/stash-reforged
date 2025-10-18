@@ -535,29 +535,32 @@ func (t *ConvertToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h in
 	case ffmpeg.VideoCodecN264, ffmpeg.VideoCodecN264H:
 		videoArgs = append(videoArgs,
 			"-rc", "vbr",
-			"-cq", "18",
+			"-cq", "23",
 			"-preset", "p4",
 			"-tune", "hq",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-b:v", "0",
 		)
 	case ffmpeg.VideoCodecI264, ffmpeg.VideoCodecI264C:
 		videoArgs = append(videoArgs,
-			"-global_quality", "18",
+			"-global_quality", "23",
 			"-preset", "medium",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-look_ahead", "1",
 		)
 	case ffmpeg.VideoCodecV264:
 		videoArgs = append(videoArgs,
-			"-qp", "18",
+			"-qp", "23",
 			"-profile:v", "high",
 			"-level", "4.2",
+			"-quality", "1",
 		)
 	case ffmpeg.VideoCodecM264:
 		videoArgs = append(videoArgs,
 			"-b:v", "0",
-			"-q:v", "65",
+			"-q:v", "70",
 			"-profile:v", "high",
 			"-level", "4.2",
 		)
@@ -565,8 +568,8 @@ func (t *ConvertToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h in
 		videoArgs = append(videoArgs,
 			"-quality", "balanced",
 			"-rc", "vbr_latency",
-			"-qp_i", "18",
-			"-qp_p", "18",
+			"-qp_i", "23",
+			"-qp_p", "23",
 			"-profile:v", "high",
 			"-level", "4.2",
 		)
@@ -576,83 +579,11 @@ func (t *ConvertToMP4Task) getVideoArgsForCodec(codec ffmpeg.VideoCodec, w, h in
 			"-profile:v", "high",
 			"-level", "4.2",
 			"-preset", "medium",
-			"-crf", "18",
+			"-crf", "23",
 		)
 	}
 
 	return videoArgs
-}
-
-func (t *ConvertToMP4Task) performConversion(ctx context.Context, inputPath, outputPath string) error {
-	ffprobe := t.FFProbe
-	videoFile, err := ffprobe.NewVideoFile(inputPath)
-	if err != nil {
-		return fmt.Errorf("error reading video file: %w", err)
-	}
-
-	w, h := videoFile.Width, videoFile.Height
-	transcodeSize := t.Config.GetMaxTranscodeSize()
-
-	if transcodeSize.GetMaxResolution() > 0 {
-		w, h = videoFile.TranscodeScale(transcodeSize.GetMaxResolution())
-	}
-
-	var videoArgs ffmpeg.Args
-	if w != 0 && h != 0 {
-		var videoFilter ffmpeg.VideoFilter
-		videoFilter = videoFilter.ScaleDimensions(w, h)
-		videoArgs = videoArgs.VideoFilter(videoFilter)
-	}
-
-	videoArgs = append(videoArgs,
-		"-pix_fmt", "yuv420p",
-		"-profile:v", "high",
-		"-level", "4.2",
-		"-preset", "medium",
-		"-crf", "18",
-	)
-
-	audioArgs := ffmpeg.Args{
-		"-ac", "2", // Explicitly specify stereo output
-		"-ar", "44100",
-		"-ab", "128k",
-		"-strict", "-2",
-		// More aggressive parameters for problematic audio codecs
-		"-ignore_errors", "1",
-		"-fflags", "+genpts+igndts",
-		"-avoid_negative_ts", "make_zero",
-		"-async", "1",
-		"-err_detect", "ignore_err", // Ignore minor errors in data
-	}
-
-	// Add extra input args for problematic video files (AVI, FLV, etc.)
-	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
-		"-fflags", "+genpts",
-		"-avoid_negative_ts", "make_zero",
-	)
-
-	// For non-MP4 files (AVI, FLV, etc.), always convert audio to AAC instead of copying
-	// These formats often have codecs that aren't compatible with MP4 container
-	audioCodec := ffmpeg.AudioCodecAAC
-	audioArgs = ffmpeg.Args{
-		"-ac", "2",
-		"-ar", "44100",
-		"-ab", "128k",
-		"-strict", "-2",
-	}
-
-	args := transcoder.Transcode(inputPath, transcoder.TranscodeOptions{
-		OutputPath:      outputPath,
-		VideoCodec:      ffmpeg.VideoCodecLibX264,
-		VideoArgs:       videoArgs,
-		AudioCodec:      audioCodec,
-		AudioArgs:       audioArgs,
-		Format:          ffmpeg.FormatMP4,
-		ExtraInputArgs:  extraInputArgs,
-		ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
-	})
-
-	return t.FFMpeg.Generate(ctx, args)
 }
 
 func (t *ConvertToMP4Task) performConversionWithProgress(ctx context.Context, inputPath, outputPath string, progress *job.Progress) error {
@@ -673,13 +604,17 @@ func (t *ConvertToMP4Task) performConversionWithProgress(ctx context.Context, in
 	audioArgs := ffmpeg.Args{
 		"-ac", "2",
 		"-ar", "44100",
-		"-ab", "128k",
+		"-ab", "96k",
 		"-strict", "-2",
 	}
 
 	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
 		"-fflags", "+genpts",
 		"-avoid_negative_ts", "make_zero",
+	)
+
+	extraOutputArgs := append(t.Config.GetTranscodeOutputArgs(),
+		"-movflags", "+faststart",
 	)
 
 	hwCodec := t.getHardwareCodecForConversion()
@@ -697,7 +632,7 @@ func (t *ConvertToMP4Task) performConversionWithProgress(ctx context.Context, in
 			AudioArgs:       audioArgs,
 			Format:          ffmpeg.FormatMP4,
 			ExtraInputArgs:  extraInputArgs,
-			ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
+			ExtraOutputArgs: extraOutputArgs,
 		})
 
 		logger.Infof("[convert] running hardware-accelerated ffmpeg command: %v", args)
@@ -730,7 +665,7 @@ func (t *ConvertToMP4Task) performConversionWithProgress(ctx context.Context, in
 		"-profile:v", "high",
 		"-level", "4.2",
 		"-preset", "medium",
-		"-crf", "18",
+		"-crf", "23",
 	)
 
 	args := transcoder.Transcode(inputPath, transcoder.TranscodeOptions{
@@ -741,124 +676,10 @@ func (t *ConvertToMP4Task) performConversionWithProgress(ctx context.Context, in
 		AudioArgs:       audioArgs,
 		Format:          ffmpeg.FormatMP4,
 		ExtraInputArgs:  extraInputArgs,
-		ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
+		ExtraOutputArgs: extraOutputArgs,
 	})
 
 	logger.Infof("[convert] running software ffmpeg command: %v", args)
-	logger.Infof("[convert] video duration: %.2f seconds", videoFile.FileDuration)
-	return t.FFMpeg.GenerateWithProgress(ctx, args, progress, videoFile.FileDuration)
-}
-
-func (t *ConvertToMP4Task) performConversionWithStandardAAC(ctx context.Context, inputPath, outputPath string, progress *job.Progress) error {
-	ffprobe := t.FFProbe
-	videoFile, err := ffprobe.NewVideoFile(inputPath)
-	if err != nil {
-		return fmt.Errorf("error reading video file: %w", err)
-	}
-
-	w, h := videoFile.Width, videoFile.Height
-	transcodeSize := t.Config.GetMaxTranscodeSize()
-
-	if transcodeSize.GetMaxResolution() > 0 {
-		w, h = videoFile.TranscodeScale(transcodeSize.GetMaxResolution())
-	}
-
-	var videoArgs ffmpeg.Args
-	if w != 0 && h != 0 {
-		var videoFilter ffmpeg.VideoFilter
-		videoFilter = videoFilter.ScaleDimensions(w, h)
-		videoArgs = videoArgs.VideoFilter(videoFilter)
-	}
-
-	videoArgs = append(videoArgs,
-		"-pix_fmt", "yuv420p",
-		"-profile:v", "high",
-		"-level", "4.2",
-		"-preset", "medium",
-		"-crf", "18",
-	)
-
-	// Use standard AAC codec with robust parameters
-	audioArgs := ffmpeg.Args{
-		"-ac", "2", // Explicitly specify stereo output
-		"-ar", "44100",
-		"-ab", "128k",
-		"-strict", "-2",
-		"-err_detect", "ignore_err", // Ignore minor errors in data
-		"-ignore_errors", "1",
-		"-fflags", "+genpts+igndts",
-		"-avoid_negative_ts", "make_zero",
-		"-async", "1",
-	}
-
-	// Add extra input args for problematic video files (AVI, FLV, etc.)
-	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
-		"-fflags", "+genpts",
-		"-avoid_negative_ts", "make_zero",
-	)
-
-	args := transcoder.Transcode(inputPath, transcoder.TranscodeOptions{
-		OutputPath:      outputPath,
-		VideoCodec:      ffmpeg.VideoCodecLibX264,
-		VideoArgs:       videoArgs,
-		AudioCodec:      ffmpeg.AudioCodecAAC, // Use standard AAC
-		AudioArgs:       audioArgs,
-		Format:          ffmpeg.FormatMP4,
-		ExtraInputArgs:  extraInputArgs,
-		ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
-	})
-
-	logger.Infof("[convert] running ffmpeg command (AAC): %v", args)
-	logger.Infof("[convert] video duration: %.2f seconds", videoFile.FileDuration)
-	return t.FFMpeg.GenerateWithProgress(ctx, args, progress, videoFile.FileDuration)
-}
-
-func (t *ConvertToMP4Task) performConversionWithoutAudio(ctx context.Context, inputPath, outputPath string, progress *job.Progress) error {
-	ffprobe := t.FFProbe
-	videoFile, err := ffprobe.NewVideoFile(inputPath)
-	if err != nil {
-		return fmt.Errorf("error reading video file: %w", err)
-	}
-
-	w, h := videoFile.Width, videoFile.Height
-	transcodeSize := t.Config.GetMaxTranscodeSize()
-
-	if transcodeSize.GetMaxResolution() > 0 {
-		w, h = videoFile.TranscodeScale(transcodeSize.GetMaxResolution())
-	}
-
-	var videoArgs ffmpeg.Args
-	if w != 0 && h != 0 {
-		var videoFilter ffmpeg.VideoFilter
-		videoFilter = videoFilter.ScaleDimensions(w, h)
-		videoArgs = videoArgs.VideoFilter(videoFilter)
-	}
-
-	videoArgs = append(videoArgs,
-		"-pix_fmt", "yuv420p",
-		"-profile:v", "high",
-		"-level", "4.2",
-		"-preset", "medium",
-		"-crf", "18",
-	)
-
-	// Add extra input args for problematic video files (AVI, FLV, etc.)
-	extraInputArgs := append(t.Config.GetTranscodeInputArgs(),
-		"-fflags", "+genpts",
-		"-avoid_negative_ts", "make_zero",
-	)
-
-	args := transcoder.Transcode(inputPath, transcoder.TranscodeOptions{
-		OutputPath:      outputPath,
-		VideoCodec:      ffmpeg.VideoCodecLibX264,
-		VideoArgs:       videoArgs,
-		AudioCodec:      "", // No audio
-		Format:          ffmpeg.FormatMP4,
-		ExtraInputArgs:  extraInputArgs,
-		ExtraOutputArgs: t.Config.GetTranscodeOutputArgs(),
-	})
-
-	logger.Infof("[convert] running ffmpeg command (no audio): %v", args)
 	logger.Infof("[convert] video duration: %.2f seconds", videoFile.FileDuration)
 	return t.FFMpeg.GenerateWithProgress(ctx, args, progress, videoFile.FileDuration)
 }
@@ -1278,6 +1099,17 @@ func (t *ConvertToMP4Task) regenerateSprites(ctx context.Context) error {
 
 	if updatedScene == nil {
 		return fmt.Errorf("updated scene not found")
+	}
+
+	sceneHash := updatedScene.GetHash(t.FileNamingAlgorithm)
+	spriteImagePath := t.Paths.Scene.GetSpriteImageFilePath(sceneHash)
+	spriteVttPath := t.Paths.Scene.GetSpriteVttFilePath(sceneHash)
+
+	if _, err := os.Stat(spriteImagePath); err == nil {
+		if _, err := os.Stat(spriteVttPath); err == nil {
+			logger.Infof("[convert] sprites already exist for scene %d, skipping regeneration", t.Scene.ID)
+			return nil
+		}
 	}
 
 	spriteTask := GenerateSpriteTask{
