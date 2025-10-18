@@ -7,7 +7,7 @@ import { Icon } from "../Shared/Icon";
 import { TruncatedText } from "../Shared/TruncatedText";
 import { ConfigurationContext } from "../../hooks/Config";
 import GenderIcon from "../Performers/GenderIcon";
-import { faPlay, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { faPlay, faTimes, faClock } from "@fortawesome/free-solid-svg-icons";
 import "./NextSceneOverlay.scss";
 
 interface NextSceneOverlayProps {
@@ -28,10 +28,38 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
   const hasAutoplay = autoplayTimer > 0;
   const [timeLeft, setTimeLeft] = useState(hasAutoplay ? autoplayTimer : 0);
   const [timerCancelled, setTimerCancelled] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const [isWindowFocused, setIsWindowFocused] = useState(true);
 
   useEffect(() => {
-    if (!hasAutoplay || timerCancelled || timeLeft <= 0) {
-      if (timeLeft <= 0 && hasAutoplay) {
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+
+    const handleWindowFocus = () => {
+      setIsWindowFocused(true);
+    };
+
+    const handleWindowBlur = () => {
+      setIsWindowFocused(false);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+  }, []);
+
+  const isActive = isTabVisible && isWindowFocused;
+
+  useEffect(() => {
+    if (!hasAutoplay || timerCancelled || !isActive || timeLeft <= 0) {
+      if (timeLeft <= 0 && hasAutoplay && isActive) {
         onPlay();
       }
       return;
@@ -42,7 +70,7 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [timeLeft, onPlay, timerCancelled, hasAutoplay]);
+  }, [timeLeft, onPlay, timerCancelled, hasAutoplay, isActive]);
 
   // Handle Escape key to close overlay and cancel timer
   useEffect(() => {
@@ -69,9 +97,14 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
     onSkip();
   }, [onSkip]);
 
-  const handleCancel = useCallback(() => {
+  const handleStopTimer = useCallback(() => {
     setTimerCancelled(true);
   }, []);
+
+  const handleCancel = useCallback(() => {
+    setTimerCancelled(true);
+    onCancel();
+  }, [onCancel]);
 
   const file = nextScene.files.length > 0 ? nextScene.files[0] : undefined;
   const duration = file?.duration ?? 0;
@@ -184,26 +217,31 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
                 <FormattedMessage id="actions.play" defaultMessage="Play" />
               </button>
 
-              {!timerCancelled && autoplayTimer > 0 && (
-                <button
-                  className="btn btn-secondary next-scene-overlay-cancel-btn"
-                  onClick={handleCancel}
-                >
-                  <FormattedMessage id="actions.cancel" defaultMessage="Cancel" />
-                </button>
-              )}
+              <button
+                className="btn btn-secondary next-scene-overlay-cancel-btn"
+                onClick={handleCancel}
+              >
+                <FormattedMessage id="actions.cancel" defaultMessage="Cancel" />
+              </button>
             </div>
 
-            <div
-              className="next-scene-overlay-countdown"
-              style={{ opacity: (!timerCancelled && autoplayTimer > 0) ? 1 : 0 }}
-            >
-              <FormattedMessage
-                id="next_scene_autoplay"
-                defaultMessage="Next scene in {seconds}s"
-                values={{ seconds: timeLeft }}
-              />
-            </div>
+            {!timerCancelled && autoplayTimer > 0 && (
+              <div className="next-scene-overlay-countdown">
+                <FormattedMessage
+                  id="next_scene_autoplay"
+                  defaultMessage="Next scene in {seconds}s"
+                  values={{ seconds: timeLeft }}
+                />
+                <button
+                  className="btn btn-sm btn-link next-scene-overlay-stop-timer"
+                  onClick={handleStopTimer}
+                  title="Stop timer"
+                >
+                  <Icon icon={faClock} />
+                  <FormattedMessage id="actions.stop_timer" defaultMessage="Stop timer" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

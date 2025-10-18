@@ -921,15 +921,15 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           </div>
 
           <div className="scene-subheader">
-            <span className="date mr-3" data-value={scene.date}>
-              {!!scene.date && (
+            {!!scene.date && (
+              <span className="date mr-3" data-value={scene.date}>
                 <FormattedDate
                   value={scene.date}
                   format="long"
                   timeZone="utc"
                 />
-              )}
-            </span>
+              </span>
+            )}
             <VideoFrameRateResolution
               width={file?.width}
               height={file?.height}

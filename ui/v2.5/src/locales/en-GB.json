@@ -146,6 +146,7 @@
     "skip": "Skip",
     "split": "Split",
     "stop": "Stop",
+    "stop_timer": "Stop timer",
     "submit": "Submit",
     "submit_stash_box": "Submit to Stash-Box",
     "submit_update": "Submit update",

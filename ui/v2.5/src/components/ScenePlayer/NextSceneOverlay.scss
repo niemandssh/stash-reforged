@@ -252,11 +252,33 @@
   }
 
   .next-scene-overlay-countdown {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
     font-size: 0.875rem;
     color: var(--text-color-secondary);
     font-weight: 500;
     text-align: left;
     margin-top: 1rem;
+
+    .next-scene-overlay-stop-timer {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-color-secondary);
+      transition: color 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+
+      &:hover {
+        color: var(--text-color);
+        text-decoration: none;
+      }
+
+      .fa-icon {
+        font-size: 0.875rem;
+      }
+    }
   }
 
 
