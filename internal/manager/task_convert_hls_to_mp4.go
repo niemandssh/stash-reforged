@@ -174,8 +174,12 @@ func (t *ConvertHLSToMP4Task) needsConversion(f *models.VideoFile) bool {
 }
 
 func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile, progress *job.Progress) error {
+	// Save old hash BEFORE conversion for sprite migration
+	oldHash := t.Scene.GetHash(t.FileNamingAlgorithm)
+	logger.Infof("[convert] old HLS scene hash before conversion: %s", oldHash)
+
 	tempDir := t.Config.GetGeneratedPath()
-	tempFile := filepath.Join(tempDir, fmt.Sprintf("convert_hls_%d_%s.mp4", t.Scene.ID, t.Scene.GetHash(t.FileNamingAlgorithm)))
+	tempFile := filepath.Join(tempDir, fmt.Sprintf("convert_hls_%d_%s.mp4", t.Scene.ID, oldHash))
 
 	// Create independent backup copy in temp directory
 	backupTempDir := t.Config.GetTempPath()
@@ -300,9 +304,9 @@ func (t *ConvertHLSToMP4Task) convertToMP4(ctx context.Context, f *models.VideoF
 		logger.Infof("[convert] recalculated HLS file hashes")
 	}
 
-	// Regenerate sprites with new hash after HLS conversion
+	// Regenerate sprites with new hash after HLS conversion (oldHash saved at start of function)
 	logger.Infof("[convert] regenerating sprites for converted HLS file")
-	if err := t.regenerateSprites(ctx); err != nil {
+	if err := t.regenerateSprites(ctx, oldHash); err != nil {
 		logger.Warnf("[convert] failed to regenerate HLS sprites: %v", err)
 		// Don't fail the conversion if sprite generation fails
 	}
@@ -901,7 +905,7 @@ func (t *ConvertHLSToMP4Task) copyFileContent(src, dst string) error {
 
 // regenerateSprites regenerates sprites for the scene after HLS conversion
 // NOTE: This function expects to be called within an existing transaction context
-func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context) error {
+func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context, oldHash string) error {
 	// Get updated scene from database with new hash
 	// Use the existing transaction context instead of creating a new one
 	updatedScene, err := t.Repository.Scene.Find(ctx, t.Scene.ID)
@@ -919,17 +923,82 @@ func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context) error {
 		return fmt.Errorf("updated scene not found")
 	}
 
-	sceneHash := updatedScene.GetHash(t.FileNamingAlgorithm)
-	spriteImagePath := t.Paths.Scene.GetSpriteImageFilePath(sceneHash)
-	spriteVttPath := t.Paths.Scene.GetSpriteVttFilePath(sceneHash)
+	newHash := updatedScene.GetHash(t.FileNamingAlgorithm)
+	logger.Infof("[convert] HLS sprite migration: old hash=%s, new hash=%s", oldHash, newHash)
 
-	if _, err := os.Stat(spriteImagePath); err == nil {
-		if _, err := os.Stat(spriteVttPath); err == nil {
-			logger.Infof("[convert] sprites already exist for HLS scene %d, skipping regeneration", t.Scene.ID)
-			return nil
-		}
+	// Check if sprites exist for OLD hash
+	oldSpriteImagePath := t.Paths.Scene.GetSpriteImageFilePath(oldHash)
+	oldSpriteVttPath := t.Paths.Scene.GetSpriteVttFilePath(oldHash)
+
+	// Paths for NEW hash
+	newSpriteImagePath := t.Paths.Scene.GetSpriteImageFilePath(newHash)
+	newSpriteVttPath := t.Paths.Scene.GetSpriteVttFilePath(newHash)
+
+	logger.Infof("[convert] checking old HLS sprites:")
+	logger.Infof("[convert]   old image: %s", oldSpriteImagePath)
+	logger.Infof("[convert]   old vtt: %s", oldSpriteVttPath)
+	logger.Infof("[convert] new HLS sprite paths:")
+	logger.Infof("[convert]   new image: %s", newSpriteImagePath)
+	logger.Infof("[convert]   new vtt: %s", newSpriteVttPath)
+
+	oldSpriteImageExists := false
+	oldSpriteVttExists := false
+
+	if _, err := os.Stat(oldSpriteImagePath); err == nil {
+		oldSpriteImageExists = true
+		logger.Infof("[convert] old HLS sprite image exists")
+	} else {
+		logger.Infof("[convert] old HLS sprite image does not exist")
 	}
 
+	if _, err := os.Stat(oldSpriteVttPath); err == nil {
+		oldSpriteVttExists = true
+		logger.Infof("[convert] old HLS sprite vtt exists")
+	} else {
+		logger.Infof("[convert] old HLS sprite vtt does not exist")
+	}
+
+	// If both old sprites exist, rename them to new hash
+	if oldSpriteImageExists && oldSpriteVttExists {
+		logger.Infof("[convert] migrating existing HLS sprites from old hash to new hash")
+
+		// Rename sprite image
+		if err := os.Rename(oldSpriteImagePath, newSpriteImagePath); err != nil {
+			logger.Warnf("[convert] failed to rename HLS sprite image: %v", err)
+		} else {
+			logger.Infof("[convert] renamed HLS sprite image: %s -> %s", oldSpriteImagePath, newSpriteImagePath)
+		}
+
+		// Rename sprite vtt
+		if err := os.Rename(oldSpriteVttPath, newSpriteVttPath); err != nil {
+			logger.Warnf("[convert] failed to rename HLS sprite vtt: %v", err)
+		} else {
+			logger.Infof("[convert] renamed HLS sprite vtt: %s -> %s", oldSpriteVttPath, newSpriteVttPath)
+		}
+
+		logger.Infof("[convert] HLS sprite migration completed for scene %d", t.Scene.ID)
+		return nil
+	}
+
+	// If old sprites don't exist, check if new sprites already exist
+	newSpriteImageExists := false
+	newSpriteVttExists := false
+
+	if _, err := os.Stat(newSpriteImagePath); err == nil {
+		newSpriteImageExists = true
+	}
+
+	if _, err := os.Stat(newSpriteVttPath); err == nil {
+		newSpriteVttExists = true
+	}
+
+	if newSpriteImageExists && newSpriteVttExists {
+		logger.Infof("[convert] sprites already exist for new HLS hash, skipping regeneration")
+		return nil
+	}
+
+	// Generate new sprites
+	logger.Infof("[convert] generating new sprites for HLS scene %d", t.Scene.ID)
 	spriteTask := GenerateSpriteTask{
 		Scene:               *updatedScene, // Use updated scene with new hash
 		Overwrite:           true,          // Force regeneration with new hash
@@ -938,6 +1007,6 @@ func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context) error {
 
 	// Run sprite generation
 	spriteTask.Start(ctx)
-	logger.Infof("[convert] regenerated sprites for HLS scene %d with updated hash", t.Scene.ID)
+	logger.Infof("[convert] generated new sprites for HLS scene %d with hash %s", t.Scene.ID, newHash)
 	return nil
 }
