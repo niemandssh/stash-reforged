@@ -97,14 +97,13 @@ const PerformerTagField: React.FC<PerformerTagFieldProps> = ({
     <Form.Group key={performer.id} controlId={`performer_tags_${performer.id}`} as={Row}>
       <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
       <Col {...fullWidthProps.fieldProps}>
-        <div key={`tag-select-${performer.id}`}>
-          <TagSelect
-            values={tags}
-            onSelect={onSelectPerformerTags}
-            isMulti
-            creatable
-          />
-        </div>
+        <TagSelect
+          values={tags}
+          onSelect={onSelectPerformerTags}
+          isMulti
+          creatable
+          instanceId={`performer-${performer.id}-tags`}
+        />
       </Col>
     </Form.Group>
   );
@@ -1325,7 +1324,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
       return (
         <PerformerTagField
-          key={`${performer.performer.id}-${performer.performer.name}-${currentTags.length}`}
+          key={`${performer.performer.id}-${performer.performer.name}`}
           performer={performer.performer}
           tags={currentTags}
           sceneId={scene.id}

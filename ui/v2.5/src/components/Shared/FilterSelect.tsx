@@ -57,7 +57,7 @@ const getSelectedItems = <T,>(
 };
 
 const SelectComponent = <T, IsMulti extends boolean>(
-  props: ISelectProps<T, IsMulti>
+  props: ISelectProps<T, IsMulti> & { selectRef?: React.Ref<any> }
 ) => {
   const {
     selectedOptions,
@@ -68,6 +68,8 @@ const SelectComponent = <T, IsMulti extends boolean>(
     placeholder,
     showDropdown = true,
     noOptionsMessageText: noOptionsMessage = "None",
+    selectRef,
+    isMulti,
   } = props;
 
   const styles: StylesConfig<Option<T>, IsMulti> = {
@@ -87,9 +89,12 @@ const SelectComponent = <T, IsMulti extends boolean>(
 
   const componentProps = {
     ...props,
+    ref: selectRef,
     styles,
     defaultOptions: true,
     isClearable: true,
+    blurInputOnSelect: !isMulti,
+    openMenuOnFocus: isMulti,
     value: selectedOptions ?? null,
     className: cx("react-select", props.className),
     classNamePrefix: "react-select",
@@ -171,9 +176,21 @@ export const FilterSelectComponent = <
   }
   const uniquePrefix = uniquePrefixRef.current;
 
-
+  const selectRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
+  const shouldRestoreFocus = useRef(false);
   const Toast = useToast();
+
+  React.useEffect(() => {
+    if (!loading && shouldRestoreFocus.current && isMulti && selectRef.current) {
+      shouldRestoreFocus.current = false;
+      setTimeout(() => {
+        if (selectRef.current && selectRef.current.inputRef) {
+          selectRef.current.inputRef.focus();
+        }
+      }, 100);
+    }
+  }, [loading, isMulti]);
 
   const selectedOptions = useMemo(() => {
     if (isMulti && values) {
@@ -204,6 +221,9 @@ export const FilterSelectComponent = <
     creatable && props.onCreate
       ? async (name: string) => {
           try {
+            if (isMulti) {
+              shouldRestoreFocus.current = true;
+            }
             setLoading(true);
             const {
               value,
@@ -212,13 +232,17 @@ export const FilterSelectComponent = <
             } = await props.onCreate!(name);
             const newItemOption = {
               object: newItem,
-              value,
+              value: `${uniquePrefix}-${newItem.id}`,
             } as Option<T>;
             if (!isMulti) {
               onChange(newItemOption);
             } else {
-              const o = (selectedOptions ?? []) as Option<T>[];
-              onChange([...o, newItemOption]);
+              const currentValues = values ?? [];
+              const currentOptions = currentValues.map(v => ({
+                object: v,
+                value: `${uniquePrefix}-${v.id}`,
+              } as Option<T>));
+              onChange([...currentOptions, newItemOption]);
             }
 
             setLoading(false);
@@ -229,6 +253,8 @@ export const FilterSelectComponent = <
             );
           } catch (e) {
             Toast.error(e);
+            setLoading(false);
+            shouldRestoreFocus.current = false;
           }
         }
       : undefined;
@@ -265,6 +291,7 @@ export const FilterSelectComponent = <
   return (
     <SelectComponent<T, IsMulti>
       {...props}
+      selectRef={selectRef}
       loadOptions={debounceLoadOptions}
       isLoading={props.isLoading || loading}
       onChange={onChange}
