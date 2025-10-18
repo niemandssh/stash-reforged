@@ -22,6 +22,7 @@ import {
   useSceneIncrementPlayCount,
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
+  useSceneReduceResolution,
   useFindColorPresets,
 } from "src/core/StashService";
 
@@ -91,6 +92,7 @@ const SceneVideoFilterPanel = lazyComponent(
   () => import("./SceneVideoFilterPanel")
 );
 import { SceneMergeModal } from "../SceneMergeDialog";
+import { ReduceResolutionModal } from "./ReduceResolutionModal";
 import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
 
 const VideoFrameRateResolution: React.FC<{
@@ -206,6 +208,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const { configuration } = useContext(ConfigurationContext);
 
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [showReduceResolutionModal, setShowReduceResolutionModal] = useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
 
   const [incrementO] = useSceneIncrementO(scene.id);
@@ -213,6 +216,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
+  const [reduceResolution] = useSceneReduceResolution();
   
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
@@ -613,6 +617,17 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   }
 
+  function maybeRenderReduceResolutionDialog() {
+    if (showReduceResolutionModal) {
+      return (
+        <ReduceResolutionModal
+          scene={scene}
+          onClose={() => setShowReduceResolutionModal(false)}
+        />
+      );
+    }
+  }
+
   const renderOperations = () => (
     <Dropdown>
       <Dropdown.Toggle
@@ -661,7 +676,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
-        {scene.files.length > 0 && (scene.files[0]?.format !== "mp4" || scene.files[0]?.video_codec !== "h264" || (scene.is_broken && !isHLSVideo(scene))) && (
+        {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || (scene.is_broken && !isHLSVideo(scene))) && (
           <Dropdown.Item
             key="convert-to-mp4"
             className="bg-secondary text-white"
@@ -677,6 +692,15 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             onClick={() => onConvertHLSToMP4()}
           >
             <FormattedMessage id="actions.convert_hls_to_mp4" />
+          </Dropdown.Item>
+        )}
+        {scene.files.length > 0 && (
+          <Dropdown.Item
+            key="reduce-resolution"
+            className="bg-secondary text-white"
+            onClick={() => setShowReduceResolutionModal(true)}
+          >
+            <FormattedMessage id="actions.reduce_resolution" />
           </Dropdown.Item>
         )}
         {boxes.length > 0 && (
@@ -884,6 +908,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       {maybeRenderDeleteDialog()}
       {maybeRenderMergeIntoDialog()}
       {maybeRenderMergeFromDialog()}
+      {maybeRenderReduceResolutionDialog()}
       <div
         className={`scene-tabs order-xl-first order-last ${
           collapsed ? "collapsed" : ""
@@ -1116,6 +1141,10 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 
     const currentTime = getPlayerPosition();
 
+    if (currentTime === undefined) {
+      return;
+    }
+
     // Check if we are already inside one of the markers for this tag
     const currentMarkerIndex = sortedMarkers.findIndex((marker, index) => {
       const endTime = getMarkerEndTime(marker, index);
@@ -1179,6 +1208,11 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     }
 
     const currentTime = getPlayerPosition();
+
+    if (currentTime === undefined) {
+      return;
+    }
+
     let nextMarkerToPlay = mergedMarkers.find((m) => m.seconds >= currentTime);
     let startIndex = mergedMarkers.findIndex((m) => m.seconds >= currentTime);
 

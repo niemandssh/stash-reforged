@@ -410,3 +410,10 @@ type HistoryMutationResult {
   count: Int!
   history: [Time!]!
 }
+
+input ReduceResolutionInput {
+  scene_id: ID!
+  file_id: ID!
+  target_width: Int!
+  target_height: Int!
+}

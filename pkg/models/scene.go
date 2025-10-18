@@ -241,6 +241,13 @@ type ScenesDestroyInput struct {
 	DeleteGenerated *bool    `json:"delete_generated"`
 }
 
+type ReduceResolutionInput struct {
+	SceneID      string `json:"scene_id"`
+	FileID       string `json:"file_id"`
+	TargetWidth  int    `json:"target_width"`
+	TargetHeight int    `json:"target_height"`
+}
+
 func NewSceneQueryResult(getter SceneGetter) *SceneQueryResult {
 	return &SceneQueryResult{
 		getter: getter,

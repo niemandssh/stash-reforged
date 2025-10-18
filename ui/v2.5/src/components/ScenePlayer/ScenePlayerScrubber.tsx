@@ -26,7 +26,10 @@ interface IScenePlayerScrubberProps {
 
 interface ISceneSpriteItem {
   style: CSSProperties;
+  spanStyle: CSSProperties;
+  imgStyle: CSSProperties;
   time: string;
+  url: string;
 }
 
 export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
@@ -90,21 +93,61 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   useEffect(() => {
     if (!spriteInfo) return;
     let totalWidth = 0;
+
+    // Calculate the actual sprite sheet dimensions
+    let maxX = 0, maxY = 0;
+    spriteInfo.forEach(sprite => {
+      maxX = Math.max(maxX, sprite.x + sprite.w);
+      maxY = Math.max(maxY, sprite.y + sprite.h);
+    });
+
     const newSprites = spriteInfo?.map((sprite, index) => {
-      totalWidth += sprite.w;
-      const left = sprite.w * index;
-      const style = {
-        width: `${sprite.w}px`,
-        height: `${sprite.h}px`,
-        backgroundPosition: `${-sprite.x}px ${-sprite.y}px`,
-        backgroundImage: `url(${sprite.url})`,
+      // Fixed display size for all scrubber items
+      const displayWidth = 160;
+      const displayHeight = 90;
+
+      // Calculate scale to fit the sprite piece within display bounds
+      const scale = Math.min(displayWidth / sprite.w, displayHeight / sprite.h);
+
+      // Size of the fitted sprite piece
+      const fittedWidth = sprite.w * scale;
+      const fittedHeight = sprite.h * scale;
+
+      totalWidth += displayWidth;
+      const left = totalWidth - displayWidth;
+
+      const style: CSSProperties = {
+        width: `${displayWidth}px`,
+        height: `${displayHeight}px`,
         left: `${left}px`,
+      };
+
+      // Style for the span wrapper (fitted sprite size with overflow hidden)
+      const spanStyle: CSSProperties = {
+        position: 'absolute',
+        width: `${fittedWidth}px`,
+        height: `${fittedHeight}px`,
+        left: `${(displayWidth - fittedWidth) / 2}px`,
+        top: `${(displayHeight - fittedHeight) / 2}px`,
+        overflow: 'hidden',
+      };
+
+      // Style for the img element (scaled sprite sheet size, positioned to show correct piece)
+      const imgStyle: CSSProperties = {
+        position: 'absolute',
+        width: `${maxX * scale}px`,
+        height: `${maxY * scale}px`,
+        left: `${-sprite.x * scale}px`,
+        top: `${-sprite.y * scale}px`,
       };
       const start = TextUtils.secondsToTimestamp(sprite.start);
       const end = TextUtils.secondsToTimestamp(sprite.end);
       return {
         style,
+        spanStyle,
+        imgStyle,
         time: `${start} - ${end}`,
+        url: sprite.url,
       };
     });
     setScrubWidth(totalWidth);
@@ -312,6 +355,13 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
           style={sprite.style}
           data-sprite-item-id={index}
         >
+          <span style={sprite.spanStyle}>
+            <img
+              src={sprite.url}
+              alt=""
+              style={sprite.imgStyle}
+            />
+          </span>
           <span className="scrubber-item-time">{sprite.time}</span>
         </div>
       );

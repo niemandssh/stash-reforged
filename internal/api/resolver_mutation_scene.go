@@ -1339,8 +1339,8 @@ func (r *mutationResolver) SceneConvertToMp4(ctx context.Context, id string) (st
 		FingerprintCalculator: fingerprintCalc,
 	}
 
-	// Запускаем задачу напрямую через JobManager
-	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
+	// Запускаем задачу в отдельном потоке через JobManager
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
 
 	return strconv.Itoa(jobID), nil
 }
@@ -1422,8 +1422,93 @@ func (r *mutationResolver) SceneConvertHLSToMp4(ctx context.Context, id string) 
 		FingerprintCalculator: fingerprintCalc,
 	}
 
-	// Start the task via JobManager
-	jobID := manager.GetInstance().JobManager.Add(ctx, task.GetDescription(), task)
+	// Start the task in separate thread via JobManager
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
+
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) SceneReduceResolution(ctx context.Context, input models.ReduceResolutionInput) (string, error) {
+	sceneID, err := strconv.Atoi(input.SceneID)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	fileID, err := strconv.Atoi(input.FileID)
+	if err != nil {
+		return "", fmt.Errorf("converting file id: %w", err)
+	}
+
+	// Get scene and load files in one transaction
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Load scene files within transaction
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	// Verify that file belongs to scene
+	var targetFile *models.VideoFile
+	for _, sceneFile := range scene.Files.List() {
+		vf, err := convertVideoFile(sceneFile)
+		if err == nil && int(vf.ID) == fileID {
+			targetFile = vf
+			break
+		}
+	}
+
+	if targetFile == nil {
+		return "", fmt.Errorf("file with id %d not found in scene %d", fileID, sceneID)
+	}
+
+	// Verify that target resolution is smaller than current
+	if targetFile.Width <= input.TargetWidth && targetFile.Height <= input.TargetHeight {
+		return "", fmt.Errorf("target resolution %dx%d is not smaller than current resolution %dx%d",
+			input.TargetWidth, input.TargetHeight, targetFile.Width, targetFile.Height)
+	}
+
+	// Create resolution reduction task
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	g := &generate.Generator{
+		Encoder:      manager.GetInstance().FFMpeg,
+		FFMpegConfig: manager.GetInstance().Config,
+		LockManager:  manager.GetInstance().ReadLockManager,
+		MarkerPaths:  manager.GetInstance().Paths.SceneMarkers,
+		ScenePaths:   manager.GetInstance().Paths.Scene,
+		Overwrite:    true,
+	}
+
+	// Create fingerprint calculator
+	fingerprintCalc := &manager.FingerprintCalculator{Config: manager.GetInstance().Config}
+
+	task := &manager.ReduceResolutionTask{
+		Scene:                 *scene,
+		FileID:                targetFile.ID,
+		TargetWidth:           input.TargetWidth,
+		TargetHeight:          input.TargetHeight,
+		FileNamingAlgorithm:   fileNamingAlgorithm,
+		G:                     g,
+		FFMpeg:                manager.GetInstance().FFMpeg,
+		FFProbe:               manager.GetInstance().FFProbe,
+		Config:                manager.GetInstance().Config,
+		Paths:                 manager.GetInstance().Paths,
+		Repository:            r.repository,
+		FingerprintCalculator: fingerprintCalc,
+	}
+
+	// Start the task in separate thread via JobManager
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), task)
 
 	return strconv.Itoa(jobID), nil
 }

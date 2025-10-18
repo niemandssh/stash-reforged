@@ -965,6 +965,15 @@ export const useSceneConvertHLSToMP4 = () => {
   return useMutation(mutation);
 };
 
+export const useSceneReduceResolution = () => {
+  const mutation = gql`
+    mutation SceneReduceResolution($input: ReduceResolutionInput!) {
+      sceneReduceResolution(input: $input)
+    }
+  `;
+  return useMutation(mutation);
+};
+
 export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
   client.mutate<GQL.SceneUpdateMutation>({
     mutation: GQL.SceneUpdateDocument,

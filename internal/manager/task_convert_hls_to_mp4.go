@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/stashapp/stash/internal/manager/config"
@@ -962,6 +963,14 @@ func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context, oldHash str
 	if oldSpriteImageExists && oldSpriteVttExists {
 		logger.Infof("[convert] migrating existing HLS sprites from old hash to new hash")
 
+		// First, update VTT file content to reference new hash
+		if err := t.updateVttFileHash(oldSpriteVttPath, oldHash, newHash); err != nil {
+			logger.Warnf("[convert] failed to update HLS VTT file hash: %v", err)
+			// Continue with migration even if VTT update fails
+		} else {
+			logger.Infof("[convert] updated HLS VTT file to reference new hash")
+		}
+
 		// Rename sprite image
 		if err := os.Rename(oldSpriteImagePath, newSpriteImagePath); err != nil {
 			logger.Warnf("[convert] failed to rename HLS sprite image: %v", err)
@@ -1008,5 +1017,26 @@ func (t *ConvertHLSToMP4Task) regenerateSprites(ctx context.Context, oldHash str
 	// Run sprite generation
 	spriteTask.Start(ctx)
 	logger.Infof("[convert] generated new sprites for HLS scene %d with hash %s", t.Scene.ID, newHash)
+	return nil
+}
+
+// updateVttFileHash updates the VTT file to replace old hash with new hash in image references
+func (t *ConvertHLSToMP4Task) updateVttFileHash(vttPath, oldHash, newHash string) error {
+	// Read VTT file content
+	content, err := os.ReadFile(vttPath)
+	if err != nil {
+		return fmt.Errorf("failed to read VTT file: %w", err)
+	}
+
+	// Replace old hash with new hash in the content
+	oldContent := string(content)
+	newContent := strings.ReplaceAll(oldContent, oldHash, newHash)
+
+	// Write updated content back to VTT file
+	if err := os.WriteFile(vttPath, []byte(newContent), 0644); err != nil {
+		return fmt.Errorf("failed to write updated VTT file: %w", err)
+	}
+
+	logger.Infof("[convert] updated HLS VTT file: replaced %s with %s", oldHash, newHash)
 	return nil
 }
