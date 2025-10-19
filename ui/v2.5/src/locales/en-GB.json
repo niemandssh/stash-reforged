@@ -25,7 +25,7 @@
     "convert_to_mp4_started": "MP4 conversion started (job {jobId})",
     "convert_hls_to_mp4": "Convert HLS to MP4",
     "convert_hls_to_mp4_started": "HLS to MP4 conversion started (job {jobId})",
-    "reduce_resolution": "Reduce Resolution",
+    "reduce_resolution": "Convert - Reduce Resolution...",
     "reduce_resolution_started": "Resolution reduction started (job {jobId})",
     "clear_back_image": "Clear back image",
     "clear_date_data": "Clear date data",
@@ -1068,6 +1068,18 @@
       "info": "This will reduce the video resolution and create a new MP4 file with the selected resolution. The original file will be replaced.",
       "warning": "Warning: This operation will permanently modify the video file. Make sure you have a backup if needed.",
       "confirm_message": "Are you sure you want to reduce the resolution from {currentResolution} to {targetResolution}?"
+    },
+    "convert_to_mp4": {
+      "warning": "This operation will permanently replace the original video file with an MP4 version. A backup will be created in the temp folder in case of errors.",
+      "warning_text": "This operation will permanently replace the original video file with an MP4 version. A backup will be created in the temp folder in case of errors.",
+      "info": "This will convert the video from {originalFormat} to MP4 format and replace the original file. The conversion process may take some time depending on the file size. If an error occurs, check the temp folder for the backup file.",
+      "temp_path_label": "Backup will be stored in this folder during the operation. If something goes wrong, look for the backup there:"
+    },
+    "convert_hls_to_mp4": {
+      "warning": "This operation will permanently replace the original HLS video with an MP4 version. A backup will be created in the temp folder in case of errors.",
+      "warning_text": "This operation will permanently replace the original HLS video with an MP4 version. A backup will be created in the temp folder in case of errors.",
+      "info": "This will convert the HLS video to MP4 format and replace the original file. The conversion process may take some time depending on the file size. If an error occurs, check the temp folder for the backup file.",
+      "temp_path_label": "Backup will be stored in this folder during the operation. If something goes wrong, look for the backup there:"
     }
   },
   "dimensions": "Dimensions",

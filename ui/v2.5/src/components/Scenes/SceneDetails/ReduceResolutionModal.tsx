@@ -49,7 +49,8 @@ function getResolutionOptions(currentWidth: number, currentHeight: number): Reso
     for (const scale of scales) {
       const width = Math.floor(currentWidth * scale);
       const height = Math.floor(currentHeight * scale);
-      if (width >= 640 && height >= 360) {
+      // Lower minimum requirements for smaller videos
+      if (width >= 320 && height >= 240) {
         options.push({
           width,
           height,
@@ -205,7 +206,7 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
               >
                 {scene.files.map((file) => (
                   <option key={file.id} value={file.id}>
-                    {file.basename} ({file.width}x{file.height} -{" "}
+                    {file.path ? file.path.split('/').pop() : 'Unknown file'} ({file.width}x{file.height} -{" "}
                     {formatFileSize(file.size)})
                   </option>
                 ))}
@@ -219,7 +220,7 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
             <strong>
               <FormattedMessage id="file" />:{" "}
             </strong>
-            {selectedFile.basename}
+            {selectedFile.path ? selectedFile.path.split('/').pop() : 'Unknown file'}
             <br />
             <strong>
               <FormattedMessage id="resolution" />:{" "}

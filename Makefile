@@ -424,6 +424,7 @@ start-compiler-container:
 remove-compiler-container:
 	docker rm -f -v build
 
+up:
 dev:
 start:
 	make server-start

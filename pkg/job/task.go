@@ -32,11 +32,32 @@ func NewTaskQueue(ctx context.Context, p *Progress, queueSize int, processes int
 }
 
 func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
-	tq.tasks <- taskExec{
+	select {
+	case tq.tasks <- taskExec{
 		task: task{
 			description: description,
 		},
 		fn: fn,
+	}:
+		// Successfully added task
+	case <-tq.done:
+		// TaskQueue is closed, ignore
+	default:
+		// Channel is full, try non-blocking send with timeout
+		// This prevents blocking but still attempts to add the task
+		go func() {
+			select {
+			case tq.tasks <- taskExec{
+				task: task{
+					description: description,
+				},
+				fn: fn,
+			}:
+				// Successfully added task
+			case <-tq.done:
+				// TaskQueue is closed, ignore
+			}
+		}()
 	}
 }
 

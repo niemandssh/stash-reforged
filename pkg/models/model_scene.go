@@ -118,12 +118,18 @@ func NewScenePartial() ScenePartial {
 }
 
 func (s *Scene) LoadURLs(ctx context.Context, l URLLoader) error {
+	if s.URLs.Loaded() {
+		return nil
+	}
 	return s.URLs.load(func() ([]string, error) {
 		return l.GetURLs(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadFiles(ctx context.Context, l VideoFileLoader) error {
+	if s.Files.Loaded() {
+		return nil
+	}
 	return s.Files.load(func() ([]*VideoFile, error) {
 		return l.GetFiles(ctx, s.ID)
 	})
@@ -153,24 +159,36 @@ func (s *Scene) LoadPrimaryFile(ctx context.Context, l FileGetter) error {
 }
 
 func (s *Scene) LoadGalleryIDs(ctx context.Context, l GalleryIDLoader) error {
+	if s.GalleryIDs.Loaded() {
+		return nil
+	}
 	return s.GalleryIDs.load(func() ([]int, error) {
 		return l.GetGalleryIDs(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadPerformerIDs(ctx context.Context, l PerformerIDLoader) error {
+	if s.PerformerIDs.Loaded() {
+		return nil
+	}
 	return s.PerformerIDs.load(func() ([]int, error) {
 		return l.GetPerformerIDs(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadScenePerformers(ctx context.Context, l ScenePerformerLoader) error {
+	if s.ScenePerformers.Loaded() {
+		return nil
+	}
 	return s.ScenePerformers.load(func() ([]PerformerScenes, error) {
 		return l.GetScenePerformers(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadTagIDs(ctx context.Context, l TagIDLoader) error {
+	if s.TagIDs.Loaded() {
+		return nil
+	}
 	return s.TagIDs.load(func() ([]int, error) {
 		ids, err := l.GetTagIDs(ctx, s.ID)
 		return ids, err
@@ -178,18 +196,27 @@ func (s *Scene) LoadTagIDs(ctx context.Context, l TagIDLoader) error {
 }
 
 func (s *Scene) LoadGroups(ctx context.Context, l SceneGroupLoader) error {
+	if s.Groups.Loaded() {
+		return nil
+	}
 	return s.Groups.load(func() ([]GroupsScenes, error) {
 		return l.GetGroups(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadStashIDs(ctx context.Context, l StashIDLoader) error {
+	if s.StashIDs.Loaded() {
+		return nil
+	}
 	return s.StashIDs.load(func() ([]StashID, error) {
 		return l.GetStashIDs(ctx, s.ID)
 	})
 }
 
 func (s *Scene) LoadPerformerTagIDs(ctx context.Context, l PerformerTagIDLoader) error {
+	if s.PerformerTagIDs.Loaded() {
+		return nil
+	}
 	return s.PerformerTagIDs.load(func() ([]ScenesTagsPerformer, error) {
 		return l.GetPerformerTagIDs(ctx, s.ID)
 	})

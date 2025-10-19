@@ -1,4 +1,4 @@
-import { Tab, Nav, Dropdown, Button } from "react-bootstrap";
+import { Tab, Nav, Dropdown, Button, Alert } from "react-bootstrap";
 import React, {
   useEffect,
   useState,
@@ -46,6 +46,16 @@ import {
   faEllipsisV,
   faChevronRight,
   faChevronLeft,
+  faVideo,
+  faSync,
+  faSearch,
+  faCog,
+  faCamera,
+  faImage,
+  faCompressAlt,
+  faUpload,
+  faExchangeAlt,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
@@ -93,6 +103,7 @@ const SceneVideoFilterPanel = lazyComponent(
 );
 import { SceneMergeModal } from "../SceneMergeDialog";
 import { ReduceResolutionModal } from "./ReduceResolutionModal";
+import { ModalComponent } from "src/components/Shared/Modal";
 import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
 
 const VideoFrameRateResolution: React.FC<{
@@ -209,6 +220,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [showReduceResolutionModal, setShowReduceResolutionModal] = useState(false);
+  const [showConvertToMP4Confirm, setShowConvertToMP4Confirm] = useState(false);
+  const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] = useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
 
   const [incrementO] = useSceneIncrementO(scene.id);
@@ -494,7 +507,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     Toast.success(intl.formatMessage({ id: "toast.generating_screenshot" }));
   }
 
-  async function onConvertToMP4() {
+  function onConvertToMP4() {
+    setShowConvertToMP4Confirm(true);
+  }
+
+  async function confirmConvertToMP4() {
     try {
       const result = await convertToMP4({
         variables: {
@@ -510,12 +527,18 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           )
         );
       }
+      setShowConvertToMP4Confirm(false);
     } catch (e) {
       Toast.error(e);
+      setShowConvertToMP4Confirm(false);
     }
   }
 
-  async function onConvertHLSToMP4() {
+  function onConvertHLSToMP4() {
+    setShowConvertHLSToMP4Confirm(true);
+  }
+
+  async function confirmConvertHLSToMP4() {
     try {
       const result = await convertHLSToMP4({
         variables: {
@@ -531,8 +554,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           )
         );
       }
+      setShowConvertHLSToMP4Confirm(false);
     } catch (e) {
       Toast.error(e);
+      setShowConvertHLSToMP4Confirm(false);
     }
   }
 
@@ -628,109 +653,237 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   }
 
-  const renderOperations = () => (
-    <Dropdown>
-      <Dropdown.Toggle
-        variant="secondary"
-        id="operation-menu"
-        className="minimal"
-        title={intl.formatMessage({ id: "operations" })}
-      >
-        <Icon icon={faEllipsisV} />
-      </Dropdown.Toggle>
-      <Dropdown.Menu className="bg-secondary text-white">
+  function maybeRenderConvertToMP4ConfirmDialog() {
+    if (showConvertToMP4Confirm) {
+      const originalFormat = scene.files.length > 0 ? scene.files[0].format?.toUpperCase() || 'UNKNOWN' : 'UNKNOWN';
+      
+      // Calculate temp path based on generatedPath (same logic as in config.go)
+      const generatedPath = configuration?.general?.generatedPath || '';
+      const tempPath = generatedPath ? 
+        generatedPath.substring(0, generatedPath.lastIndexOf('/')) + '/temp' : 
+        './temp';
+      
+      return (
+        <ModalComponent
+          show
+          icon={faVideo}
+          header={intl.formatMessage({ id: "actions.convert_to_mp4" })}
+          accept={{
+            variant: "danger",
+            onClick: confirmConvertToMP4,
+            text: intl.formatMessage({ id: "actions.confirm" }),
+          }}
+          cancel={{
+            onClick: () => setShowConvertToMP4Confirm(false),
+            text: intl.formatMessage({ id: "actions.cancel" }),
+            variant: "secondary",
+          }}
+        >
+          <Alert variant="warning">
+            <strong>Warning:</strong> <FormattedMessage id="dialogs.convert_to_mp4.warning_text" />
+          </Alert>
+          <p>
+            <FormattedMessage 
+              id="dialogs.convert_to_mp4.info" 
+              values={{ originalFormat }}
+            />
+          </p>
+          <p>
+            <strong>
+              <FormattedMessage id="dialogs.convert_to_mp4.temp_path_label" />
+            </strong>
+            <br />
+            <a 
+              href={`file://${tempPath}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ fontWeight: 'bold', textDecoration: 'underline' }}
+            >
+              {tempPath}
+            </a>
+          </p>
+        </ModalComponent>
+      );
+    }
+  }
+
+  function maybeRenderConvertHLSToMP4ConfirmDialog() {
+    if (showConvertHLSToMP4Confirm) {
+      // Calculate temp path based on generatedPath (same logic as in config.go)
+      const generatedPath = configuration?.general?.generatedPath || '';
+      const tempPath = generatedPath ? 
+        generatedPath.substring(0, generatedPath.lastIndexOf('/')) + '/temp' : 
+        './temp';
+      
+      return (
+        <ModalComponent
+          show
+          icon={faVideo}
+          header={intl.formatMessage({ id: "actions.convert_hls_to_mp4" })}
+          accept={{
+            variant: "danger",
+            onClick: confirmConvertHLSToMP4,
+            text: intl.formatMessage({ id: "actions.confirm" }),
+          }}
+          cancel={{
+            onClick: () => setShowConvertHLSToMP4Confirm(false),
+            text: intl.formatMessage({ id: "actions.cancel" }),
+            variant: "secondary",
+          }}
+        >
+          <Alert variant="warning">
+            <strong>Warning:</strong> <FormattedMessage id="dialogs.convert_hls_to_mp4.warning_text" />
+          </Alert>
+          <p>
+            <FormattedMessage id="dialogs.convert_hls_to_mp4.info" />
+          </p>
+          <p>
+            <strong>
+              <FormattedMessage id="dialogs.convert_hls_to_mp4.temp_path_label" />
+            </strong>
+            <br />
+            <a 
+              href={`file://${tempPath}`} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ fontWeight: 'bold', textDecoration: 'underline' }}
+            >
+              {tempPath}
+            </a>
+          </p>
+        </ModalComponent>
+      );
+    }
+  }
+
+  const renderOperations = () => {
+    // Check if conversion section has any items
+    const hasConversionOptions = scene.files.length > 0 && (
+      (scene.files[0]?.video_codec !== "h264" || scene.files[0]?.format !== "mp4" || (scene.is_broken && !isHLSVideo(scene))) ||
+      (isHLSVideo(scene) || scene.is_broken) ||
+      true // reduce resolution is always available if there are files
+    );
+
+    return (
+      <Dropdown>
+        <Dropdown.Toggle
+          variant="secondary"
+          id="operation-menu"
+          className="minimal"
+          title={intl.formatMessage({ id: "operations" })}
+        >
+          <Icon icon={faEllipsisV} />
+        </Dropdown.Toggle>
+        <Dropdown.Menu className="bg-secondary text-white" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
         {!!scene.files.length && (
           <Dropdown.Item
             key="rescan"
-            className="bg-secondary text-white"
+            className="bg-secondary text-white d-flex align-items-center"
             onClick={() => onRescan()}
           >
+            <Icon icon={faSync} className="mr-2" />
             <FormattedMessage id="actions.rescan" />
           </Dropdown.Item>
         )}
         <Dropdown.Item
           key="rescan-similarity"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => onRescanSimilarity()}
         >
+          <Icon icon={faSearch} className="mr-2" />
           <FormattedMessage id="actions.rescan_similarity" />
         </Dropdown.Item>
+        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
         <Dropdown.Item
           key="generate"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => setIsGenerateDialogOpen(true)}
         >
+          <Icon icon={faCog} className="mr-2" />
           <FormattedMessage id="actions.generate" />
         </Dropdown.Item>
         <Dropdown.Item
           key="generate-screenshot"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => onGenerateScreenshot(getPlayerPosition())}
         >
+          <Icon icon={faCamera} className="mr-2" />
           <FormattedMessage id="actions.generate_thumb_from_current" />
         </Dropdown.Item>
         <Dropdown.Item
           key="generate-default"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => onGenerateScreenshot()}
         >
+          <Icon icon={faImage} className="mr-2" />
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
+        {hasConversionOptions && <Dropdown.Divider className="bg-dark" />}
         {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || scene.files[0]?.format !== "mp4" || (scene.is_broken && !isHLSVideo(scene))) && (
           <Dropdown.Item
             key="convert-to-mp4"
-            className="bg-secondary text-white"
+            className="bg-secondary text-white d-flex align-items-center"
             onClick={() => onConvertToMP4()}
           >
+            <Icon icon={faVideo} className="mr-2" />
             <FormattedMessage id="actions.convert_to_mp4" />
           </Dropdown.Item>
         )}
         {scene.files.length > 0 && (isHLSVideo(scene) || scene.is_broken) && (
           <Dropdown.Item
             key="convert-hls-to-mp4"
-            className="bg-secondary text-white"
+            className="bg-secondary text-white d-flex align-items-center"
             onClick={() => onConvertHLSToMP4()}
           >
+            <Icon icon={faVideo} className="mr-2" />
             <FormattedMessage id="actions.convert_hls_to_mp4" />
           </Dropdown.Item>
         )}
         {scene.files.length > 0 && (
           <Dropdown.Item
             key="reduce-resolution"
-            className="bg-secondary text-white"
+            className="bg-secondary text-white d-flex align-items-center"
             onClick={() => setShowReduceResolutionModal(true)}
           >
+            <Icon icon={faCompressAlt} className="mr-2" />
             <FormattedMessage id="actions.reduce_resolution" />
           </Dropdown.Item>
         )}
+        {boxes.length > 0 && <Dropdown.Divider className="bg-dark" />}
         {boxes.length > 0 && (
           <Dropdown.Item
             key="submit"
-            className="bg-secondary text-white"
+            className="bg-secondary text-white d-flex align-items-center"
             onClick={() => setShowDraftModal(true)}
           >
+            <Icon icon={faUpload} className="mr-2" />
             <FormattedMessage id="actions.submit_stash_box" />
           </Dropdown.Item>
         )}
+        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
         <Dropdown.Item
           key="merge-into-other"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => onMergeIntoOtherScene()}
         >
+          <Icon icon={faExchangeAlt} className="mr-2" />
           <FormattedMessage id="actions.merge_into_other_scene" />
         </Dropdown.Item>
         <Dropdown.Item
           key="merge-from-other"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => onMergeFromOtherScene()}
         >
+          <Icon icon={faExchangeAlt} className="mr-2" />
           <FormattedMessage id="actions.merge_from_other_scene" />
         </Dropdown.Item>
+        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
         <Dropdown.Item
           key="delete-scene"
-          className="bg-secondary text-white"
+          className="bg-secondary text-white d-flex align-items-center"
           onClick={() => setIsDeleteAlertOpen(true)}
         >
+          <Icon icon={faTrash} className="mr-2" />
           <FormattedMessage
             id="actions.delete"
             values={{ entityType: intl.formatMessage({ id: "scene" }) }}
@@ -738,7 +891,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         </Dropdown.Item>
       </Dropdown.Menu>
     </Dropdown>
-  );
+    );
+  };
 
   const renderTabs = () => (
     <Tab.Container
@@ -909,6 +1063,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       {maybeRenderMergeIntoDialog()}
       {maybeRenderMergeFromDialog()}
       {maybeRenderReduceResolutionDialog()}
+      {maybeRenderConvertToMP4ConfirmDialog()}
+      {maybeRenderConvertHLSToMP4ConfirmDialog()}
       <div
         className={`scene-tabs order-xl-first order-last ${
           collapsed ? "collapsed" : ""
@@ -1470,3 +1626,4 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 };
 
 export default SceneLoader;
+
