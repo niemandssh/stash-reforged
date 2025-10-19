@@ -32,6 +32,15 @@ func NewTaskQueue(ctx context.Context, p *Progress, queueSize int, processes int
 }
 
 func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
+	// Check if TaskQueue is already closed
+	select {
+	case <-tq.done:
+		// TaskQueue is closed, ignore
+		return
+	default:
+		// TaskQueue is still active, continue
+	}
+
 	select {
 	case tq.tasks <- taskExec{
 		task: task{

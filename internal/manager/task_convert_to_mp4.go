@@ -76,14 +76,14 @@ func (t *ConvertToMP4Task) Execute(ctx context.Context, progress *job.Progress) 
 		// Start monitoring file size in a goroutine
 		done := make(chan bool)
 		tempFile := filepath.Join(t.Config.GetGeneratedPath(), fmt.Sprintf("convert_%d_%s.mp4", t.Scene.ID, t.Scene.GetHash(t.FileNamingAlgorithm)))
-		go t.monitorFileSize(tempFile, originalSize, progress, done)
+		go t.monitorFileSize(ctx, tempFile, originalSize, progress, done)
 
 		// Start monitoring in a goroutine
-		go t.monitorFileSizeWithStatusUpdate(tempFile, originalSize, progress, done)
+		go t.monitorFileSizeWithStatusUpdate(ctx, tempFile, originalSize, progress, done)
 
 		// Create a task queue for dynamic status updates
 		taskQueue := job.NewTaskQueue(ctx, progress, 100, 1)
-		go t.monitorFileSizeWithQueue(tempFile, originalSize, taskQueue, done)
+		go t.monitorFileSizeWithQueue(ctx, tempFile, originalSize, taskQueue, done)
 
 		// Perform conversion without transaction to avoid blocking
 		conversionErr = t.convertToMP4(ctx, f, progress, done)
@@ -198,7 +198,7 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 	}
 
 	// Start monitoring file size in a goroutine (using shared done channel)
-	go t.monitorFileSize(tempFile, originalSize, progress, done)
+	go t.monitorFileSize(ctx, tempFile, originalSize, progress, done)
 
 	// Track if conversion was successful
 	conversionSuccessful := false
@@ -375,12 +375,14 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 	return nil
 }
 
-func (t *ConvertToMP4Task) monitorFileSize(tempFile string, originalSize int64, progress *job.Progress, done chan bool) {
+func (t *ConvertToMP4Task) monitorFileSize(ctx context.Context, tempFile string, originalSize int64, progress *job.Progress, done chan bool) {
 	ticker := time.NewTicker(2 * time.Second) // Check every 2 seconds
 	defer ticker.Stop()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-done:
 			return
 		case <-ticker.C:
@@ -407,12 +409,14 @@ func (t *ConvertToMP4Task) monitorFileSize(tempFile string, originalSize int64, 
 	}
 }
 
-func (t *ConvertToMP4Task) monitorFileSizeWithStatusUpdate(tempFile string, originalSize int64, progress *job.Progress, done chan bool) {
+func (t *ConvertToMP4Task) monitorFileSizeWithStatusUpdate(ctx context.Context, tempFile string, originalSize int64, progress *job.Progress, done chan bool) {
 	ticker := time.NewTicker(2 * time.Second) // Check every 2 seconds
 	defer ticker.Stop()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-done:
 			return
 		case <-ticker.C:
@@ -439,12 +443,14 @@ func (t *ConvertToMP4Task) monitorFileSizeWithStatusUpdate(tempFile string, orig
 	}
 }
 
-func (t *ConvertToMP4Task) monitorFileSizeWithQueue(tempFile string, originalSize int64, taskQueue *job.TaskQueue, done chan bool) {
+func (t *ConvertToMP4Task) monitorFileSizeWithQueue(ctx context.Context, tempFile string, originalSize int64, taskQueue *job.TaskQueue, done chan bool) {
 	ticker := time.NewTicker(6 * time.Second) // Check every 6 seconds
 	defer ticker.Stop()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case <-done:
 			return
 		case <-ticker.C:
