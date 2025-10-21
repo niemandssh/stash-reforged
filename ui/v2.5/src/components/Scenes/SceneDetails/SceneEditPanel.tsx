@@ -1435,30 +1435,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
       <Form key={hasInitialized ? 'initialized' : 'not-initialized'} noValidate onSubmit={formik.handleSubmit}>
         <Row className="form-container edit-buttons-container px-3 pt-3">
           <div className="edit-buttons mb-3 pl-0">
-        <Button
-          className="edit-button"
-          variant="primary"
-          disabled={
-            (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) || !isEqual(formik.errors, {})
-          }
-          title={
-            (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) ? "No changes to save" :
-            !isEqual(formik.errors, {}) ? `Validation errors: ${Object.keys(formik.errors).join(', ')}` :
-            ""
-          }
-          onClick={() => formik.submitForm()}
-        >
-          <FormattedMessage id="actions.save" />
-        </Button>
-            {onDelete && (
-              <Button
-                className="edit-button"
-                variant="danger"
-                onClick={() => onDelete()}
-              >
-                <FormattedMessage id="actions.delete" />
-              </Button>
-            )}
+            <Button
+              className="edit-button"
+              variant="primary"
+              disabled={
+                (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) || !isEqual(formik.errors, {})
+              }
+              title={
+                (!isNew && !formik.dirty && !hasUserInteractedWithPerformerTags) ? "No changes to save" :
+                !isEqual(formik.errors, {}) ? `Validation errors: ${Object.keys(formik.errors).join(', ')}` :
+                ""
+              }
+              onClick={() => formik.submitForm()}
+            >
+              <FormattedMessage id="actions.save" />
+            </Button> 
             <Button
               className={`edit-button ${trimEnabled ? 'btn-success' : 'btn-secondary'}`}
               onClick={() => setTrimEnabled(!trimEnabled)}
