@@ -302,19 +302,6 @@ export const SortBySelect: React.FC<{
           />
         </Button>
       </OverlayTrigger>
-      {sortBy === "random" && (
-        <OverlayTrigger
-          overlay={
-            <Tooltip id="sort-reshuffle-tooltip">
-              {intl.formatMessage({ id: "actions.reshuffle" })}
-            </Tooltip>
-          }
-        >
-          <Button variant="secondary" onClick={onReshuffleRandomSort}>
-            <Icon icon={faRandom} />
-          </Button>
-        </OverlayTrigger>
-      )}
     </Dropdown>
   );
 };

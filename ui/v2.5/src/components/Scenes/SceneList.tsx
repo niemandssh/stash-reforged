@@ -22,6 +22,7 @@ import {
   faPencil,
   faPlay,
   faPlus,
+  faRandom,
   faTimes,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -511,6 +512,7 @@ const ListResultsHeader: React.FC<{
   metadataByline?: React.ReactNode;
   onChangeFilter: (filter: ListFilterModel) => void;
 }> = ({ loading, filter, totalCount, metadataByline, onChangeFilter }) => {
+  const intl = useIntl();
   return (
     <ButtonToolbar className="scene-list-header">
       <div>
@@ -523,6 +525,19 @@ const ListResultsHeader: React.FC<{
         />
       </div>
       <div>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            if (filter.sortBy === "random") {
+              onChangeFilter(filter.reshuffleRandomSort());
+            } else {
+              onChangeFilter(filter.setSortBy("random"));
+            }
+          }}
+          title={intl.formatMessage({ id: "actions.sort_by_random" })}
+        >
+          <Icon icon={faRandom} />
+        </Button>
         <SortBySelect
           options={filter.options.sortByOptions}
           sortBy={filter.sortBy}
