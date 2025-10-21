@@ -248,6 +248,13 @@ type ReduceResolutionInput struct {
 	TargetHeight int    `json:"target_height"`
 }
 
+type TrimVideoInput struct {
+	SceneID   string  `json:"scene_id"`
+	FileID    string  `json:"file_id"`
+	StartTime float64 `json:"start_time"`
+	EndTime   float64 `json:"end_time"`
+}
+
 func NewSceneQueryResult(getter SceneGetter) *SceneQueryResult {
 	return &SceneQueryResult{
 		getter: getter,

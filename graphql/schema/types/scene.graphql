@@ -417,3 +417,10 @@ input ReduceResolutionInput {
   target_width: Int!
   target_height: Int!
 }
+
+input TrimVideoInput {
+  scene_id: ID!
+  file_id: ID!
+  start_time: Float!
+  end_time: Float!
+}

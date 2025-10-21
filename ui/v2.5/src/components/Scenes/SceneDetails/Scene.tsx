@@ -1,4 +1,4 @@
-import { Tab, Nav, Dropdown, Button, Alert } from "react-bootstrap";
+import { Tab, Nav, Dropdown, Button, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import React, {
   useEffect,
   useState,
@@ -23,6 +23,8 @@ import {
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
   useSceneReduceResolution,
+  useSceneSetBroken,
+  useSceneSetNotBroken,
   useFindColorPresets,
 } from "src/core/StashService";
 
@@ -53,6 +55,10 @@ import {
   faCamera,
   faImage,
   faCompressAlt,
+  faCut,
+  faImages,
+  faExclamationTriangle,
+  faCheckCircle,
   faUpload,
   faExchangeAlt,
   faTrash,
@@ -103,6 +109,8 @@ const SceneVideoFilterPanel = lazyComponent(
 );
 import { SceneMergeModal } from "../SceneMergeDialog";
 import { ReduceResolutionModal } from "./ReduceResolutionModal";
+import { TrimVideoModal } from "./TrimVideoModal";
+import { RegenerateSpritesModal } from "./RegenerateSpritesModal";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
 
@@ -220,6 +228,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [showDraftModal, setShowDraftModal] = useState(false);
   const [showReduceResolutionModal, setShowReduceResolutionModal] = useState(false);
+  const [showTrimVideoModal, setShowTrimVideoModal] = useState(false);
+  const [showRegenerateSpritesModal, setShowRegenerateSpritesModal] = useState(false);
   const [showConvertToMP4Confirm, setShowConvertToMP4Confirm] = useState(false);
   const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] = useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
@@ -230,6 +240,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
   const [reduceResolution] = useSceneReduceResolution();
+  const [setBroken] = useSceneSetBroken();
+  const [setNotBroken] = useSceneSetNotBroken();
   
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
@@ -576,6 +588,34 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     setIsMergeFromDialogOpen(true);
   }
 
+  async function onSetBroken() {
+    try {
+      await setBroken({
+        variables: {
+          id: scene.id,
+        },
+      });
+      Toast.success(intl.formatMessage({ id: "toast.scene_set_broken" }));
+      forceRefreshSceneData();
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
+  async function onSetNotBroken() {
+    try {
+      await setNotBroken({
+        variables: {
+          id: scene.id,
+        },
+      });
+      Toast.success(intl.formatMessage({ id: "toast.scene_set_not_broken" }));
+      forceRefreshSceneData();
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
   function onMergeDialogClosed(mergedID?: string) {
     setIsMergeIntoDialogOpen(false);
     setIsMergeFromDialogOpen(false);
@@ -648,6 +688,33 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         <ReduceResolutionModal
           scene={scene}
           onClose={() => setShowReduceResolutionModal(false)}
+        />
+      );
+    }
+  }
+
+  function maybeRenderTrimVideoDialog() {
+    if (showTrimVideoModal) {
+      return (
+        <TrimVideoModal
+          scene={scene}
+          onClose={() => setShowTrimVideoModal(false)}
+        />
+      );
+    }
+  }
+
+  function maybeRenderRegenerateSpritesDialog() {
+    if (showRegenerateSpritesModal) {
+      return (
+        <RegenerateSpritesModal
+          sceneId={scene.id}
+          show={showRegenerateSpritesModal}
+          onClose={() => setShowRegenerateSpritesModal(false)}
+          onSuccess={() => {
+            // Refresh scene data after successful regeneration
+            forceRefreshSceneData();
+          }}
         />
       );
     }
@@ -818,7 +885,17 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           <Icon icon={faImage} className="mr-2" />
           <FormattedMessage id="actions.generate_thumb_default" />
         </Dropdown.Item>
-        {hasConversionOptions && <Dropdown.Divider className="bg-dark" />}
+        {scene.files.length > 0 && (
+          <Dropdown.Item
+            key="regenerate-sprites"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => setShowRegenerateSpritesModal(true)}
+          >
+            <Icon icon={faImages} className="mr-2" />
+            <FormattedMessage id="actions.regenerate_sprites" />
+          </Dropdown.Item>
+        )}
+        {hasConversionOptions && <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />}
         {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || scene.files[0]?.format !== "mp4" || (scene.is_broken && !isHLSVideo(scene))) && (
           <Dropdown.Item
             key="convert-to-mp4"
@@ -849,7 +926,39 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.reduce_resolution" />
           </Dropdown.Item>
         )}
-        {boxes.length > 0 && <Dropdown.Divider className="bg-dark" />}
+        {scene.files.length > 0 && (scene.start_time !== null || scene.end_time !== null) && (
+          <Dropdown.Item
+            key="trim-video"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => setShowTrimVideoModal(true)}
+          >
+            <Icon icon={faCut} className="mr-2" />
+            <FormattedMessage id="actions.trim_video" />
+          </Dropdown.Item>
+        )}
+        {scene.files.length > 0 && scene.start_time === null && scene.end_time === null && (
+          <OverlayTrigger
+            overlay={
+              <Tooltip id="trim-video-disabled-tooltip">
+                <FormattedMessage id="dialogs.trim_video.disabled_tooltip" />
+              </Tooltip>
+            }
+            placement="bottom"
+          >
+            <span style={{ cursor: 'not-allowed' }}>
+              <Dropdown.Item
+                key="trim-video-disabled"
+                className="bg-secondary text-white d-flex align-items-center"
+                style={{ opacity: 0.5, cursor: 'not-allowed' }}
+                disabled
+              >
+                <Icon icon={faCut} className="mr-2" />
+                <FormattedMessage id="actions.trim_video" />
+              </Dropdown.Item>
+            </span>
+          </OverlayTrigger>
+        )}
+        {boxes.length > 0 && <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />}
         {boxes.length > 0 && (
           <Dropdown.Item
             key="submit"
@@ -858,6 +967,27 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           >
             <Icon icon={faUpload} className="mr-2" />
             <FormattedMessage id="actions.submit_stash_box" />
+          </Dropdown.Item>
+        )}
+        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
+        {!scene.is_broken && (
+          <Dropdown.Item
+            key="set-broken"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => onSetBroken()}
+          >
+            <Icon icon={faExclamationTriangle} className="mr-2" />
+            <FormattedMessage id="actions.set_broken" />
+          </Dropdown.Item>
+        )}
+        {!scene.is_not_broken && (
+          <Dropdown.Item
+            key="set-not-broken"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => onSetNotBroken()}
+          >
+            <Icon icon={faCheckCircle} className="mr-2" />
+            <FormattedMessage id="actions.set_not_broken" />
           </Dropdown.Item>
         )}
         <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
@@ -1063,6 +1193,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       {maybeRenderMergeIntoDialog()}
       {maybeRenderMergeFromDialog()}
       {maybeRenderReduceResolutionDialog()}
+      {maybeRenderTrimVideoDialog()}
+      {maybeRenderRegenerateSpritesDialog()}
       {maybeRenderConvertToMP4ConfirmDialog()}
       {maybeRenderConvertHLSToMP4ConfirmDialog()}
       <div

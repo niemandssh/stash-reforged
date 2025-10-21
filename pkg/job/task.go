@@ -41,6 +41,13 @@ func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
 		// TaskQueue is still active, continue
 	}
 
+	// Try to send task with panic recovery
+	defer func() {
+		if r := recover(); r != nil {
+			// Channel is closed, ignore the panic
+		}
+	}()
+
 	select {
 	case tq.tasks <- taskExec{
 		task: task{
@@ -55,6 +62,12 @@ func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
 		// Channel is full, try non-blocking send with timeout
 		// This prevents blocking but still attempts to add the task
 		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// Channel is closed, ignore the panic
+				}
+			}()
+
 			select {
 			case tq.tasks <- taskExec{
 				task: task{

@@ -372,6 +372,16 @@ func (t *ConvertToMP4Task) convertToMP4(ctx context.Context, f *models.VideoFile
 
 	// Mark conversion as successful - temp file will be moved, not deleted
 	conversionSuccessful = true
+
+	// Force cleanup of temp file regardless of success/failure
+	if _, err := os.Stat(tempFile); err == nil {
+		if err := os.Remove(tempFile); err != nil {
+			logger.Warnf("[convert] failed to remove temp file %s: %v", tempFile, err)
+		} else {
+			logger.Infof("[convert] force cleaned up temp file: %s", tempFile)
+		}
+	}
+
 	return nil
 }
 
@@ -468,11 +478,20 @@ func (t *ConvertToMP4Task) monitorFileSizeWithQueue(ctx context.Context, tempFil
 						float64(currentSize)/1024/1024,
 						float64(originalSize)/1024/1024)
 
-					taskQueue.Add(statusText, func(ctx context.Context) {
-						// This task will update the description
-						// Add a longer delay to make the status visible
-						time.Sleep(4 * time.Second)
-					})
+					// Check if taskQueue is still active before adding task
+					select {
+					case <-ctx.Done():
+						return
+					case <-done:
+						return
+					default:
+						// Only add task if context is not cancelled and done channel is not closed
+						taskQueue.Add(statusText, func(ctx context.Context) {
+							// This task will update the description
+							// Add a longer delay to make the status visible
+							time.Sleep(4 * time.Second)
+						})
+					}
 
 					logger.Infof("[convert] file size progress: %d/%d bytes (%.1f%%) - %.2f/%.2f MB",
 						currentSize, originalSize, percent*100,
@@ -481,11 +500,20 @@ func (t *ConvertToMP4Task) monitorFileSizeWithQueue(ctx context.Context, tempFil
 					statusText := fmt.Sprintf("Converting video to MP4 - %.2f MB",
 						float64(currentSize)/1024/1024)
 
-					taskQueue.Add(statusText, func(ctx context.Context) {
-						// This task will update the description
-						// Add a longer delay to make the status visible
-						time.Sleep(4 * time.Second)
-					})
+					// Check if taskQueue is still active before adding task
+					select {
+					case <-ctx.Done():
+						return
+					case <-done:
+						return
+					default:
+						// Only add task if context is not cancelled and done channel is not closed
+						taskQueue.Add(statusText, func(ctx context.Context) {
+							// This task will update the description
+							// Add a longer delay to make the status visible
+							time.Sleep(4 * time.Second)
+						})
+					}
 
 					logger.Infof("[convert] current file size: %d bytes (%.2f MB)",
 						currentSize, float64(currentSize)/1024/1024)

@@ -1523,6 +1523,170 @@ func (r *mutationResolver) SceneReduceResolution(ctx context.Context, input mode
 	return strconv.Itoa(jobID), nil
 }
 
+func (r *mutationResolver) SceneTrimVideo(ctx context.Context, input models.TrimVideoInput) (string, error) {
+	sceneID, err := strconv.Atoi(input.SceneID)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	fileID, err := strconv.Atoi(input.FileID)
+	if err != nil {
+		return "", fmt.Errorf("converting file id: %w", err)
+	}
+
+	// Get scene and load files in one transaction
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Load scene files within transaction
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	// Verify that file belongs to scene
+	var targetFile *models.VideoFile
+	for _, sceneFile := range scene.Files.List() {
+		vf, err := convertVideoFile(sceneFile)
+		if err == nil && int(vf.ID) == fileID {
+			targetFile = vf
+			break
+		}
+	}
+
+	if targetFile == nil {
+		return "", fmt.Errorf("file with id %d not found in scene %d", fileID, sceneID)
+	}
+
+	// Validate trim times
+	// At least one time must be set (greater than 0)
+	if input.StartTime <= 0 && input.EndTime <= 0 {
+		return "", fmt.Errorf("at least one trim time must be set")
+	}
+
+	// Validate start time if set
+	if input.StartTime > 0 {
+		if input.StartTime >= targetFile.Duration {
+			return "", fmt.Errorf("start time %.2f cannot be greater than or equal to video duration %.2f", input.StartTime, targetFile.Duration)
+		}
+	}
+
+	// Validate end time if set
+	if input.EndTime > 0 {
+		if input.EndTime > targetFile.Duration {
+			return "", fmt.Errorf("end time %.2f cannot be greater than video duration %.2f", input.EndTime, targetFile.Duration)
+		}
+	}
+
+	// If both are set, validate relationship
+	if input.StartTime > 0 && input.EndTime > 0 {
+		if input.EndTime <= input.StartTime {
+			return "", fmt.Errorf("end time %.2f must be greater than start time %.2f", input.EndTime, input.StartTime)
+		}
+	}
+
+	// Create video trimming task
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	g := &generate.Generator{
+		Encoder:      manager.GetInstance().FFMpeg,
+		FFMpegConfig: manager.GetInstance().Config,
+		LockManager:  manager.GetInstance().ReadLockManager,
+		MarkerPaths:  manager.GetInstance().Paths.SceneMarkers,
+		ScenePaths:   manager.GetInstance().Paths.Scene,
+		Overwrite:    true,
+	}
+
+	// Create fingerprint calculator
+	fingerprintCalc := &manager.FingerprintCalculator{Config: manager.GetInstance().Config}
+
+	// Convert 0 values to nil for proper handling
+	var startTime *float64
+	if input.StartTime > 0 {
+		startTime = &input.StartTime
+	}
+
+	var endTime *float64
+	if input.EndTime > 0 {
+		endTime = &input.EndTime
+	}
+
+	task := &manager.TrimVideoTask{
+		Scene:                 *scene,
+		FileID:                targetFile.ID,
+		StartTime:             startTime,
+		EndTime:               endTime,
+		FileNamingAlgorithm:   fileNamingAlgorithm,
+		G:                     g,
+		FFMpeg:                manager.GetInstance().FFMpeg,
+		FFProbe:               manager.GetInstance().FFProbe,
+		Config:                manager.GetInstance().Config,
+		Paths:                 manager.GetInstance().Paths,
+		Repository:            r.repository,
+		FingerprintCalculator: fingerprintCalc,
+	}
+
+	// Start the task in separate thread via JobManager
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
+
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) SceneRegenerateSprites(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	// Get scene and load files in one transaction
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Load scene files within transaction
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	// Create sprite regeneration task
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+
+	task := &manager.RegenerateSpritesTask{
+		Scene:               *scene,
+		FileNamingAlgorithm: fileNamingAlgorithm,
+		Repository:          r.repository,
+		Paths:               manager.GetInstance().Paths,
+	}
+
+	// Start the task in separate thread via JobManager
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
+
+	return strconv.Itoa(jobID), nil
+}
+
 func (r *mutationResolver) OpenInExternalPlayer(ctx context.Context, id string) (bool, error) {
 	sceneID, err := strconv.Atoi(id)
 	if err != nil {
@@ -1612,5 +1776,77 @@ func (r *mutationResolver) OpenInExternalPlayer(ctx context.Context, id string) 
 	}()
 
 	logger.Infof("Successfully started external player for file '%s'", videoFilePath)
+	return true, nil
+}
+
+func (r *mutationResolver) SceneSetBroken(ctx context.Context, id string) (bool, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid scene ID: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return fmt.Errorf("loading scene: %w", err)
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Set scene as broken and clear not broken status
+		scene.IsBroken = true
+		scene.IsNotBroken = false
+
+		// Update scene in database
+		if err := r.repository.Scene.Update(ctx, scene); err != nil {
+			return fmt.Errorf("updating scene: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return false, err
+	}
+
+	logger.Infof("Set scene %d as broken (cleared not broken status)", sceneID)
+	return true, nil
+}
+
+func (r *mutationResolver) SceneSetNotBroken(ctx context.Context, id string) (bool, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid scene ID: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return fmt.Errorf("loading scene: %w", err)
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		// Set scene as not broken and clear broken status
+		scene.IsNotBroken = true
+		scene.IsBroken = false
+
+		// Update scene in database
+		if err := r.repository.Scene.Update(ctx, scene); err != nil {
+			return fmt.Errorf("updating scene: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return false, err
+	}
+
+	logger.Infof("Set scene %d as not broken (cleared broken status)", sceneID)
 	return true, nil
 }

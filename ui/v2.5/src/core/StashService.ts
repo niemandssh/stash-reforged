@@ -974,6 +974,46 @@ export const useSceneReduceResolution = () => {
   return useMutation(mutation);
 };
 
+export const useSceneTrimVideo = () => {
+  const mutation = gql`
+    mutation SceneTrimVideo($input: TrimVideoInput!) {
+      sceneTrimVideo(input: $input)
+    }
+  `;
+  return useMutation(mutation);
+};
+
+export const useSceneRegenerateSprites = () => {
+  const mutation = gql`
+    mutation SceneRegenerateSprites($id: ID!) {
+      sceneRegenerateSprites(id: $id)
+    }
+  `;
+  return useMutation(mutation);
+};
+
+export const useSceneSetBroken = () => {
+  const mutation = gql`
+    mutation SceneSetBroken($id: ID!) {
+      sceneSetBroken(id: $id)
+    }
+  `;
+  return useMutation(mutation, {
+    refetchQueries: [GQL.FindSceneDocument],
+  });
+};
+
+export const useSceneSetNotBroken = () => {
+  const mutation = gql`
+    mutation SceneSetNotBroken($id: ID!) {
+      sceneSetNotBroken(id: $id)
+    }
+  `;
+  return useMutation(mutation, {
+    refetchQueries: [GQL.FindSceneDocument],
+  });
+};
+
 export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
   client.mutate<GQL.SceneUpdateMutation>({
     mutation: GQL.SceneUpdateDocument,

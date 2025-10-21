@@ -344,6 +344,16 @@ func (t *ReduceResolutionTask) reduceResolution(ctx context.Context, f *models.V
 
 	// Mark conversion as successful
 	conversionSuccessful = true
+
+	// Force cleanup of temp file regardless of success/failure
+	if _, err := os.Stat(tempFile); err == nil {
+		if err := os.Remove(tempFile); err != nil {
+			logger.Warnf("[reduce-res] failed to remove temp file %s: %v", tempFile, err)
+		} else {
+			logger.Infof("[reduce-res] force cleaned up temp file: %s", tempFile)
+		}
+	}
+
 	return nil
 }
 
