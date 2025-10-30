@@ -465,6 +465,18 @@ export const SceneEditPanel: React.FC<IProps> = ({
     // Mark that user has interacted with performer tags
     setHasUserInteractedWithPerformerTags(true);
 
+    // Add new tags to allTags if they don't exist yet (e.g., newly created tags)
+    setAllTags(prevAllTags => {
+      const existingTagIds = new Set(prevAllTags.map(t => t.id));
+      const newTags = tags.filter(tag => !existingTagIds.has(tag.id));
+      
+      if (newTags.length > 0) {
+        // Add new tags to allTags
+        return [...prevAllTags, ...newTags];
+      }
+      return prevAllTags;
+    });
+
     // Get current performer tags from formik
     const currentPerformerTags = formik.values.performer_tag_ids || [];
 

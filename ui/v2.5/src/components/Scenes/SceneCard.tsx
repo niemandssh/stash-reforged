@@ -331,9 +331,21 @@ const SceneCardPopovers = PatchComponent(
 const SceneCardDetails = PatchComponent(
   "SceneCard.Details",
   (props: ISceneCardProps) => {
+    const file = useMemo(
+      () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
+      [props.scene]
+    );
+
+    const hasDate = !!props.scene.date;
+
     return (
       <div className="scene-card__details">
         <span className="scene-card__date">{props.scene.date}</span>
+        {file?.size !== undefined ? (
+          <span className={cx("scene-card__file-size", { "scene-card__file-size--with-margin": hasDate })}>
+            <FileSize size={file.size} />
+          </span>
+        ) : null}
         <span className="file-path extra-scene-info">
           {objectPath(props.scene)}
         </span>

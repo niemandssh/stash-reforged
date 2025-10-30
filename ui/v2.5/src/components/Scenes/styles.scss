@@ -302,6 +302,15 @@ textarea.scene-description {
 
   &__details {
     margin-bottom: 1rem;
+
+    .scene-card__file-size {
+      color: $text-muted;
+      display: inline-block;
+
+      &--with-margin {
+        margin-left: 0.5rem;
+      }
+    }
   }
 
   &:hover,
