@@ -1400,3 +1400,22 @@ input[type="range"].blue-slider {
     color: rgba(255, 255, 255, 0.9);
   }
 }
+
+// Remove box-shadow and outline from all Bootstrap buttons
+.btn {
+  box-shadow: none !important;
+  outline: none !important;
+
+  &:focus,
+  &:active,
+  &:focus-visible,
+  &.active:focus {
+    box-shadow: none !important;
+    outline: none !important;
+  }
+
+  &:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}

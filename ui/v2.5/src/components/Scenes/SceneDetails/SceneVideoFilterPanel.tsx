@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, ButtonGroup } from "react-bootstrap";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { VIDEO_PLAYER_ID } from "src/components/ScenePlayer/util";
 import { useSceneUpdate } from "src/core/StashService";
@@ -862,6 +862,83 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         setValue={setScaleValue}
         displayValue={`${scaleValue / scaleRange.divider}%`}
       />
+      <div className="row form-group">
+        <span className="col-sm-3"></span>
+        <span className="col-sm-7">
+          <ButtonGroup className="scale-buttons ml-sm-3">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(25)}
+              active={scaleValue === 25}
+            >
+              25%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(40)}
+              active={scaleValue === 40}
+            >
+              40%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(50)}
+              active={scaleValue === 50}
+            >
+              50%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(60)}
+              active={scaleValue === 60}
+            >
+              60%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(75)}
+              active={scaleValue === 75}
+            >
+              75%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(80)}
+              active={scaleValue === 80}
+            >
+              80%
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="px-1 py-0"
+              style={{ fontSize: '0.875rem' }}
+              onClick={() => setScaleValue(100)}
+              active={scaleValue === 100}
+            >
+              100%
+            </Button>
+          </ButtonGroup>
+        </span>
+      </div>
       <Slider
         title={intl.formatMessage({ id: "effect_filters.aspect" })}
         range={aspectRatioRange}
