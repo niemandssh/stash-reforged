@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+	time "time"
 
 	models "github.com/stashapp/stash/pkg/models"
 	mock "github.com/stretchr/testify/mock"
@@ -700,6 +701,578 @@ func (_m *GalleryReaderWriter) UpdatePartial(ctx context.Context, id int, update
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int, models.GalleryPartial) error); ok {
 		r1 = rf(ctx, id, updatedGallery)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AddO provides a mock function with given fields: ctx, id, dates
+func (_m *GalleryReaderWriter) AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, id, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, id, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, id, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AddViews provides a mock function with given fields: ctx, sceneID, dates
+func (_m *GalleryReaderWriter) AddViews(ctx context.Context, sceneID int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, sceneID, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, sceneID, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, sceneID, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountAllViews provides a mock function with given fields: ctx
+func (_m *GalleryReaderWriter) CountAllViews(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountViews provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) CountViews(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountUniqueViews provides a mock function with given fields: ctx
+func (_m *GalleryReaderWriter) CountUniqueViews(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DecrementOCounter provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) DecrementOCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteAllViews provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) DeleteAllViews(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteViews provides a mock function with given fields: ctx, id, dates
+func (_m *GalleryReaderWriter) DeleteViews(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, id, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, id, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, id, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteO provides a mock function with given fields: ctx, id, dates
+func (_m *GalleryReaderWriter) DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, id, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, id, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, id, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetManyViewDates provides a mock function with given fields: ctx, ids
+func (_m *GalleryReaderWriter) GetManyViewDates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 [][]time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, []int) [][]time.Time); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([][]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetManyViewCount provides a mock function with given fields: ctx, ids
+func (_m *GalleryReaderWriter) GetManyViewCount(ctx context.Context, ids []int) ([]int, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []int
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []int); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetManyLastViewed provides a mock function with given fields: ctx, ids
+func (_m *GalleryReaderWriter) GetManyLastViewed(ctx context.Context, ids []int) ([]*time.Time, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []*time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []*time.Time); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetODatesInRange provides a mock function with given fields: ctx, start, end
+func (_m *GalleryReaderWriter) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, start, end)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []time.Time); ok {
+		r0 = rf(ctx, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetODates provides a mock function with given fields: ctx, relatedID
+func (_m *GalleryReaderWriter) GetODates(ctx context.Context, relatedID int) ([]time.Time, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int) []time.Time); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetManyODates provides a mock function with given fields: ctx, ids
+func (_m *GalleryReaderWriter) GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 [][]time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, []int) [][]time.Time); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([][]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetManyOCount provides a mock function with given fields: ctx, ids
+func (_m *GalleryReaderWriter) GetManyOCount(ctx context.Context, ids []int) ([]int, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []int
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []int); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetOCount provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) GetOCount(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAllOCount provides a mock function with given fields: ctx
+func (_m *GalleryReaderWriter) GetAllOCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetViewDates provides a mock function with given fields: ctx, relatedID
+func (_m *GalleryReaderWriter) GetViewDates(ctx context.Context, relatedID int) ([]time.Time, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int) []time.Time); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IncrementOCounter provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) IncrementOCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// OCount provides a mock function with given fields: ctx
+func (_m *GalleryReaderWriter) OCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// OCountByPerformerID provides a mock function with given fields: ctx, performerID
+func (_m *GalleryReaderWriter) OCountByPerformerID(ctx context.Context, performerID int) (int, error) {
+	ret := _m.Called(ctx, performerID)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, performerID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, performerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetOCounter provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) ResetOCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAggregatedViewHistory provides a mock function with given fields: ctx, page, perPage
+func (_m *GalleryReaderWriter) GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.AggregatedView, error) {
+	ret := _m.Called(ctx, page, perPage)
+
+	var r0 []models.AggregatedView
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.AggregatedView); ok {
+		r0 = rf(ctx, page, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.AggregatedView)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, page, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAggregatedViewHistoryCount provides a mock function with given fields: ctx
+func (_m *GalleryReaderWriter) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetO provides a mock function with given fields: ctx, id
+func (_m *GalleryReaderWriter) ResetO(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}

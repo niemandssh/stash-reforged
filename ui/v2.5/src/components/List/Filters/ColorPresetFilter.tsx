@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Form } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ModifierCriterion } from "src/models/list-filter/criteria/criterion";
-import { CriterionModifier } from "src/core/generated-graphql";
+import { CriterionModifier, ColorPreset } from "src/core/generated-graphql";
 import { useFindColorPresets } from "src/core/StashService";
-import { ColorPreset } from "src/core/generated-graphql";
 
 interface IColorPresetFilter {
   criterion: ModifierCriterion<string>;
@@ -19,7 +18,7 @@ export const ColorPresetFilter: React.FC<IColorPresetFilter> = ({
   const { data: presetsData, loading } = useFindColorPresets();
   const [options, setOptions] = useState<Array<{ value: string; label: string }>>([]);
 
-  const presets = presetsData?.findColorPresets?.color_presets || [];
+  const presets = useMemo(() => presetsData?.findColorPresets?.color_presets || [], [presetsData]);
 
   useEffect(() => {
     const newOptions = [

@@ -21,7 +21,7 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const { value } = e.target;
     // Разрешаем только цифры
     if (value === "" || /^\d+$/.test(value)) {
       setInputValue(value);

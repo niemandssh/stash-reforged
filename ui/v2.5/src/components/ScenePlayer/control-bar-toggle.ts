@@ -46,7 +46,7 @@ class ControlBarToggleButton extends videojs.getComponent("button") {
 
   handleClick() {
     const player = this.player();
-    const controlBar = player.controlBar;
+    const { controlBar } = player;
     
     if (!controlBar) return;
 
@@ -112,7 +112,7 @@ class ControlBarTogglePlugin extends videojs.getPlugin("plugin") {
   }
 
   ready() {
-    const player = this.player;
+    const { player } = this;
     
     // Create floating button and add to player
     this.floatingButton = this.createFloatingButton();

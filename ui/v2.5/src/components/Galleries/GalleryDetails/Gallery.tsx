@@ -45,7 +45,6 @@ import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import cx from "classnames";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ConfigurationContext } from "src/hooks/Config";
-import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { OCounterButton } from "src/components/Scenes/SceneDetails/OCounterButton";
 import { ViewCountButton } from "src/components/Shared/CountButton";
 

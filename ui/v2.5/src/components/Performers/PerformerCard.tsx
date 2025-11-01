@@ -177,7 +177,7 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
 
 const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Overlays",
-  ({ performer, ageFromDate }) => {
+  ({ performer }) => {
     const [updatePerformer] = usePerformerUpdate();
     const intl = useIntl();
 

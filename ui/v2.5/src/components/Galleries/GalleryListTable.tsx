@@ -10,7 +10,6 @@ import { RatingSystem } from "../Shared/Rating/RatingSystem";
 import { useGalleryUpdate } from "src/core/StashService";
 import { IColumn, ListTable } from "../List/ListTable";
 import { useTableColumns } from "src/hooks/useTableColumns";
-import { Icon } from "../Shared/Icon";
 import { PinIcon } from "../Shared/PinIcon";
 
 interface IGalleryListTableProps {

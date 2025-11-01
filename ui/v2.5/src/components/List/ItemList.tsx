@@ -79,7 +79,7 @@ export function useFilteredItemList<
   const { showModal, closeModal } = modalState;
 
   // Utility hooks
-  const { setPage, setDisplayMode: defaultSetDisplayMode } = useFilterOperations({ filter, setFilter });
+  const { setPage } = useFilterOperations({ filter, setFilter });
   
   // scroll to the top of the page when the page changes
   useScrollToTopOnPageChange(filter.currentPage, result.loading);

@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+	time "time"
 
 	models "github.com/stashapp/stash/pkg/models"
 	mock "github.com/stretchr/testify/mock"
@@ -757,4 +758,27 @@ func (_m *ImageReaderWriter) UpdateTags(ctx context.Context, imageID int, tagIDs
 	}
 
 	return r0
+}
+
+// GetODatesInRange provides a mock function with given fields: ctx, start, end
+func (_m *ImageReaderWriter) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, start, end)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []time.Time); ok {
+		r0 = rf(ctx, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

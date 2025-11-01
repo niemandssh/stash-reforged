@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Form, Button, Alert, Row, Col } from "react-bootstrap";
+import { Form, Alert, Row, Col } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { useToast } from "src/hooks/Toast";
@@ -12,15 +12,15 @@ interface IReduceResolutionModalProps {
   onClose: () => void;
 }
 
-interface ResolutionOption {
+interface IResolutionOption {
   width: number;
   height: number;
   label: string;
 }
 
-function getResolutionOptions(currentWidth: number, currentHeight: number): ResolutionOption[] {
+function getResolutionOptions(currentWidth: number, currentHeight: number): IResolutionOption[] {
   const aspectRatio = currentWidth / currentHeight;
-  const options: ResolutionOption[] = [];
+  const options: IResolutionOption[] = [];
 
   // Common resolutions in descending order
   const standardResolutions = [

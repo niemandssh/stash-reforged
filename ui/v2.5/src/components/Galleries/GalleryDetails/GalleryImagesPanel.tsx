@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useCallback } from "react";
 import * as GQL from "src/core/generated-graphql";
 import { GalleriesCriterion } from "src/models/list-filter/criteria/galleries";
 import { ListFilterModel } from "src/models/list-filter/filter";

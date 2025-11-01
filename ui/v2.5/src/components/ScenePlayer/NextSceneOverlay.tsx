@@ -10,14 +10,14 @@ import GenderIcon from "../Performers/GenderIcon";
 import { faPlay, faTimes, faClock } from "@fortawesome/free-solid-svg-icons";
 import "./NextSceneOverlay.scss";
 
-interface NextSceneOverlayProps {
+interface INextSceneOverlayProps {
   nextScene: GQL.SlimSceneDataFragment;
   onPlay: () => void;
   onCancel: () => void;
   onSkip: () => void;
 }
 
-export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
+export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
   nextScene,
   onPlay,
   onCancel,
@@ -85,12 +85,6 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onCancel]);
-
-  // Handle Escape key to close overlay (separate from timer cancellation)
-  const handleEscapeClose = useCallback(() => {
-    setTimerCancelled(true);
-    onCancel();
   }, [onCancel]);
 
   const handleSkip = useCallback(() => {
@@ -196,7 +190,7 @@ export const NextSceneOverlay: React.FC<NextSceneOverlayProps> = ({
                     className="next-scene-overlay-performer-chip"
                     onClick={handleSkip}
                   >
-                    <GenderIcon gender={performer.gender as any} className="next-scene-overlay-gender-icon" />
+                    <GenderIcon gender={performer.gender ?? undefined} className="next-scene-overlay-gender-icon" />
                     {performer.name}
                   </Link>
                 ))}

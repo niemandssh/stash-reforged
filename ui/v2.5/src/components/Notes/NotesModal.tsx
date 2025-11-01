@@ -23,14 +23,14 @@ const messages = defineMessages({
   },
 });
 
-interface NotesModalProps {
+interface INotesModalProps {
   show: boolean;
   onHide: () => void;
   notes: string;
   onSave: (notes: string) => void;
 }
 
-export const NotesModal: React.FC<NotesModalProps> = ({
+export const NotesModal: React.FC<INotesModalProps> = ({
   show,
   onHide,
   notes,

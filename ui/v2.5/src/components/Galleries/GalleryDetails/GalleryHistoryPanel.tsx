@@ -21,7 +21,6 @@ import {
 } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
 import { useToast } from "src/hooks/Toast";
-import { TextField } from "src/utils/field";
 import TextUtils from "src/utils/text";
 
 const History: React.FC<{
@@ -147,7 +146,6 @@ interface IGalleryHistoryProps {
 
 export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery }) => {
   const intl = useIntl();
-  const Toast = useToast();
 
   const [dialogs, setDialogs] = React.useState({
     playHistory: false,
@@ -173,7 +171,7 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     return date.toISOString();
   }
 
-  function handleAddPlayDate(time?: string) {
+  function handleAddPlayDate() {
     incrementPlayCount({
       variables: {
         id: gallery.id,

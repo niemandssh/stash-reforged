@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { Form, Button, Alert, Row, Col } from "react-bootstrap";
+import { Form, Alert, Row, Col } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { DurationInput } from "src/components/Shared/DurationInput";
@@ -152,7 +152,6 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
     if (startTime === null || endTime === null) return null;
     
     const trimDuration = endTime - startTime;
-    const removedFromStart = startTime;
     const removedFromEnd = originalDuration - endTime;
 
     return (

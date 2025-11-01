@@ -7,7 +7,7 @@ import * as GQL from "src/core/generated-graphql";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
-import { queryFindGalleries, useFindGalleries, useGalleryUpdate, getClient } from "src/core/StashService";
+import { queryFindGalleries, useFindGalleries, getClient } from "src/core/StashService";
 import GalleryWallCard from "./GalleryWallCard";
 import { EditGalleriesDialog } from "./EditGalleriesDialog";
 import { DeleteGalleriesDialog } from "./DeleteGalleriesDialog";

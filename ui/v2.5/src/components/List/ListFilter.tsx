@@ -29,7 +29,6 @@ import {
   faCaretDown,
   faCaretUp,
   faCheck,
-  faRandom,
 } from "@fortawesome/free-solid-svg-icons";
 import { FilterButton } from "./Filters/FilterButton";
 import { useDebounce } from "src/hooks/debounce";

@@ -307,7 +307,6 @@ export const ImageList: React.FC<IImageList> = ({
   alterQuery,
   extraOperations,
   chapters = [],
-  onDisplayModeChange,
 }) => {
   const intl = useIntl();
   const history = useHistory();

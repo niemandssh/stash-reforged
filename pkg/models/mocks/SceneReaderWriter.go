@@ -113,6 +113,29 @@ func (_m *SceneReaderWriter) All(ctx context.Context) ([]*models.Scene, error) {
 	return r0, r1
 }
 
+// AllWithRelationships provides a mock function with given fields: ctx
+func (_m *SceneReaderWriter) AllWithRelationships(ctx context.Context) ([]*models.Scene, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []*models.Scene
+	if rf, ok := ret.Get(0).(func(context.Context) []*models.Scene); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Scene)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AssignFiles provides a mock function with given fields: ctx, sceneID, fileID
 func (_m *SceneReaderWriter) AssignFiles(ctx context.Context, sceneID int, fileID []models.FileID) error {
 	ret := _m.Called(ctx, sceneID, fileID)
@@ -1355,6 +1378,163 @@ func (_m *SceneReaderWriter) UpdatePartial(ctx context.Context, id int, updatedS
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int, models.ScenePartial) error); ok {
 		r1 = rf(ctx, id, updatedScene)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAggregatedViewHistory provides a mock function with given fields: ctx, page, perPage
+func (_m *SceneReaderWriter) GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.AggregatedView, error) {
+	ret := _m.Called(ctx, page, perPage)
+
+	var r0 []models.AggregatedView
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.AggregatedView); ok {
+		r0 = rf(ctx, page, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.AggregatedView)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, page, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCombinedAggregatedViewHistory provides a mock function with given fields: ctx, page, perPage
+func (_m *SceneReaderWriter) GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.CombinedAggregatedView, error) {
+	ret := _m.Called(ctx, page, perPage)
+
+	var r0 []models.CombinedAggregatedView
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.CombinedAggregatedView); ok {
+		r0 = rf(ctx, page, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.CombinedAggregatedView)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, page, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCombinedAggregatedViewHistoryCount provides a mock function with given fields: ctx
+func (_m *SceneReaderWriter) GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAggregatedViewHistoryCount provides a mock function with given fields: ctx
+func (_m *SceneReaderWriter) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetODatesInRange provides a mock function with given fields: ctx, start, end
+func (_m *SceneReaderWriter) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, start, end)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []time.Time); ok {
+		r0 = rf(ctx, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPerformerTagIDs provides a mock function with given fields: ctx, relatedID
+func (_m *SceneReaderWriter) GetPerformerTagIDs(ctx context.Context, relatedID int) ([]models.ScenesTagsPerformer, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []models.ScenesTagsPerformer
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.ScenesTagsPerformer); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.ScenesTagsPerformer)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetScenePerformers provides a mock function with given fields: ctx, relatedID
+func (_m *SceneReaderWriter) GetScenePerformers(ctx context.Context, relatedID int) ([]models.PerformerScenes, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []models.PerformerScenes
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.PerformerScenes); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.PerformerScenes)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
 	} else {
 		r1 = ret.Error(1)
 	}

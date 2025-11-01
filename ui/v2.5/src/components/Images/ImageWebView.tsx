@@ -68,7 +68,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
   }, [images.length]);
 
   useEffect(() => {
-    spacerRefs.current.forEach((ref, index) => {
+    spacerRefs.current.forEach((ref) => {
       if (ref) {
         observe(ref);
       }
@@ -142,7 +142,7 @@ export const ImageWebView: React.FC<IImageWebViewProps> = ({
       clearTimeout(timeoutId);
       isModeSwitching.current = false;
     };
-  }, [webDisplayMode, images.length]);
+  }, [webDisplayMode, images.length, currentImageIndex]);
 
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);

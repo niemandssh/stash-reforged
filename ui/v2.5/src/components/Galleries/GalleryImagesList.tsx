@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useMemo, MouseEvent, useContext } from "react";
-import { FormattedNumber, useIntl } from "react-intl";
+import { useIntl } from "react-intl";
 import cloneDeep from "lodash-es/cloneDeep";
 import { useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
@@ -21,7 +21,6 @@ import { ConfigurationContext } from "src/hooks/Config";
 import { ImageGridCard } from "../Images/ImageGridCard";
 import { ImageSlideshow } from "../Images/ImageSlideshow";
 import { ImageWebView } from "../Images/ImageWebView";
-import { WebDisplayModeToggle } from "../Images/WebDisplayModeToggle";
 import { View } from "../List/views";
 import { IItemListOperation } from "../List/FilteredListToolbar";
 
