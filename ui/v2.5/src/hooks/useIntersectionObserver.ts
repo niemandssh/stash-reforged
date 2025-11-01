@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 interface IUseIntersectionObserverOptions {
   threshold?: number | number[];
@@ -14,29 +14,38 @@ export function useIntersectionObserver(
   const observerRef = useRef<IntersectionObserver | null>(null);
   const elementsRef = useRef<Element[]>([]);
 
-  const { threshold = 0.5, rootMargin = '0px', root = null } = options;
+  const { threshold = 0.5, rootMargin = "0px", root = null } = options;
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
       (observedEntries) => {
         setEntries(observedEntries);
-        
+
         let maxIntersectionRatio = 0;
         let maxIndex = 0;
-        
+
         observedEntries.forEach((entry) => {
           if (entry.isIntersecting) {
             // Get the index from data-index attribute
-            const dataIndex = parseInt((entry.target as HTMLElement).getAttribute('data-index') || '0', 10);
+            const dataIndex = parseInt(
+              (entry.target as HTMLElement).getAttribute("data-index") || "0",
+              10
+            );
             // Find the element with the highest intersection ratio that's closest to center
-            const centerRatio = entry.intersectionRatio * (1 - Math.abs(entry.boundingClientRect.top - window.innerHeight / 2) / window.innerHeight);
+            const centerRatio =
+              entry.intersectionRatio *
+              (1 -
+                Math.abs(
+                  entry.boundingClientRect.top - window.innerHeight / 2
+                ) /
+                  window.innerHeight);
             if (centerRatio > maxIntersectionRatio) {
               maxIntersectionRatio = centerRatio;
               maxIndex = dataIndex;
             }
           }
         });
-        
+
         if (maxIntersectionRatio > 0) {
           setActiveIndex(maxIndex);
         }

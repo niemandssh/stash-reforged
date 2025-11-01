@@ -8,11 +8,13 @@ import * as GQL from "src/core/generated-graphql";
  * @returns The selected next scene or null if no suitable scene found
  */
 export function selectNextScene(
-  similarScenes: Array<{
-    __typename?: 'SimilarScene';
-    similarity_score: number;
-    scene: GQL.SlimSceneDataFragment;
-  }> | undefined,
+  similarScenes:
+    | Array<{
+        __typename?: "SimilarScene";
+        similarity_score: number;
+        scene: GQL.SlimSceneDataFragment;
+      }>
+    | undefined,
   currentSceneId: string,
   viewedSceneIds: string[] = []
 ): GQL.SlimSceneDataFragment | null {
@@ -33,7 +35,8 @@ export function selectNextScene(
 
   // Sort by similarity score in descending order
   const sortedScenes = filteredScenes.sort(
-    (a: { similarity_score: number }, b: { similarity_score: number }) => b.similarity_score - a.similarity_score
+    (a: { similarity_score: number }, b: { similarity_score: number }) =>
+      b.similarity_score - a.similarity_score
   );
 
   // Take batches of 5 scenes until we find one that's not viewed
@@ -66,11 +69,13 @@ export function selectNextScene(
  */
 export function useNextScene(
   sceneId: string,
-  similarScenes: Array<{
-    __typename?: 'SimilarScene';
-    similarity_score: number;
-    scene: GQL.SlimSceneDataFragment;
-  }> | undefined,
+  similarScenes:
+    | Array<{
+        __typename?: "SimilarScene";
+        similarity_score: number;
+        scene: GQL.SlimSceneDataFragment;
+      }>
+    | undefined,
   viewedSceneIds: string[] = []
 ): GQL.SlimSceneDataFragment | null {
   return selectNextScene(similarScenes, sceneId, viewedSceneIds);

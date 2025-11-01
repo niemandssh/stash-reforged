@@ -80,9 +80,7 @@ export const PrimaryTags: React.FC<IPrimaryTags> = ({
           <Button
             variant="link"
             className="ml-auto"
-            onClick={() =>
-              isPlaying ? onStop() : onPlay(markersByTag[id])
-            }
+            onClick={() => (isPlaying ? onStop() : onPlay(markersByTag[id]))}
           >
             <Icon icon={isPlaying ? faStop : faPlay} />
           </Button>

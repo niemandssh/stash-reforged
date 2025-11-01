@@ -52,7 +52,9 @@ export const StringListInput: React.FC<IStringListInputProps> = (props) => {
   const AppendComponent = props.appendComponent;
 
   // Ensure all values are strings and filter out null/undefined
-  const cleanValues = props.value.filter(v => v != null && v !== undefined).map(v => String(v));
+  const cleanValues = props.value
+    .filter((v) => v != null && v !== undefined)
+    .map((v) => String(v));
   const values = cleanValues.concat("");
 
   function valueChanged(idx: number, value: string) {

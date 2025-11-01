@@ -13,7 +13,6 @@ import {
 } from "react-intl";
 import { Nav, Navbar, Button, Fade } from "react-bootstrap";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { LinkContainer } from "react-router-bootstrap";
 import { Link, NavLink, useLocation, useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
 import * as GQL from "src/core/generated-graphql";
@@ -281,7 +280,8 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       },
     });
 
-    const unorganizedCount = unorganizedCountResult.data?.findScenes?.count || 0;
+    const unorganizedCount =
+      unorganizedCountResult.data?.findScenes?.count || 0;
     if (unorganizedCount > 0) {
       const randomPage = Math.floor(Math.random() * unorganizedCount) + 1;
 
@@ -311,8 +311,9 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
   }
 };
 
-
-const getRandomScene = async (ratingThreshold: number = 55): Promise<string | null> => {
+const getRandomScene = async (
+  ratingThreshold: number = 55
+): Promise<string | null> => {
   try {
     const client = getClient();
 
@@ -367,7 +368,9 @@ const getRandomScene = async (ratingThreshold: number = 55): Promise<string | nu
   }
 };
 
-const getRandomBestScene = async (ratingThreshold: number = 90): Promise<string | null> => {
+const getRandomBestScene = async (
+  ratingThreshold: number = 90
+): Promise<string | null> => {
   return getRandomScene(ratingThreshold);
 };
 
@@ -458,36 +461,45 @@ export const MainNavbar: React.FC = () => {
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      alert(intl.formatMessage({
-        id: "no_scenes_to_review",
-        defaultMessage: "No scenes without rating, without tags, or unorganized scenes to review"
-      }));
+      alert(
+        intl.formatMessage({
+          id: "no_scenes_to_review",
+          defaultMessage:
+            "No scenes without rating, without tags, or unorganized scenes to review",
+        })
+      );
     }
   }, [history, intl]);
 
   const handleRandomClick = useCallback(async () => {
-    const ratingThreshold = configuration?.interface?.randomRatingThreshold ?? 55;
+    const ratingThreshold =
+      configuration?.interface?.randomRatingThreshold ?? 55;
     const sceneId = await getRandomScene(ratingThreshold);
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      alert(intl.formatMessage({
-        id: "no_scenes_available",
-        defaultMessage: `No scenes with rating >= ${ratingThreshold}`
-      }));
+      alert(
+        intl.formatMessage({
+          id: "no_scenes_available",
+          defaultMessage: `No scenes with rating >= ${ratingThreshold}`,
+        })
+      );
     }
   }, [history, intl, configuration]);
 
   const handleRandomBestClick = useCallback(async () => {
-    const ratingThreshold = configuration?.interface?.randomBestRatingThreshold ?? 90;
+    const ratingThreshold =
+      configuration?.interface?.randomBestRatingThreshold ?? 90;
     const sceneId = await getRandomBestScene(ratingThreshold);
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
-      alert(intl.formatMessage({
-        id: "no_best_scenes_available",
-        defaultMessage: `No scenes with rating >= ${ratingThreshold}`
-      }));
+      alert(
+        intl.formatMessage({
+          id: "no_best_scenes_available",
+          defaultMessage: `No scenes with rating >= ${ratingThreshold}`,
+        })
+      );
     }
   }, [history, intl, configuration]);
 
@@ -546,7 +558,10 @@ export const MainNavbar: React.FC = () => {
         <Button
           className="nav-utility minimal"
           onClick={() => setShowNotesModal(true)}
-          title={intl.formatMessage({ id: "notes.title", defaultMessage: "Notes" })}
+          title={intl.formatMessage({
+            id: "notes.title",
+            defaultMessage: "Notes",
+          })}
         >
           <Icon icon={faStickyNote} />
         </Button>
@@ -601,24 +616,37 @@ export const MainNavbar: React.FC = () => {
           <Fade in={!loading}>
             <>
               <MainNavbarMenuItems>
-                {menuItems.map(({ href, icon, message }) => (
-                  <Nav.Link
-                    eventKey={href}
-                    as="div"
-                    key={href}
-                    className="col-4 col-sm-3 col-md-2 col-lg-auto"
-                  >
-                    <LinkContainer activeClassName="active" exact to={href}>
-                      <Button className="minimal p-4 p-xl-2 d-flex d-xl-inline-block flex-column justify-content-between align-items-center">
-                        <Icon
-                          {...{ icon }}
-                          className="nav-menu-icon d-block d-xl-inline mb-2 mb-xl-0"
-                        />
-                        <span>{intl.formatMessage(message)}</span>
-                      </Button>
-                    </LinkContainer>
-                  </Nav.Link>
-                ))}
+                {menuItems.map(({ href, icon, message }) => {
+                  const isActive =
+                    location.pathname === href ||
+                    (href !== "/" && location.pathname.startsWith(href));
+                  return (
+                    <Nav.Link
+                      eventKey={href}
+                      as="div"
+                      key={href}
+                      className="col-4 col-sm-3 col-md-2 col-lg-auto"
+                    >
+                      <NavLink
+                        to={href}
+                        className="d-block"
+                        style={{ textDecoration: "none" }}
+                      >
+                        <Button
+                          className={`minimal p-4 p-xl-2 d-flex d-xl-inline-block flex-column justify-content-between align-items-center ${
+                            isActive ? "active" : ""
+                          }`}
+                        >
+                          <Icon
+                            {...{ icon }}
+                            className="nav-menu-icon d-block d-xl-inline mb-2 mb-xl-0"
+                          />
+                          <span>{intl.formatMessage(message)}</span>
+                        </Button>
+                      </NavLink>
+                    </Nav.Link>
+                  );
+                })}
               </MainNavbarMenuItems>
               <Nav>
                 <MainNavbarUtilityItems>
@@ -632,9 +660,20 @@ export const MainNavbar: React.FC = () => {
         <Navbar.Brand as="div" onClick={handleDismiss}>
           <Link to="/">
             <Button className="minimal brand-link d-inline-block">
-              <div className="text-left" style={{ marginTop: '-6px' }}>
-                Stash: <strong><i>Reforged</i></strong>
-                <small style={{ fontSize: '0.75em', lineHeight: '1', display: 'block' }}>by niemandssh</small>
+              <div className="text-left" style={{ marginTop: "-6px" }}>
+                Stash:{" "}
+                <strong>
+                  <i>Reforged</i>
+                </strong>
+                <small
+                  style={{
+                    fontSize: "0.75em",
+                    lineHeight: "1",
+                    display: "block",
+                  }}
+                >
+                  by niemandssh
+                </small>
               </div>
             </Button>
           </Link>
@@ -660,7 +699,8 @@ export const MainNavbar: React.FC = () => {
             onClick={handleReviewClick}
             title={intl.formatMessage({
               id: "review_unrated_video_title",
-              defaultMessage: "Review unrated video, video without tags, or unorganized video"
+              defaultMessage:
+                "Review unrated video, video without tags, or unorganized video",
             })}
           >
             <Icon icon={faStarHalfStroke} className="mr-1" />
@@ -671,7 +711,9 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary random-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleRandomClick}
-            title={`Open random scene with rating >= ${configuration?.interface?.randomRatingThreshold ?? 55}`}
+            title={`Open random scene with rating >= ${
+              configuration?.interface?.randomRatingThreshold ?? 55
+            }`}
           >
             <Icon icon={faRandom} className="mr-1" />
             Random
@@ -681,7 +723,9 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary random-best-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleRandomBestClick}
-            title={`Open random scene with rating >= ${configuration?.interface?.randomBestRatingThreshold ?? 90}`}
+            title={`Open random scene with rating >= ${
+              configuration?.interface?.randomBestRatingThreshold ?? 90
+            }`}
           >
             <Icon icon={faStar} className="mr-1" />
             Random best

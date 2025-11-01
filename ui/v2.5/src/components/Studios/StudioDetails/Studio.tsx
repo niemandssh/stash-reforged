@@ -448,18 +448,30 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
           show={enableBackgroundImage && !isEditing}
         />
         <div className="detail-container">
-          <HeaderImage encodingImage={encodingImage}>
-            {studioImage && !isEditing && !studioImage.includes('default=true') && (
-              <StudioImageCropper
-                imageSrc={studioImage}
-                studioId={studio.id}
-              />
-            )}
-            {studioImage && !isEditing && studioImage.includes('default=true') && (
-              <DetailImage className="logo" alt={studio.name} src={studioImage} />
-            )}
+          <HeaderImage hasImages={!encodingImage}>
+            {studioImage &&
+              !isEditing &&
+              !studioImage.includes("default=true") && (
+                <StudioImageCropper
+                  imageSrc={studioImage}
+                  studioId={studio.id}
+                />
+              )}
+            {studioImage &&
+              !isEditing &&
+              studioImage.includes("default=true") && (
+                <DetailImage
+                  className="logo"
+                  alt={studio.name}
+                  src={studioImage}
+                />
+              )}
             {studioImage && isEditing && (
-              <DetailImage className="logo" alt={studio.name} src={studioImage} />
+              <DetailImage
+                className="logo"
+                alt={studio.name}
+                src={studioImage}
+              />
             )}
           </HeaderImage>
           <div className="row">

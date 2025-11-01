@@ -81,7 +81,7 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
     }
 
     function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
-      if (event.key === 'Enter') {
+      if (event.key === "Enter") {
         onConfirmURL();
       }
     }
@@ -99,7 +99,7 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
           modalProps={{
             style: { zIndex: 9999 },
             backdrop: true,
-            keyboard: true
+            keyboard: true,
           }}
           dialogClassName="image-url-modal"
         >
@@ -151,10 +151,13 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
               </Form.Label>
             </div>
             <div>
-              <Button className="minimal" onClick={() => {
-                setShowPopover(false);
-                showDialog();
-              }}>
+              <Button
+                className="minimal"
+                onClick={() => {
+                  setShowPopover(false);
+                  showDialog();
+                }}
+              >
                 <Icon icon={faLink} className="fa-fw" />
                 <span>{intl.formatMessage({ id: "actions.from_url" })}</span>
               </Button>
@@ -174,7 +177,10 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
           show={showPopover}
           rootClose
         >
-          <Button variant="secondary" onClick={() => setShowPopover(!showPopover)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowPopover(!showPopover)}
+          >
             {text ?? intl.formatMessage({ id: "actions.set_image" })}
           </Button>
         </OverlayTrigger>
@@ -197,8 +203,8 @@ const modalStyles = `
 `;
 
 // Inject styles into the document head
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
+if (typeof document !== "undefined") {
+  const styleElement = document.createElement("style");
   styleElement.textContent = modalStyles;
   document.head.appendChild(styleElement);
 }

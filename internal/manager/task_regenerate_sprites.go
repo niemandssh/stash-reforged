@@ -67,13 +67,13 @@ func (t *RegenerateSpritesTask) Execute(ctx context.Context, progress *job.Progr
 			logger.Warnf("[regenerate-sprites] failed to load scene files: %v", err)
 		} else {
 			logger.Infof("[regenerate-sprites] loaded %d files for scene", len(t.Scene.Files.List()))
-			
+
 			// Look for phash in scene files
 			for _, vf := range t.Scene.Files.List() {
 				videoFile := vf
 				logger.Infof("[regenerate-sprites] file %d: %s", videoFile.ID, videoFile.Base().Path)
 				logger.Infof("[regenerate-sprites] file %d fingerprints: %v", videoFile.ID, videoFile.Base().Fingerprints)
-				
+
 				// Check all fingerprint types
 				if oshash := videoFile.Base().Fingerprints.Get(models.FingerprintTypeOshash); oshash != nil {
 					logger.Infof("[regenerate-sprites] file %d OSHash: %s", videoFile.ID, oshash)

@@ -476,6 +476,8 @@ export const StringSetting: React.FC<IStringSetting> = PatchComponent(
 interface INumberSetting extends ISetting {
   value: number | undefined;
   onChange: (v: number) => void;
+  min?: number;
+  max?: number;
 }
 
 export const NumberSetting: React.FC<INumberSetting> = PatchComponent(
@@ -488,6 +490,8 @@ export const NumberSetting: React.FC<INumberSetting> = PatchComponent(
           <NumberField
             className="text-input"
             value={value ?? 0}
+            min={props.min}
+            max={props.max}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setValue(Number.parseInt(e.currentTarget.value || "0", 10))
             }

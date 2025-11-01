@@ -1,12 +1,24 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 import { useIntl } from "react-intl";
 import { Icon } from "src/components/Shared/Icon";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
-import { faStar, faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faStar,
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { ProfileImageCropper } from "./ProfileImageCropper";
-import ImageUtils from "src/utils/image";
-import { usePerformerProfileImageUpdate, usePerformerProfileImageDestroy, usePerformerProfileImageCreate } from "src/core/StashService";
+import {
+  usePerformerProfileImageDestroy,
+  usePerformerProfileImageCreate,
+} from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import { useLightbox } from "src/hooks/Lightbox/hooks";
 import "./ProfileImageSlider.scss";
@@ -26,7 +38,9 @@ interface IProfileImageSliderProps {
   encodingImage?: boolean;
   setImage?: (image?: string | null) => void;
   setEncodingImage?: (loading: boolean) => void;
-  onPerformerUpdate?: (updatedPerformer: Partial<any>) => void;
+  onPerformerUpdate?: (
+    updatedPerformer: Partial<GQL.PerformerDataFragment>
+  ) => void;
 }
 
 export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
@@ -57,7 +71,6 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
   const [hasSwiped, setHasSwiped] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
 
-  const [updateProfileImage] = usePerformerProfileImageUpdate();
   const [destroyProfileImage] = usePerformerProfileImageDestroy();
   const [createProfileImage] = usePerformerProfileImageCreate();
 
@@ -69,7 +82,6 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       prevCurrentImageIndex.current = currentImageIndex;
     }
   }, [currentImageIndex]);
-
 
   // Sort images: primary first, then by position
   const sortedImages = useMemo(() => {
@@ -83,7 +95,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
 
   // Convert profile images to lightbox format
   const lightboxImages = useMemo(() => {
-    return sortedImages.map(image => ({
+    return sortedImages.map((image) => ({
       id: image.id,
       title: `Profile Image ${sortedImages.indexOf(image) + 1}`,
       paths: {
@@ -91,170 +103,215 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         thumbnail: image.image_path || "",
         preview: image.image_path || "",
       },
-      visual_files: [{
-        __typename: "ImageFile" as const,
-        path: image.image_path || "",
-        width: 1920, // Higher resolution for better lightbox display
-        height: 1080, // Higher resolution for better lightbox display
-      }],
+      visual_files: [
+        {
+          __typename: "ImageFile" as const,
+          path: image.image_path || "",
+          width: 1920, // Higher resolution for better lightbox display
+          height: 1080, // Higher resolution for better lightbox display
+        },
+      ],
     }));
   }, [sortedImages]);
 
   // Create stable lightbox state
-  const lightboxState = useMemo(() => ({
-    images: lightboxImages,
-    showNavigation: false,
-    hideGallery: true,
-    hideRating: true,
-    hideOCounter: true,
-  }), [lightboxImages]);
+  const lightboxState = useMemo(
+    () => ({
+      images: lightboxImages,
+      showNavigation: false,
+      hideGallery: true,
+      hideRating: true,
+      hideOCounter: true,
+    }),
+    [lightboxImages]
+  );
 
   // Always call useLightbox hook - no conditional calls
   const showLightbox = useLightbox(lightboxState);
 
-  const handleImageClick = useCallback((e: React.MouseEvent) => {
-    // Don't open lightbox if we're dragging, if it's a touch event, if we just swiped, or if we're cropping
-    if (isDragging || touchStart !== null || hasSwiped || isCropping) {
-      return;
-    }
-    e.preventDefault();
-    showLightbox({ initialIndex: activeIndex });
-  }, [isDragging, touchStart, hasSwiped, isCropping, showLightbox, activeIndex]);
+  const handleImageClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't open lightbox if we're dragging, if it's a touch event, if we just swiped, or if we're cropping
+      if (isDragging || touchStart !== null || hasSwiped || isCropping) {
+        return;
+      }
+      e.preventDefault();
+      showLightbox({ initialIndex: activeIndex });
+    },
+    [isDragging, touchStart, hasSwiped, isCropping, showLightbox, activeIndex]
+  );
 
-  const currentImage = sortedImages.length > 0 ? sortedImages[activeIndex] : null;
+  const currentImage =
+    sortedImages.length > 0 ? sortedImages[activeIndex] : null;
   const hasMultipleImages = sortedImages.length > 1;
-  const hasNoImages = sortedImages.length === 0 && !activeImage;
 
   const goToPrevious = useCallback(() => {
-    const newIndex = activeIndex > 0 ? activeIndex - 1 : sortedImages.length - 1;
+    const newIndex =
+      activeIndex > 0 ? activeIndex - 1 : sortedImages.length - 1;
     setActiveIndex(newIndex);
     onImageChange?.(newIndex);
   }, [activeIndex, sortedImages.length, onImageChange]);
 
   const goToNext = useCallback(() => {
-    const newIndex = activeIndex < sortedImages.length - 1 ? activeIndex + 1 : 0;
+    const newIndex =
+      activeIndex < sortedImages.length - 1 ? activeIndex + 1 : 0;
     setActiveIndex(newIndex);
     onImageChange?.(newIndex);
   }, [activeIndex, sortedImages.length, onImageChange]);
 
   // Touch handlers for swipe
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (hasMultipleImages) {
-      e.preventDefault();
-      setIsDragging(true);
-      setTouchEnd(null);
-      setTouchStart(e.targetTouches[0].clientX);
-    }
-  }, [isCropping, hasMultipleImages]);
+      if (hasMultipleImages) {
+        e.preventDefault();
+        setIsDragging(true);
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientX);
+      }
+    },
+    [isCropping, hasMultipleImages]
+  );
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (isDragging && hasMultipleImages) {
-      e.preventDefault();
-      setTouchEnd(e.targetTouches[0].clientX);
-    }
-  }, [isCropping, isDragging, hasMultipleImages]);
+      if (isDragging && hasMultipleImages) {
+        e.preventDefault();
+        setTouchEnd(e.targetTouches[0].clientX);
+      }
+    },
+    [isCropping, isDragging, hasMultipleImages]
+  );
 
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (isDragging && hasMultipleImages) {
-      e.preventDefault();
-      setIsDragging(false);
+      if (isDragging && hasMultipleImages) {
+        e.preventDefault();
+        setIsDragging(false);
 
-      if (touchStart && touchEnd) {
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > 50;
-        const isRightSwipe = distance < -50;
+        if (touchStart && touchEnd) {
+          const distance = touchStart - touchEnd;
+          const isLeftSwipe = distance > 50;
+          const isRightSwipe = distance < -50;
 
-        if (isLeftSwipe || isRightSwipe) {
-          setHasSwiped(true);
-          if (isLeftSwipe) {
-            goToNext();
-          } else if (isRightSwipe) {
-            goToPrevious();
+          if (isLeftSwipe || isRightSwipe) {
+            setHasSwiped(true);
+            if (isLeftSwipe) {
+              goToNext();
+            } else if (isRightSwipe) {
+              goToPrevious();
+            }
+            // Reset hasSwiped after a short delay
+            setTimeout(() => setHasSwiped(false), 100);
           }
-          // Reset hasSwiped after a short delay
-          setTimeout(() => setHasSwiped(false), 100);
         }
       }
-    }
 
-    setTouchStart(null);
-    setTouchEnd(null);
-  }, [isCropping, isDragging, hasMultipleImages, touchStart, touchEnd, goToNext, goToPrevious]);
+      setTouchStart(null);
+      setTouchEnd(null);
+    },
+    [
+      isCropping,
+      isDragging,
+      hasMultipleImages,
+      touchStart,
+      touchEnd,
+      goToNext,
+      goToPrevious,
+    ]
+  );
 
   // Mouse handlers for desktop swipe simulation
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (hasMultipleImages) {
-      e.preventDefault();
-      setIsDragging(true);
-      setTouchEnd(null);
-      setTouchStart(e.clientX);
-    }
-  }, [isCropping, hasMultipleImages]);
+      if (hasMultipleImages) {
+        e.preventDefault();
+        setIsDragging(true);
+        setTouchEnd(null);
+        setTouchStart(e.clientX);
+      }
+    },
+    [isCropping, hasMultipleImages]
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (isDragging && hasMultipleImages) {
-      e.preventDefault();
-      setTouchEnd(e.clientX);
-    }
-  }, [isCropping, isDragging, hasMultipleImages]);
+      if (isDragging && hasMultipleImages) {
+        e.preventDefault();
+        setTouchEnd(e.clientX);
+      }
+    },
+    [isCropping, isDragging, hasMultipleImages]
+  );
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    // Don't handle swipe if cropping is active
-    if (isCropping) return;
+  const handleMouseUp = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't handle swipe if cropping is active
+      if (isCropping) return;
 
-    if (isDragging && hasMultipleImages) {
-      e.preventDefault();
-      setIsDragging(false);
+      if (isDragging && hasMultipleImages) {
+        e.preventDefault();
+        setIsDragging(false);
 
-      if (touchStart && touchEnd) {
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > 50;
-        const isRightSwipe = distance < -50;
+        if (touchStart && touchEnd) {
+          const distance = touchStart - touchEnd;
+          const isLeftSwipe = distance > 50;
+          const isRightSwipe = distance < -50;
 
-        if (isLeftSwipe || isRightSwipe) {
-          setHasSwiped(true);
-          if (isLeftSwipe) {
-            goToNext();
-          } else if (isRightSwipe) {
-            goToPrevious();
+          if (isLeftSwipe || isRightSwipe) {
+            setHasSwiped(true);
+            if (isLeftSwipe) {
+              goToNext();
+            } else if (isRightSwipe) {
+              goToPrevious();
+            }
+            // Reset hasSwiped after a short delay
+            setTimeout(() => setHasSwiped(false), 100);
           }
-          // Reset hasSwiped after a short delay
-          setTimeout(() => setHasSwiped(false), 100);
         }
       }
-    }
 
-    setTouchStart(null);
-    setTouchEnd(null);
+      setTouchStart(null);
+      setTouchEnd(null);
 
-    // Small delay to prevent click after drag
-    setTimeout(() => {
-      setIsDragging(false);
-    }, 100);
-  }, [isCropping, isDragging, hasMultipleImages, touchStart, touchEnd, goToNext, goToPrevious]);
+      // Small delay to prevent click after drag
+      setTimeout(() => {
+        setIsDragging(false);
+      }, 100);
+    },
+    [
+      isCropping,
+      isDragging,
+      hasMultipleImages,
+      touchStart,
+      touchEnd,
+      goToNext,
+      goToPrevious,
+    ]
+  );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteImage = async () => {
     if (!currentImage) return;
 
     const confirmDelete = window.confirm(
       intl.formatMessage({
         id: "dialogs.delete_confirm",
-        defaultMessage: "Are you sure you want to delete this image?"
+        defaultMessage: "Are you sure you want to delete this image?",
       })
     );
 
@@ -268,10 +325,13 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       });
 
       Toast.success(
-        intl.formatMessage({
-          id: "toast.deleted_entity",
-          defaultMessage: "Deleted {entityType}",
-        }, { entityType: intl.formatMessage({ id: "image" }) })
+        intl.formatMessage(
+          {
+            id: "toast.deleted_entity",
+            defaultMessage: "Deleted {entityType}",
+          },
+          { entityType: intl.formatMessage({ id: "image" }) }
+        )
       );
 
       // Adjust active index if needed
@@ -283,7 +343,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       Toast.error(
         intl.formatMessage({
           id: "toast.delete_failed",
-          defaultMessage: "Delete failed"
+          defaultMessage: "Delete failed",
         })
       );
     }
@@ -294,78 +354,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     }
   };
 
-  const handleSetPrimary = async () => {
-    if (!currentImage) return;
-
-    try {
-      // Set the selected image as primary
-      await updateProfileImage({
-        variables: {
-          input: {
-            id: currentImage.id,
-            is_primary: true,
-          },
-        },
-      });
-
-      // Unset all other images as primary
-      await Promise.all(
-        profileImages
-          .filter(img => img.id !== currentImage.id && img.is_primary)
-          .map(img =>
-            updateProfileImage({
-              variables: {
-                input: {
-                  id: img.id,
-                  is_primary: false,
-                },
-              },
-            })
-          )
-      );
-
-      Toast.success(
-        intl.formatMessage({
-          id: "toast.set_primary_success"
-        })
-      );
-
-      // Update the current image in the sorted array
-      const updatedImages = profileImages.map(img =>
-        img.id === currentImage.id
-          ? { ...img, is_primary: true }
-          : { ...img, is_primary: false }
-      );
-
-      // Re-sort images with primary first
-      const newSortedImages = [...updatedImages].sort((a, b) => {
-        if (a.is_primary && !b.is_primary) return -1;
-        if (!a.is_primary && b.is_primary) return 1;
-        return (a.position || 0) - (b.position || 0);
-      });
-
-      // Find new index of the primary image
-      const newIndex = newSortedImages.findIndex(img => img.id === currentImage.id);
-      if (newIndex !== -1) {
-        setActiveIndex(newIndex);
-        onImageChange?.(newIndex);
-      }
-    } catch (error) {
-      console.error("Error setting primary image:", error);
-      Toast.error(
-        intl.formatMessage({
-          id: "toast.set_primary_failed",
-          defaultMessage: "Failed to set as primary"
-        })
-      );
-    }
-
-    // Also call prop handler if provided
-    if (onSetPrimary) {
-      onSetPrimary(currentImage.id, activeIndex);
-    }
-  };
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleImageUpload = async (imageData: string | null) => {
     if (!imageData) {
       setImage?.(null);
@@ -399,7 +388,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
           intl.formatMessage(
             { id: "toast.created_entity" },
             {
-              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+              entity: `${intl
+                .formatMessage({ id: "image" })
+                .toLocaleLowerCase()} ${newImageIndex}`,
             }
           )
         );
@@ -409,7 +400,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         const updatedProfileImages = [...profileImages, newProfileImage];
         const updatedPerformer = {
           profile_images: updatedProfileImages,
-          primary_image_path: newProfileImage.is_primary ? newProfileImage.image_path : undefined,
+          primary_image_path: newProfileImage.is_primary
+            ? newProfileImage.image_path
+            : undefined,
         };
         onPerformerUpdate?.(updatedPerformer);
 
@@ -430,7 +423,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
       Toast.error(
         intl.formatMessage({
           id: "toast.upload_failed",
-          defaultMessage: "Failed to add image"
+          defaultMessage: "Failed to add image",
         })
       );
 
@@ -441,40 +434,39 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
     }
   };
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    ImageUtils.onImageChange(event, handleImageUpload);
-  };
-
-  const handleImageURL = (url: string) => {
-    if (url) {
-      handleImageUpload(url);
-    }
-  };
-
   // Navigation button handlers
-  const handlePreviousClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    goToPrevious();
-  }, [goToPrevious]);
-
-  const handleNextClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    goToNext();
-  }, [goToNext]);
-
-  const handleDotClick = useCallback((index: number) => {
-    return (e: React.MouseEvent) => {
+  const handlePreviousClick = useCallback(
+    (e: React.MouseEvent) => {
       e.stopPropagation();
-      setActiveIndex(index);
-      onImageChange?.(index);
-    };
-  }, [onImageChange]);
+      goToPrevious();
+    },
+    [goToPrevious]
+  );
+
+  const handleNextClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      goToNext();
+    },
+    [goToNext]
+  );
+
+  const handleDotClick = useCallback(
+    (index: number) => {
+      return (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setActiveIndex(index);
+        onImageChange?.(index);
+      };
+    },
+    [onImageChange]
+  );
 
   return (
-    <div className={`profile-image-slider ${isEditing ? 'editing' : ''}`}>
+    <div className={`profile-image-slider ${isEditing ? "editing" : ""}`}>
       <div className="performer-image-container">
         <div
-          className={`image-container ${isDragging ? 'dragging' : ''}`}
+          className={`image-container ${isDragging ? "dragging" : ""}`}
           onTouchStart={isCropping ? undefined : handleTouchStart}
           onTouchMove={isCropping ? undefined : handleTouchMove}
           onTouchEnd={isCropping ? undefined : handleTouchEnd}
@@ -483,10 +475,10 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
           onMouseUp={isCropping ? undefined : handleMouseUp}
           onDragStart={(e) => e.preventDefault()}
           style={{
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            cursor: isCropping ? 'default' : 'pointer',
-            pointerEvents: isCropping ? 'none' : 'auto'
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            cursor: isCropping ? "default" : "pointer",
+            pointerEvents: isCropping ? "none" : "auto",
           }}
         >
           <div className="image-wrapper">
@@ -509,23 +501,23 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
             ) : (
               <>
                 {currentImage?.image_path && (
-                <ProfileImageCropper
-                  imageSrc={currentImage.image_path}
-                  profileImageId={parseInt(currentImage.id, 10)}
-                  performerId={performerId.toString()}
-                  isNew={isNew}
-                  onCroppingChange={setIsCropping}
-                  onImageUpdate={onImageUpdate}
-                  onAddImage={onAddImage}
-                  onImageClick={handleImageClick}
-                  onImageChange={onImageChange}
-                  profileImages={profileImages}
-                  setImage={setImage}
-                  setEncodingImage={setEncodingImage}
-                  onPerformerUpdate={onPerformerUpdate}
-                  onSetPrimary={onSetPrimary}
-                  onDeleteImage={onDeleteImage}
-                />
+                  <ProfileImageCropper
+                    imageSrc={currentImage.image_path}
+                    profileImageId={parseInt(currentImage.id, 10)}
+                    performerId={performerId.toString()}
+                    isNew={isNew}
+                    onCroppingChange={setIsCropping}
+                    onImageUpdate={onImageUpdate}
+                    onAddImage={onAddImage}
+                    onImageClick={handleImageClick}
+                    onImageChange={onImageChange}
+                    profileImages={profileImages}
+                    setImage={setImage}
+                    setEncodingImage={setEncodingImage}
+                    onPerformerUpdate={onPerformerUpdate}
+                    onSetPrimary={onSetPrimary}
+                    onDeleteImage={onDeleteImage}
+                  />
                 )}
 
                 {/* Primary indicator */}
@@ -554,7 +546,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
                   onClick={handlePreviousClick}
                   title={intl.formatMessage({
                     id: "actions.previous_action",
-                    defaultMessage: "Previous"
+                    defaultMessage: "Previous",
                   })}
                 >
                   <Icon icon={faChevronLeft} />
@@ -564,7 +556,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
                   onClick={handleNextClick}
                   title={intl.formatMessage({
                     id: "actions.next_action",
-                    defaultMessage: "Next"
+                    defaultMessage: "Next",
                   })}
                 >
                   <Icon icon={faChevronRight} />
@@ -580,9 +572,13 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
             {sortedImages.map((image, index) => (
               <button
                 key={image.id}
-                className={`dot ${index === activeIndex ? 'active' : ''} ${image.is_primary ? 'primary' : ''}`}
+                className={`dot ${index === activeIndex ? "active" : ""} ${
+                  image.is_primary ? "primary" : ""
+                }`}
                 onClick={handleDotClick(index)}
-                title={`Image ${index + 1}${image.is_primary ? ' (Primary)' : ''}`}
+                title={`Image ${index + 1}${
+                  image.is_primary ? " (Primary)" : ""
+                }`}
               />
             ))}
           </div>

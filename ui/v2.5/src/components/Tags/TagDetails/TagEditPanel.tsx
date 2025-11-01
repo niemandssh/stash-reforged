@@ -141,7 +141,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           color: input.color || undefined,
           image: input.image || undefined,
         };
-        
+
         await onSubmit(gqlInput);
       } else {
         // Convert InputValues to GQL update input format
@@ -160,7 +160,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           color: input.color || undefined,
           image: input.image || undefined,
         };
-        
+
         await onSubmit(gqlInput);
       }
       formik.resetForm();
@@ -196,9 +196,11 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
   // Утилита для определения цвета текста на основе цвета фона
   const getContrastColor = (backgroundColor: string): string => {
     if (!backgroundColor) return "#000000";
-    
-    let r = 0, g = 0, b = 0;
-    
+
+    let r = 0,
+      g = 0,
+      b = 0;
+
     // Обработка hex цветов
     if (backgroundColor.startsWith("#")) {
       const hex = backgroundColor.replace("#", "");
@@ -228,32 +230,32 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
         const h = parseInt(matches[0]) / 360;
         const s = parseInt(matches[1]) / 100;
         const l = parseInt(matches[2]) / 100;
-        
+
         const hue2rgb = (p: number, q: number, t: number) => {
           if (t < 0) t += 1;
           if (t > 1) t -= 1;
-          if (t < 1/6) return p + (q - p) * 6 * t;
-          if (t < 1/2) return q;
-          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
           return p;
         };
-        
+
         if (s === 0) {
           r = g = b = l;
         } else {
           const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
           const p = 2 * l - q;
-          r = hue2rgb(p, q, h + 1/3);
+          r = hue2rgb(p, q, h + 1 / 3);
           g = hue2rgb(p, q, h);
-          b = hue2rgb(p, q, h - 1/3);
+          b = hue2rgb(p, q, h - 1 / 3);
         }
-        
+
         r = Math.round(r * 255);
         g = Math.round(g * 255);
         b = Math.round(b * 255);
       }
     }
-    
+
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
     return brightness > 128 ? "#000000" : "#ffffff";
   };
@@ -262,7 +264,7 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     const title = intl.formatMessage({ id: "Color" });
     const backgroundColor = formik.values.color || "#bfccd6";
     const textColor = getContrastColor(backgroundColor);
-    
+
     const control = (
       <div>
         {/* Стандартное поле цвета */}
@@ -291,14 +293,14 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
           <small className="text-muted mr-3">
             <FormattedMessage id="preview" />:
           </small>
-          <div 
+          <div
             className="px-2 py-1 rounded"
-            style={{ 
+            style={{
               backgroundColor: backgroundColor,
               color: textColor,
               border: `1px solid ${backgroundColor}`,
               fontSize: "0.875rem",
-              fontWeight: "500"
+              fontWeight: "500",
             }}
           >
             {formik.values.name || intl.formatMessage({ id: "tag" })}
@@ -332,11 +334,11 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
   //   for (let i = 0; i < seed.length; i++) {
   //     hash = seed.charCodeAt(i) + ((hash << 5) - hash);
   //   }
-  //   
+  //
   //   const hue = Math.abs(hash) % 360;
   //   const saturation = 60 + (Math.abs(hash) % 30);
   //   const lightness = 45 + (Math.abs(hash >> 8) % 20);
-  //   
+  //
   //   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   // };
 

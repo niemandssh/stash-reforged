@@ -5,7 +5,9 @@ interface IBrokenBadgeProps {
   className?: string;
 }
 
-export const BrokenBadge: React.FC<IBrokenBadgeProps> = ({ className = "" }) => {
+export const BrokenBadge: React.FC<IBrokenBadgeProps> = ({
+  className = "",
+}) => {
   return (
     <Badge
       variant="danger"

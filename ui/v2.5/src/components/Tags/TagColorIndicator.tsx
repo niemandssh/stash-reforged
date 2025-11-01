@@ -19,8 +19,8 @@ export const TagColorIndicator: React.FC<ITagColorIndicatorProps> = ({
 
   const sizeClasses = {
     sm: "tag-color-indicator-sm",
-    md: "tag-color-indicator-md", 
-    lg: "tag-color-indicator-lg"
+    md: "tag-color-indicator-md",
+    lg: "tag-color-indicator-lg",
   };
 
   return (

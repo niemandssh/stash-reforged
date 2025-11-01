@@ -69,7 +69,9 @@ const Galleries = lazyComponent(
 const Groups = lazyComponent(() => import("./components/Groups/Groups"));
 const Tags = lazyComponent(() => import("./components/Tags/Tags"));
 const Images = lazyComponent(() => import("./components/Images/Images"));
-const ViewHistory = lazyComponent(() => import("./components/ViewHistory/ViewHistory"));
+const ViewHistory = lazyComponent(
+  () => import("./components/ViewHistory/ViewHistory")
+);
 const Setup = lazyComponent(() => import("./components/Setup/Setup"));
 const Migrate = lazyComponent(() => import("./components/Setup/Migrate"));
 

@@ -1537,6 +1537,7 @@ func (t *scenePerformersTable) replaceJoins(ctx context.Context, id int, v []mod
 	return t.insertJoins(ctx, id, v)
 }
 
+// nolint:unused // kept for potential future use
 func (t *scenePerformersTable) addJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
 	// get existing foreign keys
 	fks, err := t.get(ctx, id)
@@ -1563,6 +1564,7 @@ func (t *scenePerformersTable) addJoins(ctx context.Context, id int, v []models.
 	return t.insertJoins(ctx, id, filtered)
 }
 
+// nolint:unused // kept for potential future use
 func (t *scenePerformersTable) destroyJoins(ctx context.Context, id int, v []models.PerformerScenes) error {
 	for _, vv := range v {
 		q := dialect.Delete(t.table.table).Where(
@@ -1578,6 +1580,7 @@ func (t *scenePerformersTable) destroyJoins(ctx context.Context, id int, v []mod
 	return nil
 }
 
+// nolint:unused // kept for potential future use
 func (t *scenePerformersTable) modifyJoins(ctx context.Context, id int, v []models.PerformerScenes, mode models.RelationshipUpdateMode) error {
 	switch mode {
 	case models.RelationshipUpdateModeSet:

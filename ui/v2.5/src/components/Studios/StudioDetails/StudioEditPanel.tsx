@@ -78,8 +78,9 @@ export const StudioEditPanel: React.FC<IStudioEditPanel> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
-  const { tagsControl } = useTagsEdit(studio.tags, (ids) =>
-    formik.setFieldValue("tag_ids", ids),
+  const { tagsControl } = useTagsEdit(
+    studio.tags,
+    (ids) => formik.setFieldValue("tag_ids", ids),
     studio.id
   );
 

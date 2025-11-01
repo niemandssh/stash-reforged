@@ -1,6 +1,8 @@
 import React from "react";
 import { Link, useHistory } from "react-router-dom";
 import { useIntl } from "react-intl";
+import * as GQL from "src/core/generated-graphql";
+import { stringToGender } from "src/utils/gender";
 import TextUtils from "src/utils/text";
 import { ScenePreview } from "../Scenes/SceneCard";
 import { GalleryPreview } from "../Galleries/GalleryCard";
@@ -38,10 +40,16 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
   // Determine content type and set variables accordingly
   const isScene = !!scene;
   const content = scene || gallery;
-  const contentPath = isScene ? `/scenes/${scene!.id}` : NavUtils.makeGalleryUrl(gallery!);
+  const contentPath = isScene
+    ? `/scenes/${scene!.id}`
+    : NavUtils.makeGalleryUrl(gallery! as Partial<GQL.SlimGalleryDataFragment>);
   const file = isScene ? scene!.files?.[0] : gallery!.files?.[0];
 
-  console.log(`ViewHistoryCard for ${isScene ? 'scene' : 'gallery'} ${content!.id}: viewCount = ${viewCount}`);
+  console.log(
+    `ViewHistoryCard for ${isScene ? "scene" : "gallery"} ${
+      content!.id
+    }: viewCount = ${viewCount}`
+  );
 
   const formatViewDate = (date: string) => {
     const viewDateTime = new Date(date);
@@ -85,8 +93,14 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
             }}
           />
           {scene!.resume_time && scene!.resume_time > 0 && duration > 0 && (
-            <div title={Math.round((scene!.resume_time / duration) * 100) + "%"} className="progress-bar">
-              <div style={{ width: `${(scene!.resume_time / duration) * 100}%` }} className="progress-indicator" />
+            <div
+              title={Math.round((scene!.resume_time / duration) * 100) + "%"}
+              className="progress-bar"
+            >
+              <div
+                style={{ width: `${(scene!.resume_time / duration) * 100}%` }}
+                className="progress-indicator"
+              />
             </div>
           )}
           {duration > 0 && (
@@ -98,6 +112,8 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
       );
     } else {
       // For gallery, use GalleryPreview with cover image
+      const cover: string = gallery!.paths?.cover || "";
+      const preview: string = gallery!.paths?.preview || cover;
       const slimGallery = {
         id: gallery!.id,
         title: gallery!.title,
@@ -112,41 +128,46 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
         o_counter: gallery!.o_counter || 0,
         display_mode: gallery!.display_mode || 0,
         paths: {
-          cover: gallery!.paths?.cover || "",
-          preview: gallery!.paths?.preview || gallery!.paths?.cover || "",
-        },
+          cover,
+          preview,
+        } as GQL.GalleryPathsType,
         image_count: gallery!.image_count || 0,
-        files: gallery!.files?.map(fileItem => ({
-          id: fileItem.id,
-          path: fileItem.path,
-          size: fileItem.size,
-          mod_time: fileItem.mod_time,
-          fingerprints: fileItem.fingerprints.map(fp => ({
-            type: fp.type,
-            value: fp.value,
-          })),
-        })) || [],
+        files:
+          gallery!.files?.map((fileItem) => ({
+            id: fileItem.id,
+            path: fileItem.path,
+            size: fileItem.size,
+            mod_time: fileItem.mod_time,
+            fingerprints: fileItem.fingerprints.map((fp) => ({
+              type: fp.type,
+              value: fp.value,
+            })),
+          })) || [],
         chapters: [],
         scenes: [],
-        studio: gallery!.studio && gallery!.studio.name ? {
-          id: gallery!.studio.id,
-          name: gallery!.studio.name,
-          image_path: gallery!.studio.image_path,
-        } : null,
+        studio:
+          gallery!.studio && gallery!.studio.name
+            ? {
+                id: gallery!.studio.id,
+                name: gallery!.studio.name || "",
+                image_path: gallery!.studio.image_path,
+              }
+            : null,
         tags: [],
-        performers: gallery!.performers?.map(performer => ({
-          id: performer.id,
-          name: performer.name || "",
-          gender: performer.gender as any,
-          favorite: false,
-          image_path: null,
-        })) || [],
+        performers:
+          gallery!.performers?.map((performer) => ({
+            id: performer.id,
+            name: performer.name || "",
+            gender: stringToGender(performer.gender) ?? null,
+            favorite: false,
+            image_path: null,
+          })) || [],
       };
 
       return (
         <>
           <GalleryPreview
-            gallery={slimGallery}
+            gallery={slimGallery as GQL.SlimGalleryDataFragment}
             onScrubberClick={(index) => {
               // Navigate to gallery at specific image
               history.push(`/galleries/${gallery!.id}?index=${index}`);
@@ -185,7 +206,11 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
   };
 
   return (
-    <div className={`view-history-card card ${isScene ? 'scene-card' : 'gallery-card'}`}>
+    <div
+      className={`view-history-card card ${
+        isScene ? "scene-card" : "gallery-card"
+      }`}
+    >
       <Link to={contentPath} className="view-history-thumbnail-container">
         {renderPreview()}
       </Link>
@@ -196,7 +221,10 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
             {getTitle()}
             {viewCount && viewCount > 1 && (
               <span className="view-history-view-count-chip">
-                {intl.formatMessage({ id: "consecutive_views" }, { count: viewCount })}
+                {intl.formatMessage(
+                  { id: "consecutive_views" },
+                  { count: viewCount }
+                )}
               </span>
             )}
             {isScene && scene!.force_hls && (
@@ -209,16 +237,25 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
                 <BrokenBadge />
               </span>
             )}
-            {isScene && !scene!.is_broken && scene!.is_probably_broken && !scene!.is_not_broken && (
-              <span className="view-history-status-chip">
-                <ProbablyBrokenBadge />
-              </span>
-            )}
+            {isScene &&
+              !scene!.is_broken &&
+              scene!.is_probably_broken &&
+              !scene!.is_not_broken && (
+                <span className="view-history-status-chip">
+                  <ProbablyBrokenBadge />
+                </span>
+              )}
           </h3>
         </Link>
 
         {content!.studio && content!.studio.name && (
-          <StudioOverlay studio={content!.studio as any} />
+          <StudioOverlay
+            studio={{
+              id: content!.studio.id,
+              name: content!.studio.name || "",
+              image_path: content!.studio.image_path,
+            }}
+          />
         )}
 
         <div className="view-history-bottom-info">
@@ -240,7 +277,10 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
                     to={`/performers/${performer.id}`}
                     className="view-history-performer-chip"
                   >
-                    <GenderIcon gender={performer.gender as any} className="view-history-gender-icon" />
+                    <GenderIcon
+                      gender={stringToGender(performer.gender) ?? undefined}
+                      className="view-history-gender-icon"
+                    />
                     {performer.name}
                   </Link>
                 </PerformerPopover>
@@ -256,7 +296,10 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
       </div>
 
       {oDate && (
-        <div className="view-history-o-count-indicator" title={`O-Count: ${new Date(oDate).toLocaleString()}`}>
+        <div
+          className="view-history-o-count-indicator"
+          title={`O-Count: ${new Date(oDate).toLocaleString()}`}
+        >
           <SweatDrops />
         </div>
       )}

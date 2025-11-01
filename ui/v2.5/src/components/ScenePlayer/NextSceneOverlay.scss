@@ -1,54 +1,54 @@
 .next-scene-overlay {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  pointer-events: none;
   position: absolute;
   top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
   z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
 
   .next-scene-overlay-background {
+    background-color: rgba(0, 0, 0, 0.7);
+    height: 100%;
+    left: 0;
+    pointer-events: auto;
     position: absolute;
     top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    pointer-events: auto;
   }
 
   .next-scene-overlay-content {
-    position: relative;
-    max-width: 750px;
-    width: 95%;
     background-color: var(--card-bg);
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    pointer-events: auto;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    max-width: 750px;
+    overflow: hidden;
+    pointer-events: auto;
+    position: relative;
+    width: 95%;
   }
 
   .next-scene-overlay-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    align-items: center;
     background: rgba(0, 0, 0, 0.5);
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     color: white;
     cursor: pointer;
-    z-index: 10;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    position: absolute;
+    right: 16px;
+    top: 16px;
     transition: background-color 0.2s;
+    width: 40px;
+    z-index: 10;
 
     &:hover {
       background: rgba(0, 0, 0, 0.7);
@@ -56,38 +56,38 @@
   }
 
   .next-scene-overlay-main {
-    display: flex;
-    padding: 36px 78px 16px 50px;
-    gap: 1.5rem;
-    background: rgba(31, 43, 51, 0.5490196078);
     backdrop-filter: blur(10px);
+    background: rgba(31, 43, 51, 0.549);
+    display: flex;
+    gap: 1.5rem;
+    padding: 36px 78px 16px 50px;
 
     @media (max-width: 768px) {
       flex-direction: column;
-      padding: 1rem;
       gap: 1rem;
+      padding: 1rem;
     }
   }
 
   .next-scene-overlay-preview {
-    position: relative;
-    flex-shrink: 0;
-    width: 260px;
-    height: 146px; // 16:9 aspect ratio
-    border-radius: 8px;
-    overflow: hidden;
     background-color: #26313b;
+    border-radius: 8px;
+    flex-shrink: 0;
+    height: 146px; // 16:9 aspect ratio
+    overflow: hidden;
+    position: relative;
+    width: 260px;
 
     @media (max-width: 768px) {
-      width: 100%;
-      height: auto;
       aspect-ratio: 16/9;
+      height: auto;
+      width: 100%;
     }
 
     a {
       display: block;
-      width: 100%;
       height: 100%;
+      width: 100%;
 
       &:hover {
         text-decoration: none;
@@ -95,21 +95,21 @@
     }
 
     .next-scene-overlay-duration {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
       background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 4px 8px;
       border-radius: 4px;
+      bottom: 8px;
+      color: white;
       font-size: 0.875rem;
       font-weight: 500;
+      padding: 4px 8px;
+      position: absolute;
+      right: 8px;
     }
   }
 
   .next-scene-overlay-info {
-    flex: 1;
     display: flex;
+    flex: 1;
     flex-direction: column;
     justify-content: center;
     min-height: 146px;
@@ -120,11 +120,11 @@
   }
 
   .next-scene-overlay-title {
-    margin: 0 0 0.5rem 0;
+    color: var(--text-color);
     font-size: 1.5rem;
     font-weight: 600;
-    color: var(--text-color);
     line-height: 1.3;
+    margin: 0 0 0.5rem 0;
 
     a {
       color: inherit;
@@ -142,26 +142,26 @@
   }
 
   .next-scene-overlay-meta {
-    display: flex;
     align-items: center;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
     color: var(--text-color-secondary);
+    display: flex;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
 
     .next-scene-overlay-date {
       color: var(--text-color-secondary);
     }
 
     .next-scene-overlay-separator {
-      margin: 0 0.5rem;
       color: var(--text-color-secondary);
+      margin: 0 0.5rem;
     }
 
     .next-scene-overlay-studio {
       color: #fff;
-      text-decoration: none;
       margin-left: 3px;
       margin-top: -3px;
+      text-decoration: none;
 
       &:hover {
         text-decoration: underline;
@@ -169,16 +169,16 @@
 
       .next-scene-overlay-studio-image {
         height: 16px;
-        width: auto;
+        margin-right: 0.25rem;
         max-width: 60px;
         object-fit: contain;
         vertical-align: middle;
-        margin-right: 0.25rem;
+        width: auto;
       }
 
       .next-scene-overlay-studio-text {
-        font-weight: 600;
         color: white;
+        font-weight: 600;
       }
     }
   }
@@ -190,57 +190,57 @@
     margin-bottom: 1.5rem;
 
     .next-scene-overlay-performer-chip {
-      display: inline-flex;
       align-items: center;
-      padding: 0.25rem 0.5rem;
       background-color: var(--secondary);
       border-radius: 0.25rem;
-      text-decoration: none;
       color: white;
+      display: inline-flex;
       font-size: 0.875rem;
-      transition: background-color 0.2s ease;
       margin-bottom: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
 
       &:hover {
         background-color: #6c757d; // darken($secondary, 10%) equivalent
-        text-decoration: none;
         color: white;
+        text-decoration: none;
       }
     }
 
     .next-scene-overlay-gender-icon {
       font-size: 0.75rem;
-      opacity: 0.8;
       margin-right: 0.25rem;
+      opacity: 0.8;
     }
 
     .next-scene-overlay-more-performers {
+      align-self: center;
       color: var(--text-color-secondary);
       font-size: 0.875rem;
-      align-self: center;
     }
   }
 
   .next-scene-overlay-actions {
-    display: flex;
     align-items: center;
+    display: flex;
     gap: 1rem;
     margin-top: auto;
 
     @media (max-width: 768px) {
+      align-items: stretch;
       flex-direction: column;
       gap: 1rem;
-      align-items: stretch;
     }
   }
 
   .next-scene-overlay-play-btn,
   .next-scene-overlay-cancel-btn {
-    display: flex;
     align-items: center;
+    display: flex;
+    font-weight: 600;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    font-weight: 600;
 
     .fa-icon {
       font-size: 1rem;
@@ -252,23 +252,23 @@
   }
 
   .next-scene-overlay-countdown {
-    display: flex;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 0.875rem;
     color: var(--text-color-secondary);
+    display: flex;
+    font-size: 0.875rem;
     font-weight: 500;
-    text-align: left;
+    gap: 0.75rem;
     margin-top: 1rem;
+    text-align: left;
 
     .next-scene-overlay-stop-timer {
-      padding: 0.25rem 0.75rem;
-      font-size: 0.75rem;
-      color: var(--text-color-secondary);
-      transition: color 0.2s ease;
-      display: flex;
       align-items: center;
+      color: var(--text-color-secondary);
+      display: flex;
+      font-size: 0.75rem;
       gap: 0.35rem;
+      padding: 0.25rem 0.75rem;
+      transition: color 0.2s ease;
 
       &:hover {
         color: var(--text-color);
@@ -281,8 +281,7 @@
     }
   }
 
-
-// Override scene preview styles for overlay
+  // Override scene preview styles for overlay
   .scene-card-preview {
     border-radius: 8px;
     overflow: hidden;
@@ -290,8 +289,8 @@
 
   .scene-card-preview-image,
   .scene-card-preview-video {
-    width: 100%;
     height: 100%;
     object-fit: cover;
+    width: 100%;
   }
 }

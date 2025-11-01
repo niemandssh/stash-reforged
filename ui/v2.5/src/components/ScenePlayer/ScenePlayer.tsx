@@ -61,7 +61,7 @@ import { PatchComponent } from "src/patch";
 try {
   airplay(videojs);
 } catch (e) {
-  console.warn('AirPlay plugin failed to load:', e);
+  console.warn("AirPlay plugin failed to load:", e);
 }
 chromecast(videojs);
 abLoopPlugin(window, videojs);
@@ -334,15 +334,19 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     // Query for similar scenes to determine next scene for autoplay
     // Get enough scenes to handle multiple batches when some are already viewed
-    const { data: similarScenesData } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
-      GQL.FindSimilarScenesDocument,
-      {
-        variables: { id: scene.id, limit: 50 }, // Get more scenes to handle viewed scenes
-        skip: !scene.id,
-      }
-    );
+    const { data: similarScenesData } = useQuery<
+      GQL.FindSimilarScenesQuery,
+      GQL.FindSimilarScenesQueryVariables
+    >(GQL.FindSimilarScenesDocument, {
+      variables: { id: scene.id, limit: 50 }, // Get more scenes to handle viewed scenes
+      skip: !scene.id,
+    });
 
-    const nextScene = useNextScene(scene.id, similarScenesData?.findScene?.similar_scenes, Array.from(viewedScenes as Set<string>));
+    const nextScene = useNextScene(
+      scene.id,
+      similarScenesData?.findScene?.similar_scenes,
+      Array.from(viewedScenes as Set<string>)
+    );
     const trackActivity = uiConfig?.trackActivity ?? true;
     const vrTag = uiConfig?.vrTag ?? undefined;
 
@@ -571,30 +575,31 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       vrMenu.setShowButton(showButton);
     }, [getPlayer, scene, vrTag]);
 
-
-
-
     // Function to update Video.js progress bar trim styles
-    const updateVideoJsProgressBarTrimStyles = useCallback((player: VideoJsPlayer) => {
-      const progressHolder = player.el().querySelector('.vjs-progress-holder');
-      if (!progressHolder) return;
+    const updateVideoJsProgressBarTrimStyles = useCallback(
+      (player: VideoJsPlayer) => {
+        const progressHolder = player
+          .el()
+          .querySelector(".vjs-progress-holder");
+        if (!progressHolder) return;
 
-      const duration = player.duration();
-      const startTime = scene.start_time ?? 0;
-      const endTime = scene.end_time ?? 0;
+        const duration = player.duration();
+        const startTime = scene.start_time ?? 0;
+        const endTime = scene.end_time ?? 0;
 
-      if (duration <= 0) return;
+        if (duration <= 0) return;
 
-      // Remove existing trim overlays
-      const existingOverlays = progressHolder.querySelectorAll('.vjs-trim-overlay');
-      existingOverlays.forEach((overlay: Element) => overlay.remove());
+        // Remove existing trim overlays
+        const existingOverlays =
+          progressHolder.querySelectorAll(".vjs-trim-overlay");
+        existingOverlays.forEach((overlay: Element) => overlay.remove());
 
-      // Add start trim overlay
-      if (startTime > 0) {
-        const startPercent = (startTime / duration) * 100;
-        const startOverlay = document.createElement('div');
-        startOverlay.className = 'vjs-trim-overlay vjs-trim-start';
-        startOverlay.style.cssText = `
+        // Add start trim overlay
+        if (startTime > 0) {
+          const startPercent = (startTime / duration) * 100;
+          const startOverlay = document.createElement("div");
+          startOverlay.className = "vjs-trim-overlay vjs-trim-start";
+          startOverlay.style.cssText = `
           position: absolute;
           top: 0;
           left: 0;
@@ -604,15 +609,15 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           pointer-events: none;
           z-index: 2;
         `;
-        progressHolder.appendChild(startOverlay);
-      }
+          progressHolder.appendChild(startOverlay);
+        }
 
-      // Add end trim overlay
-      if (endTime > 0 && endTime < duration) {
-        const endPercent = (endTime / duration) * 100;
-        const endOverlay = document.createElement('div');
-        endOverlay.className = 'vjs-trim-overlay vjs-trim-end';
-        endOverlay.style.cssText = `
+        // Add end trim overlay
+        if (endTime > 0 && endTime < duration) {
+          const endPercent = (endTime / duration) * 100;
+          const endOverlay = document.createElement("div");
+          endOverlay.className = "vjs-trim-overlay vjs-trim-end";
+          endOverlay.style.cssText = `
           position: absolute;
           top: 0;
           left: ${endPercent}%;
@@ -622,9 +627,11 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           pointer-events: none;
           z-index: 2;
         `;
-        progressHolder.appendChild(endOverlay);
-      }
-    }, [scene.start_time, scene.end_time]);
+          progressHolder.appendChild(endOverlay);
+        }
+      },
+      [scene.start_time, scene.end_time]
+    );
 
     // Player event handlers
     useEffect(() => {
@@ -715,7 +722,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       }
 
       function seeking(this: VideoJsPlayer) {
-        console.log('SEEKING called', this.currentTime());
+        console.log("SEEKING called", this.currentTime());
         // Track that seeking has started
         isSeeking.current = true;
         lastSeekTime.current = this.currentTime();
@@ -791,11 +798,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         // This fires when user interacts with progress bar (click, drag, etc.)
         const currentTime = this.currentTime();
         if (showNextSceneOverlay && currentTime < previousTime.current) {
-            setShowNextSceneOverlay(false);
+          setShowNextSceneOverlay(false);
         }
         previousTime.current = currentTime;
       }
-
 
       function timeupdate(this: VideoJsPlayer) {
         const currentTime = this.currentTime();
@@ -829,11 +835,11 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
         // Check for seeking backward - close overlay on ANY backward movement
         if (showNextSceneOverlay && currentTime < previousTime.current) {
-          console.log('TIMEUPDATE: Seeking backward detected', {
+          console.log("TIMEUPDATE: Seeking backward detected", {
             currentTime,
             previousTime: previousTime.current,
             overlayState: showNextSceneOverlay,
-            paused: this.paused()
+            paused: this.paused(),
           });
           setShowNextSceneOverlay(false);
         }
@@ -853,11 +859,11 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
         // Auto-pause when reaching end_time, or show next scene overlay if available
         if (endTime && endTime > 0 && currentTime >= endTime) {
-          console.log('ATTEMPTING TO SHOW OVERLAY:', {
+          console.log("ATTEMPTING TO SHOW OVERLAY:", {
             currentTime,
             endTime,
             overlayState: showNextSceneOverlay,
-            nextScene: !!nextScene
+            nextScene: !!nextScene,
           });
           if (nextScene) {
             this.pause();
@@ -885,7 +891,18 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         player.off("useractive", onProgressInteraction);
         clearTimeout(playingTimer.current);
       };
-    }, [getPlayer, interactiveClient, scene, trimEnabled, pausedByTrim, updateVideoJsProgressBarTrimStyles]);
+    }, [
+      getPlayer,
+      interactiveClient,
+      scene,
+      trimEnabled,
+      pausedByTrim,
+      updateVideoJsProgressBarTrimStyles,
+      currentPlaylistIndex,
+      nextScene,
+      showNextSceneOverlay,
+      stopPlaylist,
+    ]);
 
     useEffect(() => {
       const player = getPlayer();
@@ -1008,11 +1025,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const startTime = scene.start_time ?? 0;
 
       let startPosition = _initialTimestamp;
-      if (
-        !startPosition &&
-        !alwaysStartFromBeginning &&
-        resumeTime > 0
-      ) {
+      if (!startPosition && !alwaysStartFromBeginning && resumeTime > 0) {
         // Check if resume position is in a trimmed segment
         const endTime = scene.end_time ?? 0;
         const inTrimmedStart = startTime > 0 && resumeTime < startTime;
@@ -1056,12 +1069,12 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         }, 100);
 
         // Set trim styles when metadata is loaded
-        player.on('loadedmetadata', () => {
+        player.on("loadedmetadata", () => {
           updateVideoJsProgressBarTrimStyles(player);
         });
 
         // Set trim styles when video can play
-        player.on('canplay', () => {
+        player.on("canplay", () => {
           updateVideoJsProgressBarTrimStyles(player);
         });
       });
@@ -1107,9 +1120,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       return () => clearTimeout(timeoutId);
     }, [getPlayer, scene, updateVideoJsProgressBarTrimStyles]);
-
-
-
 
     const loadMarkers = useCallback(() => {
       const player = getPlayer();
@@ -1288,14 +1298,20 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     }, [onComplete]);
 
     // Handle clicks on video player container for progress bar interactions
-    const handleVideoPlayerClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLElement;
-      if (target.closest('.vjs-progress-control') || target.closest('.vjs-progress-holder')) {
-        if (showNextSceneOverlay) {
+    const handleVideoPlayerClick = useCallback(
+      (event: React.MouseEvent<HTMLDivElement>) => {
+        const target = event.target as HTMLElement;
+        if (
+          target.closest(".vjs-progress-control") ||
+          target.closest(".vjs-progress-holder")
+        ) {
+          if (showNextSceneOverlay) {
             setShowNextSceneOverlay(false);
+          }
         }
-      }
-    }, [showNextSceneOverlay]);
+      },
+      [showNextSceneOverlay]
+    );
 
     // Attach handler for onComplete event
     useEffect(() => {
@@ -1319,7 +1335,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       // Close next scene overlay if seeking backward from end of video
       if (showNextSceneOverlay && seconds < time) {
-            setShowNextSceneOverlay(false);
+        setShowNextSceneOverlay(false);
       }
 
       if (started.current) {
@@ -1328,8 +1344,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         setTime(seconds);
       }
     }
-
-
 
     // Override spacebar to always pause/play
     function onKeyDown(this: HTMLDivElement, event: KeyboardEvent) {

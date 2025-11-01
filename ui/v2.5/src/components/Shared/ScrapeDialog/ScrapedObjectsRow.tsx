@@ -165,6 +165,7 @@ export const ScrapedPerformersRow: React.FC<
         id: p.stored_id ?? "",
         name: p.name ?? "",
         alias_list,
+        small_role: false,
       };
     });
 
@@ -176,7 +177,13 @@ export const ScrapedPerformersRow: React.FC<
         onSelect={(items) => {
           if (onChangeFn) {
             // map the id back to stored_id
-            onChangeFn(items.map((p) => ({ ...p, stored_id: p.id })));
+            onChangeFn(
+              items.map((p) => ({
+                ...p,
+                stored_id: p.id,
+                __typename: "ScrapedPerformer" as const,
+              }))
+            );
           }
         }}
         values={selectValue}

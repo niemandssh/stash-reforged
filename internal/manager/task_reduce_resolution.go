@@ -142,7 +142,7 @@ func (t *ReduceResolutionTask) Execute(ctx context.Context, progress *job.Progre
 // For backward compatibility
 func (t *ReduceResolutionTask) Start(ctx context.Context) {
 	progress := &job.Progress{}
-	t.Execute(ctx, progress)
+	_ = t.Execute(ctx, progress)
 }
 
 func (t *ReduceResolutionTask) reduceResolution(ctx context.Context, f *models.VideoFile, progress *job.Progress, done chan bool) error {

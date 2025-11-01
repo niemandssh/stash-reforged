@@ -95,8 +95,9 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     let totalWidth = 0;
 
     // Calculate the actual sprite sheet dimensions
-    let maxX = 0, maxY = 0;
-    spriteInfo.forEach(sprite => {
+    let maxX = 0,
+      maxY = 0;
+    spriteInfo.forEach((sprite) => {
       maxX = Math.max(maxX, sprite.x + sprite.w);
       maxY = Math.max(maxY, sprite.y + sprite.h);
     });
@@ -124,17 +125,17 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
 
       // Style for the span wrapper (fitted sprite size with overflow hidden)
       const spanStyle: CSSProperties = {
-        position: 'absolute',
+        position: "absolute",
         width: `${fittedWidth}px`,
         height: `${fittedHeight}px`,
         left: `${(displayWidth - fittedWidth) / 2}px`,
         top: `${(displayHeight - fittedHeight) / 2}px`,
-        overflow: 'hidden',
+        overflow: "hidden",
       };
 
       // Style for the img element (scaled sprite sheet size, positioned to show correct piece)
       const imgStyle: CSSProperties = {
-        position: 'absolute',
+        position: "absolute",
         width: `${maxX * scale}px`,
         height: `${maxY * scale}px`,
         left: `${-sprite.x * scale}px`,
@@ -356,11 +357,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
           data-sprite-item-id={index}
         >
           <span style={sprite.spanStyle}>
-            <img
-              src={sprite.url}
-              alt=""
-              style={sprite.imgStyle}
-            />
+            <img src={sprite.url} alt="" style={sprite.imgStyle} />
           </span>
           <span className="scrubber-item-time">{sprite.time}</span>
         </div>
@@ -372,13 +369,13 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     const { duration } = file;
     const startTime = scene.start_time ?? 0;
     const endTime = scene.end_time ?? 0;
-    
+
     if (startTime <= 0 && endTime <= 0) return null;
     if (!width || duration <= 0) return null;
 
     const segments = [];
     const totalWidth = width; // Use total width instead of scrubWidth
-    
+
     // Add segment from 0 to start_time (if start_time > 0)
     if (startTime > 0) {
       const left = 0;
@@ -395,7 +392,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
         />
       );
     }
-    
+
     // Add segment from end_time to duration (if end_time > 0)
     if (endTime > 0 && endTime < duration) {
       const left = (totalWidth * endTime) / duration;

@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Form, Button, Modal, Row, Col } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
-import { useFindColorPresets, useColorPresetCreate, useColorPresetUpdate, useColorPresetDestroy } from "src/core/StashService";
+import {
+  useFindColorPresets,
+  useColorPresetCreate,
+  useColorPresetUpdate,
+  useColorPresetDestroy,
+} from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import { ColorPreset } from "src/core/generated-graphql";
 import { faGripLines } from "@fortawesome/free-solid-svg-icons";
@@ -14,16 +19,16 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+} from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface ISortablePresetCardProps {
   preset: ColorPreset;
@@ -51,22 +56,18 @@ const SortablePresetCard: React.FC<ISortablePresetCardProps> = ({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 'auto',
+    zIndex: isDragging ? 1000 : "auto",
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="w-100 mb-2"
-    >
-      <div 
-        className="card p-2 h-100" 
-        style={{ 
+    <div ref={setNodeRef} style={style} className="w-100 mb-2">
+      <div
+        className="card p-2 h-100"
+        style={{
           margin: 0,
-          backgroundColor: isSelected ? 'rgba(19, 124, 189, 0.2)' : undefined,
-          borderColor: isSelected ? '#137cbd' : undefined,
-          cursor: 'pointer',
+          backgroundColor: isSelected ? "rgba(19, 124, 189, 0.2)" : undefined,
+          borderColor: isSelected ? "#137cbd" : undefined,
+          cursor: "pointer",
         }}
         onClick={() => onEdit(preset)}
       >
@@ -75,7 +76,7 @@ const SortablePresetCard: React.FC<ISortablePresetCardProps> = ({
             <div
               ref={dragHandleRef}
               className="drag-handle mr-2"
-              style={{ cursor: 'grab', flexShrink: 0 }}
+              style={{ cursor: "grab", flexShrink: 0 }}
               {...attributes}
               {...listeners}
               onClick={(e) => e.stopPropagation()}
@@ -122,11 +123,19 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
   const [presetName, setPresetName] = useState("");
   const [presetSort, setPresetSort] = useState(1);
   const [presetColor, setPresetColor] = useState("");
-  const [presetTagRequirementsDescription, setPresetTagRequirementsDescription] = useState("");
-  const [presetRequiredForRequirements, setPresetRequiredForRequirements] = useState(true);
+  const [
+    presetTagRequirementsDescription,
+    setPresetTagRequirementsDescription,
+  ] = useState("");
+  const [presetRequiredForRequirements, setPresetRequiredForRequirements] =
+    useState(true);
   const [editingPreset, setEditingPreset] = useState<ColorPreset | null>(null);
 
-  const { data: presetsData, refetch: refetchPresets, loading: presetsLoading } = useFindColorPresets();
+  const {
+    data: presetsData,
+    refetch: refetchPresets,
+    loading: presetsLoading,
+  } = useFindColorPresets();
   const [createPreset] = useColorPresetCreate();
   const [updatePreset] = useColorPresetUpdate();
   const [destroyPreset] = useColorPresetDestroy();
@@ -143,7 +152,14 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
         setPresetSort(presets.length + 1);
       }
     }
-  }, [showPresetModal, editingPreset, presetColor, presetSort, selectedColor, presets.length]);
+  }, [
+    showPresetModal,
+    editingPreset,
+    presetColor,
+    presetSort,
+    selectedColor,
+    presets.length,
+  ]);
 
   // Sensors for drag & drop
   const sensors = useSensors(
@@ -164,25 +180,32 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
       const reorderedPresets = arrayMove(presets, oldIndex, newIndex);
 
       // Update sort values for all presets
-      const updatePromises = reorderedPresets.map((preset, index) => {
-        const newSort = index + 1;
-        if (preset.sort !== newSort) {
-          return updatePreset({
-            variables: {
-              input: {
-                id: preset.id,
-                sort: newSort,
+      const updatePromises = reorderedPresets
+        .map((preset, index) => {
+          const newSort = index + 1;
+          if (preset.sort !== newSort) {
+            return updatePreset({
+              variables: {
+                input: {
+                  id: preset.id,
+                  sort: newSort,
+                },
               },
-            },
-          });
-        }
-        return null;
-      }).filter(Boolean);
+            });
+          }
+          return null;
+        })
+        .filter(Boolean);
 
       try {
         await Promise.all(updatePromises);
         refetchPresets();
-        Toast.success(intl.formatMessage({ id: "toast.updated_entity" }, { entity: "Color presets order" }));
+        Toast.success(
+          intl.formatMessage(
+            { id: "toast.updated_entity" },
+            { entity: "Color presets order" }
+          )
+        );
       } catch (e) {
         Toast.error(e);
       }
@@ -205,7 +228,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
       required_for_requirements: presetRequiredForRequirements,
     };
 
-    console.log('Creating preset with data:', inputData);
+    console.log("Creating preset with data:", inputData);
 
     try {
       await createPreset({
@@ -240,7 +263,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
       required_for_requirements: presetRequiredForRequirements,
     };
 
-    console.log('Updating preset with data:', inputData);
+    console.log("Updating preset with data:", inputData);
 
     try {
       await updatePreset({
@@ -252,7 +275,11 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
       Toast.success(intl.formatMessage({ id: "color_preset.updated" }));
 
       // If current selected color matches old preset color, update it to new color
-      if (selectedColor && selectedColor === oldColor && presetColor !== oldColor) {
+      if (
+        selectedColor &&
+        selectedColor === oldColor &&
+        presetColor !== oldColor
+      ) {
         onColorSelect(presetColor);
       }
     } catch (e) {
@@ -261,7 +288,14 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
   };
 
   const handleDeletePreset = async (preset: ColorPreset) => {
-    if (!confirm(intl.formatMessage({ id: "color_preset.confirm_delete" }, { name: preset.name }))) {
+    if (
+      !confirm(
+        intl.formatMessage(
+          { id: "color_preset.confirm_delete" },
+          { name: preset.name }
+        )
+      )
+    ) {
       return;
     }
 
@@ -295,7 +329,9 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
     setPresetName(preset.name);
     setPresetSort(preset.sort);
     setPresetColor(preset.color);
-    setPresetTagRequirementsDescription(preset.tag_requirements_description || "");
+    setPresetTagRequirementsDescription(
+      preset.tag_requirements_description || ""
+    );
     setPresetRequiredForRequirements(preset.required_for_requirements ?? true);
     setShowPresetModal(true);
   };
@@ -390,13 +426,20 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
             <Col md={5}>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="mb-0">
-                  <FormattedMessage id="color_preset.presets" /> ({presets.length})
+                  <FormattedMessage id="color_preset.presets" /> (
+                  {presets.length})
                 </h6>
               </div>
               <small className="text-muted d-block mb-2">
                 <FormattedMessage id="color_preset.drag_to_reorder" />
               </small>
-              <div style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '10px' }}>
+              <div
+                style={{
+                  maxHeight: "500px",
+                  overflowY: "auto",
+                  paddingRight: "10px",
+                }}
+              >
                 {presetsLoading ? (
                   <div className="text-center py-3">
                     <FormattedMessage id="loading.generic" />
@@ -409,7 +452,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext
-                      items={presets.map(p => p.id)}
+                      items={presets.map((p) => p.id)}
                       strategy={verticalListSortingStrategy}
                     >
                       <div className="d-flex flex-column">
@@ -436,7 +479,13 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
             <Col md={7}>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h6 className="mb-0">
-                  <FormattedMessage id={editingPreset ? "color_preset.edit" : "color_preset.create"} />
+                  <FormattedMessage
+                    id={
+                      editingPreset
+                        ? "color_preset.edit"
+                        : "color_preset.create"
+                    }
+                  />
                 </h6>
                 {editingPreset && (
                   <Button
@@ -456,7 +505,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                   </Button>
                 )}
               </div>
-              
+
               <Form.Group className="mb-3">
                 <Form.Label>
                   <FormattedMessage id="color_preset.name" />
@@ -467,10 +516,12 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                   className="text-input"
                   value={presetName}
                   onChange={(e) => setPresetName(e.target.value)}
-                  placeholder={intl.formatMessage({ id: "color_preset.name_placeholder" })}
+                  placeholder={intl.formatMessage({
+                    id: "color_preset.name_placeholder",
+                  })}
                 />
               </Form.Group>
-              
+
               <Form.Group className="mb-3">
                 <Form.Label>
                   <FormattedMessage id="color_preset.color" />
@@ -495,7 +546,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                   />
                 </div>
               </Form.Group>
-              
+
               <Form.Group className="mb-3">
                 <Form.Label>
                   <FormattedMessage id="color_preset.sort" />
@@ -509,7 +560,7 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                   placeholder="0"
                 />
               </Form.Group>
-              
+
               <Form.Group className="mb-3">
                 <Form.Label>
                   <FormattedMessage id="color_preset.tag_requirements_description" />
@@ -519,8 +570,12 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                   name="preset_tag_requirements_description"
                   className="text-input"
                   value={presetTagRequirementsDescription}
-                  onChange={(e) => setPresetTagRequirementsDescription(e.target.value)}
-                  placeholder={intl.formatMessage({ id: "color_preset.tag_requirements_description_placeholder" })}
+                  onChange={(e) =>
+                    setPresetTagRequirementsDescription(e.target.value)
+                  }
+                  placeholder={intl.formatMessage({
+                    id: "color_preset.tag_requirements_description_placeholder",
+                  })}
                   rows={3}
                 />
                 <Form.Text className="text-muted">
@@ -532,9 +587,13 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
                 <Form.Check
                   type="checkbox"
                   id="preset_required_for_requirements"
-                  label={intl.formatMessage({ id: "color_preset.required_for_requirements" })}
+                  label={intl.formatMessage({
+                    id: "color_preset.required_for_requirements",
+                  })}
                   checked={presetRequiredForRequirements}
-                  onChange={(e) => setPresetRequiredForRequirements(e.target.checked)}
+                  onChange={(e) =>
+                    setPresetRequiredForRequirements(e.target.checked)
+                  }
                 />
                 <Form.Text className="text-muted">
                   <FormattedMessage id="color_preset.required_for_requirements_help" />
@@ -564,7 +623,9 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
             onClick={editingPreset ? handleEditPreset : handleCreatePreset}
             disabled={!presetName.trim() || !presetColor}
           >
-            <FormattedMessage id={editingPreset ? "actions.save" : "actions.create"} />
+            <FormattedMessage
+              id={editingPreset ? "actions.save" : "actions.create"}
+            />
           </Button>
         </Modal.Footer>
       </Modal>
@@ -576,7 +637,9 @@ export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
 function getContrastColor(backgroundColor: string): string {
   if (!backgroundColor) return "#000000";
 
-  let r = 0, g = 0, b = 0;
+  let r = 0,
+    g = 0,
+    b = 0;
 
   if (backgroundColor.startsWith("#")) {
     const hex = backgroundColor.replace("#", "");

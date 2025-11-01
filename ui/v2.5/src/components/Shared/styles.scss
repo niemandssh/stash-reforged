@@ -51,15 +51,15 @@
   position: relative;
 
   .loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
     align-items: center;
+    background-color: rgba(0, 0, 0, 0.7);
+    bottom: 0;
+    display: flex;
     justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
     z-index: 10;
   }
 }
@@ -277,7 +277,6 @@ button.collapse-button {
 .hover-popover-content {
   max-width: 50rem;
 }
-
 
 .ErrorMessage-container {
   display: flex;
@@ -1019,6 +1018,7 @@ $sticky-header-height: calc(50px + 3.3rem);
 }
 
 // Death ribbon styles
+/* stylelint-disable selector-class-pattern */
 .death-ribbon {
   height: 0;
   left: 0;
@@ -1081,6 +1081,7 @@ $sticky-header-height: calc(50px + 3.3rem);
     }
   }
 }
+/* stylelint-enable selector-class-pattern */
 
 // Death image effects - darken images for deceased performers
 .performer-card-image.deceased,
@@ -1113,10 +1114,10 @@ $sticky-header-height: calc(50px + 3.3rem);
     }
 
     .fa-icon {
-      transition: transform 0.2s ease;
-      width: 10px;
       height: 10px;
       margin-top: -1px;
+      transition: transform 0.2s ease;
+      width: 10px;
     }
   }
 
@@ -1129,10 +1130,10 @@ $sticky-header-height: calc(50px + 3.3rem);
     transition: max-height 0.3s ease-in-out;
 
     &.collapsed {
+      border: none;
       height: 0;
       max-height: 0;
       overflow: hidden;
-      border: none;
     }
 
     &.expanded {
@@ -1288,7 +1289,6 @@ $sticky-header-height: calc(50px + 3.3rem);
         text-transform: uppercase;
       }
     }
-
   }
 }
 
@@ -1296,8 +1296,8 @@ $sticky-header-height: calc(50px + 3.3rem);
 .color-palette {
   .color-palette-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
     gap: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(30px, 1fr));
     max-width: 100%;
   }
 
@@ -1306,8 +1306,8 @@ $sticky-header-height: calc(50px + 3.3rem);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       transform: scale(1.1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       z-index: 10;
 
       .color-tooltip {
@@ -1317,19 +1317,19 @@ $sticky-header-height: calc(50px + 3.3rem);
   }
 
   .color-tooltip {
-    position: absolute;
-    bottom: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(0,0,0,0.8);
-    color: white;
-    padding: 2px 6px;
+    background-color: rgba(0, 0, 0, 0.8);
     border-radius: 3px;
+    bottom: -20px;
+    color: white;
     font-size: 9px;
-    white-space: nowrap;
+    left: 50%;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    padding: 2px 6px;
     pointer-events: none;
+    position: absolute;
+    transform: translateX(-50%);
+    transition: opacity 0.2s ease;
+    white-space: nowrap;
     z-index: 1000;
   }
 }
@@ -1341,8 +1341,8 @@ $sticky-header-height: calc(50px + 3.3rem);
       transition: all 0.2s ease;
 
       &:hover {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
       }
     }
   }
@@ -1350,24 +1350,24 @@ $sticky-header-height: calc(50px + 3.3rem);
 
 // Tag Color Indicator Styles
 .tag-color-indicator {
-  display: inline-block;
-  border-radius: 3px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  display: inline-block;
   flex-shrink: 0;
 
   &.tag-color-indicator-sm {
-    width: 12px;
     height: 12px;
+    width: 12px;
   }
 
   &.tag-color-indicator-md {
-    width: 16px;
     height: 16px;
+    width: 16px;
   }
 
   &.tag-color-indicator-lg {
-    width: 20px;
     height: 20px;
+    width: 20px;
   }
 }
 
@@ -1376,22 +1376,22 @@ $sticky-header-height: calc(50px + 3.3rem);
   min-width: 200px;
 
   span {
-    flex-shrink: 0;
-    padding: 2px 6px;
     border-radius: 4px;
+    flex-shrink: 0;
     font-size: 0.85em;
     font-weight: 500;
-    white-space: nowrap;
     margin-right: 0.5rem;
+    padding: 2px 6px;
+    white-space: nowrap;
   }
 }
 
 // Tag Requirements Indicator Styles
 .tag-requirements-indicator {
+  border-radius: 0.25rem;
   font-size: 0.8em;
   font-weight: bold;
   padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
   transition: all 0.2s ease-in-out;
 
   &:hover {
@@ -1400,27 +1400,27 @@ $sticky-header-height: calc(50px + 3.3rem);
 }
 
 .tag-requirements-popover {
-  width: 700px;
-  padding: 1rem;
   font-size: 1.1em;
+  padding: 1rem;
   text-align: left;
+  width: 700px;
 
   .tag-requirements-list {
     max-height: 250px;
     overflow-y: auto;
 
     .tag-requirement-item {
-      display: flex;
       align-items: flex-start;
-      margin-bottom: 0.35rem;
+      display: flex;
       font-size: 1em;
+      margin-bottom: 0.35rem;
 
       &.required-filled {
-        background-color: rgba(40, 167, 69, 0.30);
+        background-color: rgba(40, 167, 69, 0.3);
       }
 
       &.required-empty {
-        background-color: rgba(220, 53, 69, 0.30);
+        background-color: rgba(220, 53, 69, 0.3);
       }
 
       &.optional-filled {
@@ -1433,10 +1433,10 @@ $sticky-header-height: calc(50px + 3.3rem);
 
       .requirement-indicator {
         flex-shrink: 0;
-        margin-right: 0.75rem;
-        margin-left: 0.5rem;
-        font-weight: bold;
         font-size: 1.1em;
+        font-weight: bold;
+        margin-left: 0.5rem;
+        margin-right: 0.75rem;
         margin-top: 0.1em;
         width: 16px;
 

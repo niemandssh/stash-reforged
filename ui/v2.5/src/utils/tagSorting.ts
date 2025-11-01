@@ -12,7 +12,7 @@ export function sortTagsByColorPreset(
   direction: GQL.SortDirectionEnum = GQL.SortDirectionEnum.Asc
 ): GQL.TagDataFragment[] {
   const colorToPreset = new Map<string, GQL.ColorPreset>();
-  colorPresets.forEach(preset => {
+  colorPresets.forEach((preset) => {
     colorToPreset.set(preset.color.toLowerCase(), preset);
   });
 
@@ -37,7 +37,9 @@ export function sortTagsByColorPreset(
 
     const colorComparison = aPreset.color.localeCompare(bPreset.color);
 
-    return direction === GQL.SortDirectionEnum.Desc ? -colorComparison : colorComparison;
+    return direction === GQL.SortDirectionEnum.Desc
+      ? -colorComparison
+      : colorComparison;
   });
 
   return sortedTags;
@@ -52,7 +54,9 @@ export function getTagColorPreset(
 ): GQL.ColorPreset | null {
   if (!tag.color) return null;
 
-  return colorPresets.find(preset =>
-    preset.color.toLowerCase() === tag.color?.toLowerCase()
-  ) || null;
+  return (
+    colorPresets.find(
+      (preset) => preset.color.toLowerCase() === tag.color?.toLowerCase()
+    ) || null
+  );
 }

@@ -263,13 +263,20 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
       </div>
       {maybeRenderInteractiveHeatmap()}
       <div className="card-section">
-        <Link to={props.url} onClick={handleImageClick} target="_blank" rel="noopener noreferrer">
+        <Link
+          to={props.url}
+          onClick={handleImageClick}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <h5 className="card-section-title flex-aligned">
             {props.pretitleIcon}
             <TruncatedText text={props.title} lineCount={2} />
             {props.pinButton && (
               <span
-                className={`pin-button-container ${props.isPinned || isHovered ? 'visible' : 'hidden'}`}
+                className={`pin-button-container ${
+                  props.isPinned || isHovered ? "visible" : "hidden"
+                }`}
               >
                 {props.pinButton}
               </span>

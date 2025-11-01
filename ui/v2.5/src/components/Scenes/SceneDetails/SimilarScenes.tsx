@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef } from "react";
 import { FormattedMessage } from "react-intl";
 import { useQuery } from "@apollo/client";
@@ -20,7 +19,11 @@ import { HoverPopover } from "src/components/Shared/HoverPopover";
 import { TagLink } from "src/components/Shared/TagLink";
 import { PerformerPopoverButton } from "src/components/Shared/PerformerPopoverButton";
 import { GroupTag } from "src/components/Groups/GroupTag";
-import { faTag, faFilm, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTag,
+  faFilm,
+  faMapMarkerAlt,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface ISimilarScenesProps {
   scene: GQL.SceneDataFragment;
@@ -44,13 +47,13 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   getSimilarityColor,
   getSimilarityText,
   getSimilarityTextColor,
-  showSimilarityPercent
+  showSimilarityPercent,
 }) => {
   const { configuration } = React.useContext(ConfigurationContext);
   const chipRef = useRef<HTMLDivElement>(null);
-  
+
   const sceneLink = `/scenes/${scene.id}`;
-  
+
   const file = useMemo(
     () => (scene.files.length > 0 ? scene.files[0] : undefined),
     [scene]
@@ -135,10 +138,7 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
     if (scene.performers.length <= 0) return;
 
     return (
-      <PerformerPopoverButton
-        performers={scene.performers}
-        linkType="scene"
-      />
+      <PerformerPopoverButton performers={scene.performers} linkType="scene" />
     );
   }
 
@@ -241,50 +241,134 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
             popoverClassName="similarity-popover-content"
             target={chipRef}
             content={
-              similarityScoreData ? (() => {
-                const totalContribution = (similarityScoreData.enhanced_tags || 0) +
-                  (similarityScoreData.normal_tags || 0) +
-                  (similarityScoreData.reduced_tags || 0) +
-                  (similarityScoreData.tags || 0) +
-                  (similarityScoreData.performers || 0) +
-                  (similarityScoreData.groups || 0) +
-                  (similarityScoreData.studio || 0);
+              similarityScoreData ? (
+                (() => {
+                  const totalContribution =
+                    (similarityScoreData.enhanced_tags || 0) +
+                    (similarityScoreData.normal_tags || 0) +
+                    (similarityScoreData.reduced_tags || 0) +
+                    (similarityScoreData.tags || 0) +
+                    (similarityScoreData.performers || 0) +
+                    (similarityScoreData.groups || 0) +
+                    (similarityScoreData.studio || 0);
 
-                return (
-                  <div className="p-2" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>
-                    <div className="mb-2"><strong>Similarity Breakdown:</strong></div>
-                    {totalContribution > 0 && (
-                      <>
-                        {similarityScoreData.enhanced_tags !== undefined && similarityScoreData.enhanced_tags > 0 && (
-                          <div>Enhanced Tags: <strong>{(similarityScoreData.enhanced_tags * 100).toFixed(1)}%</strong></div>
+                  return (
+                    <div
+                      className="p-2"
+                      style={{ fontSize: "0.9rem", lineHeight: "1.5" }}
+                    >
+                      <div className="mb-2">
+                        <strong>Similarity Breakdown:</strong>
+                      </div>
+                      {totalContribution > 0 && (
+                        <>
+                          {similarityScoreData.enhanced_tags !== undefined &&
+                            similarityScoreData.enhanced_tags !== null &&
+                            similarityScoreData.enhanced_tags > 0 && (
+                              <div>
+                                Enhanced Tags:{" "}
+                                <strong>
+                                  {(
+                                    similarityScoreData.enhanced_tags * 100
+                                  ).toFixed(1)}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.normal_tags !== undefined &&
+                            similarityScoreData.normal_tags !== null &&
+                            similarityScoreData.normal_tags > 0 && (
+                              <div>
+                                Normal Tags:{" "}
+                                <strong>
+                                  {(
+                                    similarityScoreData.normal_tags * 100
+                                  ).toFixed(1)}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.reduced_tags !== undefined &&
+                            similarityScoreData.reduced_tags !== null &&
+                            similarityScoreData.reduced_tags < 0 && (
+                              <div>
+                                Reduced Tags Penalty:{" "}
+                                <strong>
+                                  {(
+                                    similarityScoreData.reduced_tags * 100
+                                  ).toFixed(1)}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.tags !== undefined &&
+                            similarityScoreData.tags !== null &&
+                            similarityScoreData.tags > 0 && (
+                              <div>
+                                Tags:{" "}
+                                <strong>
+                                  {(similarityScoreData.tags * 100).toFixed(1)}%
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.performers !== undefined &&
+                            similarityScoreData.performers !== null &&
+                            similarityScoreData.performers > 0 && (
+                              <div>
+                                Performers:{" "}
+                                <strong>
+                                  {(
+                                    similarityScoreData.performers * 100
+                                  ).toFixed(1)}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.groups !== undefined &&
+                            similarityScoreData.groups !== null &&
+                            similarityScoreData.groups > 0 && (
+                              <div>
+                                Groups:{" "}
+                                <strong>
+                                  {(similarityScoreData.groups * 100).toFixed(
+                                    1
+                                  )}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                          {similarityScoreData.studio !== undefined &&
+                            similarityScoreData.studio !== null &&
+                            similarityScoreData.studio > 0 && (
+                              <div>
+                                Studio:{" "}
+                                <strong>
+                                  {(similarityScoreData.studio * 100).toFixed(
+                                    1
+                                  )}
+                                  %
+                                </strong>
+                              </div>
+                            )}
+                        </>
+                      )}
+                      {similarityScoreData.penalty !== undefined &&
+                        similarityScoreData.penalty !== null &&
+                        similarityScoreData.penalty < 1 && (
+                          <div>
+                            Penalty:{" "}
+                            <strong>
+                              {(similarityScoreData.penalty * 100).toFixed(0)}%
+                            </strong>
+                          </div>
                         )}
-                        {similarityScoreData.normal_tags !== undefined && similarityScoreData.normal_tags > 0 && (
-                          <div>Normal Tags: <strong>{(similarityScoreData.normal_tags * 100).toFixed(1)}%</strong></div>
-                        )}
-                        {similarityScoreData.reduced_tags !== undefined && similarityScoreData.reduced_tags < 0 && (
-                          <div>Reduced Tags Penalty: <strong>{(similarityScoreData.reduced_tags * 100).toFixed(1)}%</strong></div>
-                        )}
-                        {similarityScoreData.tags !== undefined && similarityScoreData.tags > 0 && (
-                          <div>Tags: <strong>{(similarityScoreData.tags * 100).toFixed(1)}%</strong></div>
-                        )}
-                        {similarityScoreData.performers !== undefined && similarityScoreData.performers > 0 && (
-                          <div>Performers: <strong>{(similarityScoreData.performers * 100).toFixed(1)}%</strong></div>
-                        )}
-                        {similarityScoreData.groups !== undefined && similarityScoreData.groups > 0 && (
-                          <div>Groups: <strong>{(similarityScoreData.groups * 100).toFixed(1)}%</strong></div>
-                        )}
-                        {similarityScoreData.studio !== undefined && similarityScoreData.studio > 0 && (
-                          <div>Studio: <strong>{(similarityScoreData.studio * 100).toFixed(1)}%</strong></div>
-                        )}
-                      </>
-                    )}
-                    {similarityScoreData.penalty !== undefined && similarityScoreData.penalty < 1 && (
-                      <div>Penalty: <strong>{(similarityScoreData.penalty * 100).toFixed(0)}%</strong></div>
-                    )}
-                  </div>
-                );
-              })() : (
-                <div>Similarity score: {getSimilarityText(similarityScore)}</div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div>
+                  Similarity score: {getSimilarityText(similarityScore)}
+                </div>
               )
             }
           >
@@ -292,20 +376,20 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
               ref={chipRef}
               className="similarity-badge px-2 py-1 rounded fw-bold"
               style={{
-                position: 'absolute',
-                bottom: '12px',
-                left: '8px',
+                position: "absolute",
+                bottom: "12px",
+                left: "8px",
                 backgroundColor: getSimilarityColor(similarityScore),
                 color: getSimilarityTextColor(similarityScore),
-                fontSize: '0.8rem',
+                fontSize: "0.8rem",
                 zIndex: 10,
-                cursor: 'pointer'
+                cursor: "pointer",
               }}
             >
               {getSimilarityText(similarityScore)}
             </div>
           </HoverPopover>
-        ) : null
+        ) : undefined
       }
       details={
         <div className="scene-card__details">
@@ -325,30 +409,32 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   );
 };
 
-export const SimilarScenes: React.FC<ISimilarScenesProps> = ({ 
-  scene, 
-  limit = 10 
+export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
+  scene,
+  limit = 10,
 }) => {
   const [displayLimit, setDisplayLimit] = useState(limit);
   const { configuration } = React.useContext(ConfigurationContext);
 
   // Use GraphQL query to fetch similar scenes
-  const { data, loading, error, refetch } = useQuery<GQL.FindSimilarScenesQuery, GQL.FindSimilarScenesQueryVariables>(
-    GQL.FindSimilarScenesDocument,
-    {
-      variables: { id: scene.id, limit: 100 }, // Fetch more than needed
-      skip: !scene.id,
-    }
-  );
+  const { data, loading, error, refetch } = useQuery<
+    GQL.FindSimilarScenesQuery,
+    GQL.FindSimilarScenesQueryVariables
+  >(GQL.FindSimilarScenesDocument, {
+    variables: { id: scene.id, limit: 100 }, // Fetch more than needed
+    skip: !scene.id,
+  });
 
   // Monitor similarity job completion for this scene
   useSimilarityJobMonitor({
     onSimilarityJobComplete: (completedSceneId) => {
       if (completedSceneId === scene.id) {
-        console.log(`Similarity job completed for scene ${scene.id}, similar scenes will be refreshed`);
+        console.log(
+          `Similarity job completed for scene ${scene.id}, similar scenes will be refreshed`
+        );
       }
     },
-    refetch: refetch
+    refetch: refetch,
   });
 
   const allSimilarScenes = data?.findScene?.similar_scenes || [];
@@ -358,17 +444,17 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
   // Function to get color based on similarity score
   const getSimilarityColor = (score: number) => {
     const percentage = Math.round(Math.min(score, 1.0) * 100);
-    if (percentage >= 85) return '#28a745'; // Green
-    if (percentage >= 60) return '#ffc107'; // Yellow
-    if (percentage >= 40) return '#dc3545'; // Red
-    return '#6c757d'; // Gray
+    if (percentage >= 85) return "#28a745"; // Green
+    if (percentage >= 60) return "#ffc107"; // Yellow
+    if (percentage >= 40) return "#dc3545"; // Red
+    return "#6c757d"; // Gray
   };
 
   // Function to get text color based on similarity score
   const getSimilarityTextColor = (score: number) => {
     const percentage = Math.round(Math.min(score, 1.0) * 100);
-    if (percentage >= 60 && percentage < 85) return '#000000'; // Black for yellow
-    return '#ffffff'; // White for other colors
+    if (percentage >= 60 && percentage < 85) return "#000000"; // Black for yellow
+    return "#ffffff"; // White for other colors
   };
 
   // Function to get similarity percentage text
@@ -380,7 +466,10 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
     return (
       <div className="similar-scenes mt-3">
         <h4>
-          <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
+          <FormattedMessage
+            id="scene_similar_scenes"
+            defaultMessage="Similar Scenes"
+          />
         </h4>
         <LoadingIndicator />
       </div>
@@ -391,7 +480,10 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
     return (
       <div className="similar-scenes mt-3">
         <h4>
-          <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
+          <FormattedMessage
+            id="scene_similar_scenes"
+            defaultMessage="Similar Scenes"
+          />
         </h4>
         <ErrorMessage error={error} />
       </div>
@@ -402,12 +494,15 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
     return (
       <div className="similar-scenes mt-3">
         <h4>
-          <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
+          <FormattedMessage
+            id="scene_similar_scenes"
+            defaultMessage="Similar Scenes"
+          />
         </h4>
         <p className="text-muted">
-          <FormattedMessage 
-            id="scene_no_similar_scenes" 
-            defaultMessage="No similar scenes found" 
+          <FormattedMessage
+            id="scene_no_similar_scenes"
+            defaultMessage="No similar scenes found"
           />
         </p>
       </div>
@@ -415,7 +510,7 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
   }
 
   const handleShowMore = () => {
-    setDisplayLimit(prev => prev + limit);
+    setDisplayLimit((prev) => prev + limit);
   };
 
   return (
@@ -430,13 +525,19 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
       `}</style>
       <div className="mt-3 mb-3">
         <h4>
-          <FormattedMessage id="scene_similar_scenes" defaultMessage="Similar Scenes" />
+          <FormattedMessage
+            id="scene_similar_scenes"
+            defaultMessage="Similar Scenes"
+          />
         </h4>
       </div>
 
       <div className="row">
         {displayedScenes.map((similarScene) => (
-          <div key={similarScene.scene.id} className="col-lg-6 col-md-6 col-sm-12 mb-2 px-1">
+          <div
+            key={similarScene.scene.id}
+            className="col-lg-6 col-md-6 col-sm-12 mb-2 px-1"
+          >
             <SimilarSceneCard
               scene={similarScene.scene}
               similarityScore={similarScene.similarity_score}
@@ -444,7 +545,9 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
               getSimilarityColor={getSimilarityColor}
               getSimilarityText={getSimilarityText}
               getSimilarityTextColor={getSimilarityTextColor}
-              showSimilarityPercent={configuration?.interface?.showSimilarityPercent !== undefined ? configuration.interface.showSimilarityPercent : true}
+              showSimilarityPercent={
+                configuration?.interface?.showSimilarityPercent ?? true
+              }
             />
           </div>
         ))}
@@ -452,13 +555,10 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
 
       {hasMore && (
         <div className="text-center mt-3">
-          <Button
-            variant="outline-light"
-            onClick={handleShowMore}
-          >
-            <FormattedMessage 
-              id="actions.show_more" 
-              defaultMessage="Show More" 
+          <Button variant="outline-light" onClick={handleShowMore}>
+            <FormattedMessage
+              id="actions.show_more"
+              defaultMessage="Show More"
             />
             <span className="ml-1">
               ({allSimilarScenes.length - displayLimit} more)
@@ -468,4 +568,4 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
       )}
     </div>
   );
-}
+};

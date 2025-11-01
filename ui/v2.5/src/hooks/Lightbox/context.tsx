@@ -72,8 +72,8 @@ export const LightboxProvider: React.FC = ({ children }) => {
       {children}
       <Suspense fallback={<></>}>
         {lightboxState.isVisible && (
-          <LightboxComponent 
-            {...lightboxState} 
+          <LightboxComponent
+            {...lightboxState}
             hide={onHide}
             hideGallery={lightboxState.hideGallery}
             hideRating={lightboxState.hideRating}

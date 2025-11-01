@@ -45,6 +45,7 @@ func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
 	defer func() {
 		if r := recover(); r != nil {
 			// Channel is closed, ignore the panic
+			_ = r
 		}
 	}()
 
@@ -65,6 +66,7 @@ func (tq *TaskQueue) Add(description string, fn func(ctx context.Context)) {
 			defer func() {
 				if r := recover(); r != nil {
 					// Channel is closed, ignore the panic
+					_ = r
 				}
 			}()
 

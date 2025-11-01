@@ -348,7 +348,7 @@ const GroupPage: React.FC<IProps> = ({ group, tabKey }) => {
           show={enableBackgroundImage && !isEditing}
         />
         <div className="detail-container">
-          <HeaderImage encodingImage={encodingImage}>
+          <HeaderImage hasImages={!encodingImage}>
             <div className="group-images">
               {!!activeFrontImage && (
                 <LightboxLink images={lightboxImages}>

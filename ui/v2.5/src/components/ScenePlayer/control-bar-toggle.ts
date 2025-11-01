@@ -21,7 +21,7 @@ class ControlBarToggleButton extends videojs.getComponent("button") {
     super(player, options);
     this.controlText(this.localize("Toggle Control Bar"));
     this.addClass("vjs-control-bar-toggle");
-    
+
     // Initial icon
     this.updateIcon();
   }
@@ -34,7 +34,7 @@ class ControlBarToggleButton extends videojs.getComponent("button") {
     // Remove existing icon classes
     this.removeClass("vjs-icon-eye");
     this.removeClass("vjs-icon-eye-slash");
-    
+
     if (this.isControlBarVisible) {
       this.addClass("vjs-icon-eye-slash"); // Eye-slash icon for "hide"
       this.controlText(this.localize("Hide Control Bar"));
@@ -47,11 +47,11 @@ class ControlBarToggleButton extends videojs.getComponent("button") {
   handleClick() {
     const player = this.player();
     const { controlBar } = player;
-    
+
     if (!controlBar) return;
 
     this.isControlBarVisible = !this.isControlBarVisible;
-    
+
     if (this.isControlBarVisible) {
       // Show control bar
       player.removeClass("vjs-control-bar-hidden");
@@ -61,12 +61,15 @@ class ControlBarToggleButton extends videojs.getComponent("button") {
       player.addClass("vjs-control-bar-hidden");
       controlBar.hide();
     }
-    
+
     this.updateIcon();
-    
+
     // Store preference in localStorage
     try {
-      localStorage.setItem("stash-control-bar-visible", String(this.isControlBarVisible));
+      localStorage.setItem(
+        "stash-control-bar-visible",
+        String(this.isControlBarVisible)
+      );
     } catch (e) {
       // Ignore localStorage errors
     }
@@ -87,11 +90,12 @@ class ControlBarTogglePlugin extends videojs.getPlugin("plugin") {
   private createFloatingButton(): HTMLDivElement {
     const button = document.createElement("div");
     button.className = "vjs-floating-toggle-button";
-    button.innerHTML = '<span class="vjs-icon-placeholder vjs-icon-eye"></span>';
-    
+    button.innerHTML =
+      '<span class="vjs-icon-placeholder vjs-icon-eye"></span>';
+
     // Set localized title
     button.title = "Show Control Bar (C)";
-    
+
     button.addEventListener("click", () => {
       if (this.toggleButton) {
         this.toggleButton.handleClick();
@@ -113,21 +117,29 @@ class ControlBarTogglePlugin extends videojs.getPlugin("plugin") {
 
   ready() {
     const { player } = this;
-    
+
     // Create floating button and add to player
     this.floatingButton = this.createFloatingButton();
     player.el().appendChild(this.floatingButton);
-    
+
     // Add button to control bar (at the end)
-    this.toggleButton = player.controlBar.addChild("ControlBarToggleButton", {}, 999) as ControlBarToggleButton;
-    
+    this.toggleButton = player.controlBar.addChild(
+      "ControlBarToggleButton",
+      {},
+      999
+    ) as ControlBarToggleButton;
+
     // Override the toggle button's handleClick to also update floating button
-    const originalHandleClick = this.toggleButton.handleClick.bind(this.toggleButton);
+    const originalHandleClick = this.toggleButton.handleClick.bind(
+      this.toggleButton
+    );
     this.toggleButton.handleClick = () => {
       originalHandleClick();
-      this.updateFloatingButtonVisibility(this.toggleButton!.isControlBarVisible);
+      this.updateFloatingButtonVisibility(
+        this.toggleButton!.isControlBarVisible
+      );
     };
-    
+
     // Restore preference from localStorage
     try {
       const savedState = localStorage.getItem("stash-control-bar-visible");
@@ -169,4 +181,3 @@ declare module "video.js" {
 }
 
 export default ControlBarTogglePlugin;
-

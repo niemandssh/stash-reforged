@@ -89,15 +89,15 @@
 }
 
 // Стили для новой звездочной системы рейтинга
-  .rating-number-stars {
-    align-items: center; // Выравниваем все элементы по центру
-    display: inline-flex;
-    gap: 0; // Убираем промежутки между звездами в паре
-    
-    // Убираем промежутки между звездами
-    button:nth-child(odd) {
-      margin-right: 0; // Убираем промежуток
-    }
+.rating-number-stars {
+  align-items: center; // Выравниваем все элементы по центру
+  display: inline-flex;
+  gap: 0; // Убираем промежутки между звездами в паре
+
+  // Убираем промежутки между звездами
+  button:nth-child(odd) {
+    margin-right: 0; // Убираем промежуток
+  }
 
   button {
     align-items: center; // Выравниваем содержимое кнопки
@@ -106,19 +106,19 @@
     justify-content: center;
     outline: none; // Убираем outline у кнопок
     position: relative;
-    
+
     &:hover {
       outline: none; // Убираем outline при наведении
       .unfilled-star {
         color: gold; // Золотая обводка при наведении
       }
     }
-    
+
     &:focus {
       box-shadow: none; // Убираем box-shadow при фокусе
       outline: none; // Убираем outline при фокусе
     }
-    
+
     &:focus-visible {
       box-shadow: none; // Убираем box-shadow при фокусе
       outline: none; // Убираем outline при фокусе (современные браузеры)
@@ -210,7 +210,7 @@
       position: relative;
       width: 11px; // Увеличили ширину кнопки на 1px
       z-index: 1; // Нечетные звезды ниже (левая половина)
-      
+
       .filled-star {
         align-items: center;
         display: flex;
@@ -222,7 +222,7 @@
         width: 20px; // Полная ширина звезды
         z-index: 2; // Поверх unfilled
       }
-      
+
       .unfilled-star {
         align-items: center;
         display: flex;
@@ -242,7 +242,7 @@
       position: relative;
       width: 11px; // Увеличили ширину кнопки на 1px
       z-index: 1; // Четные звезды тоже на том же уровне
-      
+
       .filled-star {
         align-items: center;
         display: flex;
@@ -254,7 +254,7 @@
         width: 20px; // Полная ширина звезды
         z-index: 2; // Поверх unfilled
       }
-      
+
       .unfilled-star {
         align-items: center;
         display: flex;

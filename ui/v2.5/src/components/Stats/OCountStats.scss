@@ -1,17 +1,17 @@
 .chart-container {
-  width: 100%;
   overflow: visible;
-  
+  width: 100%;
+
   .apexcharts-canvas {
-    width: 100% !important;
     max-width: 100% !important;
+    width: 100% !important;
   }
 }
 
 hr {
+  background: #6c757d;
   border: 0;
   height: 1px;
-  background: #6c757d;
   margin: 1.5rem 0;
 }
 
@@ -21,39 +21,39 @@ hr {
 
 .apexcharts-xaxis-label {
   display: block !important;
-  visibility: visible !important;
   opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .apexcharts-xaxis-label[style*="display: none"] {
   display: block !important;
-  visibility: visible !important;
   opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .apexcharts-tooltip {
   border: none !important;
   box-shadow: none !important;
-  
+
   .apex-tooltip {
     background: rgba(0, 0, 0, 0.9) !important;
-    color: white !important;
-    padding: 8px 12px !important;
-    border-radius: 6px !important;
-    font-size: 12px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     border: none !important;
-    
+    border-radius: 6px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    color: white !important;
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+
     .tooltip-date {
+      font-size: 11px !important;
       font-weight: 500 !important;
       margin-bottom: 2px !important;
-      font-size: 11px !important;
     }
-    
+
     .tooltip-count {
-      font-weight: 600 !important;
       color: #007bff !important;
       font-size: 13px !important;
+      font-weight: 600 !important;
     }
   }
 }
@@ -61,7 +61,7 @@ hr {
 .apexcharts-tooltip.apexcharts-theme-dark,
 .apexcharts-tooltip.apexcharts-theme-light {
   .apex-tooltip {
-    background: #000000 !important;
+    background: #000 !important;
     color: white !important;
   }
 }
@@ -69,23 +69,23 @@ hr {
 .apexcharts-tooltip[style*="position: absolute"],
 .apexcharts-tooltip[style*="position:fixed"] {
   .apex-tooltip {
-    background: #000000 !important;
+    background: #000 !important;
     color: white !important;
   }
 }
 
 .apexcharts-tooltip .apex-tooltip {
-  background: #000000 !important;
+  background: #000 !important;
   color: white !important;
 }
 
 .apexcharts-xaxistooltip {
-  background: #000000 !important;
-  color: #ffffff !important;
+  background: #000 !important;
   border: none !important;
   box-shadow: none !important;
+  color: #fff !important;
 }
 
 .apexcharts-xaxistooltip .apexcharts-tooltip-text {
-  color: #ffffff !important;
+  color: #fff !important;
 }

@@ -75,7 +75,7 @@
     .tag-title-with-icon {
       align-items: center;
       display: flex;
-      
+
       .pose-tag-icon-before-title {
         display: inline-block;
         fill: white;
@@ -165,6 +165,7 @@
   }
 
   // Colored tag chips
+  /* stylelint-disable selector-class-pattern, declaration-no-important */
   .colored-multi-value .react-select__multi-value {
     background-color: var(--tag-bg-color, inherit) !important;
     color: var(--tag-text-color, inherit) !important;
@@ -182,6 +183,7 @@
   .colored-multi-value .react-select__multi-value__remove {
     color: currentColor;
   }
+  /* stylelint-enable selector-class-pattern, declaration-no-important */
 }
 
 .tag-select-image {

@@ -260,7 +260,9 @@ export const GalleryCard = PatchComponent(
     const pinButton = (
       <Button
         variant="link"
-        className={`p-0 text-decoration-none mt-n1 ml-n1 ${props.gallery.pinned ? 'text-warning' : 'text-muted'}`}
+        className={`p-0 text-decoration-none mt-n1 ml-n1 ${
+          props.gallery.pinned ? "text-warning" : "text-muted"
+        }`}
         onClick={togglePin}
         title={props.gallery.pinned ? "Unpin" : "Pin"}
       >

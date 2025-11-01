@@ -14,7 +14,7 @@ export const WebDisplayModeToggle: React.FC<IWebDisplayModeToggleProps> = ({
   onModeChange,
 }) => {
   const intl = useIntl();
-  
+
   const handleModeChange = (mode: WebDisplayMode) => {
     onModeChange(mode);
   };
@@ -22,14 +22,18 @@ export const WebDisplayModeToggle: React.FC<IWebDisplayModeToggleProps> = ({
   return (
     <div className="web-display-mode-toggle">
       <button
-        className={`web-display-mode-btn ${currentMode === WebDisplayMode.FullSize ? "active" : ""}`}
+        className={`web-display-mode-btn ${
+          currentMode === WebDisplayMode.FullSize ? "active" : ""
+        }`}
         onClick={() => handleModeChange(WebDisplayMode.FullSize)}
         title={intl.formatMessage({ id: "web_display_mode.full_size" })}
       >
         <Icon icon={faExpand} />
       </button>
       <button
-        className={`web-display-mode-btn ${currentMode === WebDisplayMode.FitToScreen ? "active" : ""}`}
+        className={`web-display-mode-btn ${
+          currentMode === WebDisplayMode.FitToScreen ? "active" : ""
+        }`}
         onClick={() => handleModeChange(WebDisplayMode.FitToScreen)}
         title={intl.formatMessage({ id: "web_display_mode.fit_to_screen" })}
       >

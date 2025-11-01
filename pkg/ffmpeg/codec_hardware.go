@@ -29,8 +29,6 @@ var (
 	VideoCodecVVPX  = makeVideoCodec("VP8 VAAPI", "vp8_vaapi")
 )
 
-const minHeight int = 480
-
 // Tests all (given) hardware codec's
 func (f *FFMpeg) InitHWSupport(ctx context.Context) {
 	var hwCodecSupport []VideoCodec

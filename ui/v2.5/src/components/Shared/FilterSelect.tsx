@@ -10,6 +10,7 @@ import AsyncSelect from "react-select/async";
 import AsyncCreatableSelect, {
   AsyncCreatableProps,
 } from "react-select/async-creatable";
+import { SelectInstance } from "react-select/dist/declarations/src";
 import cx from "classnames";
 
 import { useToast } from "src/hooks/Toast";
@@ -57,7 +58,11 @@ const getSelectedItems = <T,>(
 };
 
 const SelectComponent = <T, IsMulti extends boolean>(
-  props: ISelectProps<T, IsMulti> & { selectRef?: React.Ref<unknown> }
+  props: ISelectProps<T, IsMulti> & {
+    selectRef?: React.Ref<
+      SelectInstance<Option<T>, IsMulti, GroupBase<Option<T>>>
+    >;
+  }
 ) => {
   const {
     selectedOptions,
@@ -136,7 +141,10 @@ export interface IFilterProps {
 }
 
 export interface IFilterComponentProps<T> extends IFilterProps {
-  loadOptions: (inputValue: string, excludeIds?: string[]) => Promise<Option<T>[]>;
+  loadOptions: (
+    inputValue: string,
+    excludeIds?: string[]
+  ) => Promise<Option<T>[]>;
   onCreate?: (
     name: string
   ) => Promise<{ value: string; item: T; message: string }>;
@@ -176,17 +184,27 @@ export const FilterSelectComponent = <
   }
   const uniquePrefix = uniquePrefixRef.current;
 
-  const selectRef = useRef<unknown>(null);
+  const selectRef =
+    useRef<SelectInstance<Option<T>, IsMulti, GroupBase<Option<T>>>>(null);
   const [loading, setLoading] = useState(false);
   const shouldRestoreFocus = useRef(false);
   const Toast = useToast();
 
   React.useEffect(() => {
-    if (!loading && shouldRestoreFocus.current && isMulti && selectRef.current) {
+    if (
+      !loading &&
+      shouldRestoreFocus.current &&
+      isMulti &&
+      selectRef.current
+    ) {
       shouldRestoreFocus.current = false;
       setTimeout(() => {
-        if (selectRef.current && selectRef.current.inputRef) {
-          selectRef.current.inputRef.focus();
+        if (
+          selectRef.current &&
+          "inputRef" in selectRef.current &&
+          selectRef.current.inputRef
+        ) {
+          (selectRef.current.inputRef as HTMLInputElement).focus();
         }
       }, 100);
     }
@@ -225,10 +243,7 @@ export const FilterSelectComponent = <
               shouldRestoreFocus.current = true;
             }
             setLoading(true);
-            const {
-              item: newItem,
-              message,
-            } = await props.onCreate!(name);
+            const { item: newItem, message } = await props.onCreate!(name);
             const newItemOption = {
               object: newItem,
               value: `${uniquePrefix}-${newItem.id}`,
@@ -237,10 +252,13 @@ export const FilterSelectComponent = <
               onChange(newItemOption);
             } else {
               const currentValues = values ?? [];
-              const currentOptions = currentValues.map(v => ({
-                object: v,
-                value: `${uniquePrefix}-${v.id}`,
-              } as Option<T>));
+              const currentOptions = currentValues.map(
+                (v) =>
+                  ({
+                    object: v,
+                    value: `${uniquePrefix}-${v.id}`,
+                  } as Option<T>)
+              );
               onChange([...currentOptions, newItemOption]);
             }
 

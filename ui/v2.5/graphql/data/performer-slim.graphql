@@ -44,4 +44,5 @@ fragment SelectPerformerData on Performer {
   primary_image_path
   birthdate
   death_date
+  small_role
 }

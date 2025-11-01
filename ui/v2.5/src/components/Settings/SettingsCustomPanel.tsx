@@ -24,7 +24,7 @@ export const SettingsCustomPanel: React.FC = () => {
           onChange={(v) => saveInterface({ randomBestRatingThreshold: v })}
         />
       </SettingSection>
-      
+
       <SettingSection headingID="config.custom.similar_scenes">
         <BooleanSetting
           id="show-similarity-percent"
@@ -66,6 +66,6 @@ export const SettingsCustomPanel: React.FC = () => {
           onChange={(v) => saveInterface({ redirectHomeToScenes: v })}
         />
       </SettingSection>
-      </div>
+    </div>
   );
 };

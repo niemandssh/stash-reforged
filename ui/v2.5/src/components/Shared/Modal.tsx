@@ -9,6 +9,7 @@ interface IButton {
   text?: string;
   variant?: ButtonVariant;
   onClick?: () => void;
+  disabled?: boolean;
 }
 
 interface IModal {
@@ -79,7 +80,7 @@ export const ModalComponent: React.FC<IModal> = ({
           ""
         )}
         <Button
-          disabled={isRunning || disabled}
+          disabled={isRunning || disabled || accept?.disabled}
           variant={accept?.variant ?? "primary"}
           onClick={accept?.onClick}
           className="ml-2"

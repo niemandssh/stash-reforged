@@ -17,13 +17,13 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
 
   const xaxisCategories = useMemo(() => {
     if (!data || data.length === 0) return [];
-    return data.map(point => point.date_display);
+    return data.map((point) => point.date_display);
   }, [data]);
 
   const chartOptions = useMemo((): ApexOptions => {
     return {
       chart: {
-        type: 'area',
+        type: "area",
         height: 350,
         toolbar: {
           show: true,
@@ -32,41 +32,41 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
             zoomin: true,
             zoomout: true,
             pan: true,
-            reset: true
-          }
+            reset: true,
+          },
         },
         zoom: {
           enabled: true,
-          type: 'x',
-          autoScaleYaxis: true
+          type: "x",
+          autoScaleYaxis: true,
         },
         events: {
-          mounted: function(chartContext) {
+          mounted: function (chartContext) {
             if (data && data.length > 0) {
               // Зум на последние 30 дней от последней точки в данных
               const lastIndex = data.length - 1;
               const lastMonthStart = Math.max(0, lastIndex - 29);
               chartContext.zoomX(lastMonthStart, lastIndex + 1);
             }
-          }
+          },
         },
         animations: {
           enabled: true,
-          speed: 800
+          speed: 800,
         },
         parentHeightOffset: 0,
-        redrawOnParentResize: true
+        redrawOnParentResize: true,
       },
       dataLabels: {
-        enabled: false
+        enabled: false,
       },
       stroke: {
-        curve: 'smooth',
+        curve: "smooth",
         width: 2,
-        colors: ['#007bff']
+        colors: ["#007bff"],
       },
       fill: {
-        type: 'gradient',
+        type: "gradient",
         gradient: {
           shadeIntensity: 1,
           opacityFrom: 0.3,
@@ -75,76 +75,76 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
           colorStops: [
             {
               offset: 0,
-              color: '#007bff',
-              opacity: 0.3
+              color: "#007bff",
+              opacity: 0.3,
             },
             {
               offset: 100,
-              color: '#007bff',
-              opacity: 0.1
-            }
-          ]
-        }
+              color: "#007bff",
+              opacity: 0.1,
+            },
+          ],
+        },
       },
       xaxis: {
-        type: 'category',
+        type: "category",
         categories: xaxisCategories,
         tickAmount: data ? data.length : 0,
-        tickPlacement: 'on',
+        tickPlacement: "on",
         labels: {
           style: {
-            colors: '#666',
-            fontSize: '12px'
+            colors: "#666",
+            fontSize: "12px",
           },
           rotate: -45,
           rotateAlways: true,
           hideOverlappingLabels: false,
           show: true,
-          trim: false
+          trim: false,
         },
         axisBorder: {
-          show: false
+          show: false,
         },
         axisTicks: {
-          show: false
+          show: false,
         },
         tooltip: {
           enabled: true,
           style: {
-            fontSize: '12px',
-            fontFamily: 'inherit'
-          }
-        }
+            fontSize: "12px",
+            fontFamily: "inherit",
+          },
+        },
       },
       yaxis: {
         min: 0,
         labels: {
           style: {
-            colors: '#666',
-            fontSize: '12px'
-          }
+            colors: "#666",
+            fontSize: "12px",
+          },
         },
         title: {
-          text: intl.formatMessage({ id: 'o_count_stats.y_axis_title' }),
+          text: intl.formatMessage({ id: "o_count_stats.y_axis_title" }),
           style: {
-            color: '#666',
-            fontSize: '14px'
-          }
-        }
+            color: "#666",
+            fontSize: "14px",
+          },
+        },
       },
       grid: {
-        borderColor: '#e0e0e0',
+        borderColor: "#e0e0e0",
         strokeDashArray: 4,
         xaxis: {
           lines: {
-            show: false
-          }
+            show: false,
+          },
         },
         yaxis: {
           lines: {
-            show: true
-          }
-        }
+            show: true,
+          },
+        },
       },
       tooltip: {
         enabled: true,
@@ -152,18 +152,20 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
         intersect: false,
         followCursor: true,
         fixed: {
-          enabled: false
+          enabled: false,
         },
-          custom: function({ series, seriesIndex, dataPointIndex }) {
-            const value = series[seriesIndex][dataPointIndex];
-            const dateDisplay = data[dataPointIndex] ? data[dataPointIndex].date_display : '';
+        custom: function ({ series, seriesIndex, dataPointIndex }) {
+          const value = series[seriesIndex][dataPointIndex];
+          const dateDisplay = data[dataPointIndex]
+            ? data[dataPointIndex].date_display
+            : "";
 
-            const timesText = intl.formatMessage(
-              { id: 'o_count_stats.tooltip_times' },
-              { count: value }
-            );
+          const timesText = intl.formatMessage(
+            { id: "o_count_stats.tooltip_times" },
+            { count: value }
+          );
 
-            return `
+          return `
               <div class="apex-tooltip">
                 <div class="tooltip-date">
                   ${dateDisplay}
@@ -173,39 +175,41 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
                 </div>
               </div>
             `;
-          }
+        },
       },
       markers: {
         size: 4,
-        colors: ['#007bff'],
-        strokeColors: '#fff',
+        colors: ["#007bff"],
+        strokeColors: "#fff",
         strokeWidth: 2,
         hover: {
-          size: 6
-        }
+          size: 6,
+        },
       },
-      colors: ['#007bff']
+      colors: ["#007bff"],
     };
   }, [intl, xaxisCategories, data]);
 
-      const series = useMemo(() => {
-        if (!data || data.length === 0) return [];
+  const series = useMemo(() => {
+    if (!data || data.length === 0) return [];
 
-        return [
-          {
-            name: 'O-Count',
-            data: data.map(point => ({
-              x: point.date,
-              y: point.count
-            }))
-          }
-        ];
-      }, [data]);
+    return [
+      {
+        name: "O-Count",
+        data: data.map((point) => ({
+          x: point.date,
+          y: point.count,
+        })),
+      },
+    ];
+  }, [data]);
 
   if (!data || data.length === 0) {
     return (
       <div className="text-center mt-5">
-        <p><FormattedMessage id="o_count_stats.no_data" /></p>
+        <p>
+          <FormattedMessage id="o_count_stats.no_data" />
+        </p>
       </div>
     );
   }
@@ -213,14 +217,14 @@ const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
   return (
     <div className="mt-4">
       <div className="chart-container">
-            <Chart
-              options={chartOptions}
-              series={series}
-              type="area"
-              height={350}
-            />
+        <Chart
+          options={chartOptions}
+          series={series}
+          type="area"
+          height={350}
+        />
       </div>
-      
+
       <div className="text-center mt-3">
         <small className="text-muted">
           <FormattedMessage id="o_count_stats.description" />
@@ -240,10 +244,13 @@ export const OCountStats: React.FC = () => {
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth() + 1;
-    
+
     return data.oCountStats.daily_stats.reduce((sum, point) => {
       const pointDate = new Date(point.date);
-      if (pointDate.getFullYear() === currentYear && pointDate.getMonth() + 1 === currentMonth) {
+      if (
+        pointDate.getFullYear() === currentYear &&
+        pointDate.getMonth() + 1 === currentMonth
+      ) {
         return sum + point.count;
       }
       return sum;
@@ -255,7 +262,7 @@ export const OCountStats: React.FC = () => {
     if (!data?.oCountStats?.daily_stats) return 0;
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
+
     return data.oCountStats.daily_stats.reduce((sum, point) => {
       const pointDate = new Date(point.date);
       if (pointDate >= thirtyDaysAgo) {
@@ -296,11 +303,13 @@ export const OCountStats: React.FC = () => {
           </p>
         </div>
       </div>
-      
+
       <div className="row mt-3">
         <div className="col-12">
           <hr className="mb-4" />
-          <h4 className="text-center mb-4 mt-5"><FormattedMessage id="o_count_stats.title" /></h4>
+          <h4 className="text-center mb-4 mt-5">
+            <FormattedMessage id="o_count_stats.title" />
+          </h4>
           <OCountChart data={data.oCountStats.daily_stats} />
         </div>
       </div>

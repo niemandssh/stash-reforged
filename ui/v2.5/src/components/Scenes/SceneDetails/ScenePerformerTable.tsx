@@ -1,7 +1,10 @@
 import React, { useMemo } from "react";
 import { useIntl } from "react-intl";
 import { Form, Row, Col } from "react-bootstrap";
-import { Performer, PerformerSelect } from "src/components/Performers/PerformerSelect";
+import {
+  Performer,
+  PerformerSelect,
+} from "src/components/Performers/PerformerSelect";
 import cx from "classnames";
 
 export interface IPerformerEntry {
@@ -81,7 +84,7 @@ export const ScenePerformerTable: React.FC<IProps> = (props) => {
       ...value,
       {
         performer: performer,
-        small_role: performer.small_role || false,
+        small_role: Boolean(performer.small_role),
         role_description: null,
       },
     ];
@@ -106,7 +109,9 @@ export const ScenePerformerTable: React.FC<IProps> = (props) => {
               <Form.Check
                 type="checkbox"
                 id={`small-role-${p.performer.id}`}
-                checked={p.performer.small_role || p.small_role}
+                checked={
+                  Boolean(p.performer.small_role) || Boolean(p.small_role)
+                }
                 disabled={p.performer.small_role === true}
                 onChange={(e) =>
                   updateFieldChanged(i, "small_role", e.target.checked)
@@ -175,4 +180,3 @@ export const ScenePerformerTable: React.FC<IProps> = (props) => {
     </div>
   );
 };
-

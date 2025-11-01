@@ -381,24 +381,24 @@ dd {
 }
 
 #performer-page .detail-header-image {
-  position: relative;
   overflow: hidden;
+  position: relative;
 
   .profile-image-slider {
     position: relative;
 
     .performer-image-container {
-      position: relative;
       overflow: hidden;
+      position: relative;
 
       .image-container {
         height: calc(412px + 80px);
         position: relative;
 
         .detail-header-image {
-          height: 412px;
-          flex-shrink: 0;
           border-radius: 8px;
+          flex-shrink: 0;
+          height: 412px;
         }
       }
     }
@@ -413,25 +413,25 @@ dd {
     position: relative;
 
     .background-image {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
       bottom: 0;
+      left: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
       z-index: 1;
 
       &::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
         background: rgba(0, 0, 0, 0.3);
+        bottom: 0;
+        content: "";
+        left: 0;
+        position: absolute;
+        right: 0;
+        top: 0;
       }
     }
 
-    > *:not(.background-image) {
+    > :not(.background-image) {
       position: relative;
       z-index: 2;
     }
@@ -710,7 +710,6 @@ div.dropdown-menu {
     background-color: #8a9ba826;
     cursor: pointer;
   }
-
 }
 
 div.dropdown-menu {
@@ -735,19 +734,19 @@ div.dropdown-menu {
 
 /* Подсветка выбранных тегов при поиске */
 .react-select__multi-value.highlighted-tag-chip {
-  background-color: #ffeb3b !important;
-  color: #000 !important;
+  background-color: #ffeb3b;
+  color: #000;
 
   .react-select__multi-value__label {
-    color: #000 !important;
+    color: #000;
   }
 
   .react-select__multi-value__remove {
-    color: #000 !important;
+    color: #000;
 
     &:hover {
-      background-color: #f57c00 !important;
-      color: #fff !important;
+      background-color: #f57c00;
+      color: #fff;
     }
   }
 }
@@ -1493,5 +1492,5 @@ select {
 
 // Только центрирование вкладок
 .nav-tabs {
-  justify-content: center !important;
+  justify-content: center;
 }

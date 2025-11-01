@@ -564,23 +564,30 @@ export const useSceneUpdate = () =>
     update(cache, result, { variables }) {
       if (!result.data?.sceneUpdate || !variables) return;
 
-
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
+      const similarityFields = [
+        "performer_ids",
+        "tag_ids",
+        "groups",
+        "studio_id",
+        "is_broken",
+      ];
       const updatedFields = Object.keys(variables.input);
-      const needsSimilarityUpdate = similarityFields.some(field =>
+      const needsSimilarityUpdate = similarityFields.some((field) =>
         updatedFields.includes(field)
       );
 
       if (needsSimilarityUpdate) {
         // Don't evict immediately - let the similarity job monitor handle it
         // when the backend job completes
-        console.log(`Similarity job will be triggered for scene ${variables.input.id}`);
+        console.log(
+          `Similarity job will be triggered for scene ${variables.input.id}`
+        );
       } else {
         // For non-similarity affecting changes, evict immediately
         cache.evict({
           fieldName: "findScene",
-          args: { id: variables.input.id }
+          args: { id: variables.input.id },
         });
       }
 
@@ -596,15 +603,21 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
       if (!result.data?.bulkSceneUpdate) return;
 
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
+      const similarityFields = [
+        "performer_ids",
+        "tag_ids",
+        "groups",
+        "studio_id",
+        "is_broken",
+      ];
       const updatedFields = Object.keys(input);
-      const needsSimilarityUpdate = similarityFields.some(field =>
+      const needsSimilarityUpdate = similarityFields.some((field) =>
         updatedFields.includes(field)
       );
 
       // Update rating100 field in cache for all updated scenes
       if (input.rating100 !== undefined && input.ids) {
-        input.ids.forEach(id => {
+        input.ids.forEach((id) => {
           cache.modify({
             id: cache.identify({ __typename: "Scene", id }),
             fields: {
@@ -618,7 +631,7 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
 
       // Evict similar scenes for all updated scenes
       if (input.ids) {
-        input.ids.forEach(id => {
+        input.ids.forEach((id) => {
           if (needsSimilarityUpdate) {
             // Don't evict immediately - let the similarity job monitor handle it
             console.log(`Similarity job will be triggered for scene ${id}`);
@@ -628,7 +641,7 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
             if (input.rating100 === undefined) {
               cache.evict({
                 fieldName: "findScene",
-                args: { id }
+                args: { id },
               });
             }
           }
@@ -647,10 +660,16 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
       if (!result.data?.scenesUpdate) return;
 
       // Check if any similarity-affecting fields were updated
-      const similarityFields = ['performer_ids', 'tag_ids', 'groups', 'studio_id', 'is_broken'];
+      const similarityFields = [
+        "performer_ids",
+        "tag_ids",
+        "groups",
+        "studio_id",
+        "is_broken",
+      ];
 
       // Update rating100 field in cache for all updated scenes
-      input.forEach(sceneInput => {
+      input.forEach((sceneInput) => {
         if (sceneInput.rating100 !== undefined) {
           cache.modify({
             id: cache.identify({ __typename: "Scene", id: sceneInput.id }),
@@ -664,22 +683,24 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
       });
 
       // Evict similar scenes for all updated scenes
-      input.forEach(sceneInput => {
+      input.forEach((sceneInput) => {
         const updatedFields = Object.keys(sceneInput);
-        const needsSimilarityUpdate = similarityFields.some(field =>
+        const needsSimilarityUpdate = similarityFields.some((field) =>
           updatedFields.includes(field)
         );
 
         if (needsSimilarityUpdate) {
           // Don't evict immediately - let the similarity job monitor handle it
-          console.log(`Similarity job will be triggered for scene ${sceneInput.id}`);
+          console.log(
+            `Similarity job will be triggered for scene ${sceneInput.id}`
+          );
         } else {
           // For non-similarity affecting changes, only evict if rating was not updated
           // to avoid overriding the cache.modify above
           if (sceneInput.rating100 === undefined) {
             cache.evict({
               fieldName: "findScene",
-              args: { id: sceneInput.id }
+              args: { id: sceneInput.id },
             });
           }
         }
@@ -784,7 +805,7 @@ export const useSceneIncrementO = (id: string) =>
           },
         });
       }
-      
+
       cache.modify({
         id: cache.identify({ __typename: "Scene", id }),
         fields: {
@@ -1029,7 +1050,7 @@ export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
       try {
         // Update the scene in cache to reflect the new primary file
         const sceneId = `Scene:${id}`;
-        
+
         // Try to read the existing scene from cache
         let existingScene: GQL.SceneDataFragment | null = null;
         try {
@@ -1039,15 +1060,22 @@ export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
           });
         } catch (error) {
           // Scene not in cache, that's okay - we'll just evict queries
-          console.warn('Scene not found in cache, skipping cache update:', error);
+          console.warn(
+            "Scene not found in cache, skipping cache update:",
+            error
+          );
         }
 
         if (existingScene && existingScene.files) {
           // Find the new primary file
-          const newPrimaryFile = existingScene.files.find(file => file.id === fileID);
+          const newPrimaryFile = existingScene.files.find(
+            (file) => file.id === fileID
+          );
           if (newPrimaryFile) {
             // Reorder files to put the new primary file first
-            const otherFiles = existingScene.files.filter(file => file.id !== fileID);
+            const otherFiles = existingScene.files.filter(
+              (file) => file.id !== fileID
+            );
             const reorderedFiles = [newPrimaryFile, ...otherFiles];
 
             try {
@@ -1069,12 +1097,12 @@ export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
                 },
               });
             } catch (error) {
-              console.warn('Failed to write scene fragment to cache:', error);
+              console.warn("Failed to write scene fragment to cache:", error);
             }
           }
         }
       } catch (error) {
-        console.warn('Error updating scene cache:', error);
+        console.warn("Error updating scene cache:", error);
       }
 
       evictQueries(cache, [
@@ -1354,7 +1382,7 @@ export const useBulkImageUpdate = () =>
 
       // Update rating100 field in cache for all updated images
       if (variables.input.rating100 !== undefined && variables.input.ids) {
-        variables.input.ids.forEach(id => {
+        variables.input.ids.forEach((id) => {
           cache.modify({
             id: cache.identify({ __typename: "Image", id }),
             fields: {
@@ -1579,7 +1607,7 @@ export const mutateImageSetPrimaryFile = (id: string, fileID: string) =>
       try {
         // Update the image in cache to reflect the new primary file
         const imageId = `Image:${id}`;
-        
+
         // Try to read the existing image from cache
         let existingImage: GQL.ImageDataFragment | null = null;
         try {
@@ -1589,15 +1617,22 @@ export const mutateImageSetPrimaryFile = (id: string, fileID: string) =>
           });
         } catch (error) {
           // Image not in cache, that's okay - we'll just evict queries
-          console.warn('Image not found in cache, skipping cache update:', error);
+          console.warn(
+            "Image not found in cache, skipping cache update:",
+            error
+          );
         }
 
         if (existingImage && existingImage.visual_files) {
           // Find the new primary file
-          const newPrimaryFile = existingImage.visual_files.find(file => file.id === fileID);
+          const newPrimaryFile = existingImage.visual_files.find(
+            (file) => file.id === fileID
+          );
           if (newPrimaryFile) {
             // Reorder files to put the new primary file first
-            const otherFiles = existingImage.visual_files.filter(file => file.id !== fileID);
+            const otherFiles = existingImage.visual_files.filter(
+              (file) => file.id !== fileID
+            );
             const reorderedFiles = [newPrimaryFile, ...otherFiles];
 
             try {
@@ -1610,12 +1645,12 @@ export const mutateImageSetPrimaryFile = (id: string, fileID: string) =>
                 },
               });
             } catch (error) {
-              console.warn('Failed to write image fragment to cache:', error);
+              console.warn("Failed to write image fragment to cache:", error);
             }
           }
         }
       } catch (error) {
-        console.warn('Error updating image cache:', error);
+        console.warn("Error updating image cache:", error);
       }
 
       evictQueries(cache, [
@@ -1677,7 +1712,7 @@ export const useBulkGroupUpdate = (input: GQL.BulkGroupUpdateInput) =>
 
       // Update rating100 field in cache for all updated groups
       if (input.rating100 !== undefined && input.ids) {
-        input.ids.forEach(id => {
+        input.ids.forEach((id) => {
           cache.modify({
             id: cache.identify({ __typename: "Group", id }),
             fields: {
@@ -2104,7 +2139,7 @@ export const useBulkGalleryUpdate = () =>
 
       // Update rating100 field in cache for all updated galleries
       if (variables.input.rating100 !== undefined && variables.input.ids) {
-        variables.input.ids.forEach(id => {
+        variables.input.ids.forEach((id) => {
           cache.modify({
             id: cache.identify({ __typename: "Gallery", id }),
             fields: {
@@ -2240,7 +2275,7 @@ export const mutateGallerySetPrimaryFile = (id: string, fileID: string) =>
       try {
         // Update the gallery in cache to reflect the new primary file
         const galleryId = `Gallery:${id}`;
-        
+
         // Try to read the existing gallery from cache
         let existingGallery: GQL.GalleryDataFragment | null = null;
         try {
@@ -2250,15 +2285,22 @@ export const mutateGallerySetPrimaryFile = (id: string, fileID: string) =>
           });
         } catch (error) {
           // Gallery not in cache, that's okay - we'll just evict queries
-          console.warn('Gallery not found in cache, skipping cache update:', error);
+          console.warn(
+            "Gallery not found in cache, skipping cache update:",
+            error
+          );
         }
 
         if (existingGallery && existingGallery.files) {
           // Find the new primary file
-          const newPrimaryFile = existingGallery.files.find(file => file.id === fileID);
+          const newPrimaryFile = existingGallery.files.find(
+            (file) => file.id === fileID
+          );
           if (newPrimaryFile) {
             // Reorder files to put the new primary file first
-            const otherFiles = existingGallery.files.filter(file => file.id !== fileID);
+            const otherFiles = existingGallery.files.filter(
+              (file) => file.id !== fileID
+            );
             const reorderedFiles = [newPrimaryFile, ...otherFiles];
 
             try {
@@ -2271,12 +2313,12 @@ export const mutateGallerySetPrimaryFile = (id: string, fileID: string) =>
                 },
               });
             } catch (error) {
-              console.warn('Failed to write gallery fragment to cache:', error);
+              console.warn("Failed to write gallery fragment to cache:", error);
             }
           }
         }
       } catch (error) {
-        console.warn('Error updating gallery cache:', error);
+        console.warn("Error updating gallery cache:", error);
       }
 
       evictQueries(cache, [
@@ -2363,7 +2405,10 @@ export const usePerformerUpdate = () =>
       // Update the specific performer's rating100 field in cache
       if (variables.input.rating100 !== undefined) {
         cache.modify({
-          id: cache.identify({ __typename: "Performer", id: variables.input.id }),
+          id: cache.identify({
+            __typename: "Performer",
+            id: variables.input.id,
+          }),
           fields: {
             rating100() {
               return variables.input.rating100 ?? null;
@@ -2385,7 +2430,7 @@ export const useBulkPerformerUpdate = (input: GQL.BulkPerformerUpdateInput) =>
 
       // Update rating100 field in cache for all updated performers
       if (input.rating100 !== undefined && input.ids) {
-        input.ids.forEach(id => {
+        input.ids.forEach((id) => {
           cache.modify({
             id: cache.identify({ __typename: "Performer", id }),
             fields: {
@@ -2780,30 +2825,42 @@ export const mutateDeleteFiles = (ids: string[]) =>
             fields: {
               findScenes: (existingScenes, { readField }) => {
                 if (!existingScenes) return existingScenes;
-                
+
                 return {
                   ...existingScenes,
-                  scenes: existingScenes.scenes.filter((scene: { __typename?: string }) => {
-                    const sceneFiles = readField('files', scene);
-                    if (!sceneFiles || !Array.isArray(sceneFiles)) return true;
-                    
-                    // Check if any of the deleted files are in this scene
-                    const hasDeletedFile = sceneFiles.some((file: { __typename?: string }) => {
-                      const fileId = readField('id', file);
-                      return fileId && typeof fileId === 'string' && ids.includes(fileId);
-                    });
-                    
-                    return !hasDeletedFile;
-                  })
+                  scenes: existingScenes.scenes.filter(
+                    (scene: { __typename?: string }) => {
+                      const sceneFiles = readField("files", scene);
+                      if (!sceneFiles || !Array.isArray(sceneFiles))
+                        return true;
+
+                      // Check if any of the deleted files are in this scene
+                      const hasDeletedFile = sceneFiles.some(
+                        (file: { __typename?: string }) => {
+                          const fileId = readField("id", file);
+                          return (
+                            fileId &&
+                            typeof fileId === "string" &&
+                            ids.includes(fileId)
+                          );
+                        }
+                      );
+
+                      return !hasDeletedFile;
+                    }
+                  ),
                 };
-              }
-            }
+              },
+            },
           });
         } catch (modifyError) {
-          console.warn('Error modifying cache after file deletion:', modifyError);
+          console.warn(
+            "Error modifying cache after file deletion:",
+            modifyError
+          );
         }
       } catch (error) {
-        console.warn('Error updating cache after file deletion:', error);
+        console.warn("Error updating cache after file deletion:", error);
       }
 
       evictQueries(cache, [
@@ -3532,7 +3589,9 @@ export const useGalleryIncrementPlayCount = () =>
       });
 
       const currentTime = new Date().toISOString();
-      const newViewHistory = gallery ? [currentTime, ...gallery.view_history] : [currentTime];
+      const newViewHistory = gallery
+        ? [currentTime, ...gallery.view_history]
+        : [currentTime];
 
       // Update the gallery's play_count and view_history in cache
       cache.modify({

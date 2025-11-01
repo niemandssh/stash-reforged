@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { Tabs, Tab, Col, Row } from "react-bootstrap";
 import { useIntl } from "react-intl";
 import { useHistory, Redirect, RouteComponentProps } from "react-router-dom";
@@ -17,7 +23,6 @@ import {
 import { DetailsEditNavbar } from "src/components/Shared/DetailsEditNavbar";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
-import { ImageInput } from "src/components/Shared/ImageInput";
 import { useToast } from "src/hooks/Toast";
 import { ConfigurationContext } from "src/hooks/Config";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
@@ -33,7 +38,6 @@ import { PerformerAppearsWithPanel } from "./performerAppearsWithPanel";
 import { PerformerEditPanel } from "./PerformerEditPanel";
 import { PerformerSubmitButton } from "./PerformerSubmitButton";
 import { useRatingKeybinds } from "src/hooks/keybinds";
-import { ImageCropper } from "src/components/Shared/ImageCropper";
 import { ProfileImageSlider } from "./ProfileImageSlider";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
 import { useScrollToTopOnMount } from "src/hooks/scrollToTop";
@@ -218,7 +222,9 @@ interface IPerformerHeaderImageProps {
   onImageChange?: (index: number) => void;
   setImage?: (image?: string | null) => void;
   setEncodingImage?: (loading: boolean) => void;
-  onPerformerUpdate?: (updatedPerformer: Partial<GQL.PerformerDataFragment>) => void;
+  onPerformerUpdate?: (
+    updatedPerformer: Partial<GQL.PerformerDataFragment>
+  ) => void;
   onImageUpdate?: () => Promise<void>;
   onAddImage?: () => void;
   onImageFileChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -227,116 +233,157 @@ interface IPerformerHeaderImageProps {
 const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
   PatchComponent(
     "PerformerHeaderImage",
-    ({ encodingImage, activeImage, performer, isEditing, isNew, currentImageIndex, onImageChange, setImage, setEncodingImage, onPerformerUpdate, onImageUpdate: onImageUpdateProp, onAddImage, onImageFileChange }) => {
+    ({
+      encodingImage,
+      activeImage,
+      performer,
+      isEditing,
+      isNew,
+      currentImageIndex,
+      onImageChange,
+      setImage,
+      setEncodingImage,
+      onPerformerUpdate,
+      onImageUpdate: onImageUpdateProp,
+      onAddImage,
+    }) => {
       const intl = useIntl();
       const Toast = useToast();
-      const hasProfileImages = performer.profile_images && performer.profile_images.length > 0;
-      const [updatePerformer] = usePerformerUpdate();
+      const hasProfileImages =
+        performer.profile_images && performer.profile_images.length > 0;
       const [updateProfileImage] = usePerformerProfileImageUpdate();
       const [destroyProfileImage] = usePerformerProfileImageDestroy();
 
-      const handleSetPrimary = useCallback(async (imageId: string, index: number) => {
-        try {
-
-          // First, set all other images to not primary
-          const otherImages = performer.profile_images?.filter(img => img.id !== imageId) || [];
-          for (const img of otherImages) {
-            if (img.is_primary) {
-              await updateProfileImage({
-                variables: {
-                  input: {
-                    id: img.id,
-                    is_primary: false,
+      const handleSetPrimary = useCallback(
+        async (imageId: string) => {
+          try {
+            // First, set all other images to not primary
+            const otherImages =
+              performer.profile_images?.filter((img) => img.id !== imageId) ||
+              [];
+            for (const img of otherImages) {
+              if (img.is_primary) {
+                await updateProfileImage({
+                  variables: {
+                    input: {
+                      id: img.id,
+                      is_primary: false,
+                    },
                   },
+                });
+              }
+            }
+
+            // Then set the selected image as primary
+            await updateProfileImage({
+              variables: {
+                input: {
+                  id: imageId,
+                  is_primary: true,
                 },
+              },
+            });
+
+            // Update the local state - update profile_images with correct is_primary flags
+            const updatedProfileImages =
+              performer.profile_images?.map((img) => ({
+                ...img,
+                is_primary: img.id === imageId,
+              })) || [];
+
+            const primaryImage = updatedProfileImages.find(
+              (img) => img.id === imageId
+            );
+            if (primaryImage) {
+              onPerformerUpdate?.({
+                ...performer,
+                primary_image_path: primaryImage.image_path,
+                profile_images: updatedProfileImages,
               });
             }
-          }
 
-          // Then set the selected image as primary
-          await updateProfileImage({
-            variables: {
-              input: {
-                id: imageId,
-                is_primary: true,
+            Toast.success(
+              intl.formatMessage(
+                { id: "toast.updated_entity" },
+                {
+                  entity: intl
+                    .formatMessage({ id: "performer" })
+                    .toLocaleLowerCase(),
+                }
+              )
+            );
+          } catch (e) {
+            Toast.error(e);
+          }
+        },
+        [performer, onPerformerUpdate, updateProfileImage, intl, Toast]
+      );
+
+      const handleDeleteImage = useCallback(
+        async (imageId: string, index: number) => {
+          const confirmDelete = window.confirm(
+            intl.formatMessage(
+              {
+                id: "dialogs.delete_confirm",
+                defaultMessage: "Are you sure you want to delete {entityName}?",
               },
-            },
-          });
-
-          // Update the local state - update profile_images with correct is_primary flags
-          const updatedProfileImages = performer.profile_images?.map(img => ({
-            ...img,
-            is_primary: img.id === imageId
-          })) || [];
-
-          const primaryImage = updatedProfileImages.find(img => img.id === imageId);
-          if (primaryImage) {
-            onPerformerUpdate?.({
-              ...performer,
-              primary_image_path: primaryImage.image_path,
-              profile_images: updatedProfileImages
-            });
-          }
-
-          Toast.success(intl.formatMessage({ id: "toast.updated_entity" }, {
-            entity: intl.formatMessage({ id: "performer" }).toLocaleLowerCase(),
-          }));
-        } catch (e) {
-          Toast.error(e);
-        }
-      }, [performer, onPerformerUpdate, updateProfileImage, onImageChange, intl, Toast]);
-
-      const handleDeleteImage = useCallback(async (imageId: string, index: number) => {
-        const confirmDelete = window.confirm(
-          intl.formatMessage({
-            id: "dialogs.delete_confirm",
-            defaultMessage: "Are you sure you want to delete {entityName}?"
-          }, { entityName: `Image ${index + 1}` })
-        );
-
-        if (!confirmDelete) return;
-
-        try {
-          await destroyProfileImage({
-            variables: {
-              input: { id: imageId },
-            },
-          });
-
-          Toast.success(
-            intl.formatMessage({
-              id: "toast.deleted_entity",
-              defaultMessage: "Deleted {entityType}",
-            }, { entityType: intl.formatMessage({ id: "image" }) })
+              { entityName: `Image ${index + 1}` }
+            )
           );
 
-          // Update local state - remove the deleted image
-          const updatedProfileImages = performer.profile_images?.filter((img) => img.id !== imageId) || [];
-          onPerformerUpdate?.({
-            ...performer,
-            profile_images: updatedProfileImages
-          });
+          if (!confirmDelete) return;
 
-          // Adjust current index if needed
-          if (currentImageIndex !== undefined && index <= currentImageIndex && currentImageIndex > 0) {
-            const newIndex = Math.max(0, currentImageIndex - 1);
-            if (onImageChange) {
-              onImageChange(newIndex);
+          try {
+            await destroyProfileImage({
+              variables: {
+                input: { id: imageId },
+              },
+            });
+
+            Toast.success(
+              intl.formatMessage(
+                {
+                  id: "toast.deleted_entity",
+                  defaultMessage: "Deleted {entityType}",
+                },
+                { entityType: intl.formatMessage({ id: "image" }) }
+              )
+            );
+
+            // Update local state - remove the deleted image
+            const updatedProfileImages =
+              performer.profile_images?.filter((img) => img.id !== imageId) ||
+              [];
+            onPerformerUpdate?.({
+              ...performer,
+              profile_images: updatedProfileImages,
+            });
+
+            // Adjust current index if needed
+            if (
+              currentImageIndex !== undefined &&
+              index <= currentImageIndex &&
+              currentImageIndex > 0
+            ) {
+              const newIndex = Math.max(0, currentImageIndex - 1);
+              if (onImageChange) {
+                onImageChange(newIndex);
+              }
             }
+          } catch (e) {
+            Toast.error(e);
           }
-        } catch (e) {
-          Toast.error(e);
-        }
-      }, [performer, onPerformerUpdate, destroyProfileImage, onImageChange, currentImageIndex, intl, Toast]);
-
-    const handleImageChange = useCallback(() => {
-      // No-op function for image change
-    }, []);
-
-    const handleSave = useCallback(() => {
-      // No-op function for save
-    }, []);
-
+        },
+        [
+          performer,
+          onPerformerUpdate,
+          destroyProfileImage,
+          onImageChange,
+          currentImageIndex,
+          intl,
+          Toast,
+        ]
+      );
 
       return (
         <HeaderImage hasImages={hasProfileImages}>
@@ -394,7 +441,8 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const [isEditing, setIsEditing] = useState<boolean>(false);
     const [image, setImage] = useState<string | null>();
     const [encodingImage, setEncodingImage] = useState<boolean>(false);
-    const [currentPerformer, setCurrentPerformer] = useState<GQL.PerformerDataFragment>(performer);
+    const [currentPerformer, setCurrentPerformer] =
+      useState<GQL.PerformerDataFragment>(performer);
     const loadStickyHeader = useLoadStickyHeader();
 
     // Refetch performer data hook
@@ -416,13 +464,13 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       const prevProfileImages = prevProfileImagesRef.current;
 
       // Check if primary image actually changed
-      const currentPrimary = profileImages?.find(img => img.is_primary);
-      const prevPrimary = prevProfileImages?.find(img => img.is_primary);
+      const currentPrimary = profileImages?.find((img) => img.is_primary);
+      const prevPrimary = prevProfileImages?.find((img) => img.is_primary);
 
       const primaryChanged = currentPrimary?.id !== prevPrimary?.id;
 
       if (profileImages && profileImages.length > 0 && primaryChanged) {
-        const hasPrimaryImage = profileImages.some(img => img.is_primary);
+        const hasPrimaryImage = profileImages.some((img) => img.is_primary);
         if (hasPrimaryImage && currentImageIndexRef.current !== 0) {
           setCurrentImageIndex(0);
         }
@@ -448,17 +496,21 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       console.log("Add image clicked");
     }, []);
 
-    const onImageFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-      // Handle the image file here
-      const file = event.target.files?.[0];
-      if (file) {
-        console.log("New image selected:", file);
-        // You can add logic to upload the image here
-      }
-    }, []);
+    const onImageFileChange = useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        // Handle the image file here
+        const file = event.target.files?.[0];
+        if (file) {
+          console.log("New image selected:", file);
+          // You can add logic to upload the image here
+        }
+      },
+      []
+    );
 
     const activeImage = useMemo(() => {
-      const performerImage = currentPerformer.primary_image_path || currentPerformer.image_path;
+      const performerImage =
+        currentPerformer.primary_image_path || currentPerformer.image_path;
       if (isEditing) {
         if (image === null && performerImage) {
           const performerImageURL = new URL(performerImage);
@@ -469,7 +521,12 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
         }
       }
       return performerImage;
-    }, [image, isEditing, currentPerformer.primary_image_path, currentPerformer.image_path]);
+    }, [
+      image,
+      isEditing,
+      currentPerformer.primary_image_path,
+      currentPerformer.image_path,
+    ]);
 
     const lightboxImages = useMemo(
       () => [{ paths: { thumbnail: activeImage, image: activeImage } }],
@@ -618,7 +675,12 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
               onImageChange={onImageChange}
               setImage={setImage}
               setEncodingImage={setEncodingImage}
-              onPerformerUpdate={(updatedPerformer) => setCurrentPerformer(prev => ({ ...prev, ...updatedPerformer }))}
+              onPerformerUpdate={(updatedPerformer) =>
+                setCurrentPerformer((prev) => ({
+                  ...prev,
+                  ...updatedPerformer,
+                }))
+              }
               onImageUpdate={onImageUpdate}
               onAddImage={onAddImageClick}
               onImageFileChange={onImageFileChange}
@@ -648,7 +710,9 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                       favorite={currentPerformer.favorite}
                       onToggleFavorite={(v) => setFavorite(v)}
                     />
-                    <ExternalLinkButtons urls={currentPerformer.urls ?? undefined} />
+                    <ExternalLinkButtons
+                      urls={currentPerformer.urls ?? undefined}
+                    />
                   </span>
                 </DetailTitle>
                 <RatingSystem
@@ -673,7 +737,12 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                     onCancel={() => toggleEditing()}
                     setImage={setImage}
                     setEncodingImage={setEncodingImage}
-                    onPerformerUpdate={(updatedPerformer) => setCurrentPerformer(prev => ({ ...prev, ...updatedPerformer }))}
+                    onPerformerUpdate={(updatedPerformer) =>
+                      setCurrentPerformer((prev) => ({
+                        ...prev,
+                        ...updatedPerformer,
+                      }))
+                    }
                   />
                 ) : (
                   <Col>

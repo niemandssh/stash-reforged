@@ -340,7 +340,8 @@ func (r *queryResolver) OCountStats(ctx context.Context) (*OCountStatsResultType
 		}
 
 		// Combine all o-dates
-		allODates := append(sceneODates, imageODates...)
+		allODates := sceneODates
+		allODates = append(allODates, imageODates...)
 		allODates = append(allODates, galleryODates...)
 
 		// Group by date

@@ -68,7 +68,7 @@ export const PerformerListTable: React.FC<IPerformerListTableProps> = (
     <Link to={`/performers/${performer.id}`} className="position-relative">
       <img
         loading="lazy"
-        className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
+        className={`image-thumbnail ${performer.death_date ? "deceased" : ""}`}
         alt={performer.name ?? ""}
         src={performer.primary_image_path ?? performer.image_path ?? ""}
       />

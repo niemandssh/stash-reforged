@@ -1,24 +1,24 @@
 .view-history-container {
-  padding: 1rem;
-  max-width: 1400px;
   margin: 0 auto;
+  max-width: 1400px;
+  padding: 1rem;
 }
 
 .view-history-header {
+  align-items: center;
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 2rem;
   padding: 0 16px;
 
   h1 {
-    margin: 0;
     font-size: 2rem;
+    margin: 0;
   }
 
   .view-history-total-views {
-    font-size: 1.1rem;
     color: var(--text-color-secondary);
+    font-size: 1.1rem;
   }
 }
 
@@ -30,13 +30,13 @@
 
 .view-history-date-group {
   .view-history-date-header {
-    font-size: 1.2rem;
-    margin-bottom: 4px;
-    color: var(--text-color-secondary);
     border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
+    color: var(--text-color-secondary);
+    font-size: 1.2rem;
     font-weight: 600;
+    margin-bottom: 4px;
     margin-left: 20px;
+    padding-bottom: 0.5rem;
   }
 
   .view-history-items-list {
@@ -49,6 +49,6 @@
 .view-history-loading-more {
   display: flex;
   justify-content: center;
-  padding: 2rem;
   min-height: 100px;
+  padding: 2rem;
 }

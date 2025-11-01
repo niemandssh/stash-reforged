@@ -16,9 +16,14 @@ export const ColorPresetFilter: React.FC<IColorPresetFilter> = ({
 }) => {
   const intl = useIntl();
   const { data: presetsData, loading } = useFindColorPresets();
-  const [options, setOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const [options, setOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
 
-  const presets = useMemo(() => presetsData?.findColorPresets?.color_presets || [], [presetsData]);
+  const presets = useMemo(
+    () => presetsData?.findColorPresets?.color_presets || [],
+    [presetsData]
+  );
 
   useEffect(() => {
     const newOptions = [
@@ -38,8 +43,8 @@ export const ColorPresetFilter: React.FC<IColorPresetFilter> = ({
     setCriterion(c);
   }
 
-  const isDisabled = 
-    criterion.modifier === CriterionModifier.IsNull || 
+  const isDisabled =
+    criterion.modifier === CriterionModifier.IsNull ||
     criterion.modifier === CriterionModifier.NotNull;
 
   return (

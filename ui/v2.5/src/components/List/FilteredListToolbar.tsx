@@ -63,18 +63,22 @@ export const FilteredListToolbar: React.FC<IFilteredListToolbar> = ({
 }) => {
   const intl = useIntl();
   const filterOptions = filter.options;
-  const { setDisplayMode: defaultSetDisplayMode, setZoom } = useFilterOperations({
-    filter,
-    setFilter,
-  });
-  
-  const setDisplayMode = useCallback((displayMode: DisplayMode) => {
-    defaultSetDisplayMode(displayMode);
-    if (customSetDisplayMode) {
-      customSetDisplayMode(displayMode);
-    }
-  }, [defaultSetDisplayMode, customSetDisplayMode]);
-  
+  const { setDisplayMode: defaultSetDisplayMode, setZoom } =
+    useFilterOperations({
+      filter,
+      setFilter,
+    });
+
+  const setDisplayMode = useCallback(
+    (displayMode: DisplayMode) => {
+      defaultSetDisplayMode(displayMode);
+      if (customSetDisplayMode) {
+        customSetDisplayMode(displayMode);
+      }
+    },
+    [defaultSetDisplayMode, customSetDisplayMode]
+  );
+
   const { selectedIds, onSelectAll, onSelectNone } = listSelect;
 
   return (

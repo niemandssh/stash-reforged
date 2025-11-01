@@ -1,4 +1,10 @@
-import React, { useCallback, useState, useMemo, MouseEvent, useContext } from "react";
+import React, {
+  useCallback,
+  useState,
+  useMemo,
+  MouseEvent,
+  useContext,
+} from "react";
 import { useIntl } from "react-intl";
 import cloneDeep from "lodash-es/cloneDeep";
 import { useHistory } from "react-router-dom";
@@ -141,7 +147,9 @@ const ImageListImages: React.FC<IImageListImages> = ({
   chapters = [],
   galleryId,
 }) => {
-  const [webDisplayMode, setWebDisplayMode] = React.useState<WebDisplayMode>(WebDisplayMode.FitToScreen);
+  const [webDisplayMode, setWebDisplayMode] = React.useState<WebDisplayMode>(
+    WebDisplayMode.FitToScreen
+  );
   const handleLightBoxPage = useCallback(
     (props: { direction?: number; page?: number }) => {
       const { direction, page: newPage } = props;
@@ -431,28 +439,35 @@ export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
     [onDisplayModeChange]
   );
 
-  const customFilterHook = useCallback((filter: ListFilterModel) => {
-    let result = filter;
+  const customFilterHook = useCallback(
+    (filter: ListFilterModel) => {
+      let result = filter;
 
-    if (filterHook) {
-      result = filterHook(filter);
-    }
+      if (filterHook) {
+        result = filterHook(filter);
+      }
 
-    if (currentDisplayMode !== undefined && result.displayMode !== currentDisplayMode) {
-      result = result.clone();
-      result.displayMode = currentDisplayMode;
-    }
-    
-    // Для режимов Web и Slideshow загружаем все изображения сразу
-    if (result.displayMode === DisplayMode.Web || result.displayMode === DisplayMode.Slideshow) {
-      result = result.clone();
-      result.itemsPerPage = -1;
-    }
-    
-    return result;
-  }, [filterHook, currentDisplayMode]);
+      if (
+        currentDisplayMode !== undefined &&
+        result.displayMode !== currentDisplayMode
+      ) {
+        result = result.clone();
+        result.displayMode = currentDisplayMode;
+      }
 
+      // Для режимов Web и Slideshow загружаем все изображения сразу
+      if (
+        result.displayMode === DisplayMode.Web ||
+        result.displayMode === DisplayMode.Slideshow
+      ) {
+        result = result.clone();
+        result.itemsPerPage = -1;
+      }
 
+      return result;
+    },
+    [filterHook, currentDisplayMode]
+  );
 
   return (
     <ItemListContext

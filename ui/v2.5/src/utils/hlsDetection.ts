@@ -29,7 +29,7 @@ export function isHLSVideo(scene: SceneDataFragment): boolean {
     const segmentLength = 2.0;
     const remainder = primaryFile.duration % segmentLength;
     // Consider it HLS if remainder is very close to 0 or very close to segmentLength
-    if (remainder < 0.1 || remainder > (segmentLength - 0.1)) {
+    if (remainder < 0.1 || remainder > segmentLength - 0.1) {
       return true;
     }
   }

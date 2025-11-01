@@ -2,21 +2,29 @@ import React from "react";
 import { Badge as BootstrapBadge } from "react-bootstrap";
 
 interface IBadgeProps {
-  variant?: "primary" | "secondary" | "success" | "danger" | "warning" | "info" | "light" | "dark";
+  variant?:
+    | "primary"
+    | "secondary"
+    | "success"
+    | "danger"
+    | "warning"
+    | "info"
+    | "light"
+    | "dark";
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export const Badge: React.FC<IBadgeProps> = ({ 
-  variant = "primary", 
-  children, 
+export const Badge: React.FC<IBadgeProps> = ({
+  variant = "primary",
+  children,
   className = "",
-  style
+  style,
 }) => {
   return (
-    <BootstrapBadge 
-      variant={variant} 
+    <BootstrapBadge
+      variant={variant}
       className={`badge-custom ${className}`}
       style={{
         fontSize: "0.75em",

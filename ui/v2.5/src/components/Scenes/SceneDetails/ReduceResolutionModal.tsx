@@ -18,7 +18,10 @@ interface IResolutionOption {
   label: string;
 }
 
-function getResolutionOptions(currentWidth: number, currentHeight: number): IResolutionOption[] {
+function getResolutionOptions(
+  currentWidth: number,
+  currentHeight: number
+): IResolutionOption[] {
   const aspectRatio = currentWidth / currentHeight;
   const options: IResolutionOption[] = [];
 
@@ -142,7 +145,9 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
       <ModalComponent
         show
         icon={faCompressAlt}
-        header={intl.formatMessage({ id: "dialogs.reduce_resolution.confirm_title" })}
+        header={intl.formatMessage({
+          id: "dialogs.reduce_resolution.confirm_title",
+        })}
         accept={{
           variant: "danger",
           onClick: handleConfirm,
@@ -206,8 +211,8 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
               >
                 {scene.files.map((file) => (
                   <option key={file.id} value={file.id}>
-                    {file.path ? file.path.split('/').pop() : 'Unknown file'} ({file.width}x{file.height} -{" "}
-                    {formatFileSize(file.size)})
+                    {file.path ? file.path.split("/").pop() : "Unknown file"} (
+                    {file.width}x{file.height} - {formatFileSize(file.size)})
                   </option>
                 ))}
               </Form.Control>
@@ -220,7 +225,9 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
             <strong>
               <FormattedMessage id="file" />:{" "}
             </strong>
-            {selectedFile.path ? selectedFile.path.split('/').pop() : 'Unknown file'}
+            {selectedFile.path
+              ? selectedFile.path.split("/").pop()
+              : "Unknown file"}
             <br />
             <strong>
               <FormattedMessage id="resolution" />:{" "}
@@ -252,7 +259,10 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
                   })}
                 </option>
                 {resolutionOptions.map((opt) => (
-                  <option key={`${opt.width}x${opt.height}`} value={`${opt.width}x${opt.height}`}>
+                  <option
+                    key={`${opt.width}x${opt.height}`}
+                    value={`${opt.width}x${opt.height}`}
+                  >
                     {opt.label}
                   </option>
                 ))}
@@ -274,4 +284,3 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
     </ModalComponent>
   );
 };
-

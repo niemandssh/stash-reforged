@@ -35,12 +35,12 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
   }
 
   function renderTags() {
-    const regularTags = gallery.tags.filter(tag => !tag.is_pose_tag);
+    const regularTags = gallery.tags.filter((tag) => !tag.is_pose_tag);
     if (regularTags.length === 0) return;
 
     // Create a map of colors to presets for quick lookup
     const colorToPreset = new Map<string, GQL.ColorPreset>();
-    colorPresets.forEach(preset => {
+    colorPresets.forEach((preset) => {
       colorToPreset.set(preset.color.toLowerCase(), preset);
     });
 
@@ -115,7 +115,6 @@ export const GalleryDetailPanel: React.FC<IGalleryDetailProps> = ({
       </>
     );
   }
-
 
   // filename should use entire row if there is no studio
   const galleryDetailsWidth = gallery.studio ? "col-9" : "col-12";

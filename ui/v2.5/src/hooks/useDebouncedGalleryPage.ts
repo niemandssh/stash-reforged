@@ -1,5 +1,5 @@
-import { useCallback, useRef, useEffect } from 'react';
-import { useGalleryLastOpenedPage } from './useGalleryLastOpenedPage.ts';
+import { useCallback, useRef, useEffect } from "react";
+import { useGalleryLastOpenedPage } from "./useGalleryLastOpenedPage";
 
 interface IUseDebouncedGalleryPageOptions {
   galleryId: string;
@@ -21,7 +21,11 @@ export const useDebouncedGalleryPage = ({
   const debouncedUpdatePage = useCallback(
     (page: number) => {
       // Don't update if no galleryId, same page, or not initialized yet
-      if (!galleryId || page === lastPageRef.current || !isInitializedRef.current) {
+      if (
+        !galleryId ||
+        page === lastPageRef.current ||
+        !isInitializedRef.current
+      ) {
         return;
       }
 

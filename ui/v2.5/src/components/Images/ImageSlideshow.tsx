@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "react-bootstrap";
 import { Icon } from "src/components/Shared/Icon";
-import { faPlay, faPause, faChevronLeft, faChevronRight, faExpand } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPlay,
+  faPause,
+  faChevronLeft,
+  faChevronRight,
+  faExpand,
+} from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { objectTitle } from "src/core/files";
 import Mousetrap from "mousetrap";
@@ -34,11 +40,14 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   }, [images.length]);
 
-  const goToSlide = useCallback((index: number) => {
-    if (index >= 0 && index < images.length) {
-      setCurrentIndex(index);
-    }
-  }, [images.length]);
+  const goToSlide = useCallback(
+    (index: number) => {
+      if (index >= 0 && index < images.length) {
+        setCurrentIndex(index);
+      }
+    },
+    [images.length]
+  );
 
   const togglePlayPause = useCallback(() => {
     setIsPlaying((prev) => !prev);
@@ -94,12 +103,17 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
       <div className="image-slideshow-main">
         <div className="image-slideshow-image-container">
           <img
-            src={currentImage.paths.image || currentImage.paths.preview || currentImage.paths.thumbnail || ""}
+            src={
+              currentImage.paths.image ||
+              currentImage.paths.preview ||
+              currentImage.paths.thumbnail ||
+              ""
+            }
             alt={objectTitle(currentImage)}
             className="image-slideshow-image"
           />
         </div>
-        
+
         <div className="image-slideshow-controls">
           <Button
             variant="secondary"
@@ -111,18 +125,22 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
           >
             <Icon icon={faChevronLeft} />
           </Button>
-          
+
           <Button
             variant="secondary"
             size="sm"
             onClick={togglePlayPause}
             disabled={images.length <= 1}
             className="image-slideshow-control-btn"
-            title={isPlaying ? "Остановить автовоспроизведение" : "Запустить автовоспроизведение"}
+            title={
+              isPlaying
+                ? "Остановить автовоспроизведение"
+                : "Запустить автовоспроизведение"
+            }
           >
             <Icon icon={isPlaying ? faPause : faPlay} />
           </Button>
-          
+
           <Button
             variant="secondary"
             size="sm"
@@ -133,7 +151,7 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
           >
             <Icon icon={faChevronRight} />
           </Button>
-          
+
           <Button
             variant="secondary"
             size="sm"
@@ -144,19 +162,17 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
             <Icon icon={faExpand} />
           </Button>
         </div>
-        
+
         <PageNavigationInput
           currentPage={currentIndex}
           totalPages={images.length}
           onPageChange={goToSlide}
           className="image-slideshow-page-navigation"
         />
-        
+
         {currentImage.title && (
           <div className="image-slideshow-info">
-            <span className="image-slideshow-title">
-              {currentImage.title}
-            </span>
+            <span className="image-slideshow-title">{currentImage.title}</span>
           </div>
         )}
       </div>

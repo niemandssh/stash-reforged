@@ -211,7 +211,9 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
 
         <Form.Group controlId="ignore_suggestions">
           <IndeterminateCheckbox
-            setChecked={(checked) => setUpdateField({ ignore_suggestions: checked })}
+            setChecked={(checked) =>
+              setUpdateField({ ignore_suggestions: checked })
+            }
             checked={updateInput.ignore_suggestions ?? undefined}
             label={intl.formatMessage({ id: "ignore_suggestions" })}
           />
@@ -233,8 +235,8 @@ export const EditTagsDialog: React.FC<IListOperationProps> = (
             value={updateInput.weight ?? ""}
             onChange={(e) => {
               const { value } = e.target;
-              setUpdateField({ 
-                weight: value === "" ? undefined : parseFloat(value) 
+              setUpdateField({
+                weight: value === "" ? undefined : parseFloat(value),
               });
             }}
             disabled={isUpdating}

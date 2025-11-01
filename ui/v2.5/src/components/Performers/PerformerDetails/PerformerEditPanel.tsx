@@ -12,7 +12,6 @@ import {
   usePerformerProfileImageCreate,
 } from "src/core/StashService";
 import { Icon } from "src/components/Shared/Icon";
-import { ImageInput } from "src/components/Shared/ImageInput";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { CountrySelect } from "src/components/Shared/CountrySelect";
 import ImageUtils from "src/utils/image";
@@ -63,7 +62,9 @@ interface IPerformerDetails {
   onCancel?: () => void;
   setImage: (image?: string | null) => void;
   setEncodingImage: (loading: boolean) => void;
-  onPerformerUpdate?: (updatedPerformer: Partial<GQL.PerformerDataFragment>) => void;
+  onPerformerUpdate?: (
+    updatedPerformer: Partial<GQL.PerformerDataFragment>
+  ) => void;
 }
 
 function customFieldInput(isNew: boolean, input: {}) {
@@ -98,7 +99,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
   const Scrapers = useListPerformerScrapers();
   const [queryableScrapers, setQueryableScrapers] = useState<GQL.Scraper[]>([]);
-  
+
   const [createProfileImage] = usePerformerProfileImageCreate();
 
   const [scrapedPerformer, setScrapedPerformer] =
@@ -194,25 +195,29 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
   );
 
   const [primaryTag, setPrimaryTag] = useState<Tag | undefined>(
-    performer.primary_tag ? {
-      id: performer.primary_tag.id,
-      name: performer.primary_tag.name,
-      aliases: performer.primary_tag.aliases,
-      is_pose_tag: false,
-    } : undefined
+    performer.primary_tag
+      ? {
+          id: performer.primary_tag.id,
+          name: performer.primary_tag.name,
+          aliases: performer.primary_tag.aliases,
+          is_pose_tag: false,
+        }
+      : undefined
   );
 
   useEffect(() => {
     setPrimaryTag(
-      performer.primary_tag ? {
-        id: performer.primary_tag.id,
-        name: performer.primary_tag.name,
-        aliases: performer.primary_tag.aliases,
-        is_pose_tag: false,
-      } : undefined
+      performer.primary_tag
+        ? {
+            id: performer.primary_tag.id,
+            name: performer.primary_tag.name,
+            aliases: performer.primary_tag.aliases,
+            is_pose_tag: false,
+          }
+        : undefined
     );
     formik.setFieldValue("primary_tag_id", performer.primary_tag?.id ?? null);
-  }, [performer.primary_tag, formik.setFieldValue]);
+  }, [performer.primary_tag, formik]);
 
   function onSetPrimaryTag(tag: Tag | undefined) {
     setPrimaryTag(tag);
@@ -403,40 +408,43 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
           intl.formatMessage(
             { id: "toast.created_entity" },
             {
-              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+              entity: `${intl
+                .formatMessage({ id: "image" })
+                .toLocaleLowerCase()} ${newImageIndex}`,
             }
           )
         );
-        
+
         // Update performer with new profile image
         const newProfileImage = result.data.performerProfileImageCreate;
-        const updatedProfileImages = [...(performer.profile_images || []), newProfileImage];
+        const updatedProfileImages = [
+          ...(performer.profile_images || []),
+          newProfileImage,
+        ];
         const updatedPerformer = {
           ...performer,
           profile_images: updatedProfileImages,
-          primary_image_path: newProfileImage.is_primary ? newProfileImage.image_path : performer.primary_image_path,
+          primary_image_path: newProfileImage.is_primary
+            ? newProfileImage.image_path
+            : performer.primary_image_path,
         };
         onPerformerUpdate?.(updatedPerformer);
-        
+
         // Also set the legacy image field for backward compatibility
         formik.setFieldValue("image", imageData);
       }
     } catch (error) {
       console.error("Error creating profile image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.upload_failed",
-          defaultMessage: "Failed to add image" 
+          defaultMessage: "Failed to add image",
         })
       );
-      
+
       // Fallback to legacy behavior
       formik.setFieldValue("image", imageData);
     }
-  }
-
-  function onImageChange(event: React.FormEvent<HTMLInputElement>) {
-    ImageUtils.onImageChange(event, onImageLoad);
   }
 
   async function onSave(input: InputValues) {
@@ -642,7 +650,10 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
     const currentPerformer = {
       ...formik.values,
-      image: formik.values.image ?? performer.primary_image_path ?? performer.image_path,
+      image:
+        formik.values.image ??
+        performer.primary_image_path ??
+        performer.image_path,
     };
 
     return (
@@ -750,13 +761,17 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
   function renderPrimaryTagField() {
     const title = intl.formatMessage({ id: "primary_tag" });
 
-    return renderField("primary_tag_id", title, (
+    return renderField(
+      "primary_tag_id",
+      title,
       <TagSelect
         isMulti={false}
-        onSelect={(tags) => onSetPrimaryTag(tags.length > 0 ? tags[0] : undefined)}
+        onSelect={(selectedTags) =>
+          onSetPrimaryTag(selectedTags.length > 0 ? selectedTags[0] : undefined)
+        }
         values={primaryTag ? [primaryTag] : []}
       />
-    ));
+    );
   }
 
   return (

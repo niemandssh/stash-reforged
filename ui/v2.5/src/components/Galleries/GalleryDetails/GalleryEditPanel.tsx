@@ -106,12 +106,13 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     onSubmit: (values) => onSave(schema.cast(values)),
   });
 
-  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } = useTagsEdit(
-    gallery.tags,
-    (ids) => formik.setFieldValue("tag_ids", ids),
-    gallery.id,
-    !isVisible
-  );
+  const { tags, updateTagsStateFromScraper, tagsControl, onSetTags } =
+    useTagsEdit(
+      gallery.tags,
+      (ids) => formik.setFieldValue("tag_ids", ids),
+      gallery.id,
+      !isVisible
+    );
 
   function onSetScenes(items: Scene[]) {
     setScenes(items);
@@ -136,18 +137,20 @@ export const GalleryEditPanel: React.FC<IProps> = ({
 
   function onPoseTagSelectionChange(poseTagIds: string[]) {
     setSelectedPoseTagIds(poseTagIds);
-    
+
     // Получаем текущие теги из useTagsEdit (включая новосозданные)
     const currentTags = tags || [];
-    
+
     // Фильтруем теги, исключая теги позы
-    const nonPoseTags = currentTags.filter(tag => !tag.is_pose_tag);
-    
+    const nonPoseTags = currentTags.filter((tag) => !tag.is_pose_tag);
+
     // Добавляем выбранные теги позы
-    const poseTagObjects = poseTagIds.map(id => allTags.find(t => t.id === id)).filter(Boolean) as Tag[];
-    
+    const poseTagObjects = poseTagIds
+      .map((id) => allTags.find((t) => t.id === id))
+      .filter(Boolean) as Tag[];
+
     const newTags = [...nonPoseTags, ...poseTagObjects];
-    
+
     onSetTags(newTags);
   }
 
@@ -180,7 +183,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
         filter.itemsPerPage = -1;
         filter.sortBy = "name";
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
-        
+
         const result = await queryFindTags(filter);
         const loadedTags = result.data.findTags.tags as unknown as Tag[];
         setAllTags(loadedTags);
@@ -196,8 +199,8 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   useEffect(() => {
     if (gallery.tags && allTags.length > 0) {
       const poseTagIds = gallery.tags
-        .filter(tag => tag.is_pose_tag)
-        .map(tag => tag.id);
+        .filter((tag) => tag.is_pose_tag)
+        .map((tag) => tag.id);
       setSelectedPoseTagIds(poseTagIds);
     }
   }, [gallery.tags, allTags]);
@@ -350,6 +353,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
               id: p.stored_id!,
               name: p.name ?? "",
               alias_list: [],
+              small_role: false,
             };
           })
         );

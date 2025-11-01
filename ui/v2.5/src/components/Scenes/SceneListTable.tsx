@@ -89,8 +89,12 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
             title={intl.formatMessage({ id: "actions.pinned" })}
           />
         )}
-        {scene.is_broken && !scene.is_not_broken && <BrokenBadge className="me-2" />}
-        {!scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge className="me-2" />}
+        {scene.is_broken && !scene.is_not_broken && (
+          <BrokenBadge className="me-2" />
+        )}
+        {!scene.is_broken &&
+          scene.is_probably_broken &&
+          !scene.is_not_broken && <ProbablyBrokenBadge className="me-2" />}
         <Link to={sceneLink} title={title}>
           <span className="ellips-data">{title}</span>
         </Link>
@@ -102,9 +106,15 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
     return (
       <Button
         variant="link"
-        className={`p-0 text-decoration-none ${scene.pinned ? 'text-warning' : 'text-muted'}`}
+        className={`p-0 text-decoration-none ${
+          scene.pinned ? "text-warning" : "text-muted"
+        }`}
         onClick={() => togglePinned(scene.id, scene.pinned)}
-        title={scene.pinned ? intl.formatMessage({ id: "actions.unpin" }) : intl.formatMessage({ id: "actions.pin" })}
+        title={
+          scene.pinned
+            ? intl.formatMessage({ id: "actions.unpin" })
+            : intl.formatMessage({ id: "actions.pin" })
+        }
       >
         <PinIcon />
       </Button>

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface ITrimContextType {
   trimEnabled: boolean;
@@ -12,10 +18,12 @@ export const useTrimContext = () => {
   if (context === undefined) {
     // Return default values instead of throwing error
     // This prevents issues with lazy-loaded components
-    console.warn('useTrimContext used outside of TrimProvider, using default values');
+    console.warn(
+      "useTrimContext used outside of TrimProvider, using default values"
+    );
     return {
       trimEnabled: true,
-      setTrimEnabled: () => {}
+      setTrimEnabled: () => {},
     };
   }
   return context;
@@ -25,7 +33,7 @@ interface ITrimProviderProps {
   children: ReactNode;
 }
 
-const TRIM_ENABLED_KEY = 'stash_trim_enabled';
+const TRIM_ENABLED_KEY = "stash_trim_enabled";
 
 export const TrimProvider: React.FC<ITrimProviderProps> = ({ children }) => {
   // Initialize from localStorage or default to true
@@ -34,7 +42,7 @@ export const TrimProvider: React.FC<ITrimProviderProps> = ({ children }) => {
       const saved = localStorage.getItem(TRIM_ENABLED_KEY);
       return saved !== null ? JSON.parse(saved) : true;
     } catch (error) {
-      console.warn('Failed to load trim state from localStorage:', error);
+      console.warn("Failed to load trim state from localStorage:", error);
       return true;
     }
   });
@@ -44,7 +52,7 @@ export const TrimProvider: React.FC<ITrimProviderProps> = ({ children }) => {
     try {
       localStorage.setItem(TRIM_ENABLED_KEY, JSON.stringify(trimEnabled));
     } catch (error) {
-      console.warn('Failed to save trim state to localStorage:', error);
+      console.warn("Failed to save trim state to localStorage:", error);
     }
   }, [trimEnabled]);
 

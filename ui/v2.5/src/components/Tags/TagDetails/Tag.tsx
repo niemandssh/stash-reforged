@@ -527,14 +527,11 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
           show={enableBackgroundImage && !isEditing}
         />
         <div className="detail-container">
-          <HeaderImage encodingImage={encodingImage}>
-            {tagImage && !isEditing && !tagImage.includes('default=true') && (
-              <TagImageCropper
-                imageSrc={tagImage}
-                tagId={tag.id}
-              />
+          <HeaderImage hasImages={!encodingImage}>
+            {tagImage && !isEditing && !tagImage.includes("default=true") && (
+              <TagImageCropper imageSrc={tagImage} tagId={tag.id} />
             )}
-            {tagImage && !isEditing && tagImage.includes('default=true') && (
+            {tagImage && !isEditing && tagImage.includes("default=true") && (
               <DetailImage className="tag" alt={tag.name} src={tagImage} />
             )}
             {tagImage && isEditing && (

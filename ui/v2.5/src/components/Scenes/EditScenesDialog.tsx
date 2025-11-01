@@ -38,11 +38,16 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
   const [studioId, setStudioId] = useState<string | undefined>(undefined);
 
   // Memoize arrays to prevent unnecessary re-renders
-  const studioIds = React.useMemo(() => studioId ? [studioId] : [], [studioId]);
+  const studioIds = React.useMemo(
+    () => (studioId ? [studioId] : []),
+    [studioId]
+  );
   const [performerMode, setPerformerMode] =
     React.useState<GQL.BulkUpdateIdMode>(GQL.BulkUpdateIdMode.Add);
   const [performerIds, setPerformerIds] = useState<string[]>([]);
-  const [existingPerformerIds, setExistingPerformerIds] = useState<string[]>([]);
+  const [existingPerformerIds, setExistingPerformerIds] = useState<string[]>(
+    []
+  );
   const [tagMode, setTagMode] = React.useState<GQL.BulkUpdateIdMode>(
     GQL.BulkUpdateIdMode.Add
   );
@@ -96,11 +101,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
       groupIds,
       aggregateGroupIds
     );
-    sceneInput.urls = getAggregateInputStrings(
-      urlMode,
-      urls,
-      aggregateURLs
-    );
+    sceneInput.urls = getAggregateInputStrings(urlMode, urls, aggregateURLs);
 
     if (organized !== undefined) {
       sceneInput.organized = organized;
@@ -139,11 +140,19 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
       const sceneStudioID = scene?.studio?.id;
       const scenePerformerIDs = (scene.performers ?? [])
         .map((p) => p.id)
-        .filter(id => id != null)
+        .filter((id) => id != null)
         .sort();
-      const sceneTagIDs = (scene.tags ?? []).map((p) => p.id).filter(id => id != null).sort();
-      const sceneGroupIDs = (scene.groups ?? []).map((m) => m.group.id).filter(id => id != null).sort();
-      const sceneURLs = (scene.urls ?? []).filter(url => url != null && url !== "").sort();
+      const sceneTagIDs = (scene.tags ?? [])
+        .map((p) => p.id)
+        .filter((id) => id != null)
+        .sort();
+      const sceneGroupIDs = (scene.groups ?? [])
+        .map((m) => m.group.id)
+        .filter((id) => id != null)
+        .sort();
+      const sceneURLs = (scene.urls ?? [])
+        .filter((url) => url != null && url !== "")
+        .sort();
 
       if (first) {
         updateRating = sceneRating ?? undefined;
@@ -254,15 +263,14 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     );
   }
 
-  function renderMultiString(
-    type: "urls",
-    values: string[]
-  ) {
+  function renderMultiString(type: "urls", values: string[]) {
     const mode = urlMode;
     const existingValues = existingUrls;
 
     // Ensure values is always a clean array of strings
-    const cleanValues = (values || []).filter(v => typeof v === 'string' && v.trim() !== '');
+    const cleanValues = (values || []).filter(
+      (v) => typeof v === "string" && v.trim() !== ""
+    );
 
     function onSetMode(m: GQL.BulkUpdateIdMode) {
       if (m === mode) {
@@ -271,7 +279,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
 
       // if going to Set, set the existing values
       if (m === GQL.BulkUpdateIdMode.Set && existingValues) {
-        setUrls(existingValues.filter(v => v != null && v !== ""));
+        setUrls(existingValues.filter((v) => v != null && v !== ""));
         // if going from Set, wipe the values
       } else if (
         m !== GQL.BulkUpdateIdMode.Set &&
@@ -313,13 +321,19 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
           setValue={setUrls}
           readOnly={isUpdating}
         />
-        {existingValues && existingValues.length > 0 && existingValues.every(v => v != null) && (
-          <div className="existing-values">
-            <small className="text-muted">
-              {intl.formatMessage({ id: "countables.urls" }, { count: existingValues.length })}: {existingValues.join(", ")}
-            </small>
-          </div>
-        )}
+        {existingValues &&
+          existingValues.length > 0 &&
+          existingValues.every((v) => v != null) && (
+            <div className="existing-values">
+              <small className="text-muted">
+                {intl.formatMessage(
+                  { id: "countables.urls" },
+                  { count: existingValues.length }
+                )}
+                : {existingValues.join(", ")}
+              </small>
+            </div>
+          )}
       </div>
     );
   }

@@ -80,7 +80,7 @@ export function useFilteredItemList<
 
   // Utility hooks
   const { setPage } = useFilterOperations({ filter, setFilter });
-  
+
   // scroll to the top of the page when the page changes
   useScrollToTopOnPageChange(filter.currentPage, result.loading);
 
@@ -352,7 +352,10 @@ export const ItemList = <T extends QueryResult, E extends IHasID>(
         totalCount={totalCount}
         onChangePage={onChangePage}
         metadataByline={metadataByline}
-        hidePaginationIndex={filter.displayMode === DisplayMode.Slideshow || filter.displayMode === DisplayMode.Web}
+        hidePaginationIndex={
+          filter.displayMode === DisplayMode.Slideshow ||
+          filter.displayMode === DisplayMode.Web
+        }
       >
         {renderContent(
           result,

@@ -182,11 +182,12 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.
 	for _, tagID := range tags1 {
 		if !ignoredTags[tagID] {
 			weight := tagWeights[tagID]
-			if weight > 0.61 {
+			switch {
+			case weight > 0.61:
 				enhancedTotal++
-			} else if weight >= 0.35 {
+			case weight >= 0.35:
 				normalTotal++
-			} else {
+			default:
 				reducedTotal++
 			}
 		}
@@ -194,15 +195,16 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.
 	for _, tagID := range tags2 {
 		if !ignoredTags[tagID] {
 			weight := tagWeights[tagID]
-			if weight > 0.61 {
+			switch {
+			case weight > 0.61:
 				if enhancedTotal == 0 {
 					enhancedTotal = 1
 				}
-			} else if weight >= 0.35 {
+			case weight >= 0.35:
 				if normalTotal == 0 {
 					normalTotal = 1
 				}
-			} else {
+			default:
 				if reducedTotal == 0 {
 					reducedTotal = 1
 				}
@@ -219,11 +221,12 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.
 		if !ignoredTags[tagID] && c.contains(tags2, tagID) {
 			weight := tagWeights[tagID]
 			// Categorize by weight ranges: enhanced (>0.61), normal (0.35-0.6), reduced (<0.35) - penalty
-			if weight > 0.61 {
+			switch {
+			case weight > 0.61:
 				enhancedTags = append(enhancedTags, weight)
-			} else if weight >= 0.35 {
+			case weight >= 0.35:
 				normalTags = append(normalTags, weight)
-			} else {
+			default:
 				reducedTags = append(reducedTags, weight)
 			}
 		}
@@ -252,32 +255,6 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarityBreakdown(ctx context.
 	return breakdown, len(enhancedTags), len(normalTags), len(reducedTags), nil
 }
 
-// countTagsByCategory counts tags in each weight category for a scene
-func (c *SceneSimilarityCalculator) countTagsByCategory(ctx context.Context, tags []int) (int, int, int) {
-	enhancedCount := 0
-	normalCount := 0
-	reducedCount := 0
-
-	for _, tagID := range tags {
-		tag, err := c.tagRepo.Find(ctx, tagID)
-		if err != nil || tag == nil {
-			continue
-		}
-		if tag.IgnoreSuggestions {
-			continue
-		}
-		weight := tag.Weight
-		if weight > 0.61 {
-			enhancedCount++
-		} else if weight >= 0.35 {
-			normalCount++
-		} else {
-			reducedCount++
-		}
-	}
-
-	return enhancedCount, normalCount, reducedCount
-}
 
 // calculateOverallTagSimilarity calculates overall tag similarity using Dice coefficient with weights (old logic)
 func (c *SceneSimilarityCalculator) calculateOverallTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
@@ -348,7 +325,10 @@ func (c *SceneSimilarityCalculator) calculateSimilarityBreakdown(ctx context.Con
 
 	tags1 := scene1.TagIDs.List()
 	tags2 := scene2.TagIDs.List()
-	tagBreakdown, _, _, _, _ := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	tagBreakdown, _, _, _, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	if err != nil {
+		return nil, fmt.Errorf("calculating tag similarity breakdown: %w", err)
+	}
 	overallTagScore, _ := c.calculateOverallTagSimilarity(ctx, tags1, tags2)
 
 	// Calculate contributions (tagBreakdown already includes quality)
@@ -447,6 +427,7 @@ func (c *SceneSimilarityCalculator) calculateGroupSimilarity(groups1, groups2 []
 // calculateTagSimilarity calculates similarity based on shared tags with weights
 // Weight system: 0.0 = least important, 1.0 = most important
 // Higher weight tags contribute more to similarity calculation
+// nolint:unused // kept for potential future use
 func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, tags1, tags2 []int) (float64, error) {
 	if len(tags1) == 0 && len(tags2) == 0 {
 		return 0.0, nil

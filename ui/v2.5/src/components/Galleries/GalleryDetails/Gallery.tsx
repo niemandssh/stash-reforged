@@ -129,7 +129,6 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
     }
   };
 
-
   function getCollapseButtonIcon() {
     return collapsed ? faChevronRight : faChevronLeft;
   }
@@ -191,7 +190,7 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
     if (isDeleteAlertOpen && gallery) {
       return (
         <DeleteGalleriesDialog
-          selected={[{ ...gallery, image_count: NaN }]}
+          selected={[{ ...gallery, image_count: NaN, pinned: false }]}
           onClose={onDeleteDialogClosed}
         />
       );
@@ -461,11 +460,13 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
               <span>
                 <ViewCountButton
                   value={gallery.play_count ?? 0}
-                  onIncrement={() => incrementPlayCount({
-                    variables: {
-                      id: gallery.id,
-                    },
-                  })}
+                  onIncrement={() =>
+                    incrementPlayCount({
+                      variables: {
+                        id: gallery.id,
+                      },
+                    })
+                  }
                 />
               </span>
               <span>

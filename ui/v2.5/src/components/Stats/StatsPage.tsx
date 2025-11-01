@@ -47,18 +47,12 @@ const StatsPage: React.FC = () => {
           unmountOnExit
           activeKey={tabFromLocation}
           onSelect={setTabKey}
-          style={{ textAlign: 'center' }}
+          style={{ textAlign: "center" }}
         >
-          <Tab
-            eventKey="general"
-            title="General"
-          >
+          <Tab eventKey="general" title="General">
             <GeneralStats />
           </Tab>
-          <Tab
-            eventKey="o-count"
-            title="O-Count"
-          >
+          <Tab eventKey="o-count" title="O-Count">
             <OCountStats />
           </Tab>
         </Tabs>

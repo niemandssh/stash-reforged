@@ -191,10 +191,8 @@ func GetSceneStreamPaths(scene *models.Scene, directStreamURL *url.URL, maxStrea
 		if container == ffmpeg.Wmv {
 			logger.Infof("[DEBUG] WMV file will use direct stream")
 		}
-	} else {
-		if container == ffmpeg.Wmv {
-			logger.Infof("[DEBUG] WMV file will NOT use direct stream")
-		}
+	} else if container == ffmpeg.Wmv {
+		logger.Infof("[DEBUG] WMV file will NOT use direct stream")
 	}
 
 	// only add mkv stream endpoint if the scene container is an mkv already

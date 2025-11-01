@@ -71,13 +71,14 @@ export const ViewHistory: React.FC = () => {
       }
     );
 
-    if (loadingRef.current) {
-      observer.observe(loadingRef.current);
+    const currentRef = loadingRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (loadingRef.current) {
-        observer.unobserve(loadingRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, [loadMore, hasMore, loading]);
@@ -98,48 +99,47 @@ export const ViewHistory: React.FC = () => {
     return acc;
   }, {} as Record<string, IViewHistoryEntry[]>);
 
-    return (
-      <>
-        <Helmet {...titleProps} />
-        <div className="view-history-container">
-          <div className="view-history-header">
-            <h1>{intl.formatMessage({ id: "view_history" })}</h1>
-            <span className="view-history-total-views">
-              {intl.formatMessage(
-                { id: "total_views" },
-                { count: totalViews }
-              )}
-            </span>
-          </div>
-
-          <div className="view-history-content">
-            {Object.entries(groupedItems).map(([date, dateItems]) => (
-              <div key={date} className="view-history-date-group">
-                <h3 className="view-history-date-header">{date}</h3>
-                <div className="view-history-items-list">
-                  {dateItems.map((item) => (
-                    <ViewHistoryCard
-                      key={`${item.scene?.id || item.gallery?.id}-${item.viewDate}`}
-                      scene={item.scene}
-                      gallery={item.gallery}
-                      viewDate={item.viewDate}
-                      oDate={item.oDate}
-                      viewCount={item.viewCount}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {hasMore && (
-              <div ref={loadingRef} className="view-history-loading-more">
-                {loading && <LoadingIndicator inline />}
-              </div>
-            )}
-          </div>
+  return (
+    <>
+      <Helmet {...titleProps} />
+      <div className="view-history-container">
+        <div className="view-history-header">
+          <h1>{intl.formatMessage({ id: "view_history" })}</h1>
+          <span className="view-history-total-views">
+            {intl.formatMessage({ id: "total_views" }, { count: totalViews })}
+          </span>
         </div>
-      </>
-    );
+
+        <div className="view-history-content">
+          {Object.entries(groupedItems).map(([date, dateItems]) => (
+            <div key={date} className="view-history-date-group">
+              <h3 className="view-history-date-header">{date}</h3>
+              <div className="view-history-items-list">
+                {dateItems.map((item) => (
+                  <ViewHistoryCard
+                    key={`${item.scene?.id || item.gallery?.id}-${
+                      item.viewDate
+                    }`}
+                    scene={item.scene}
+                    gallery={item.gallery}
+                    viewDate={item.viewDate}
+                    oDate={item.oDate}
+                    viewCount={item.viewCount}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {hasMore && (
+            <div ref={loadingRef} className="view-history-loading-more">
+              {loading && <LoadingIndicator inline />}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
 };
 
 export default ViewHistory;

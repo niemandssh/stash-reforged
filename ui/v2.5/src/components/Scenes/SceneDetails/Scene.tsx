@@ -1,4 +1,12 @@
-import { Tab, Nav, Dropdown, Button, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Tab,
+  Nav,
+  Dropdown,
+  Button,
+  Alert,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import React, {
   useEffect,
   useState,
@@ -22,7 +30,6 @@ import {
   useSceneIncrementPlayCount,
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
-  useSceneReduceResolution,
   useSceneSetBroken,
   useSceneSetNotBroken,
   useFindColorPresets,
@@ -227,11 +234,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const { configuration } = useContext(ConfigurationContext);
 
   const [showDraftModal, setShowDraftModal] = useState(false);
-  const [showReduceResolutionModal, setShowReduceResolutionModal] = useState(false);
+  const [showReduceResolutionModal, setShowReduceResolutionModal] =
+    useState(false);
   const [showTrimVideoModal, setShowTrimVideoModal] = useState(false);
-  const [showRegenerateSpritesModal, setShowRegenerateSpritesModal] = useState(false);
+  const [showRegenerateSpritesModal, setShowRegenerateSpritesModal] =
+    useState(false);
   const [showConvertToMP4Confirm, setShowConvertToMP4Confirm] = useState(false);
-  const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] = useState(false);
+  const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] =
+    useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
 
   const [incrementO] = useSceneIncrementO(scene.id);
@@ -239,17 +249,15 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
-  const [reduceResolution] = useSceneReduceResolution();
   const [setBroken] = useSceneSetBroken();
   const [setNotBroken] = useSceneSetNotBroken();
-  
+
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   const [organizedLoading, setOrganizedLoading] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState("scene-details-panel");
   const [editingTags, setEditingTags] = useState<GQL.Tag[] | null>(null);
-  const [editingPerformerTagIds, setEditingPerformerTagIds] = useState<any[] | null>(null);
 
   // Combine scene tags and performer tags for TagRequirementsIndicator
   // Use editing tags if in edit mode, otherwise use saved scene tags
@@ -260,11 +268,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
 
     // Otherwise use saved scene data
-    const sceneTagIds = new Set((scene.tags || []).map(tag => tag.id));
+    const sceneTagIds = new Set((scene.tags || []).map((tag) => tag.id));
     const performerTagIds = new Set<string>();
 
     // Add all performer tag IDs from scene data
-    (scene.performer_tag_ids || []).forEach((pt: any) => {
+    (scene.performer_tag_ids || []).forEach((pt: { tag_ids?: string[] }) => {
       if (pt.tag_ids) {
         pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
       }
@@ -274,14 +282,15 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     const allTagIds = new Set([...sceneTagIds, ...performerTagIds]);
 
     // Convert back to Tag objects
-    return Array.from(allTagIds).map(id => (scene.tags || []).find(t => t.id === id)).filter(Boolean) as GQL.Tag[];
+    return Array.from(allTagIds)
+      .map((id) => (scene.tags || []).find((t) => t.id === id))
+      .filter(Boolean) as GQL.Tag[];
   }, [scene.tags, scene.performer_tag_ids, activeTabKey, editingTags]);
 
   // Reset editing tags when leaving edit panel
   useEffect(() => {
     if (activeTabKey !== "scene-edit-panel") {
       setEditingTags(null);
-      setEditingPerformerTagIds(null);
     }
   }, [activeTabKey]);
 
@@ -297,14 +306,16 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isMergeIntoDialogOpen, setIsMergeIntoDialogOpen] = useState(false);
   const [isMergeFromDialogOpen, setIsMergeFromDialogOpen] = useState(false);
-  const [showDataUpdateNotification, setShowDataUpdateNotification] = useState(false);
-  const [lastSceneData, setLastSceneData] = useState<GQL.SceneDataFragment | null>(null);
+  const [showDataUpdateNotification, setShowDataUpdateNotification] =
+    useState(false);
+  const [lastSceneData, setLastSceneData] =
+    useState<GQL.SceneDataFragment | null>(null);
 
   // Track scene data changes to show update notification
   useEffect(() => {
     if (lastSceneData) {
       // Check if scene data has changed (excluding similar scenes and file info)
-      const hasChanged = 
+      const hasChanged =
         lastSceneData.title !== scene.title ||
         lastSceneData.details !== scene.details ||
         lastSceneData.date !== scene.date ||
@@ -319,31 +330,31 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         lastSceneData.start_time !== scene.start_time ||
         lastSceneData.end_time !== scene.end_time ||
         !isEqual(
-          lastSceneData.tags?.map(t => t.id).sort(),
-          scene.tags?.map(t => t.id).sort()
+          lastSceneData.tags?.map((t) => t.id).sort(),
+          scene.tags?.map((t) => t.id).sort()
         ) ||
         !isEqual(
-          lastSceneData.performers?.map(p => p.id).sort(),
-          scene.performers?.map(p => p.id).sort()
+          lastSceneData.performers?.map((p) => p.id).sort(),
+          scene.performers?.map((p) => p.id).sort()
         ) ||
         !isEqual(
-          lastSceneData.galleries?.map(g => g.id).sort(),
-          scene.galleries?.map(g => g.id).sort()
+          lastSceneData.galleries?.map((g) => g.id).sort(),
+          scene.galleries?.map((g) => g.id).sort()
         ) ||
         !isEqual(
-          lastSceneData.groups?.map(g => g.group.id).sort(),
-          scene.groups?.map(g => g.group.id).sort()
+          lastSceneData.groups?.map((g) => g.group.id).sort(),
+          scene.groups?.map((g) => g.group.id).sort()
         ) ||
         !isEqual(
-          lastSceneData.stash_ids?.map(s => s.stash_id).sort(),
-          scene.stash_ids?.map(s => s.stash_id).sort()
+          lastSceneData.stash_ids?.map((s) => s.stash_id).sort(),
+          scene.stash_ids?.map((s) => s.stash_id).sort()
         );
 
       if (hasChanged) {
         setShowDataUpdateNotification(true);
       }
     }
-    
+
     // Update last scene data only when not showing notification
     if (!showDataUpdateNotification && scene) {
       setLastSceneData(scene as GQL.SceneDataFragment);
@@ -422,14 +433,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     // Debug: log the input data
     console.log("Scene onSave input:", input);
     console.log("performer_tag_ids:", input.performer_tag_ids);
-    
+
     await updateScene({
       variables: {
         input: input,
       },
     });
 
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     if (onSaved) {
       await onSaved();
@@ -491,7 +502,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             id: scene.id,
             // Update tag_ids to trigger similarity recalculation
             // We'll set the same tag_ids to trigger the update
-            tag_ids: scene.tags.map(tag => tag.id),
+            tag_ids: scene.tags.map((tag) => tag.id),
           },
         },
       });
@@ -635,7 +646,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   function maybeRenderDeleteDialog() {
     if (isDeleteAlertOpen) {
       return (
-        <DeleteScenesDialog selected={[scene as any]} onClose={onDeleteDialogClosed} />
+        <DeleteScenesDialog
+          selected={[{ ...scene, pinned: false }]}
+          onClose={onDeleteDialogClosed}
+        />
       );
     }
   }
@@ -722,14 +736,17 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   function maybeRenderConvertToMP4ConfirmDialog() {
     if (showConvertToMP4Confirm) {
-      const originalFormat = scene.files.length > 0 ? scene.files[0].format?.toUpperCase() || 'UNKNOWN' : 'UNKNOWN';
-      
+      const originalFormat =
+        scene.files.length > 0
+          ? scene.files[0].format?.toUpperCase() || "UNKNOWN"
+          : "UNKNOWN";
+
       // Calculate temp path based on generatedPath (same logic as in config.go)
-      const generatedPath = configuration?.general?.generatedPath || '';
-      const tempPath = generatedPath ? 
-        generatedPath.substring(0, generatedPath.lastIndexOf('/')) + '/temp' : 
-        './temp';
-      
+      const generatedPath = configuration?.general?.generatedPath || "";
+      const tempPath = generatedPath
+        ? generatedPath.substring(0, generatedPath.lastIndexOf("/")) + "/temp"
+        : "./temp";
+
       return (
         <ModalComponent
           show
@@ -747,11 +764,12 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           }}
         >
           <Alert variant="warning">
-            <strong>Warning:</strong> <FormattedMessage id="dialogs.convert_to_mp4.warning_text" />
+            <strong>Warning:</strong>{" "}
+            <FormattedMessage id="dialogs.convert_to_mp4.warning_text" />
           </Alert>
           <p>
-            <FormattedMessage 
-              id="dialogs.convert_to_mp4.info" 
+            <FormattedMessage
+              id="dialogs.convert_to_mp4.info"
               values={{ originalFormat }}
             />
           </p>
@@ -760,11 +778,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               <FormattedMessage id="dialogs.convert_to_mp4.temp_path_label" />
             </strong>
             <br />
-            <a 
-              href={`file://${tempPath}`} 
-              target="_blank" 
+            <a
+              href={`file://${tempPath}`}
+              target="_blank"
               rel="noopener noreferrer"
-              style={{ fontWeight: 'bold', textDecoration: 'underline' }}
+              style={{ fontWeight: "bold", textDecoration: "underline" }}
             >
               {tempPath}
             </a>
@@ -777,11 +795,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   function maybeRenderConvertHLSToMP4ConfirmDialog() {
     if (showConvertHLSToMP4Confirm) {
       // Calculate temp path based on generatedPath (same logic as in config.go)
-      const generatedPath = configuration?.general?.generatedPath || '';
-      const tempPath = generatedPath ? 
-        generatedPath.substring(0, generatedPath.lastIndexOf('/')) + '/temp' : 
-        './temp';
-      
+      const generatedPath = configuration?.general?.generatedPath || "";
+      const tempPath = generatedPath
+        ? generatedPath.substring(0, generatedPath.lastIndexOf("/")) + "/temp"
+        : "./temp";
+
       return (
         <ModalComponent
           show
@@ -799,7 +817,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           }}
         >
           <Alert variant="warning">
-            <strong>Warning:</strong> <FormattedMessage id="dialogs.convert_hls_to_mp4.warning_text" />
+            <strong>Warning:</strong>{" "}
+            <FormattedMessage id="dialogs.convert_hls_to_mp4.warning_text" />
           </Alert>
           <p>
             <FormattedMessage id="dialogs.convert_hls_to_mp4.info" />
@@ -809,11 +828,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               <FormattedMessage id="dialogs.convert_hls_to_mp4.temp_path_label" />
             </strong>
             <br />
-            <a 
-              href={`file://${tempPath}`} 
-              target="_blank" 
+            <a
+              href={`file://${tempPath}`}
+              target="_blank"
               rel="noopener noreferrer"
-              style={{ fontWeight: 'bold', textDecoration: 'underline' }}
+              style={{ fontWeight: "bold", textDecoration: "underline" }}
             >
               {tempPath}
             </a>
@@ -825,11 +844,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const renderOperations = () => {
     // Check if conversion section has any items
-    const hasConversionOptions = scene.files.length > 0 && (
-      (scene.files[0]?.video_codec !== "h264" || scene.files[0]?.format !== "mp4" || (scene.is_broken && !isHLSVideo(scene))) ||
-      (isHLSVideo(scene) || scene.is_broken) ||
-      true // reduce resolution is always available if there are files
-    );
+    const hasConversionOptions =
+      scene.files.length > 0 &&
+      (scene.files[0]?.video_codec !== "h264" ||
+        scene.files[0]?.format !== "mp4" ||
+        (scene.is_broken && !isHLSVideo(scene)) ||
+        isHLSVideo(scene) ||
+        scene.is_broken ||
+        true); // reduce resolution is always available if there are files
 
     return (
       <Dropdown>
@@ -841,186 +863,199 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         >
           <Icon icon={faEllipsisV} />
         </Dropdown.Toggle>
-        <Dropdown.Menu className="bg-secondary text-white" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-        {!!scene.files.length && (
-          <Dropdown.Item
-            key="rescan"
-            className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onRescan()}
-          >
-            <Icon icon={faSync} className="mr-2" />
-            <FormattedMessage id="actions.rescan" />
-          </Dropdown.Item>
-        )}
-        <Dropdown.Item
-          key="rescan-similarity"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => onRescanSimilarity()}
+        <Dropdown.Menu
+          className="bg-secondary text-white"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
         >
-          <Icon icon={faSearch} className="mr-2" />
-          <FormattedMessage id="actions.rescan_similarity" />
-        </Dropdown.Item>
-        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
-        <Dropdown.Item
-          key="generate"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => setIsGenerateDialogOpen(true)}
-        >
-          <Icon icon={faCog} className="mr-2" />
-          <FormattedMessage id="actions.generate" />
-        </Dropdown.Item>
-        <Dropdown.Item
-          key="generate-screenshot"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => onGenerateScreenshot(getPlayerPosition())}
-        >
-          <Icon icon={faCamera} className="mr-2" />
-          <FormattedMessage id="actions.generate_thumb_from_current" />
-        </Dropdown.Item>
-        <Dropdown.Item
-          key="generate-default"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => onGenerateScreenshot()}
-        >
-          <Icon icon={faImage} className="mr-2" />
-          <FormattedMessage id="actions.generate_thumb_default" />
-        </Dropdown.Item>
-        {scene.files.length > 0 && (
+          {!!scene.files.length && (
+            <Dropdown.Item
+              key="rescan"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => onRescan()}
+            >
+              <Icon icon={faSync} className="mr-2" />
+              <FormattedMessage id="actions.rescan" />
+            </Dropdown.Item>
+          )}
           <Dropdown.Item
-            key="regenerate-sprites"
+            key="rescan-similarity"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => setShowRegenerateSpritesModal(true)}
+            onClick={() => onRescanSimilarity()}
           >
-            <Icon icon={faImages} className="mr-2" />
-            <FormattedMessage id="actions.regenerate_sprites" />
+            <Icon icon={faSearch} className="mr-2" />
+            <FormattedMessage id="actions.rescan_similarity" />
           </Dropdown.Item>
-        )}
-        {hasConversionOptions && <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />}
-        {scene.files.length > 0 && (scene.files[0]?.video_codec !== "h264" || scene.files[0]?.format !== "mp4" || (scene.is_broken && !isHLSVideo(scene))) && (
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           <Dropdown.Item
-            key="convert-to-mp4"
+            key="generate"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onConvertToMP4()}
+            onClick={() => setIsGenerateDialogOpen(true)}
           >
-            <Icon icon={faVideo} className="mr-2" />
-            <FormattedMessage id="actions.convert_to_mp4" />
+            <Icon icon={faCog} className="mr-2" />
+            <FormattedMessage id="actions.generate" />
           </Dropdown.Item>
-        )}
-        {scene.files.length > 0 && (isHLSVideo(scene) || scene.is_broken) && (
           <Dropdown.Item
-            key="convert-hls-to-mp4"
+            key="generate-screenshot"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onConvertHLSToMP4()}
+            onClick={() => onGenerateScreenshot(getPlayerPosition())}
           >
-            <Icon icon={faVideo} className="mr-2" />
-            <FormattedMessage id="actions.convert_hls_to_mp4" />
+            <Icon icon={faCamera} className="mr-2" />
+            <FormattedMessage id="actions.generate_thumb_from_current" />
           </Dropdown.Item>
-        )}
-        {scene.files.length > 0 && (
           <Dropdown.Item
-            key="reduce-resolution"
+            key="generate-default"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => setShowReduceResolutionModal(true)}
+            onClick={() => onGenerateScreenshot()}
           >
-            <Icon icon={faCompressAlt} className="mr-2" />
-            <FormattedMessage id="actions.reduce_resolution" />
+            <Icon icon={faImage} className="mr-2" />
+            <FormattedMessage id="actions.generate_thumb_default" />
           </Dropdown.Item>
-        )}
-        {scene.files.length > 0 && (scene.start_time !== null || scene.end_time !== null) && (
-          <Dropdown.Item
-            key="trim-video"
-            className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => setShowTrimVideoModal(true)}
-          >
-            <Icon icon={faCut} className="mr-2" />
-            <FormattedMessage id="actions.trim_video" />
-          </Dropdown.Item>
-        )}
-        {scene.files.length > 0 && scene.start_time === null && scene.end_time === null && (
-          <OverlayTrigger
-            overlay={
-              <Tooltip id="trim-video-disabled-tooltip">
-                <FormattedMessage id="dialogs.trim_video.disabled_tooltip" />
-              </Tooltip>
-            }
-            placement="bottom"
-          >
-            <span style={{ cursor: 'not-allowed' }}>
+          {scene.files.length > 0 && (
+            <Dropdown.Item
+              key="regenerate-sprites"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setShowRegenerateSpritesModal(true)}
+            >
+              <Icon icon={faImages} className="mr-2" />
+              <FormattedMessage id="actions.regenerate_sprites" />
+            </Dropdown.Item>
+          )}
+          {hasConversionOptions && (
+            <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
+          )}
+          {scene.files.length > 0 &&
+            (scene.files[0]?.video_codec !== "h264" ||
+              scene.files[0]?.format !== "mp4" ||
+              (scene.is_broken && !isHLSVideo(scene))) && (
               <Dropdown.Item
-                key="trim-video-disabled"
+                key="convert-to-mp4"
                 className="bg-secondary text-white d-flex align-items-center"
-                style={{ opacity: 0.5, cursor: 'not-allowed' }}
-                disabled
+                onClick={() => onConvertToMP4()}
+              >
+                <Icon icon={faVideo} className="mr-2" />
+                <FormattedMessage id="actions.convert_to_mp4" />
+              </Dropdown.Item>
+            )}
+          {scene.files.length > 0 && (isHLSVideo(scene) || scene.is_broken) && (
+            <Dropdown.Item
+              key="convert-hls-to-mp4"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => onConvertHLSToMP4()}
+            >
+              <Icon icon={faVideo} className="mr-2" />
+              <FormattedMessage id="actions.convert_hls_to_mp4" />
+            </Dropdown.Item>
+          )}
+          {scene.files.length > 0 && (
+            <Dropdown.Item
+              key="reduce-resolution"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setShowReduceResolutionModal(true)}
+            >
+              <Icon icon={faCompressAlt} className="mr-2" />
+              <FormattedMessage id="actions.reduce_resolution" />
+            </Dropdown.Item>
+          )}
+          {scene.files.length > 0 &&
+            (scene.start_time !== null || scene.end_time !== null) && (
+              <Dropdown.Item
+                key="trim-video"
+                className="bg-secondary text-white d-flex align-items-center"
+                onClick={() => setShowTrimVideoModal(true)}
               >
                 <Icon icon={faCut} className="mr-2" />
                 <FormattedMessage id="actions.trim_video" />
               </Dropdown.Item>
-            </span>
-          </OverlayTrigger>
-        )}
-        {boxes.length > 0 && <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />}
-        {boxes.length > 0 && (
+            )}
+          {scene.files.length > 0 &&
+            scene.start_time === null &&
+            scene.end_time === null && (
+              <OverlayTrigger
+                overlay={
+                  <Tooltip id="trim-video-disabled-tooltip">
+                    <FormattedMessage id="dialogs.trim_video.disabled_tooltip" />
+                  </Tooltip>
+                }
+                placement="bottom"
+              >
+                <span style={{ cursor: "not-allowed" }}>
+                  <Dropdown.Item
+                    key="trim-video-disabled"
+                    className="bg-secondary text-white d-flex align-items-center"
+                    style={{ opacity: 0.5, cursor: "not-allowed" }}
+                    disabled
+                  >
+                    <Icon icon={faCut} className="mr-2" />
+                    <FormattedMessage id="actions.trim_video" />
+                  </Dropdown.Item>
+                </span>
+              </OverlayTrigger>
+            )}
+          {boxes.length > 0 && (
+            <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
+          )}
+          {boxes.length > 0 && (
+            <Dropdown.Item
+              key="submit"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setShowDraftModal(true)}
+            >
+              <Icon icon={faUpload} className="mr-2" />
+              <FormattedMessage id="actions.submit_stash_box" />
+            </Dropdown.Item>
+          )}
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
+          {!scene.is_broken && (
+            <Dropdown.Item
+              key="set-broken"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => onSetBroken()}
+            >
+              <Icon icon={faExclamationTriangle} className="mr-2" />
+              <FormattedMessage id="actions.set_broken" />
+            </Dropdown.Item>
+          )}
+          {!scene.is_not_broken && (
+            <Dropdown.Item
+              key="set-not-broken"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => onSetNotBroken()}
+            >
+              <Icon icon={faCheckCircle} className="mr-2" />
+              <FormattedMessage id="actions.set_not_broken" />
+            </Dropdown.Item>
+          )}
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           <Dropdown.Item
-            key="submit"
+            key="merge-into-other"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => setShowDraftModal(true)}
+            onClick={() => onMergeIntoOtherScene()}
           >
-            <Icon icon={faUpload} className="mr-2" />
-            <FormattedMessage id="actions.submit_stash_box" />
+            <Icon icon={faExchangeAlt} className="mr-2" />
+            <FormattedMessage id="actions.merge_into_other_scene" />
           </Dropdown.Item>
-        )}
-        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
-        {!scene.is_broken && (
           <Dropdown.Item
-            key="set-broken"
+            key="merge-from-other"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onSetBroken()}
+            onClick={() => onMergeFromOtherScene()}
           >
-            <Icon icon={faExclamationTriangle} className="mr-2" />
-            <FormattedMessage id="actions.set_broken" />
+            <Icon icon={faExchangeAlt} className="mr-2" />
+            <FormattedMessage id="actions.merge_from_other_scene" />
           </Dropdown.Item>
-        )}
-        {!scene.is_not_broken && (
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           <Dropdown.Item
-            key="set-not-broken"
+            key="delete-scene"
             className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onSetNotBroken()}
+            onClick={() => setIsDeleteAlertOpen(true)}
           >
-            <Icon icon={faCheckCircle} className="mr-2" />
-            <FormattedMessage id="actions.set_not_broken" />
+            <Icon icon={faTrash} className="mr-2" />
+            <FormattedMessage
+              id="actions.delete"
+              values={{ entityType: intl.formatMessage({ id: "scene" }) }}
+            />
           </Dropdown.Item>
-        )}
-        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
-        <Dropdown.Item
-          key="merge-into-other"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => onMergeIntoOtherScene()}
-        >
-          <Icon icon={faExchangeAlt} className="mr-2" />
-          <FormattedMessage id="actions.merge_into_other_scene" />
-        </Dropdown.Item>
-        <Dropdown.Item
-          key="merge-from-other"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => onMergeFromOtherScene()}
-        >
-          <Icon icon={faExchangeAlt} className="mr-2" />
-          <FormattedMessage id="actions.merge_from_other_scene" />
-        </Dropdown.Item>
-        <Dropdown.Divider style={{ borderTopColor: '#52616d' }} />
-        <Dropdown.Item
-          key="delete-scene"
-          className="bg-secondary text-white d-flex align-items-center"
-          onClick={() => setIsDeleteAlertOpen(true)}
-        >
-          <Icon icon={faTrash} className="mr-2" />
-          <FormattedMessage
-            id="actions.delete"
-            values={{ entityType: intl.formatMessage({ id: "scene" }) }}
-          />
-        </Dropdown.Item>
-      </Dropdown.Menu>
-    </Dropdown>
+        </Dropdown.Menu>
+      </Dropdown>
     );
   };
 
@@ -1156,11 +1191,9 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               isVisible={activeTabKey === "scene-edit-panel"}
               scene={scene}
               onSubmit={onSave}
-              onForceRefresh={forceRefreshSceneData}
               onDelete={() => setIsDeleteAlertOpen(true)}
-              onTagsChange={(tags, performerTagIds) => {
+              onTagsChange={(tags) => {
                 setEditingTags(tags);
-                setEditingPerformerTagIds(performerTagIds);
               }}
             />
           </Tab.Pane>
@@ -1202,7 +1235,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           collapsed ? "collapsed" : ""
         }`}
       >
-        <SceneDataUpdateNotification 
+        <SceneDataUpdateNotification
           visible={showDataUpdateNotification}
           onRefresh={forceRefreshSceneData}
         />
@@ -1225,11 +1258,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               ) : scene.is_broken && !scene.is_not_broken ? (
                 <BrokenBadge />
               ) : (
-                !scene.is_broken && scene.is_probably_broken && !scene.is_not_broken && <ProbablyBrokenBadge />
+                !scene.is_broken &&
+                scene.is_probably_broken &&
+                !scene.is_not_broken && <ProbablyBrokenBadge />
               )}
-              <h3 className={cx({ "no-studio": !scene.studio })}>
-                {title}
-              </h3>
+              <h3 className={cx({ "no-studio": !scene.studio })}>{title}</h3>
             </div>
           </div>
 
@@ -1249,7 +1282,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               frameRate={file?.frame_rate}
             />
             <div className="ml-auto">
-              <TagRequirementsIndicator tags={allSceneTags} colorPresets={colorPresets} />
+              <TagRequirementsIndicator
+                tags={allSceneTags}
+                colorPresets={colorPresets}
+              />
             </div>
           </div>
 
@@ -1319,7 +1355,6 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   // Use data directly from Apollo instead of useState
   const scene = data?.findScene;
 
-
   // Force refetch on mount
   React.useEffect(() => {
     refetch();
@@ -1348,7 +1383,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const [viewedScenes, setViewedScenes] = useState<Set<string>>(new Set());
 
   const handleMarkSceneViewed = useCallback((sceneId: string) => {
-    setViewedScenes(prev => new Set(prev).add(sceneId));
+    setViewedScenes((prev) => new Set(prev).add(sceneId));
   }, []);
   const [continuePlaylist, setContinuePlaylist] = useState(queryContinue);
   const [hideScrubber, setHideScrubber] = useState(
@@ -1449,9 +1484,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
       let nextMarkerToPlay = sortedMarkers.find(
         (m) => m.seconds >= currentTime
       );
-      let startIndex = sortedMarkers.findIndex(
-        (m) => m.seconds >= currentTime
-      );
+      let startIndex = sortedMarkers.findIndex((m) => m.seconds >= currentTime);
 
       if (!nextMarkerToPlay) {
         // Current time is after all markers, loop back to the first one
@@ -1758,4 +1791,3 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 };
 
 export default SceneLoader;
-

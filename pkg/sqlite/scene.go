@@ -1737,6 +1737,10 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 		results = append(results, result)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return results, nil
 }
 

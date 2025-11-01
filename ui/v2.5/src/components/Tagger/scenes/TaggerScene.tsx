@@ -54,7 +54,9 @@ const TaggerSceneDetails: React.FC<ITaggerSceneDetails> = ({ scene }) => {
                   >
                     <img
                       loading="lazy"
-                      className={`image-thumbnail ${performer.death_date ? 'deceased' : ''}`}
+                      className={`image-thumbnail ${
+                        performer.death_date ? "deceased" : ""
+                      }`}
                       alt={performer.name ?? ""}
                       src={performer.image_path ?? ""}
                     />

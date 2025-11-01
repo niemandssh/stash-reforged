@@ -1,4 +1,10 @@
-import React, { useState, useCallback, KeyboardEvent, useRef, useEffect } from "react";
+import React, {
+  useState,
+  useCallback,
+  KeyboardEvent,
+  useRef,
+  useEffect,
+} from "react";
 import { Form, Button } from "react-bootstrap";
 import { Icon } from "src/components/Shared/Icon";
 import { faArrowRight, faChevronDown } from "@fortawesome/free-solid-svg-icons";
@@ -20,13 +26,16 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = e.target;
-    // Разрешаем только цифры
-    if (value === "" || /^\d+$/.test(value)) {
-      setInputValue(value);
-    }
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { value } = e.target;
+      // Разрешаем только цифры
+      if (value === "" || /^\d+$/.test(value)) {
+        setInputValue(value);
+      }
+    },
+    []
+  );
 
   const handleSubmit = useCallback(() => {
     const pageNumber = parseInt(inputValue, 10);
@@ -37,14 +46,17 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
     }
   }, [inputValue, totalPages, onPageChange]);
 
-  const handleKeyPress = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSubmit();
-    } else if (e.key === "Escape") {
-      setInputValue("");
-      setIsVisible(false);
-    }
-  }, [handleSubmit]);
+  const handleKeyPress = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        handleSubmit();
+      } else if (e.key === "Escape") {
+        setInputValue("");
+        setIsVisible(false);
+      }
+    },
+    [handleSubmit]
+  );
 
   const toggleVisibility = useCallback(() => {
     setIsVisible(!isVisible);
@@ -56,15 +68,19 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
   // Закрытие дропдауна при клике вне его
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
         setIsVisible(false);
         setInputValue("");
       }
     };
 
     if (isVisible) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isVisible]);
 
@@ -86,7 +102,7 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
         {currentPage} / {totalPages}
         <Icon icon={faChevronDown} className="dropdown-arrow" />
       </div>
-      
+
       {isVisible && (
         <div className="page-navigation-dropdown-content">
           <div className="page-navigation-form">
@@ -106,7 +122,11 @@ export const PageNavigationInput: React.FC<IPageNavigationInputProps> = ({
               variant="primary"
               size="sm"
               onClick={handleSubmit}
-              disabled={!inputValue || parseInt(inputValue, 10) < 1 || parseInt(inputValue, 10) > totalPages}
+              disabled={
+                !inputValue ||
+                parseInt(inputValue, 10) < 1 ||
+                parseInt(inputValue, 10) > totalPages
+              }
               className="page-navigation-submit"
               title="Перейти"
             >

@@ -14,8 +14,6 @@ import { URLsField } from "src/utils/field";
 import { PoseTagsDisplay } from "./PoseTagsDisplay";
 import GenderIcon from "src/components/Performers/GenderIcon";
 import { useFindColorPresets } from "src/core/StashService";
-import { ListFilterModel } from "src/models/list-filter/filter";
-import { useApolloClient } from "@apollo/client";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -23,44 +21,50 @@ interface ISceneDetailProps {
 
 export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   const intl = useIntl();
-  const [isDescriptionCollapsed, setIsDescriptionCollapsed] = React.useState(true);
+  const [isDescriptionCollapsed, setIsDescriptionCollapsed] =
+    React.useState(true);
   const [shouldShowToggle, setShouldShowToggle] = React.useState(false);
   const textRef = React.useRef<HTMLParagraphElement>(null);
-  const apolloClient = useApolloClient();
 
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   // Create a map of tags that are already in the scene for quick lookup
   const sceneTagMap = React.useMemo(() => {
-    const map = new Map<string, GQL.TagDataFragment>();
-    props.scene.tags?.forEach(tag => map.set(tag.id, tag));
+    const map = new Map<string, GQL.SlimTagDataFragment>();
+    props.scene.tags?.forEach((tag) => map.set(tag.id, tag));
     return map;
   }, [props.scene.tags]);
 
   // For performer tags, try to find them in scene tags first
-  const getTagById = React.useCallback((tagId: string): GQL.TagDataFragment | undefined => {
-    // First check scene tags
-    return sceneTagMap.get(tagId);
-  }, [sceneTagMap]);
+  const getTagById = React.useCallback(
+    (tagId: string): GQL.SlimTagDataFragment | undefined => {
+      // First check scene tags
+      return sceneTagMap.get(tagId);
+    },
+    [sceneTagMap]
+  );
 
   React.useLayoutEffect(() => {
     if (textRef.current && props.scene.details) {
-      const tempElement = document.createElement('p');
-      tempElement.className = 'pre scene-description-text';
-      tempElement.style.position = 'absolute';
-      tempElement.style.visibility = 'hidden';
-      tempElement.style.width = textRef.current.offsetWidth + 'px';
-      tempElement.style.whiteSpace = 'pre-wrap';
-      tempElement.style.wordWrap = 'break-word';
+      const tempElement = document.createElement("p");
+      tempElement.className = "pre scene-description-text";
+      tempElement.style.position = "absolute";
+      tempElement.style.visibility = "hidden";
+      tempElement.style.width = textRef.current.offsetWidth + "px";
+      tempElement.style.whiteSpace = "pre-wrap";
+      tempElement.style.wordWrap = "break-word";
       tempElement.style.fontSize = getComputedStyle(textRef.current).fontSize;
-      tempElement.style.lineHeight = getComputedStyle(textRef.current).lineHeight;
+      tempElement.style.lineHeight = getComputedStyle(
+        textRef.current
+      ).lineHeight;
       tempElement.textContent = props.scene.details;
 
       document.body.appendChild(tempElement);
       const fullHeight = tempElement.offsetHeight;
 
-      const lineHeight = parseFloat(getComputedStyle(textRef.current).lineHeight) || 16;
+      const lineHeight =
+        parseFloat(getComputedStyle(textRef.current).lineHeight) || 16;
       const threeLinesHeight = lineHeight * 3;
 
       document.body.removeChild(tempElement);
@@ -80,7 +84,9 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
         <div className="scene-description">
           <p
             ref={textRef}
-            className={`pre scene-description-text ${isDescriptionCollapsed ? 'scene-description-collapsed' : ''}`}
+            className={`pre scene-description-text ${
+              isDescriptionCollapsed ? "scene-description-collapsed" : ""
+            }`}
           >
             {props.scene.details}
           </p>
@@ -91,7 +97,13 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
               className="scene-description-toggle"
               onClick={() => setIsDescriptionCollapsed(!isDescriptionCollapsed)}
             >
-              <FormattedMessage id={isDescriptionCollapsed ? "actions.show_more" : "actions.show_less"} />
+              <FormattedMessage
+                id={
+                  isDescriptionCollapsed
+                    ? "actions.show_more"
+                    : "actions.show_less"
+                }
+              />
             </Button>
           )}
         </div>
@@ -103,25 +115,26 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     // Get all tags from performer_tag_ids to determine which are performer-specific
     const performerSpecificTagIds = new Set<string>();
     if (props.scene.performer_tag_ids) {
-      props.scene.performer_tag_ids.forEach((pt: any) => {
+      props.scene.performer_tag_ids.forEach((pt: GQL.PerformerTag) => {
         // Only exclude tags that have a specific performer_id (not null)
         if (pt.performer_id && pt.tag_ids) {
-          pt.tag_ids.forEach((tagId: string) => performerSpecificTagIds.add(tagId));
+          pt.tag_ids.forEach((tagId: string) =>
+            performerSpecificTagIds.add(tagId)
+          );
         }
       });
     }
 
     // Filter out performer-specific tags, keep only general tags
-    const generalTags = props.scene.tags.filter(tag => 
-      !tag.is_pose_tag && !performerSpecificTagIds.has(tag.id)
+    const generalTags = props.scene.tags.filter(
+      (tag) => !tag.is_pose_tag && !performerSpecificTagIds.has(tag.id)
     );
-    
-    
+
     if (generalTags.length === 0) return null;
 
     // Create a map of colors to presets for quick lookup
     const colorToPreset = new Map<string, GQL.ColorPreset>();
-    colorPresets.forEach(preset => {
+    colorPresets.forEach((preset) => {
       colorToPreset.set(preset.color.toLowerCase(), preset);
     });
 
@@ -176,26 +189,39 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     if (!props.scene.performers || props.scene.performers.length === 0) return;
 
     // Show tags for each performer in the order of performers list (include all performers)
-    const performerTags = props.scene.performers.map(performer => {
-      const performerTagData = props.scene.performer_tag_ids?.find((pt: any) =>
-        pt.performer_id === performer.id
+    const performerTags = props.scene.performers
+      .map((performer) => {
+        const performerTagData = props.scene.performer_tag_ids?.find(
+          (pt: GQL.PerformerTag) => pt.performer_id === performer.id
+        );
+
+        if (
+          !performerTagData ||
+          !performerTagData.tag_ids ||
+          performerTagData.tag_ids.length === 0
+        ) {
+          return null; // No tags for this performer
+        }
+
+        // Get tag objects using getTagById function
+        const tags = performerTagData.tag_ids
+          .map((tagId: string) => getTagById(tagId))
+          .filter(Boolean) as GQL.SlimTagDataFragment[];
+
+        if (tags.length === 0) {
+          return null; // Skip performers whose tags are not loaded yet
+        }
+
+        return { performer, tags };
+      })
+      .filter(
+        (
+          item
+        ): item is {
+          performer: GQL.PerformerDataFragment;
+          tags: GQL.SlimTagDataFragment[];
+        } => item !== null
       );
-
-      if (!performerTagData || !performerTagData.tag_ids || performerTagData.tag_ids.length === 0) {
-        return null; // No tags for this performer
-      }
-
-      // Get tag objects using getTagById function
-      const tags = performerTagData.tag_ids.map((tagId: string) =>
-        getTagById(tagId)
-      ).filter(Boolean) as GQL.TagDataFragment[];
-
-      if (tags.length === 0) {
-        return null; // Skip performers whose tags are not loaded yet
-      }
-
-      return { performer, tags };
-    }).filter((item): item is { performer: GQL.PerformerDataFragment, tags: GQL.TagDataFragment[] } => item !== null);
 
     if (performerTags.length === 0) return;
 
@@ -204,18 +230,25 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
         {performerTags.map(({ performer, tags }) => (
           <div key={performer.id} className="mt-3 mb-3">
             <h4>
-              <FormattedMessage
-                id="countables.tags"
-                values={{ count: 0 }}
-              />
+              <FormattedMessage id="countables.tags" values={{ count: 0 }} />
               <PerformerPopover id={performer.id}>
-                <span className="badge badge-secondary ml-2" style={{ display: 'inline-block' }}>{performer.name}</span>
+                <span
+                  className="badge badge-secondary ml-2"
+                  style={{ display: "inline-block" }}
+                >
+                  {performer.name}
+                </span>
               </PerformerPopover>
               <span className="text-muted"> ({tags.length})</span>
             </h4>
             <div>
-              {tags.map((tag: GQL.TagDataFragment) => (
-                <TagLink key={`${performer.id}-${tag.id}`} tag={tag} linkType="details" />
+              {tags.map((tag: GQL.SlimTagDataFragment) => (
+                <TagLink
+                  key={`${performer.id}-${tag.id}`}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  tag={tag as any}
+                  linkType="details"
+                />
               ))}
             </div>
           </div>
@@ -226,42 +259,64 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
   function renderPerformers() {
     // Use scene_performers if available, otherwise fall back to performers
-    const performersData = (props.scene as any).scene_performers || props.scene.performers;
+    const performersData = ((props.scene as { scene_performers?: unknown })
+      .scene_performers ?? props.scene.performers) as Array<
+      | {
+          performer?: GQL.PerformerDataFragment;
+          small_role?: boolean;
+          role_description?: string;
+        }
+      | GQL.PerformerDataFragment
+    >;
     if (performersData.length === 0) return;
 
     // Separate performers into two groups
     // For scene_performers: check both performer.small_role (from performer card) and scene.small_role (from scene data)
     // For performers: check only performer.small_role
-    const mainPerformers = performersData.filter((p: any) => {
-      if (p.performer) {
+    const mainPerformers = performersData.filter((p) => {
+      if ("performer" in p && p.performer) {
         // scene_performers format
         return !(p.small_role || p.performer.small_role);
       } else {
         // performers format
-        return !p.small_role;
+        return !(p as GQL.PerformerDataFragment).small_role;
       }
     });
-    const smallRolePerformers = performersData.filter((p: any) => {
-      if (p.performer) {
+    const smallRolePerformers = performersData.filter((p) => {
+      if ("performer" in p && p.performer) {
         // scene_performers format
         return p.small_role || p.performer.small_role;
       } else {
         // performers format
-        return p.small_role;
+        return (p as GQL.PerformerDataFragment).small_role;
       }
     });
 
     // Sort main performers
-    const sortedMainPerformers = sortPerformers(mainPerformers.map((p: any) => p.performer || p));
+    const sortedMainPerformers = sortPerformers(
+      mainPerformers.map(
+        (p) =>
+          (p as { performer?: GQL.PerformerDataFragment }).performer ||
+          (p as GQL.PerformerDataFragment)
+      )
+    );
 
     // Create cards for main performers
-    const mainCards = sortedMainPerformers.map((performer: any) => {
+    const mainCards = sortedMainPerformers.map((performer) => {
       // Find the corresponding scene_performer data for role_description
-      const scenePerformerData = performersData.find((sp: any) => 
-        (sp.performer ? sp.performer.id : sp.id) === performer.id
+      const scenePerformerData = performersData.find(
+        (sp) =>
+          (
+            (sp as { performer?: GQL.PerformerDataFragment }).performer ??
+            (sp as GQL.PerformerDataFragment)
+          ).id === performer.id
       );
-      const roleDescription = scenePerformerData?.role_description;
-      
+      const roleDescription =
+        "role_description" in (scenePerformerData || {})
+          ? (scenePerformerData as { role_description?: string })
+              .role_description
+          : undefined;
+
       return (
         <PerformerCard
           key={performer.id}
@@ -273,64 +328,87 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     });
 
     // Create list for performers with small role
-    const smallRoleList = smallRolePerformers.length > 0 ? (
-      <div className="mt-3">
-        <h6 className="scene-performers-small-role-header">
-          <FormattedMessage id="scene_performers.small_role" defaultMessage="Also starring:" />
-        </h6>
-        <div className="scene-performers-small-role">
-          {smallRolePerformers.map((performer: any) => {
-            const performerData = performer.performer || performer;
-            const roleDescription = performer.role_description;
-            const currentAge = TextUtils.age(
-              performerData.birthdate,
-              performerData.death_date
-            );
-            const productionAge = TextUtils.age(
-              performerData.birthdate,
-              props.scene.date ?? undefined
-            );
-            const ageShortString = intl.formatMessage({
-              id: "years_old_short",
-              defaultMessage: "yo",
-            });
-            const atProductionString = intl.formatMessage({
-              id: "at_production",
-              defaultMessage: "at production",
-            });
+    const smallRoleList =
+      smallRolePerformers.length > 0 ? (
+        <div className="mt-3">
+          <h6 className="scene-performers-small-role-header">
+            <FormattedMessage
+              id="scene_performers.small_role"
+              defaultMessage="Also starring:"
+            />
+          </h6>
+          <div className="scene-performers-small-role">
+            {smallRolePerformers.map((performer) => {
+              const performerData =
+                "performer" in performer && performer.performer
+                  ? performer.performer
+                  : (performer as GQL.PerformerDataFragment);
+              const roleDescription =
+                "role_description" in performer
+                  ? performer.role_description
+                  : undefined;
+              const currentAge = TextUtils.age(
+                performerData.birthdate,
+                performerData.death_date
+              );
+              const productionAge = TextUtils.age(
+                performerData.birthdate,
+                props.scene.date ?? undefined
+              );
+              const ageShortString = intl.formatMessage({
+                id: "years_old_short",
+                defaultMessage: "yo",
+              });
+              const atProductionString = intl.formatMessage({
+                id: "at_production",
+                defaultMessage: "at production",
+              });
 
-            const currentAgeString = currentAge > 0 ? `${currentAge} ${ageShortString}` : "";
-            const productionAgeString = productionAge > 0 ? `${productionAge} ${ageShortString} ${atProductionString}` : "";
+              const currentAgeString =
+                currentAge > 0 ? `${currentAge} ${ageShortString}` : "";
+              const productionAgeString =
+                productionAge > 0
+                  ? `${productionAge} ${ageShortString} ${atProductionString}`
+                  : "";
 
-            return (
-              <Link
-                key={performerData.id}
-                to={`/performers/${performerData.id}`}
-                className="scene-performer-small-role-tag"
-              >
-                <div className="performer-info">
-                  <div className="performer-header">
-                    <GenderIcon gender={performerData.gender} className="gender-icon-small" />
-                    <span className="performer-name">{performerData.name}</span>
-                    {currentAgeString && (
-                      <span className="performer-age-small">({currentAgeString})</span>
+              return (
+                <Link
+                  key={performerData.id}
+                  to={`/performers/${performerData.id}`}
+                  className="scene-performer-small-role-tag"
+                >
+                  <div className="performer-info">
+                    <div className="performer-header">
+                      <GenderIcon
+                        gender={performerData.gender}
+                        className="gender-icon-small"
+                      />
+                      <span className="performer-name">
+                        {performerData.name}
+                      </span>
+                      {currentAgeString && (
+                        <span className="performer-age-small">
+                          ({currentAgeString})
+                        </span>
+                      )}
+                    </div>
+                    {productionAgeString && (
+                      <div className="performer-age-at-production">
+                        {productionAgeString}
+                      </div>
+                    )}
+                    {roleDescription && (
+                      <div className="performer-role-description-small">
+                        <strong>Role:</strong> {roleDescription}
+                      </div>
                     )}
                   </div>
-                  {productionAgeString && (
-                    <div className="performer-age-at-production">{productionAgeString}</div>
-                  )}
-                  {roleDescription && (
-                    <div className="performer-role-description-small">
-                      <strong>Role:</strong> {roleDescription}
-                    </div>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    ) : null;
+      ) : null;
 
     return (
       <>

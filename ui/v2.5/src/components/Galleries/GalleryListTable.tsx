@@ -88,9 +88,15 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
     return (
       <Button
         variant="link"
-        className={`p-0 text-decoration-none ${gallery.pinned ? 'text-warning' : 'text-muted'}`}
+        className={`p-0 text-decoration-none ${
+          gallery.pinned ? "text-warning" : "text-muted"
+        }`}
         onClick={() => togglePinned(gallery.id, gallery.pinned)}
-        title={gallery.pinned ? intl.formatMessage({ id: "actions.unpin" }) : intl.formatMessage({ id: "actions.pin" })}
+        title={
+          gallery.pinned
+            ? intl.formatMessage({ id: "actions.unpin" })
+            : intl.formatMessage({ id: "actions.pin" })
+        }
       >
         <PinIcon />
       </Button>

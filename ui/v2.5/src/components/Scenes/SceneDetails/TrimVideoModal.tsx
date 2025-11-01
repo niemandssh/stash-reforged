@@ -26,11 +26,13 @@ function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   }
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  return `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
 export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
@@ -48,9 +50,7 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
   const [startTime, setStartTime] = useState<number | null>(
     scene.start_time || null
   );
-  const [endTime, setEndTime] = useState<number | null>(
-    scene.end_time || null
-  );
+  const [endTime, setEndTime] = useState<number | null>(scene.end_time || null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -60,7 +60,10 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
   // Check if start_time or end_time are set
   const hasTrimTimes = scene.start_time !== null || scene.end_time !== null;
 
-  const validateTimes = (start: number | null, end: number | null): string | null => {
+  const validateTimes = (
+    start: number | null,
+    end: number | null
+  ): string | null => {
     // At least one time must be set
     if (start === null && end === null) {
       return intl.formatMessage({ id: "dialogs.trim_video.select_required" });
@@ -72,7 +75,9 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
         return "Start time cannot be negative";
       }
       if (start >= originalDuration) {
-        return `Start time cannot be greater than or equal to video duration (${formatTime(originalDuration)})`;
+        return `Start time cannot be greater than or equal to video duration (${formatTime(
+          originalDuration
+        )})`;
       }
     }
 
@@ -82,7 +87,9 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
         return "End time must be greater than 0";
       }
       if (end > originalDuration) {
-        return `End time cannot be greater than video duration (${formatTime(originalDuration)})`;
+        return `End time cannot be greater than video duration (${formatTime(
+          originalDuration
+        )})`;
       }
     }
 
@@ -114,7 +121,9 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
 
     // At least one time must be set
     if (startTime === null && endTime === null) {
-      Toast.error(intl.formatMessage({ id: "dialogs.trim_video.select_required" }));
+      Toast.error(
+        intl.formatMessage({ id: "dialogs.trim_video.select_required" })
+      );
       return;
     }
 
@@ -150,7 +159,7 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
 
   if (showConfirm) {
     if (startTime === null || endTime === null) return null;
-    
+
     const trimDuration = endTime - startTime;
     const removedFromEnd = originalDuration - endTime;
 
@@ -190,17 +199,25 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
             <FormattedMessage id="dialogs.trim_video.temp_path_label" />
           </strong>
           <br />
-          <a 
-            href={`file://${configuration?.general?.generatedPath ? 
-              configuration.general.generatedPath.substring(0, configuration.general.generatedPath.lastIndexOf('/')) + '/temp' : 
-              './temp'}`} 
-            target="_blank" 
+          <a
+            href={`file://${
+              configuration?.general?.generatedPath
+                ? configuration.general.generatedPath.substring(
+                    0,
+                    configuration.general.generatedPath.lastIndexOf("/")
+                  ) + "/temp"
+                : "./temp"
+            }`}
+            target="_blank"
             rel="noopener noreferrer"
-            style={{ fontWeight: 'bold', textDecoration: 'underline' }}
+            style={{ fontWeight: "bold", textDecoration: "underline" }}
           >
-            {configuration?.general?.generatedPath ? 
-              configuration.general.generatedPath.substring(0, configuration.general.generatedPath.lastIndexOf('/')) + '/temp' : 
-              './temp'}
+            {configuration?.general?.generatedPath
+              ? configuration.general.generatedPath.substring(
+                  0,
+                  configuration.general.generatedPath.lastIndexOf("/")
+                ) + "/temp"
+              : "./temp"}
           </a>
         </p>
       </ModalComponent>
@@ -226,7 +243,8 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
       <Form>
         {hasTrimTimes && (
           <Alert variant="warning">
-            <strong>Warning:</strong> <FormattedMessage id="dialogs.trim_video.warning_text" />
+            <strong>Warning:</strong>{" "}
+            <FormattedMessage id="dialogs.trim_video.warning_text" />
           </Alert>
         )}
 
@@ -235,7 +253,6 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
             <FormattedMessage id="dialogs.trim_video.disabled_message" />
           </Alert>
         )}
-
 
         {scene.files.length > 1 && (
           <Form.Group controlId="file-select" as={Row}>
@@ -252,8 +269,8 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
               >
                 {scene.files.map((file) => (
                   <option key={file.id} value={file.id}>
-                    {file.path ? file.path.split('/').pop() : 'Unknown file'} ({file.width}x{file.height} -{" "}
-                    {formatFileSize(file.size)})
+                    {file.path ? file.path.split("/").pop() : "Unknown file"} (
+                    {file.width}x{file.height} - {formatFileSize(file.size)})
                   </option>
                 ))}
               </Form.Control>
@@ -266,7 +283,9 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
             <strong>
               <FormattedMessage id="file" />:{" "}
             </strong>
-            {selectedFile.path ? selectedFile.path.split('/').pop() : 'Unknown file'}
+            {selectedFile.path
+              ? selectedFile.path.split("/").pop()
+              : "Unknown file"}
             <br />
             <strong>
               <FormattedMessage id="dialogs.trim_video.original_duration" />:{" "}
@@ -319,7 +338,6 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
             {formatTime(originalDuration)}
           </Alert>
         )}
-
       </Form>
     </ModalComponent>
   );

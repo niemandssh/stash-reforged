@@ -129,7 +129,7 @@ func (t *ConvertToMP4Task) Execute(ctx context.Context, progress *job.Progress) 
 // For backward compatibility
 func (t *ConvertToMP4Task) Start(ctx context.Context) {
 	progress := &job.Progress{}
-	t.Execute(ctx, progress)
+	_ = t.Execute(ctx, progress)
 }
 
 func (t *ConvertToMP4Task) needsConversion(f *models.VideoFile) bool {

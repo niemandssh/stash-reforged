@@ -11,7 +11,10 @@ import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { DeleteFilesDialog } from "src/components/Shared/DeleteFilesDialog";
 import { ReassignFilesDialog } from "src/components/Shared/ReassignFilesDialog";
 import * as GQL from "src/core/generated-graphql";
-import { mutateSceneSetPrimaryFile, useOpenInExternalPlayer } from "src/core/StashService";
+import {
+  mutateSceneSetPrimaryFile,
+  useOpenInExternalPlayer,
+} from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import NavUtils from "src/utils/navigation";
 import TextUtils from "src/utils/text";
@@ -31,28 +34,33 @@ interface IFileInfoPanelProps {
   loading?: boolean;
 }
 
-const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
-  props: IFileInfoPanelProps
-) => {
+const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
+  sceneID,
+  file,
+  primary,
+  ofMany,
+  onSetPrimaryFile,
+  onDeleteFile,
+  onReassign,
+  loading,
+}) => {
   const intl = useIntl();
   const history = useHistory();
   const Toast = useToast();
   const [openInExternalPlayer] = useOpenInExternalPlayer();
 
   // TODO - generalise fingerprints
-  const oshash = props.file.fingerprints.find((f) => f.type === "oshash");
-  const phash = props.file.fingerprints.find((f) => f.type === "phash");
-  const checksum = props.file.fingerprints.find((f) => f.type === "md5");
+  const oshash = file.fingerprints.find((f) => f.type === "oshash");
+  const phash = file.fingerprints.find((f) => f.type === "phash");
+  const checksum = file.fingerprints.find((f) => f.type === "md5");
 
   function onSplit() {
-    history.push(
-      `/scenes/new?from_scene_id=${props.sceneID}&file_id=${props.file.id}`
-    );
+    history.push(`/scenes/new?from_scene_id=${sceneID}&file_id=${file.id}`);
   }
 
   async function onOpenExternalPlayer() {
     try {
-      await openInExternalPlayer({ variables: { id: props.sceneID } });
+      await openInExternalPlayer({ variables: { id: sceneID } });
       Toast.success("Opened in external player");
     } catch (e) {
       Toast.error(e);
@@ -62,7 +70,7 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
   return (
     <div>
       <dl className="container scene-file-info details-list">
-        {props.primary && (
+        {primary && (
           <>
             <dt></dt>
             <dd className="primary-file">
@@ -83,8 +91,8 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
         />
         <URLField
           id="path"
-          url={`file://${props.file.path}`}
-          value={`file://${props.file.path}`}
+          url={`file://${file.path}`}
+          value={`file://${file.path}`}
         />
         <>
           <dt>
@@ -103,37 +111,37 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
         </>
         <TextField id="filesize">
           <span className="text-truncate">
-            <FileSize size={props.file.size} />
+            <FileSize size={file.size} />
           </span>
         </TextField>
         <TextField id="file_mod_time">
           <FormattedTime
             dateStyle="medium"
             timeStyle="medium"
-            value={props.file.mod_time ?? 0}
+            value={file.mod_time ?? 0}
           />
         </TextField>
         <TextField
           id="duration"
-          value={TextUtils.secondsToTimestamp(props.file.duration ?? 0)}
+          value={TextUtils.secondsToTimestamp(file.duration ?? 0)}
           truncate
         />
         <TextField
           id="dimensions"
-          value={`${props.file.width} x ${props.file.height}`}
+          value={`${file.width} x ${file.height}`}
           truncate
         />
         <TextField id="framerate">
           <FormattedMessage
             id="frames_per_second"
-            values={{ value: intl.formatNumber(props.file.frame_rate ?? 0) }}
+            values={{ value: intl.formatNumber(file.frame_rate ?? 0) }}
           />
         </TextField>
         <TextField id="bitrate">
           <FormattedMessage
             id="megabits_per_second"
             values={{
-              value: intl.formatNumber((props.file.bit_rate ?? 0) / 1000000, {
+              value: intl.formatNumber((file.bit_rate ?? 0) / 1000000, {
                 maximumFractionDigits: 2,
               }),
             }}
@@ -141,39 +149,35 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = (
         </TextField>
         <TextField
           id="media_info.video_codec"
-          value={props.file.video_codec ?? ""}
+          value={file.video_codec ?? ""}
           truncate
         />
         <TextField
           id="media_info.audio_codec"
-          value={props.file.audio_codec ?? ""}
+          value={file.audio_codec ?? ""}
           truncate
         />
       </dl>
-      {props.ofMany && props.onSetPrimaryFile && !props.primary && (
+      {ofMany && onSetPrimaryFile && !primary && (
         <div>
           <Button
             className="edit-button"
-            disabled={props.loading}
-            onClick={props.onSetPrimaryFile}
+            disabled={loading}
+            onClick={onSetPrimaryFile}
           >
             <FormattedMessage id="actions.make_primary" />
           </Button>
           <Button
             className="edit-button"
-            disabled={props.loading}
-            onClick={props.onReassign}
+            disabled={loading}
+            onClick={onReassign}
           >
             <FormattedMessage id="actions.reassign" />
           </Button>
           <Button className="edit-button" onClick={onSplit}>
             <FormattedMessage id="actions.split" />
           </Button>
-          <Button
-            variant="danger"
-            disabled={props.loading}
-            onClick={props.onDeleteFile}
-          >
+          <Button variant="danger" disabled={loading} onClick={onDeleteFile}>
             <FormattedMessage id="actions.delete_file" />
           </Button>
         </div>
@@ -246,39 +250,37 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
     }
   }
 
+  const { scene, onRefetch } = props;
   const filesPanel = useMemo(() => {
-    if (props.scene.files.length === 0) {
+    if (scene.files.length === 0) {
       return;
     }
 
-    if (props.scene.files.length === 1) {
-      return (
-        <FileInfoPanel sceneID={props.scene.id} file={props.scene.files[0]} />
-      );
+    if (scene.files.length === 1) {
+      return <FileInfoPanel sceneID={scene.id} file={scene.files[0]} />;
     }
 
     async function onSetPrimaryFile(fileID: string) {
       try {
         setLoading(true);
-        await mutateSceneSetPrimaryFile(props.scene.id, fileID);
-        
+        await mutateSceneSetPrimaryFile(scene.id, fileID);
+
         // Get the file name for the success message
-        const targetFile = props.scene.files.find(f => f.id === fileID);
-        const fileName = targetFile ? TextUtils.fileNameFromPath(targetFile.path) : "Unknown file";
-        
+        const targetFile = scene.files.find((f) => f.id === fileID);
+        const fileName = targetFile
+          ? TextUtils.fileNameFromPath(targetFile.path)
+          : "Unknown file";
+
         // Refetch the scene data to update the UI
-        if (props.onRefetch) {
-          await props.onRefetch();
+        if (onRefetch) {
+          await onRefetch();
         }
-        
+
         Toast.success(
-          intl.formatMessage(
-            { id: "toast.primary_file_set" },
-            { fileName }
-          )
+          intl.formatMessage({ id: "toast.primary_file_set" }, { fileName })
         );
       } catch (e) {
-        console.error('Error setting primary file:', e);
+        console.error("Error setting primary file:", e);
         Toast.error(
           intl.formatMessage(
             { id: "toast.error_setting_primary_file" },
@@ -291,12 +293,12 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
     }
 
     return (
-      <Accordion defaultActiveKey={props.scene.files[0].id}>
+      <Accordion defaultActiveKey={scene.files[0].id}>
         {deletingFile && (
           <DeleteFilesDialog
             onClose={() => setDeletingFile(undefined)}
             selected={[deletingFile]}
-            onRefetch={props.onRefetch}
+            onRefetch={onRefetch}
           />
         )}
         {reassigningFile && (
@@ -305,7 +307,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
             selected={reassigningFile}
           />
         )}
-        {props.scene.files.map((file, index) => (
+        {scene.files.map((file, index) => (
           <Card key={file.id} className="scene-file-card">
             <Accordion.Toggle as={Card.Header} eventKey={file.id}>
               <TruncatedText text={TextUtils.fileNameFromPath(file.path)} />
@@ -313,7 +315,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
             <Accordion.Collapse eventKey={file.id}>
               <Card.Body>
                 <FileInfoPanel
-                  sceneID={props.scene.id}
+                  sceneID={scene.id}
                   file={file}
                   primary={index === 0}
                   ofMany
@@ -328,7 +330,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
         ))}
       </Accordion>
     );
-  }, [props.scene, loading, Toast, deletingFile, reassigningFile]);
+  }, [scene, loading, Toast, deletingFile, reassigningFile, intl, onRefetch]);
 
   return (
     <>

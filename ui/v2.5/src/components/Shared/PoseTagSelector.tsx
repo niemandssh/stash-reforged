@@ -7,7 +7,11 @@ import { queryFindTags } from "src/core/StashService";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { PoseTagIcon } from "./PoseTagIcon";
 import { Icon } from "./Icon";
-import { faCheck, faChevronDown, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCheck,
+  faChevronDown,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface IPoseTagSelectorProps {
   selectedTagIds: string[];
@@ -24,7 +28,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const [poseTags, setPoseTags] = useState<GQL.Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const STORAGE_KEY = 'pose-tag-selector-collapsed';
+  const STORAGE_KEY = "pose-tag-selector-collapsed";
   const isMountedRef = useRef(true);
 
   // Load collapsed state from localStorage on component mount
@@ -61,12 +65,13 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         const criterion = filter.makeCriterion("is_pose_tag");
         criterion.setFromSavedCriterion({
           modifier: GQL.CriterionModifier.Equals,
-          value: "true"
+          value: "true",
         });
         filter.criteria.push(criterion);
 
         const result = await queryFindTags(filter);
-        const loadedPoseTags = result.data.findTags.tags as unknown as GQL.Tag[];
+        const loadedPoseTags = result.data.findTags
+          .tags as unknown as GQL.Tag[];
 
         const sortedPoseTags = [...loadedPoseTags].sort((a, b) => {
           const aCount = a.scene_count || 0;
@@ -92,12 +97,14 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
   const handleTagToggle = (tagId: string) => {
     if (disabled) return;
 
-    const validSelectedTagIds = selectedTagIds.filter(id => id && typeof id === 'string');
+    const validSelectedTagIds = selectedTagIds.filter(
+      (id) => id && typeof id === "string"
+    );
     const isSelected = validSelectedTagIds.includes(tagId);
 
     let newSelection;
     if (isSelected) {
-      newSelection = validSelectedTagIds.filter(id => id !== tagId);
+      newSelection = validSelectedTagIds.filter((id) => id !== tagId);
     } else {
       newSelection = [...validSelectedTagIds, tagId];
     }
@@ -116,7 +123,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         <Form.Label
           className="pose-tag-selector-header"
           onClick={toggleCollapsed}
-          style={{ cursor: 'pointer', userSelect: 'none' }}
+          style={{ cursor: "pointer", userSelect: "none" }}
         >
           <Icon
             icon={isCollapsed ? faChevronRight : faChevronDown}
@@ -136,7 +143,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
       <Form.Label
         className="pose-tag-selector-header"
         onClick={toggleCollapsed}
-        style={{ cursor: 'pointer', userSelect: 'none' }}
+        style={{ cursor: "pointer", userSelect: "none" }}
       >
         <Icon
           icon={isCollapsed ? faChevronRight : faChevronDown}
@@ -144,21 +151,25 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         />
         <FormattedMessage id="pose_tags" />
       </Form.Label>
-      <div 
-        className={`pose-tag-list ${isCollapsed ? 'collapsed' : 'expanded'}`}
+      <div
+        className={`pose-tag-list ${isCollapsed ? "collapsed" : "expanded"}`}
         style={{
-          maxHeight: isCollapsed ? '0' : '225px',
-          overflow: 'hidden',
-          transition: 'max-height 0.3s ease-in-out'
+          maxHeight: isCollapsed ? "0" : "225px",
+          overflow: "hidden",
+          transition: "max-height 0.3s ease-in-out",
         }}
       >
         <ListGroup variant="flush">
           {poseTags.map((tag) => {
-            const isSelected = selectedTagIds.filter(id => id && typeof id === 'string').includes(tag.id);
+            const isSelected = selectedTagIds
+              .filter((id) => id && typeof id === "string")
+              .includes(tag.id);
             return (
               <ListGroup.Item
                 key={tag.id}
-                className={`pose-tag-item ${isSelected ? "selected" : ""} ${disabled ? "disabled" : ""}`}
+                className={`pose-tag-item ${isSelected ? "selected" : ""} ${
+                  disabled ? "disabled" : ""
+                }`}
                 onClick={() => handleTagToggle(tag.id)}
                 style={{ cursor: disabled ? "default" : "pointer" }}
               >
@@ -170,7 +181,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
                         alt={tag.name}
                         className="pose-tag-image"
                         onClick={(e) => handleImageClick(e, tag.id)}
-                        style={{ cursor: 'pointer' }}
+                        style={{ cursor: "pointer" }}
                       />
                     ) : (
                       <PoseTagIcon className="pose-icon" />
@@ -196,9 +207,7 @@ export const PoseTagSelector: React.FC<IPoseTagSelectorProps> = ({
         </ListGroup>
         {poseTags.length === 0 && (
           <div className="text-center text-muted p-3">
-            <FormattedMessage
-              id="no_pose_tags_found"
-            />
+            <FormattedMessage id="no_pose_tags_found" />
           </div>
         )}
       </div>

@@ -144,9 +144,5 @@ export const GalleryFileInfoPanel: React.FC<IGalleryFileInfoPanelProps> = (
     );
   }, [props.gallery, loading, Toast, deletingFile]);
 
-  return (
-    <>
-      {filesPanel}
-    </>
-  );
+  return <>{filesPanel}</>;
 };

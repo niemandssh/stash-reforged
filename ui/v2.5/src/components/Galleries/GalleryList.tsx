@@ -7,7 +7,11 @@ import * as GQL from "src/core/generated-graphql";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
-import { queryFindGalleries, useFindGalleries, getClient } from "src/core/StashService";
+import {
+  queryFindGalleries,
+  useFindGalleries,
+  getClient,
+} from "src/core/StashService";
 import GalleryWallCard from "./GalleryWallCard";
 import { EditGalleriesDialog } from "./EditGalleriesDialog";
 import { DeleteGalleriesDialog } from "./DeleteGalleriesDialog";
@@ -49,21 +53,37 @@ export const GalleryList: React.FC<IGalleryList> = ({
     },
     {
       text: intl.formatMessage({ id: "actions.export" }),
-      onClick: onExport,
+      onClick: async () => {
+        onExport();
+      },
       isDisplayed: showWhenSelected,
     },
     {
       text: intl.formatMessage({ id: "actions.export_all" }),
-      onClick: onExportAll,
+      onClick: async () => {
+        onExportAll();
+      },
     },
     {
       text: intl.formatMessage({ id: "actions.pin" }),
-      onClick: (selectedIds: string[]) => onPinSelected(selectedIds),
+      onClick: async (
+        _result: GQL.FindGalleriesQueryResult,
+        _filter: ListFilterModel,
+        selectedIds: Set<string>
+      ) => {
+        onPinSelected(Array.from(selectedIds));
+      },
       isDisplayed: showWhenSelected,
     },
     {
       text: intl.formatMessage({ id: "actions.unpin" }),
-      onClick: (selectedIds: string[]) => onUnpinSelected(selectedIds),
+      onClick: async (
+        _result: GQL.FindGalleriesQueryResult,
+        _filter: ListFilterModel,
+        selectedIds: Set<string>
+      ) => {
+        onUnpinSelected(Array.from(selectedIds));
+      },
       isDisplayed: showWhenSelected,
     },
   ];
@@ -114,7 +134,7 @@ export const GalleryList: React.FC<IGalleryList> = ({
 
   function onPinSelected(selectedIds: string[]) {
     const client = getClient();
-    const updatePromises = selectedIds.map(galleryId =>
+    const updatePromises = selectedIds.map((galleryId) =>
       client.mutate({
         mutation: GQL.BulkGalleryUpdateDocument,
         variables: {
@@ -126,14 +146,14 @@ export const GalleryList: React.FC<IGalleryList> = ({
       })
     );
 
-    Promise.all(updatePromises).catch(error => {
+    Promise.all(updatePromises).catch((error) => {
       console.error("Error pinning galleries:", error);
     });
   }
 
   function onUnpinSelected(selectedIds: string[]) {
     const client = getClient();
-    const updatePromises = selectedIds.map(galleryId =>
+    const updatePromises = selectedIds.map((galleryId) =>
       client.mutate({
         mutation: GQL.BulkGalleryUpdateDocument,
         variables: {
@@ -145,7 +165,7 @@ export const GalleryList: React.FC<IGalleryList> = ({
       })
     );
 
-    Promise.all(updatePromises).catch(error => {
+    Promise.all(updatePromises).catch((error) => {
       console.error("Error unpinning galleries:", error);
     });
   }

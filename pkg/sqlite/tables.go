@@ -36,6 +36,7 @@ var (
 	performersStashIDsJoinTable = goqu.T("performer_stash_ids")
 	performersCustomFieldsTable = goqu.T("performer_custom_fields")
 
+	// nolint:unused // kept for potential future use
 	performerProfileImagesJoinTable = goqu.T(performerProfileImagesTable)
 
 	studiosAliasesJoinTable  = goqu.T(studioAliasesTable)
@@ -327,6 +328,7 @@ var (
 		},
 	}
 
+	// nolint:unused // kept for potential future use
 	performerProfileImagesTableMgr = &table{
 		table:    performerProfileImagesJoinTable,
 		idColumn: performerProfileImagesJoinTable.Col(performerProfileImageIDColumn),

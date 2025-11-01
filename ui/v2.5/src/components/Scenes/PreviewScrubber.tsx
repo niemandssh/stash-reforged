@@ -7,7 +7,6 @@ import React, {
 } from "react";
 import { useSpriteInfo } from "src/hooks/sprite";
 import { useThrottle } from "src/hooks/throttle";
-import TextUtils from "src/utils/text";
 import { HoverScrubber } from "../Shared/HoverScrubber";
 
 interface IScenePreviewProps {

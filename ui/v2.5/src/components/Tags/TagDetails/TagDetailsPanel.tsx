@@ -75,7 +75,6 @@ export const TagDetailsPanel: React.FC<ITagDetails> = ({ tag, fullWidth }) => {
 };
 
 export const CompressedTagDetailsPanel: React.FC<ITagDetails> = ({ tag }) => {
-  
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }

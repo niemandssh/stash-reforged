@@ -33,7 +33,12 @@ const sortByOptions = ["filesize", "file_count", "date", ...MediaSortByOptions]
       value: "o_counter",
     },
   ]);
-const displayModeOptions = [DisplayMode.Grid, DisplayMode.Wall, DisplayMode.Slideshow, DisplayMode.Web];
+const displayModeOptions = [
+  DisplayMode.Grid,
+  DisplayMode.Wall,
+  DisplayMode.Slideshow,
+  DisplayMode.Web,
+];
 const criterionOptions = [
   createStringCriterionOption("title"),
   createStringCriterionOption("code", "scene_code"),

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react';
-import { Tag } from 'src/components/Tags/TagSelect';
+import { useEffect, useState, useCallback } from "react";
+import { Tag } from "src/components/Tags/TagSelect";
 
 interface ITagsHistoryState {
   tags: Tag[];
@@ -7,7 +7,7 @@ interface ITagsHistoryState {
 }
 
 const MAX_HISTORY_SIZE = 100;
-const STORAGE_KEY_PREFIX = 'scene-tags-history-';
+const STORAGE_KEY_PREFIX = "scene-tags-history-";
 
 export function useTagsHistory(sceneId: string | undefined) {
   const [history, setHistory] = useState<ITagsHistoryState[]>([]);
@@ -26,43 +26,49 @@ export function useTagsHistory(sceneId: string | undefined) {
         setCurrentIndex(parsedHistory.length - 1);
       }
     } catch (error) {
-      console.error('Error loading tags history from localStorage:', error);
+      console.error("Error loading tags history from localStorage:", error);
     }
   }, [storageKey]);
 
-  const saveToStorage = useCallback((newHistory: ITagsHistoryState[]) => {
-    if (!storageKey) return;
+  const saveToStorage = useCallback(
+    (newHistory: ITagsHistoryState[]) => {
+      if (!storageKey) return;
 
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(newHistory));
-    } catch (error) {
-      console.error('Error saving tags history to localStorage:', error);
-    }
-  }, [storageKey]);
-
-  const addToHistory = useCallback((tags: Tag[]) => {
-    const newState: ITagsHistoryState = {
-      tags: [...tags],
-      timestamp: Date.now()
-    };
-
-    setHistory(prevHistory => {
-      const newHistory = prevHistory.slice(0, currentIndex + 1);
-
-      newHistory.push(newState);
-
-      if (newHistory.length > MAX_HISTORY_SIZE) {
-        newHistory.shift();
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(newHistory));
+      } catch (error) {
+        console.error("Error saving tags history to localStorage:", error);
       }
+    },
+    [storageKey]
+  );
 
-      const newIndex = newHistory.length - 1;
-      setCurrentIndex(newIndex);
+  const addToHistory = useCallback(
+    (tags: Tag[]) => {
+      const newState: ITagsHistoryState = {
+        tags: [...tags],
+        timestamp: Date.now(),
+      };
 
-      saveToStorage(newHistory);
+      setHistory((prevHistory) => {
+        const newHistory = prevHistory.slice(0, currentIndex + 1);
 
-      return newHistory;
-    });
-  }, [currentIndex, saveToStorage]);
+        newHistory.push(newState);
+
+        if (newHistory.length > MAX_HISTORY_SIZE) {
+          newHistory.shift();
+        }
+
+        const newIndex = newHistory.length - 1;
+        setCurrentIndex(newIndex);
+
+        saveToStorage(newHistory);
+
+        return newHistory;
+      });
+    },
+    [currentIndex, saveToStorage]
+  );
 
   const undo = useCallback(() => {
     if (currentIndex > 0) {
@@ -100,6 +106,6 @@ export function useTagsHistory(sceneId: string | undefined) {
     clearHistory,
     canUndo,
     canRedo,
-    currentTags: currentIndex >= 0 ? history[currentIndex]?.tags : null
+    currentTags: currentIndex >= 0 ? history[currentIndex]?.tags : null,
   };
 }

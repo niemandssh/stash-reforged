@@ -4,10 +4,14 @@ import Cropper from "cropperjs";
 import { faStar, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Icon } from "src/components/Shared/Icon";
 import { ImageInput } from "src/components/Shared/ImageInput";
-import { usePerformerProfileImageUpdate, usePerformerProfileImageCreate } from "src/core/StashService";
+import {
+  usePerformerProfileImageUpdate,
+  usePerformerProfileImageCreate,
+} from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import { useIntl } from "react-intl";
 import ImageUtils from "src/utils/image";
+import * as GQL from "src/core/generated-graphql";
 
 interface IProfileImageCropperProps {
   imageSrc: string;
@@ -19,10 +23,12 @@ interface IProfileImageCropperProps {
   onAddImage?: () => void;
   onImageClick?: (e: React.MouseEvent) => void;
   onImageChange?: (index: number) => void;
-  profileImages?: any[];
+  profileImages?: GQL.PerformerProfileImage[];
   setImage?: (image?: string | null) => void;
   setEncodingImage?: (loading: boolean) => void;
-  onPerformerUpdate?: (updatedPerformer: Partial<any>) => void;
+  onPerformerUpdate?: (
+    updatedPerformer: Partial<GQL.PerformerDataFragment>
+  ) => void;
   onSetPrimary?: (imageId: string, index: number) => void;
   onDeleteImage?: (imageId: string, index: number) => void;
 }
@@ -34,7 +40,6 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
   isNew = false,
   onCroppingChange,
   onImageUpdate,
-  onAddImage,
   onImageClick,
   onImageChange,
   profileImages = [],
@@ -89,9 +94,15 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
       ready() {
         setCropperReady(true);
       },
-      crop(e: { detail: { x: number; y: number; width: number; height: number } }) {
+      crop(e: {
+        detail: { x: number; y: number; width: number; height: number };
+      }) {
         setCropInfo(
-          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(e.detail.y)}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(e.detail.height)}px`
+          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(
+            e.detail.y
+          )}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(
+            e.detail.height
+          )}px`
         );
       },
     };
@@ -105,7 +116,6 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
       evt.stopPropagation();
     }
   };
-
 
   const handleImageUpload = async (imageData: string | null) => {
     if (!imageData) {
@@ -140,7 +150,9 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
           intl.formatMessage(
             { id: "toast.created_entity" },
             {
-              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+              entity: `${intl
+                .formatMessage({ id: "image" })
+                .toLocaleLowerCase()} ${newImageIndex}`,
             }
           )
         );
@@ -150,7 +162,9 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
         const updatedProfileImages = [...profileImages, newProfileImage];
         const updatedPerformer = {
           profile_images: updatedProfileImages,
-          primary_image_path: newProfileImage.is_primary ? newProfileImage.image_path : undefined,
+          primary_image_path: newProfileImage.is_primary
+            ? newProfileImage.image_path
+            : undefined,
         };
         onPerformerUpdate?.(updatedPerformer);
 
@@ -169,7 +183,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
       Toast.error(
         intl.formatMessage({
           id: "toast.upload_failed",
-          defaultMessage: "Failed to add image"
+          defaultMessage: "Failed to add image",
         })
       );
 
@@ -196,11 +210,12 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     setCropping(false);
     setCropperReady(false);
     onCroppingChange?.(false);
-    const cropInfoText = cropInfo;
     setCropInfo("");
 
     try {
-      const croppedCanvas = (cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }).getCroppedCanvas();
+      const croppedCanvas = (
+        cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }
+      ).getCroppedCanvas();
 
       if (!croppedCanvas) {
         throw new Error("Failed to get cropped canvas");
@@ -244,35 +259,38 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
     }
   };
 
-  const hasNoImages = (!profileImages || profileImages.length === 0) && !imageSrc;
-  const currentImageIndex = profileImages?.findIndex(img => img.id === profileImageId.toString()) ?? -1;
-  const currentImage = profileImages?.find(img => img.id === profileImageId.toString());
+  const currentImageIndex =
+    profileImages?.findIndex((img) => img.id === profileImageId.toString()) ??
+    -1;
+  const currentImage = profileImages?.find(
+    (img) => img.id === profileImageId.toString()
+  );
 
   const showAddImageOnly = !imageSrc;
   const hasImageToEdit = !!imageSrc;
 
   return (
-    <div className="image-cropper-container" style={{ pointerEvents: 'auto' }}>
+    <div className="image-cropper-container" style={{ pointerEvents: "auto" }}>
       <div
         className="detail-header-image"
-        style={{ flexDirection: "column", pointerEvents: 'auto' }}
+        style={{ flexDirection: "column", pointerEvents: "auto" }}
         onClick={onImageClick}
       >
         <div
           className="background-image"
           style={{
             backgroundImage: `url(${imageSrc})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            filter: 'blur(10px)',
-            transform: 'scale(1.1)'
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            filter: "blur(10px)",
+            transform: "scale(1.1)",
           }}
         />
         <img
           src={imageSrc}
           crossOrigin="anonymous"
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           alt="hidden"
         />
 
@@ -290,24 +308,32 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
       </div>
 
       {(showAddImageOnly || hasImageToEdit) && (
-        <div className={`crop-btn-container ${cropping ? 'is-cropping' : ''} ${showAddImageOnly ? 'add-only' : ''}`}>
-        {!showAddImageOnly && (
-          <Button
-            className="crop-start"
-            variant="secondary"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCropStart();
-            }}
-            style={{ display: cropping ? "none" : "inline-block" }}
-          >
-            Crop Image
-          </Button>
-        )}
+        <div
+          className={`crop-btn-container ${cropping ? "is-cropping" : ""} ${
+            showAddImageOnly ? "add-only" : ""
+          }`}
+        >
+          {!showAddImageOnly && (
+            <Button
+              className="crop-start"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCropStart();
+              }}
+              style={{ display: cropping ? "none" : "inline-block" }}
+            >
+              Crop Image
+            </Button>
+          )}
 
           <div
             className="add-image-btn"
-            style={{ display: cropping ? "none" : "flex", marginLeft: "8px", gap: "8px" }}
+            style={{
+              display: cropping ? "none" : "flex",
+              marginLeft: "8px",
+              gap: "8px",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             {showAddImageOnly ? (
@@ -337,7 +363,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
                     style={{ display: cropping ? "none" : "inline-block" }}
                     title={intl.formatMessage({
                       id: "actions.set_as_primary",
-                      defaultMessage: "Set as primary"
+                      defaultMessage: "Set as primary",
                     })}
                   >
                     <Icon icon={faStar} />
@@ -352,10 +378,13 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
                       onDeleteImage?.(currentImage.id, currentImageIndex);
                     }}
                     style={{ display: cropping ? "none" : "inline-block" }}
-                    title={intl.formatMessage({
-                      id: "actions.delete_entity",
-                      defaultMessage: "Delete {entityType}",
-                    }, { entityType: intl.formatMessage({ id: "image" }) })}
+                    title={intl.formatMessage(
+                      {
+                        id: "actions.delete_entity",
+                        defaultMessage: "Delete {entityType}",
+                      },
+                      { entityType: intl.formatMessage({ id: "image" }) }
+                    )}
                   >
                     <Icon icon={faTrash} />
                   </Button>
@@ -364,31 +393,33 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
             )}
           </div>
 
-        <Button
-          className="crop-cancel"
-          variant="danger"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCropCancel();
-          }}
-          style={{ display: cropping ? "inline-block" : "none" }}
-        >
-          Cancel
-        </Button>
+          <Button
+            className="crop-cancel"
+            variant="danger"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCropCancel();
+            }}
+            style={{ display: cropping ? "inline-block" : "none" }}
+          >
+            Cancel
+          </Button>
 
-        <Button
-          className="crop-accept"
-          variant="success"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCropAccept();
-          }}
-          style={{ display: cropping && cropperReady ? "inline-block" : "none" }}
-        >
-          OK
-        </Button>
+          <Button
+            className="crop-accept"
+            variant="success"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCropAccept();
+            }}
+            style={{
+              display: cropping && cropperReady ? "inline-block" : "none",
+            }}
+          >
+            OK
+          </Button>
 
-        {cropInfo && <p>{cropInfo}</p>}
+          {cropInfo && <p>{cropInfo}</p>}
         </div>
       )}
     </div>

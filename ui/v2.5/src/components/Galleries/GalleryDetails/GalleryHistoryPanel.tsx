@@ -73,11 +73,7 @@ const HistoryMenu: React.FC<{
   hasHistory: boolean;
   onAddDate: () => void;
   onClearDates: () => void;
-}> = ({
-  hasHistory,
-  onAddDate,
-  onClearDates,
-}) => {
+}> = ({ hasHistory, onAddDate, onClearDates }) => {
   const intl = useIntl();
 
   return (
@@ -143,7 +139,9 @@ interface IGalleryHistoryProps {
   gallery: GQL.GalleryDataFragment;
 }
 
-export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery }) => {
+export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({
+  gallery,
+}) => {
   const intl = useIntl();
 
   const [dialogs, setDialogs] = React.useState({
@@ -220,7 +218,9 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
       <>
         <AlertModal
           show={dialogs.playHistory}
-          text={intl.formatMessage({ id: "dialogs.clear_play_history_confirm" })}
+          text={intl.formatMessage({
+            id: "dialogs.clear_play_history_confirm",
+          })}
           confirmButtonText={intl.formatMessage({ id: "actions.clear" })}
           onConfirm={() => handleClearPlayDates()}
           onCancel={() => setDialogPartial({ playHistory: false })}
@@ -238,7 +238,7 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
             onClose={(t) => {
               const tt = t ? dateStringToISOString(t) : null;
               if (tt) {
-                handleAddPlayDate(tt);
+                handleAddPlayDate();
               }
               setDialogPartial({ addPlay: false });
             }}
@@ -260,8 +260,12 @@ export const GalleryHistoryPanel: React.FC<IGalleryHistoryProps> = ({ gallery })
     );
   }
 
-  const playHistory = (gallery.view_history ?? []).filter((h) => h != null) as string[];
-  const oHistory = (gallery.o_history ?? []).filter((h) => h != null) as string[];
+  const playHistory = (gallery.view_history ?? []).filter(
+    (h) => h != null
+  ) as string[];
+  const oHistory = (gallery.o_history ?? []).filter(
+    (h) => h != null
+  ) as string[];
 
   return (
     <div>

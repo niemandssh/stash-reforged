@@ -44,14 +44,14 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
       setIsWindowFocused(false);
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
-    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("blur", handleWindowBlur);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
-      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("blur", handleWindowBlur);
     };
   }, []);
 
@@ -75,15 +75,15 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
   // Handle Escape key to close overlay and cancel timer
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setTimerCancelled(true);
         onCancel();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onCancel]);
 
@@ -106,12 +106,13 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
 
   // Get filename from path for fallback title
   const getFileName = (path: string) => {
-    return path.split('/').pop()?.split('\\').pop() || '';
+    return path.split("/").pop()?.split("\\").pop() || "";
   };
 
-  const fallbackTitle = nextScene.files.length > 0
-    ? getFileName(nextScene.files[0].path)
-    : "Untitled Scene";
+  const fallbackTitle =
+    nextScene.files.length > 0
+      ? getFileName(nextScene.files[0].path)
+      : "Untitled Scene";
 
   return (
     <div className="next-scene-overlay">
@@ -139,7 +140,10 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
 
             {duration > 0 && (
               <span className="next-scene-overlay-duration">
-                {Math.floor(duration / 60)}:{Math.floor(duration % 60).toString().padStart(2, '0')}
+                {Math.floor(duration / 60)}:
+                {Math.floor(duration % 60)
+                  .toString()
+                  .padStart(2, "0")}
               </span>
             )}
           </div>
@@ -147,13 +151,18 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
           <div className="next-scene-overlay-info">
             <h2 className="next-scene-overlay-title">
               <Link to={scenePath} onClick={handleSkip}>
-                <TruncatedText text={nextScene.title || fallbackTitle} lineCount={2} />
+                <TruncatedText
+                  text={nextScene.title || fallbackTitle}
+                  lineCount={2}
+                />
               </Link>
             </h2>
 
             <div className="next-scene-overlay-meta">
               {nextScene.date && (
-                <span className="next-scene-overlay-date">{nextScene.date}</span>
+                <span className="next-scene-overlay-date">
+                  {nextScene.date}
+                </span>
               )}
 
               {nextScene.studio && nextScene.date && (
@@ -166,7 +175,8 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
                   className="next-scene-overlay-studio"
                   onClick={handleSkip}
                 >
-                  {nextScene.studio.image_path && !nextScene.studio.image_path.includes('default=true') ? (
+                  {nextScene.studio.image_path &&
+                  !nextScene.studio.image_path.includes("default=true") ? (
                     <img
                       src={nextScene.studio.image_path}
                       alt={nextScene.studio.name}
@@ -190,7 +200,10 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
                     className="next-scene-overlay-performer-chip"
                     onClick={handleSkip}
                   >
-                    <GenderIcon gender={performer.gender ?? undefined} className="next-scene-overlay-gender-icon" />
+                    <GenderIcon
+                      gender={performer.gender ?? undefined}
+                      className="next-scene-overlay-gender-icon"
+                    />
                     {performer.name}
                   </Link>
                 ))}
@@ -232,7 +245,10 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
                   title="Stop timer"
                 >
                   <Icon icon={faClock} />
-                  <FormattedMessage id="actions.stop_timer" defaultMessage="Stop timer" />
+                  <FormattedMessage
+                    id="actions.stop_timer"
+                    defaultMessage="Stop timer"
+                  />
                 </button>
               </div>
             )}

@@ -1,7 +1,6 @@
 import React from "react";
 import { Tab, Nav, Row, Col, Form } from "react-bootstrap";
-import { Redirect, useLocation } from "react-router-dom";
-import { LinkContainer } from "react-router-bootstrap";
+import { Redirect, useLocation, NavLink } from "react-router-dom";
 import { FormattedMessage } from "react-intl";
 import { Helmet } from "react-helmet";
 import { useTitleProps } from "src/hooks/title";
@@ -55,95 +54,147 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
         <Col id="settings-menu-container" sm={3} md={3} xl={2}>
           <Nav variant="pills" className="flex-column">
             <Nav.Item>
-              <LinkContainer to="/settings?tab=tasks">
-                <Nav.Link eventKey="tasks">
+              <NavLink
+                to="/settings?tab=tasks"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="tasks" as="span">
                   <FormattedMessage id="config.categories.tasks" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=custom">
-                <Nav.Link eventKey="custom">
+              <NavLink
+                to="/settings?tab=custom"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="custom" as="span">
                   <FormattedMessage id="config.categories.custom" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=library">
-                <Nav.Link eventKey="library">
+              <NavLink
+                to="/settings?tab=library"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="library" as="span">
                   <FormattedMessage id="library" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=interface">
-                <Nav.Link eventKey="interface">
+              <NavLink
+                to="/settings?tab=interface"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="interface" as="span">
                   <FormattedMessage id="config.categories.interface" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=security">
-                <Nav.Link eventKey="security">
+              <NavLink
+                to="/settings?tab=security"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="security" as="span">
                   <FormattedMessage id="config.categories.security" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=metadata-providers">
-                <Nav.Link eventKey="metadata-providers">
+              <NavLink
+                to="/settings?tab=metadata-providers"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="metadata-providers" as="span">
                   <FormattedMessage id="config.categories.metadata_providers" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=services">
-                <Nav.Link eventKey="services">
+              <NavLink
+                to="/settings?tab=services"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="services" as="span">
                   <FormattedMessage id="config.categories.services" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=system">
-                <Nav.Link eventKey="system">
+              <NavLink
+                to="/settings?tab=system"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="system" as="span">
                   <FormattedMessage id="config.categories.system" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=plugins">
-                <Nav.Link eventKey="plugins">
+              <NavLink
+                to="/settings?tab=plugins"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="plugins" as="span">
                   <FormattedMessage id="config.categories.plugins" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=logs">
-                <Nav.Link eventKey="logs">
+              <NavLink
+                to="/settings?tab=logs"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="logs" as="span">
                   <FormattedMessage id="config.categories.logs" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=tools">
-                <Nav.Link eventKey="tools">
+              <NavLink
+                to="/settings?tab=tools"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="tools" as="span">
                   <FormattedMessage id="config.categories.tools" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=changelog">
-                <Nav.Link eventKey="changelog">
+              <NavLink
+                to="/settings?tab=changelog"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="changelog" as="span">
                   <FormattedMessage id="config.categories.changelog" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <LinkContainer to="/settings?tab=about">
-                <Nav.Link eventKey="about">
+              <NavLink
+                to="/settings?tab=about"
+                className="nav-link"
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="about" as="span">
                   <FormattedMessage id="config.categories.about" />
                 </Nav.Link>
-              </LinkContainer>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
               <div className="advanced-switch">

@@ -69,24 +69,31 @@ export const HoverPopover: React.FC<IHoverPopover> = PatchComponent(
         >
           {children}
         </div>
-        {triggerRef.current && (typeof target === 'function' ? target() : (target?.current ?? triggerRef.current)) && (
-          <Overlay
-            show={show}
-            placement={placement}
-            offset={offset}
-            container={document.body}
-            target={typeof target === 'function' ? target() : (target?.current ?? triggerRef.current)}
-          >
-            <Popover
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              id="popover"
-              className={`hover-popover-content ${popoverClassName || ''}`}
+        {triggerRef.current &&
+          (typeof target === "function"
+            ? target()
+            : target?.current ?? triggerRef.current) && (
+            <Overlay
+              show={show}
+              placement={placement}
+              offset={offset}
+              container={document.body}
+              target={
+                typeof target === "function"
+                  ? target()
+                  : target?.current ?? triggerRef.current
+              }
             >
-              {content}
-            </Popover>
-          </Overlay>
-        )}
+              <Popover
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                id="popover"
+                className={`hover-popover-content ${popoverClassName || ""}`}
+              >
+                {content}
+              </Popover>
+            </Overlay>
+          )}
       </>
     );
   }

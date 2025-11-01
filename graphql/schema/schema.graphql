@@ -321,9 +321,11 @@ type Mutation {
   sceneResetO(id: ID!): Int!
 
   "Increments the o-counter for a gallery. Returns the new value"
-  galleryIncrementO(id: ID!): Int! @deprecated(reason: "Use galleryAddO instead")
+  galleryIncrementO(id: ID!): Int!
+    @deprecated(reason: "Use galleryAddO instead")
   "Decrements the o-counter for a gallery. Returns the new value"
-  galleryDecrementO(id: ID!): Int! @deprecated(reason: "Use galleryRemoveO instead")
+  galleryDecrementO(id: ID!): Int!
+    @deprecated(reason: "Use galleryRemoveO instead")
 
   "Increments the o-counter for a gallery. Uses the current time if none provided."
   galleryAddO(id: ID!, times: [Timestamp!]): HistoryMutationResult!
@@ -416,16 +418,21 @@ type Mutation {
   galleryChapterUpdate(input: GalleryChapterUpdateInput!): GalleryChapter
   galleryChapterDestroy(id: ID!): Boolean!
 
-
   performerCreate(input: PerformerCreateInput!): Performer
   performerUpdate(input: PerformerUpdateInput!): Performer
   performerDestroy(input: PerformerDestroyInput!): Boolean!
   performersDestroy(ids: [ID!]!): Boolean!
   bulkPerformerUpdate(input: BulkPerformerUpdateInput!): [Performer!]
 
-  performerProfileImageCreate(input: PerformerProfileImageCreateInput!): PerformerProfileImage
-  performerProfileImageUpdate(input: PerformerProfileImageUpdateInput!): PerformerProfileImage
-  performerProfileImageDestroy(input: PerformerProfileImageDestroyInput!): Boolean!
+  performerProfileImageCreate(
+    input: PerformerProfileImageCreateInput!
+  ): PerformerProfileImage
+  performerProfileImageUpdate(
+    input: PerformerProfileImageUpdateInput!
+  ): PerformerProfileImage
+  performerProfileImageDestroy(
+    input: PerformerProfileImageDestroyInput!
+  ): Boolean!
 
   studioCreate(input: StudioCreateInput!): Studio
   studioUpdate(input: StudioUpdateInput!): Studio
@@ -643,7 +650,7 @@ type Mutation {
   addTempDLNAIP(input: AddTempDLNAIPInput!): Boolean!
   "Removes an IP address from the temporary DLNA whitelist"
   removeTempDLNAIP(input: RemoveTempDLNAIPInput!): Boolean!
-  
+
   "Recalculates scene similarities. Returns the job ID"
   recalculateSceneSimilarities(scene_id: ID): ID!
 

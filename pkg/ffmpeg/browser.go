@@ -82,11 +82,9 @@ func IsHLSVideo(videoCodec string, audioCodec ProbeAudioCodec, container Contain
 			if isDurationSuspicious || isExactMultiple {
 				return true
 			}
-		} else {
+		} else if isExactMultiple {
 			// For longer videos, only flag if timing is very exact (likely genuine HLS artifacts)
-			if isExactMultiple {
-				return true
-			}
+			return true
 		}
 	}
 

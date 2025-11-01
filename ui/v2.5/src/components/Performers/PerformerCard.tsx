@@ -258,11 +258,7 @@ const PerformerCardOverlays: React.FC<IPerformerCardProps> = PatchComponent(
         );
       }
 
-      return (
-        <div className="performer-card__current-age-chip">
-          {chipText}
-        </div>
-      );
+      return <div className="performer-card__current-age-chip">{chipText}</div>;
     }
 
     return (
@@ -286,12 +282,12 @@ const PerformerCardDetails: React.FC<IPerformerCardProps> = PatchComponent(
   "PerformerCard.Details",
   ({ performer, ageFromDate }) => {
     const intl = useIntl();
-    
+
     // Only show age in details if we have ageFromDate (age at production)
     let ageString = "";
     if (ageFromDate) {
       const age = TextUtils.age(performer.birthdate, ageFromDate);
-      
+
       if (age > 0) {
         const ageL10nId = "media_info.performer_card.age_context";
         const ageL10String = intl.formatMessage({
@@ -324,7 +320,9 @@ const PerformerCardImage: React.FC<IPerformerCardProps> = PatchComponent(
       <>
         <img
           loading="lazy"
-          className={`performer-card-image ${performer.death_date ? 'deceased' : ''}`}
+          className={`performer-card-image ${
+            performer.death_date ? "deceased" : ""
+          }`}
           alt={performer.name ?? ""}
           src={performer.primary_image_path ?? performer.image_path ?? ""}
         />

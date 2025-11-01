@@ -3,16 +3,16 @@ import { Button, Form } from "react-bootstrap";
 import { useIntl } from "react-intl";
 import { Icon } from "src/components/Shared/Icon";
 import { ImageInput } from "src/components/Shared/ImageInput";
-import ImageUtils from "src/utils/image";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { ProfileImageSlider } from "./ProfileImageSlider";
-import { 
+import {
   usePerformerProfileImageCreate,
   usePerformerProfileImageUpdate,
   usePerformerProfileImageDestroy,
 } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
+import ImageUtils from "src/utils/image";
 
 interface IProfileImageEditorProps {
   performer: GQL.PerformerDataFragment;
@@ -36,10 +36,8 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
 
   const profileImages = performer.profile_images || [];
 
-  function onImageChange(event: React.FormEvent<HTMLInputElement>) {
-    ImageUtils.onImageChange(event, handleImageUpload);
-  }
-
+  // This function is used by parent components but not directly in this file
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleImageUpload = async (imageData: string | null) => {
     if (!imageData) return;
 
@@ -57,30 +55,34 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
       });
 
       if (result.data?.performerProfileImageCreate) {
-        const createdImage = result.data.performerProfileImageCreate;
         const newImageIndex = profileImages.length + 1; // +1 because image is added to array after this
         Toast.success(
           intl.formatMessage(
             { id: "toast.created_entity" },
             {
-              entity: `${intl.formatMessage({ id: "image" }).toLocaleLowerCase()} ${newImageIndex}`,
+              entity: `${intl
+                .formatMessage({ id: "image" })
+                .toLocaleLowerCase()} ${newImageIndex}`,
             }
           )
         );
-        
+
         // Update the images list and set current index to the new image
-        const updatedImages = [...profileImages, result.data.performerProfileImageCreate];
+        const updatedImages = [
+          ...profileImages,
+          result.data.performerProfileImageCreate,
+        ];
         onImagesChange?.(updatedImages);
-        
+
         // Set current index to the newly created image
         setCurrentImageIndex(updatedImages.length - 1);
       }
     } catch (error) {
       console.error("Error uploading profile image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.upload_failed",
-          defaultMessage: "Upload failed" 
+          defaultMessage: "Upload failed",
         })
       );
     } finally {
@@ -97,10 +99,13 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
       });
 
       Toast.success(
-        intl.formatMessage({ 
-          id: "toast.deleted_entity",
-          defaultMessage: "Deleted {entityType}",
-        }, { entityType: intl.formatMessage({ id: "image" }) })
+        intl.formatMessage(
+          {
+            id: "toast.deleted_entity",
+            defaultMessage: "Deleted {entityType}",
+          },
+          { entityType: intl.formatMessage({ id: "image" }) }
+        )
       );
 
       const updatedImages = profileImages.filter((img) => img.id !== imageId);
@@ -113,15 +118,15 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
     } catch (error) {
       console.error("Error deleting profile image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.delete_failed",
-          defaultMessage: "Delete failed" 
+          defaultMessage: "Delete failed",
         })
       );
     }
   };
 
-  const handleSetPrimary = async (imageId: string, index: number) => {
+  const handleSetPrimary = async (imageId: string) => {
     try {
       // First, unset all other images as primary
       await Promise.all(
@@ -150,10 +155,13 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
       });
 
       Toast.success(
-        intl.formatMessage({ 
-          id: "toast.updated_entity",
-          defaultMessage: "Updated {entityType}",
-        }, { entityType: intl.formatMessage({ id: "image" }) })
+        intl.formatMessage(
+          {
+            id: "toast.updated_entity",
+            defaultMessage: "Updated {entityType}",
+          },
+          { entityType: intl.formatMessage({ id: "image" }) }
+        )
       );
 
       // Update the images list
@@ -165,9 +173,9 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
     } catch (error) {
       console.error("Error setting primary image:", error);
       Toast.error(
-        intl.formatMessage({ 
+        intl.formatMessage({
           id: "toast.update_failed",
-          defaultMessage: "Update failed" 
+          defaultMessage: "Update failed",
         })
       );
     }
@@ -180,9 +188,9 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
   return (
     <div className="profile-image-editor">
       <h6>
-        {intl.formatMessage({ 
+        {intl.formatMessage({
           id: "performer.profile_images",
-          defaultMessage: "Profile Images" 
+          defaultMessage: "Profile Images",
         })}
       </h6>
 
@@ -204,29 +212,40 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
       {/* Add New Image */}
       <Form.Group className="mb-3">
         <Form.Label>
-          {intl.formatMessage({ 
-            id: "actions.set_photo"
+          {intl.formatMessage({
+            id: "actions.set_photo",
           })}
         </Form.Label>
         <ImageInput
           isEditing={true}
-          onImageChange={onImageChange}
+          onImageChange={(event) => {
+            ImageUtils.onImageChange(
+              event as React.FormEvent<HTMLInputElement>,
+              handleImageUpload
+            );
+          }}
+          onImageURL={handleImageUpload}
         >
           <Button variant="secondary" disabled={isUploading}>
             <Icon icon={faPlus} className="me-2" />
-            {isUploading 
-              ? intl.formatMessage({ id: "actions.uploading", defaultMessage: "Uploading..." })
-              : intl.formatMessage({ id: "actions.add_image", defaultMessage: "Add Image" })
-            }
+            {isUploading
+              ? intl.formatMessage({
+                  id: "actions.uploading",
+                  defaultMessage: "Uploading...",
+                })
+              : intl.formatMessage({
+                  id: "actions.add_image",
+                  defaultMessage: "Add Image",
+                })}
           </Button>
         </ImageInput>
       </Form.Group>
 
       {profileImages.length === 0 && (
         <div className="text-muted">
-          {intl.formatMessage({ 
+          {intl.formatMessage({
             id: "performer.no_profile_images",
-            defaultMessage: "No profile images. Add your first image above." 
+            defaultMessage: "No profile images. Add your first image above.",
           })}
         </div>
       )}

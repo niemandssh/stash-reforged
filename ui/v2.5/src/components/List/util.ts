@@ -250,7 +250,7 @@ export function useListKeyboardShortcuts(props: {
 
   useEffect(() => {
     if (!currentPage || !changePage || !pages) return;
-    
+
     // Не привязываем обработчики стрелок в режиме Slideshow
     if (displayMode === DisplayMode.Slideshow) return;
 

@@ -321,20 +321,6 @@ export const ListFilter: React.FC<IListFilterProps> = ({
 }) => {
   const filterOptions = filter.options;
 
-  useEffect(() => {
-    const onReshuffleRandomSort = () => {
-      const newFilter = cloneDeep(filter);
-      newFilter.currentPage = 1;
-      newFilter.randomSeed = -1;
-      onFilterUpdate(newFilter);
-    };
-    Mousetrap.bind("r", () => onReshuffleRandomSort());
-
-    return () => {
-      Mousetrap.unbind("r");
-    };
-  }, [filter, onFilterUpdate]);
-
   function onChangePageSize(pp: number) {
     const newFilter = cloneDeep(filter);
     newFilter.itemsPerPage = pp;
@@ -360,12 +346,20 @@ export const ListFilter: React.FC<IListFilterProps> = ({
     onFilterUpdate(newFilter);
   }
 
-  function onReshuffleRandomSort() {
+  const onReshuffleRandomSort = useCallback(() => {
     const newFilter = cloneDeep(filter);
     newFilter.currentPage = 1;
     newFilter.randomSeed = -1;
     onFilterUpdate(newFilter);
-  }
+  }, [filter, onFilterUpdate]);
+
+  useEffect(() => {
+    Mousetrap.bind("r", () => onReshuffleRandomSort());
+
+    return () => {
+      Mousetrap.unbind("r");
+    };
+  }, [onReshuffleRandomSort]);
 
   function render() {
     return (

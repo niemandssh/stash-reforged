@@ -7,7 +7,7 @@ export const HeaderImage: React.FC<
   }>
 > = PatchComponent("HeaderImage", ({ children, hasImages = true }) => {
   return (
-    <div className={`detail-header-image ${!hasImages ? 'no-images' : ''}`}>
+    <div className={`detail-header-image ${!hasImages ? "no-images" : ""}`}>
       {children}
     </div>
   );

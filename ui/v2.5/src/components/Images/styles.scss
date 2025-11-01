@@ -196,13 +196,13 @@ $imageTabWidth: 450px;
 
 // Image Slideshow Styles
 .image-slideshow-container {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: calc(100vh - 200px);
   background-color: var(--bs-body-bg);
-  padding: 0;
+  display: flex;
+  height: calc(100vh - 200px);
+  justify-content: center;
   outline: none; // Убираем стандартный outline при фокусе
+  padding: 0;
 
   &:focus {
     outline: none; // Убираем outline при фокусе
@@ -210,61 +210,62 @@ $imageTabWidth: 450px;
 }
 
 .image-slideshow-empty {
-  text-align: center;
   color: $text-muted;
   font-size: 1.1rem;
+  text-align: center;
 }
 
 .image-slideshow-main {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  height: 100%;
   justify-content: center;
+  max-width: 100%;
+  position: relative;
+  width: 100%;
 }
 
 .image-slideshow-image-container {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  justify-content: center;
+  overflow: hidden;
   position: relative;
   width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
 }
 
 .image-slideshow-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
   height: auto;
+  max-height: 100%;
+  max-width: 100%;
   object-fit: contain;
+  width: auto;
 }
 
 .image-slideshow-controls {
   display: flex;
-  justify-content: center;
   gap: 0.5rem;
+  justify-content: center;
   margin-top: 1rem;
   position: absolute;
-  top: 1rem;
   right: 1rem;
+  top: 1rem;
 }
 
 .image-slideshow-control-btn {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
   background-color: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
   color: white;
+  cursor: pointer;
+  display: flex;
+  height: 40px;
+  justify-content: center;
   transition: all 0.2s ease;
+  width: 40px;
 
   &:hover:not(:disabled) {
     background-color: rgba(255, 255, 255, 0.2);
@@ -272,51 +273,48 @@ $imageTabWidth: 450px;
   }
 
   &:disabled {
-    opacity: 0.5;
     cursor: not-allowed;
+    opacity: 0.5;
   }
 }
 
-
-
 .image-slideshow-info {
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 0.375rem;
+  bottom: 1rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  margin-top: 1rem;
   gap: 0.25rem;
-  position: absolute;
-  bottom: 1rem;
   left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
+  margin-top: 1rem;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  backdrop-filter: blur(10px);
+  position: absolute;
+  transform: translateX(-50%);
 }
 
 .image-slideshow-title {
-  font-size: 1rem;
   color: white;
-  text-align: center;
+  font-size: 1rem;
   max-width: 100%;
   overflow: hidden;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-
 @media (max-width: 768px) {
   .image-slideshow-container {
-    padding: 0;
     height: calc(100vh - 150px);
+    padding: 0;
   }
 
   .image-slideshow-counter {
-    top: 0.5rem;
+    font-size: 0.8rem;
     left: 0.5rem;
     padding: 0.25rem 0.75rem;
-    font-size: 0.8rem;
+    top: 0.5rem;
   }
 
   .image-slideshow-info {
@@ -326,66 +324,67 @@ $imageTabWidth: 450px;
 }
 
 .image-web-container {
-  width: 100%;
-  height: 100%;
   background-color: var(--bs-body-bg);
-  overflow-y: auto;
+  height: 100%;
   overflow-x: hidden;
+  overflow-y: auto;
   padding: 0;
   position: relative;
+  width: 100%;
 
   &.image-web-container-fit {
     height: auto;
   }
 
   &.image-web-container-sticky {
-    position: sticky;
-    top: 0;
     height: calc(100vh - 200px);
     overflow-y: auto;
+    position: sticky;
+    top: 0;
   }
 }
 
 .image-web-empty {
-  display: flex;
-  justify-content: center;
   align-items: center;
-  height: 200px;
   color: $text-muted;
+  display: flex;
   font-size: 1.1rem;
+  height: 200px;
+  justify-content: center;
 }
 
 .image-web-list {
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 1rem;
-  padding: 1rem;
-  max-width: 100%;
-  position: relative;
   margin-top: -92px;
+  max-width: 100%;
+  padding: 1rem;
+  position: relative;
 }
 
-
 .image-web-item {
+  align-items: center;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
   margin: 0 auto;
+  width: 100%;
 }
 
 .image-web-image {
-  max-width: 100%;
-  height: auto;
-  object-fit: contain;
-  cursor: pointer;
   border-radius: 0.375rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
   transition: box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 
   &.image-web-image-fit {
@@ -394,38 +393,37 @@ $imageTabWidth: 450px;
 }
 
 .image-web-title {
-  margin-top: 0.5rem;
-  padding: 0.5rem 1rem;
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 0.375rem;
-  font-size: 0.9rem;
   color: $text-muted;
-  text-align: center;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
   max-width: 100%;
   overflow: hidden;
+  padding: 0.5rem 1rem;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .image-web-sticky-controls {
-  position: sticky;
-  top: 0;
-  z-index: 20;
+  align-items: flex-start;
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-  background: var(--bs-body-bg);
-  padding: 1rem;
-  border-bottom: 1px solid var(--bs-border-color);
   margin-bottom: 1rem;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 20;
 }
-
 
 .web-mode-controls {
   display: flex;
-  justify-content: center;
   gap: 0.5rem;
+  justify-content: center;
 }
 
 .web-display-mode-toggle {
@@ -433,18 +431,18 @@ $imageTabWidth: 450px;
   gap: 0.5rem;
 
   .web-display-mode-btn {
-    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
     color: white;
-    transition: all 0.2s ease;
-    padding: 0;
     cursor: pointer;
+    display: flex;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s ease;
+    width: 40px;
 
     &:hover:not(:disabled) {
       background-color: rgba(255, 255, 255, 0.2);
@@ -457,17 +455,16 @@ $imageTabWidth: 450px;
     }
 
     &:disabled {
-      opacity: 0.5;
       cursor: not-allowed;
+      opacity: 0.5;
     }
   }
 }
 
-
 @media (max-width: 768px) {
   .image-web-list {
-    padding: 0.5rem;
     gap: 0.75rem;
+    padding: 0.5rem;
   }
 
   .image-web-item {
@@ -484,30 +481,30 @@ $imageTabWidth: 450px;
   }
 
   .image-web-counter {
-    padding: 0.25rem 0.75rem;
     font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
   }
 }
 
 // Page Navigation Dropdown Styles
 .page-navigation-dropdown {
-  position: relative;
   display: inline-block;
+  position: relative;
 
   .page-counter-clickable {
+    align-items: center;
+    backdrop-filter: blur(10px);
     background-color: rgba(0, 0, 0, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    padding: 0.5rem 1rem;
     border-radius: 0.375rem;
-    backdrop-filter: blur(10px);
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    color: white;
     cursor: pointer;
     display: flex;
-    align-items: center;
+    font-size: 0.9rem;
+    font-weight: 500;
     gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
     user-select: none;
 
     &:hover {
@@ -526,17 +523,18 @@ $imageTabWidth: 450px;
   }
 
   .page-navigation-dropdown-content {
+    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    left: 0;
+    margin-top: 0.25rem;
+    min-width: 200px;
     position: absolute;
     top: 100%;
-    left: 0;
-    min-width: 200px;
-    background-color: rgba(0, 0, 0, 0.95);
-    border-radius: 0.375rem;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
     z-index: 1000;
-    margin-top: 0.25rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
 
     .page-navigation-form {
       display: flex;
@@ -544,14 +542,14 @@ $imageTabWidth: 450px;
       padding: 1rem;
 
       .page-navigation-input-field {
-        flex: 1;
-        min-width: 120px;
         background-color: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        font-size: 1rem;
-        padding: 0.75rem 1rem;
         border-radius: 0.25rem;
+        color: white;
+        flex: 1;
+        font-size: 1rem;
+        min-width: 120px;
+        padding: 0.75rem 1rem;
         width: 150px;
 
         &::placeholder {
@@ -572,22 +570,22 @@ $imageTabWidth: 450px;
           margin: 0;
         }
 
-        &[type=number] {
+        &[type="number"] {
           -moz-appearance: textfield;
         }
       }
 
       .page-navigation-submit {
+        align-items: center;
         background-color: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        padding: 0.75rem 1rem;
         border-radius: 0.25rem;
-        transition: all 0.2s ease;
+        color: white;
         display: flex;
-        align-items: center;
         justify-content: center;
         min-width: 50px;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
 
         &:hover:not(:disabled) {
           background-color: rgba(255, 255, 255, 0.2);
@@ -595,13 +593,13 @@ $imageTabWidth: 450px;
         }
 
         &:disabled {
-          opacity: 0.5;
           cursor: not-allowed;
+          opacity: 0.5;
         }
 
         &:focus {
-          outline: none;
           box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+          outline: none;
         }
       }
     }
@@ -609,34 +607,34 @@ $imageTabWidth: 450px;
 }
 
 .page-counter-static {
-  background-color: rgba(0, 0, 0, 0.7);
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
   backdrop-filter: blur(10px);
-  font-size: 0.9rem;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 0.375rem;
   color: white;
+  font-size: 0.9rem;
   font-weight: 500;
+  padding: 0.5rem 1rem;
 }
 
 // Specific positioning for different contexts
 
 .image-slideshow-page-navigation {
+  left: 1rem;
   position: absolute;
   top: 1rem;
-  left: 1rem;
   z-index: 10;
 }
 
 @media (max-width: 768px) {
   .page-navigation-input {
     .page-navigation-toggle {
-      padding: 0.25rem 0.75rem;
       font-size: 0.8rem;
+      padding: 0.25rem 0.75rem;
     }
 
     .page-navigation-form {
-      padding: 0.25rem;
       gap: 0.125rem;
+      padding: 0.25rem;
 
       .page-navigation-input-field {
         font-size: 0.8rem;

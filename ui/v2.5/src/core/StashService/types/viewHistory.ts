@@ -1,7 +1,10 @@
 import { gql } from "graphql-tag";
 
 export const FIND_VIEW_HISTORY = gql`
-  query FindViewHistory($filter: FindFilterType, $historyFilter: ViewHistoryFilter) {
+  query FindViewHistory(
+    $filter: FindFilterType
+    $historyFilter: ViewHistoryFilter
+  ) {
     findViewHistory(filter: $filter, history_filter: $historyFilter) {
       count
       items {
@@ -14,10 +17,10 @@ export const FIND_VIEW_HISTORY = gql`
           is_broken
           is_probably_broken
           is_not_broken
-               files {
-                 path
-                 duration
-               }
+          files {
+            path
+            duration
+          }
           paths {
             screenshot
             preview

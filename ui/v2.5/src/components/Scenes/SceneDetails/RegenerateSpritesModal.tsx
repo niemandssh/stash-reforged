@@ -31,7 +31,7 @@ export const RegenerateSpritesModal: React.FC<IRegenerateSpritesModalProps> = ({
           id: sceneId,
         },
       });
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -47,7 +47,7 @@ export const RegenerateSpritesModal: React.FC<IRegenerateSpritesModalProps> = ({
     <ModalComponent
       show={show}
       icon={faImages}
-      title={intl.formatMessage({ id: "dialogs.regenerate_sprites.title" })}
+      header={intl.formatMessage({ id: "dialogs.regenerate_sprites.title" })}
       accept={{
         text: intl.formatMessage({ id: "actions.regenerate" }),
         variant: "danger",

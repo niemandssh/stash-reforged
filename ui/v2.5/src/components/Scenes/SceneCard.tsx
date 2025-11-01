@@ -342,7 +342,11 @@ const SceneCardDetails = PatchComponent(
       <div className="scene-card__details">
         <span className="scene-card__date">{props.scene.date}</span>
         {file?.size !== undefined ? (
-          <span className={cx("scene-card__file-size", { "scene-card__file-size--with-margin": hasDate })}>
+          <span
+            className={cx("scene-card__file-size", {
+              "scene-card__file-size--with-margin": hasDate,
+            })}
+          >
             <FileSize size={file.size} />
           </span>
         ) : null}
@@ -365,7 +369,8 @@ const SceneCardOverlays = PatchComponent(
     return (
       <>
         <StudioOverlay studio={props.scene.studio} />
-        {props.scene.force_hls ? (
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {"force_hls" in props.scene && (props.scene as any).force_hls ? (
           <div className="hls-badge-overlay">
             <HLSBadge />
           </div>
@@ -374,7 +379,9 @@ const SceneCardOverlays = PatchComponent(
             <BrokenBadge />
           </div>
         ) : (
-          !props.scene.is_broken && props.scene.is_probably_broken && !props.scene.is_not_broken && (
+          !props.scene.is_broken &&
+          props.scene.is_probably_broken &&
+          !props.scene.is_not_broken && (
             <div className="probably-broken-badge-overlay">
               <ProbablyBrokenBadge />
             </div>
@@ -529,7 +536,9 @@ export const SceneCard = PatchComponent(
     const pinButton = (
       <Button
         variant="link"
-        className={`p-0 text-decoration-none mt-n1 ml-n1 ${props.scene.pinned ? 'text-warning' : 'text-muted'}`}
+        className={`p-0 text-decoration-none mt-n1 ml-n1 ${
+          props.scene.pinned ? "text-warning" : "text-muted"
+        }`}
         onClick={togglePin}
         title={props.scene.pinned ? "Unpin" : "Pin"}
       >

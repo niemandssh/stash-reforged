@@ -32,5 +32,3 @@ func (r *sceneCreateInputResolver) ScenePerformers(ctx context.Context, obj *mod
 	obj.ScenePerformers = scenePerformers
 	return nil
 }
-
-

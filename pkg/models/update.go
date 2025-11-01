@@ -282,7 +282,7 @@ func removePerformerTags(existing []ScenesTagsPerformer, toRemove []ScenesTagsPe
 }
 
 type UpdateScenePerformers struct {
-	ScenePerformers []PerformerScenes     `json:"scene_performers"`
+	ScenePerformers []PerformerScenes      `json:"scene_performers"`
 	Mode            RelationshipUpdateMode `json:"mode"`
 }
 

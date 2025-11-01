@@ -7,10 +7,11 @@ interface IGalleryPoseTagsDisplayProps {
   gallery: GQL.GalleryDataFragment;
 }
 
-export const GalleryPoseTagsDisplay: React.FC<IGalleryPoseTagsDisplayProps> = ({ gallery }) => {
-
+export const GalleryPoseTagsDisplay: React.FC<IGalleryPoseTagsDisplayProps> = ({
+  gallery,
+}) => {
   const poseTags = [...gallery.tags]
-    .filter(tag => tag.is_pose_tag)
+    .filter((tag) => tag.is_pose_tag)
     .sort((a, b) => {
       const aCount = a.scene_count || 0;
       const bCount = b.scene_count || 0;
@@ -22,7 +23,7 @@ export const GalleryPoseTagsDisplay: React.FC<IGalleryPoseTagsDisplayProps> = ({
   }
 
   const handlePoseTagClick = (tagId: string) => {
-    window.open(`/tags/${tagId}`, '_blank');
+    window.open(`/tags/${tagId}`, "_blank");
   };
 
   const handleImageClick = (e: React.MouseEvent, tagId: string) => {
@@ -47,12 +48,12 @@ export const GalleryPoseTagsDisplay: React.FC<IGalleryPoseTagsDisplayProps> = ({
             key={tag.id}
             className="pose-tag-item-display"
             onClick={() => handlePoseTagClick(tag.id)}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
           >
             <div className="pose-tag-icon-display">
               {tag.image_path ? (
-                <img 
-                  src={tag.image_path} 
+                <img
+                  src={tag.image_path}
                   alt={tag.name}
                   className="pose-tag-image-display"
                   onClick={(e) => handleImageClick(e, tag.id)}

@@ -39,7 +39,6 @@ type Performer {
   ignore_auto_tag: Boolean!
   small_role: Boolean!
   primary_tag: Tag # Resolver
-
   image_path: String # Resolver
   profile_images: [PerformerProfileImage!]! # Resolver
   primary_image_path: String # Resolver

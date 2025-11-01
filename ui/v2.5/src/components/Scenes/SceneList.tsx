@@ -744,37 +744,43 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
   }
 
   function onPinSelected() {
-    client.mutate({
-      mutation: GQL.BulkSceneUpdateDocument,
-      variables: {
-        input: {
-          ids: selectedItems,
-          pinned: true,
+    getClient()
+      .mutate({
+        mutation: GQL.BulkSceneUpdateDocument,
+        variables: {
+          input: {
+            ids: selectedItems,
+            pinned: true,
+          },
         },
-      },
-    }).then(() => {
-      // Refresh the list
-      refetch();
-    }).catch(error => {
-      console.error("Error pinning scenes:", error);
-    });
+      })
+      .then(() => {
+        // Refresh the list
+        result.refetch();
+      })
+      .catch((error: unknown) => {
+        console.error("Error pinning scenes:", error);
+      });
   }
 
   function onUnpinSelected() {
-    client.mutate({
-      mutation: GQL.BulkSceneUpdateDocument,
-      variables: {
-        input: {
-          ids: selectedItems,
-          pinned: false,
+    getClient()
+      .mutate({
+        mutation: GQL.BulkSceneUpdateDocument,
+        variables: {
+          input: {
+            ids: selectedItems,
+            pinned: false,
+          },
         },
-      },
-    }).then(() => {
-      // Refresh the list
-      refetch();
-    }).catch(error => {
-      console.error("Error unpinning scenes:", error);
-    });
+      })
+      .then(() => {
+        // Refresh the list
+        result.refetch();
+      })
+      .catch((error: unknown) => {
+        console.error("Error unpinning scenes:", error);
+      });
   }
 
   const otherOperations = [

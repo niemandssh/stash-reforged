@@ -111,16 +111,16 @@ query FindSimilarScenes($id: ID!, $limit: Int) {
         ...SlimSceneData
       }
       similarity_score
-             similarity_score_data {
-               enhanced_tags
-               normal_tags
-               reduced_tags
-               tags
-               performers
-               groups
-               studio
-               penalty
-             }
+      similarity_score_data {
+        enhanced_tags
+        normal_tags
+        reduced_tags
+        tags
+        performers
+        groups
+        studio
+        penalty
+      }
     }
   }
 }

@@ -56,9 +56,15 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
       ready() {
         setCropperReady(true);
       },
-      crop(e: { detail: { x: number; y: number; width: number; height: number } }) {
+      crop(e: {
+        detail: { x: number; y: number; width: number; height: number };
+      }) {
         setCropInfo(
-          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(e.detail.y)}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(e.detail.height)}px`
+          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(
+            e.detail.y
+          )}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(
+            e.detail.height
+          )}px`
         );
       },
     };
@@ -75,7 +81,9 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
     setCropInfo("");
 
     try {
-      const croppedCanvas = (cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }).getCroppedCanvas();
+      const croppedCanvas = (
+        cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }
+      ).getCroppedCanvas();
       const imageDataUrl = croppedCanvas.toDataURL();
 
       const result = await updatePerformer({
@@ -105,7 +113,11 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
       setCropping(true);
       setCropperReady(true);
       setCropInfo(cropInfoText);
-      Toast.error(error instanceof Error ? error.message : "Ошибка при обрезке изображения");
+      Toast.error(
+        error instanceof Error
+          ? error.message
+          : "Ошибка при обрезке изображения"
+      );
     }
   };
 
@@ -157,7 +169,9 @@ export const ImageCropper: React.FC<IImageCropperProps> = ({
           className="crop-accept"
           variant="success"
           onClick={handleCropAccept}
-          style={{ display: cropping && cropperReady ? "inline-block" : "none" }}
+          style={{
+            display: cropping && cropperReady ? "inline-block" : "none",
+          }}
         >
           OK
         </Button>

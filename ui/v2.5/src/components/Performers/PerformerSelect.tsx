@@ -40,18 +40,7 @@ export type SelectObject = {
   title?: string | null;
 };
 
-export type Performer = Pick<
-  GQL.Performer,
-  | "id"
-  | "name"
-  | "alias_list"
-  | "disambiguation"
-  | "image_path"
-  | "primary_image_path"
-  | "birthdate"
-  | "death_date"
-  | "small_role"
->;
+export type Performer = GQL.SelectPerformerDataFragment;
 type Option = SelectOption<Performer>;
 
 type FindPerformersResult = Awaited<
@@ -93,7 +82,10 @@ const _PerformerSelect: React.FC<
   const defaultCreatable =
     !configuration?.interface.disableDropdownCreate.performer ?? true;
 
-  async function loadPerformers(input: string, excludeIds?: string[]): Promise<Option[]> {
+  async function loadPerformers(
+    input: string,
+    excludeIds?: string[]
+  ): Promise<Option[]> {
     const filter = new ListFilterModel(GQL.FilterMode.Performers);
     filter.searchTerm = input;
     filter.currentPage = 1;
@@ -101,17 +93,16 @@ const _PerformerSelect: React.FC<
     filter.sortBy = "name";
     filter.sortDirection = GQL.SortDirectionEnum.Asc;
     const query = await queryFindPerformersForSelect(filter);
-    
+
     // Filter out excluded performers
     let performers = query.data.findPerformers.performers.slice();
     if (excludeIds && excludeIds.length > 0) {
-      performers = performers.filter(performer => !excludeIds.includes(performer.id));
+      performers = performers.filter(
+        (performer) => !excludeIds.includes(performer.id)
+      );
     }
-    
-    return performerSelectSort(
-      input,
-      performers
-    ).map((performer) => ({
+
+    return performerSelectSort(input, performers).map((performer) => ({
       value: performer.id,
       object: performer,
     }));
@@ -167,7 +158,9 @@ const _PerformerSelect: React.FC<
               className="performer-select-image-link position-relative"
             >
               <img
-                className={`performer-select-image ${object.death_date ? 'deceased' : ''}`}
+                className={`performer-select-image ${
+                  object.death_date ? "deceased" : ""
+                }`}
                 src={object.primary_image_path ?? object.image_path ?? ""}
                 loading="lazy"
               />
@@ -275,6 +268,7 @@ const _PerformerSelect: React.FC<
       id,
       name,
       alias_list: [],
+      small_role: false,
     };
   };
 

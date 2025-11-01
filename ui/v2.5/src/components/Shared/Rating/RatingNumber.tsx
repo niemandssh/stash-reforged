@@ -30,7 +30,7 @@ export const RatingNumber = PatchComponent(
       }
 
       let newRating: number;
-      
+
       if (starIndex % 2 === 0) {
         newRating = starIndex * 0.5;
       } else {
@@ -46,7 +46,7 @@ export const RatingNumber = PatchComponent(
         const rect = event.currentTarget.getBoundingClientRect();
         const clickX = event.clientX - rect.left;
         const isHalf = clickX < rect.width / 2;
-        
+
         setHoverRating(starIndex);
         setHoverIsHalf(isHalf);
       }
@@ -69,7 +69,7 @@ export const RatingNumber = PatchComponent(
     function getStarFill(starIndex: number) {
       if (hoverRating !== undefined) {
         const hoverValue = hoverRating * 0.5;
-        
+
         if (starIndex % 2 === 0) {
           const pairIndex = starIndex / 2;
           if (hoverValue >= pairIndex) {
@@ -107,19 +107,19 @@ export const RatingNumber = PatchComponent(
     function getStarColorClass(starIndex: number) {
       if (hoverRating !== undefined) {
         if (starIndex <= hoverRating) {
-          return 'star-color-gold';
+          return "star-color-gold";
         } else {
-          return 'star-color-white';
+          return "star-color-white";
         }
       } else {
-        return 'star-color-white';
+        return "star-color-white";
       }
     }
 
     function getStarClassName(starIndex: number) {
       const fill = getStarFill(starIndex);
       const isEven = starIndex % 2 === 0;
-      return `star-fill-${fill} ${isEven ? 'star-even' : 'star-odd'}`;
+      return `star-fill-${fill} ${isEven ? "star-even" : "star-odd"}`;
     }
 
     function handleStarClick(starIndex: number) {
@@ -145,9 +145,7 @@ export const RatingNumber = PatchComponent(
                 onFocus={() => onFocus(starIndex)}
                 onBlur={onMouseOut}
               >
-                <div 
-                  className={`filled-star ${getStarColorClass(starIndex)}`}
-                >
+                <div className={`filled-star ${getStarColorClass(starIndex)}`}>
                   <Icon icon={fasStar} className="set" />
                 </div>
                 <div className="unfilled-star">
@@ -157,10 +155,11 @@ export const RatingNumber = PatchComponent(
             );
           })}
           <span className={`star-rating-number ${getStarColorClass(1)}`}>
-            {hoverRating !== undefined 
+            {hoverRating !== undefined
               ? (hoverRating * 0.5).toFixed(1)
-              : (rating > 0 ? rating.toFixed(1) : '')
-            }
+              : rating > 0
+              ? rating.toFixed(1)
+              : ""}
           </span>
         </div>
       );
@@ -168,7 +167,7 @@ export const RatingNumber = PatchComponent(
       return (
         <div className="rating-number disabled">
           {props.withoutContext && <Icon icon={fasStar} />}
-          <span>{rating > 0 ? rating.toFixed(1) : '0.0'}</span>
+          <span>{rating > 0 ? rating.toFixed(1) : "0.0"}</span>
         </div>
       );
     }

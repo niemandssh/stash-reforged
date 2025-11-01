@@ -134,65 +134,66 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const Toast = useToast();
 
   // Initialize state from saved filters
-  const [contrastValue, setContrastValue] = useState(() => 
-    props.scene.video_filters?.contrast ?? contrastRange.default
+  const [contrastValue, setContrastValue] = useState(
+    () => props.scene.video_filters?.contrast ?? contrastRange.default
   );
-  const [brightnessValue, setBrightnessValue] = useState(() =>
-    props.scene.video_filters?.brightness ?? brightnessRange.default
+  const [brightnessValue, setBrightnessValue] = useState(
+    () => props.scene.video_filters?.brightness ?? brightnessRange.default
   );
-  const [gammaValue, setGammaValue] = useState(() =>
-    props.scene.video_filters?.gamma ?? gammaRange.default
+  const [gammaValue, setGammaValue] = useState(
+    () => props.scene.video_filters?.gamma ?? gammaRange.default
   );
-  const [saturateValue, setSaturateValue] = useState(() =>
-    props.scene.video_filters?.saturate ?? saturateRange.default
+  const [saturateValue, setSaturateValue] = useState(
+    () => props.scene.video_filters?.saturate ?? saturateRange.default
   );
-  const [hueRotateValue, setHueRotateValue] = useState(() =>
-    props.scene.video_filters?.hue_rotate ?? hueRotateRange.default
+  const [hueRotateValue, setHueRotateValue] = useState(
+    () => props.scene.video_filters?.hue_rotate ?? hueRotateRange.default
   );
-  const [whiteBalanceValue, setWhiteBalanceValue] = useState(() =>
-    props.scene.video_filters?.white_balance ?? whiteBalanceRange.default
+  const [whiteBalanceValue, setWhiteBalanceValue] = useState(
+    () => props.scene.video_filters?.white_balance ?? whiteBalanceRange.default
   );
-  const [redValue, setRedValue] = useState(() =>
-    props.scene.video_filters?.red ?? colourRange.default
+  const [redValue, setRedValue] = useState(
+    () => props.scene.video_filters?.red ?? colourRange.default
   );
-  const [greenValue, setGreenValue] = useState(() =>
-    props.scene.video_filters?.green ?? colourRange.default
+  const [greenValue, setGreenValue] = useState(
+    () => props.scene.video_filters?.green ?? colourRange.default
   );
-  const [blueValue, setBlueValue] = useState(() =>
-    props.scene.video_filters?.blue ?? colourRange.default
+  const [blueValue, setBlueValue] = useState(
+    () => props.scene.video_filters?.blue ?? colourRange.default
   );
-  const [blurValue, setBlurValue] = useState(() =>
-    props.scene.video_filters?.blur ?? blurRange.default
+  const [blurValue, setBlurValue] = useState(
+    () => props.scene.video_filters?.blur ?? blurRange.default
   );
-  const [rotateValue, setRotateValue] = useState(() =>
-    props.scene.video_transforms?.rotate ?? rotateRange.default
+  const [rotateValue, setRotateValue] = useState(
+    () => props.scene.video_transforms?.rotate ?? rotateRange.default
   );
-  const [scaleValue, setScaleValue] = useState(() =>
-    props.scene.video_transforms?.scale ?? scaleRange.default
+  const [scaleValue, setScaleValue] = useState(
+    () => props.scene.video_transforms?.scale ?? scaleRange.default
   );
-  const [aspectRatioValue, setAspectRatioValue] = useState(() =>
-    props.scene.video_transforms?.aspect_ratio ?? aspectRatioRange.default
+  const [aspectRatioValue, setAspectRatioValue] = useState(
+    () => props.scene.video_transforms?.aspect_ratio ?? aspectRatioRange.default
   );
-  const [audioOffsetValue, setAudioOffsetValue] = useState(() =>
-    props.scene.audio_offset_ms ?? 0
+  const [audioOffsetValue, setAudioOffsetValue] = useState(
+    () => props.scene.audio_offset_ms ?? 0
   );
   const [audioOffsetText, setAudioOffsetText] = useState(() =>
     String(props.scene.audio_offset_ms ?? 0)
   );
-  const [audioPlaybackSpeedValue, setAudioPlaybackSpeedValue] = useState(() =>
-    props.scene.audio_playback_speed ?? 1.0
+  const [audioPlaybackSpeedValue, setAudioPlaybackSpeedValue] = useState(
+    () => props.scene.audio_playback_speed ?? 1.0
   );
   const [audioPlaybackSpeedText, setAudioPlaybackSpeedText] = useState(() =>
     String(props.scene.audio_playback_speed ?? 1.0)
   );
-  const [forceHLSValue, setForceHLSValue] = useState(() =>
-    props.scene.force_hls ?? false
+  const [forceHLSValue, setForceHLSValue] = useState(
+    () => props.scene.force_hls ?? false
   );
 
   // Apply filters and transforms when values change
   useEffect(() => {
     updateVideoFilters();
     updateVideoStyle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     contrastValue,
     brightnessValue,
@@ -216,29 +217,44 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       updateVideoFilters();
       updateVideoStyle();
     }, 100);
-    
+
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update state when scene changes (e.g., when navigating to different scene)
   useEffect(() => {
     if (props.scene.video_filters) {
-      setContrastValue(props.scene.video_filters.contrast ?? contrastRange.default);
-      setBrightnessValue(props.scene.video_filters.brightness ?? brightnessRange.default);
+      setContrastValue(
+        props.scene.video_filters.contrast ?? contrastRange.default
+      );
+      setBrightnessValue(
+        props.scene.video_filters.brightness ?? brightnessRange.default
+      );
       setGammaValue(props.scene.video_filters.gamma ?? gammaRange.default);
-      setSaturateValue(props.scene.video_filters.saturate ?? saturateRange.default);
-      setHueRotateValue(props.scene.video_filters.hue_rotate ?? hueRotateRange.default);
-      setWhiteBalanceValue(props.scene.video_filters.white_balance ?? whiteBalanceRange.default);
+      setSaturateValue(
+        props.scene.video_filters.saturate ?? saturateRange.default
+      );
+      setHueRotateValue(
+        props.scene.video_filters.hue_rotate ?? hueRotateRange.default
+      );
+      setWhiteBalanceValue(
+        props.scene.video_filters.white_balance ?? whiteBalanceRange.default
+      );
       setRedValue(props.scene.video_filters.red ?? colourRange.default);
       setGreenValue(props.scene.video_filters.green ?? colourRange.default);
       setBlueValue(props.scene.video_filters.blue ?? colourRange.default);
       setBlurValue(props.scene.video_filters.blur ?? blurRange.default);
     }
-    
+
     if (props.scene.video_transforms) {
-      setRotateValue(props.scene.video_transforms.rotate ?? rotateRange.default);
+      setRotateValue(
+        props.scene.video_transforms.rotate ?? rotateRange.default
+      );
       setScaleValue(props.scene.video_transforms.scale ?? scaleRange.default);
-      setAspectRatioValue(props.scene.video_transforms.aspect_ratio ?? aspectRatioRange.default);
+      setAspectRatioValue(
+        props.scene.video_transforms.aspect_ratio ?? aspectRatioRange.default
+      );
     }
 
     setAudioOffsetValue(props.scene.audio_offset_ms ?? 0);
@@ -246,7 +262,13 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     setAudioPlaybackSpeedValue(props.scene.audio_playback_speed ?? 1.0);
     setAudioPlaybackSpeedText(String(props.scene.audio_playback_speed ?? 1.0));
     setForceHLSValue(props.scene.force_hls ?? false);
-  }, [props.scene.id, props.scene.audio_offset_ms, props.scene.audio_playback_speed, props.scene.force_hls]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    props.scene.id,
+    props.scene.audio_offset_ms,
+    props.scene.audio_playback_speed,
+    props.scene.force_hls,
+  ]);
 
   // Sync text and numeric values
   useEffect(() => {
@@ -530,18 +552,18 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
 
     const newRotateValue = direction === 0 ? 1 : 3;
     const newScaleValue = Math.round(scaleFactor * 100);
-    
+
     // Update state first
     setRotateValue(newRotateValue);
     setScaleValue(newScaleValue);
-    
+
     // Save transforms to database immediately
     const videoTransforms: GQL.VideoTransforms = {
       rotate: newRotateValue !== rotateRange.default ? newRotateValue : null,
       scale: newScaleValue !== scaleRange.default ? newScaleValue : null,
-      aspect_ratio: aspectRatioValue !== aspectRatioRange.default ? aspectRatioValue : null,
+      aspect_ratio:
+        aspectRatioValue !== aspectRatioRange.default ? aspectRatioValue : null,
     };
-
 
     sceneUpdate({
       variables: {
@@ -552,9 +574,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       },
     });
 
-    Toast.success(
-      intl.formatMessage({ id: "toast.filters_for_scene_saved" })
-    );
+    Toast.success(intl.formatMessage({ id: "toast.filters_for_scene_saved" }));
   }
 
   function renderRotateAndScale() {
@@ -621,9 +641,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       },
     });
 
-    Toast.success(
-      intl.formatMessage({ id: "toast.filters_reset" })
-    );
+    Toast.success(intl.formatMessage({ id: "toast.filters_reset" }));
   }
 
   function onResetTransforms() {
@@ -647,19 +665,22 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       },
     });
 
-    Toast.success(
-      intl.formatMessage({ id: "toast.transforms_reset" })
-    );
+    Toast.success(intl.formatMessage({ id: "toast.transforms_reset" }));
   }
 
   function onSaveFilters() {
     const videoFilters: GQL.VideoFilters = {
       contrast: contrastValue !== contrastRange.default ? contrastValue : null,
-      brightness: brightnessValue !== brightnessRange.default ? brightnessValue : null,
+      brightness:
+        brightnessValue !== brightnessRange.default ? brightnessValue : null,
       gamma: gammaValue !== gammaRange.default ? gammaValue : null,
       saturate: saturateValue !== saturateRange.default ? saturateValue : null,
-      hue_rotate: hueRotateValue !== hueRotateRange.default ? hueRotateValue : null,
-      white_balance: whiteBalanceValue !== whiteBalanceRange.default ? whiteBalanceValue : null,
+      hue_rotate:
+        hueRotateValue !== hueRotateRange.default ? hueRotateValue : null,
+      white_balance:
+        whiteBalanceValue !== whiteBalanceRange.default
+          ? whiteBalanceValue
+          : null,
       red: redValue !== colourRange.default ? redValue : null,
       green: greenValue !== colourRange.default ? greenValue : null,
       blue: blueValue !== colourRange.default ? blueValue : null,
@@ -669,7 +690,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     const videoTransforms: GQL.VideoTransforms = {
       rotate: rotateValue !== rotateRange.default ? rotateValue : null,
       scale: scaleValue !== scaleRange.default ? Math.round(scaleValue) : null,
-      aspect_ratio: aspectRatioValue !== aspectRatioRange.default ? Math.round(aspectRatioValue) : null,
+      aspect_ratio:
+        aspectRatioValue !== aspectRatioRange.default
+          ? Math.round(aspectRatioValue)
+          : null,
     };
 
     sceneUpdate({
@@ -685,9 +709,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       },
     });
 
-    Toast.success(
-      intl.formatMessage({ id: "toast.filters_for_scene_saved" })
-    );
+    Toast.success(intl.formatMessage({ id: "toast.filters_for_scene_saved" }));
   }
 
   function renderResetButton() {
@@ -738,7 +760,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   }
 
   function renderFilterContainer() {
-    return <div id="video-filter-container" style={{ display: 'none' }} />;
+    return <div id="video-filter-container" style={{ display: "none" }} />;
   }
 
   // On render update video style.
@@ -870,7 +892,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(25)}
               active={scaleValue === 25}
             >
@@ -880,7 +902,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(40)}
               active={scaleValue === 40}
             >
@@ -890,7 +912,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(50)}
               active={scaleValue === 50}
             >
@@ -900,7 +922,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(60)}
               active={scaleValue === 60}
             >
@@ -910,7 +932,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(75)}
               active={scaleValue === 75}
             >
@@ -920,7 +942,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(80)}
               active={scaleValue === 80}
             >
@@ -930,7 +952,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
               variant="outline-secondary"
               size="sm"
               className="px-1 py-0"
-              style={{ fontSize: '0.875rem' }}
+              style={{ fontSize: "0.875rem" }}
               onClick={() => setScaleValue(100)}
               active={scaleValue === 100}
             >
@@ -952,16 +974,15 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
 
       <div className="row form-group">
         <span className="col-12">
-          <h5>
-            Audio
-          </h5>
+          <h5>Audio</h5>
         </span>
       </div>
       <div className="row form-group">
         <span className="col-sm-3">Audio Offset (ms)</span>
         <span className="col-sm-9">
           <small className="text-muted">
-            Negative values slow down audio, positive values speed up audio for lip-sync correction
+            Negative values slow down audio, positive values speed up audio for
+            lip-sync correction
           </small>
         </span>
       </div>
@@ -982,7 +1003,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
                 setAudioOffsetText(String(parsed));
               } else {
                 setAudioOffsetValue(0);
-                setAudioOffsetText('0');
+                setAudioOffsetText("0");
               }
             }}
           />
@@ -992,7 +1013,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         <span className="col-sm-3">Audio Playback Speed</span>
         <span className="col-sm-9">
           <small className="text-muted">
-            Values less than 1.0 slow down audio, values greater than 1.0 speed up audio relative to video
+            Values less than 1.0 slow down audio, values greater than 1.0 speed
+            up audio relative to video
           </small>
         </span>
       </div>
@@ -1013,7 +1035,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
                 setAudioPlaybackSpeedText(String(parsed));
               } else {
                 setAudioPlaybackSpeedValue(1.0);
-                setAudioPlaybackSpeedText('1.0');
+                setAudioPlaybackSpeedText("1.0");
               }
             }}
           />

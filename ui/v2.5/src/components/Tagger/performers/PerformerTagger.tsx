@@ -557,10 +557,10 @@ const PerformerTaggerList: React.FC<IPerformerTaggerListProps> = ({
             />
           )}
           <Card className="performer-card p-0 m-0 position-relative">
-            <img 
-              src={performer.image_path ?? ""} 
-              alt="" 
-              className={performer.death_date ? 'deceased' : ''}
+            <img
+              src={performer.image_path ?? ""}
+              alt=""
+              className={performer.death_date ? "deceased" : ""}
             />
             {performer.death_date && <DeathRibbon size="large" />}
           </Card>

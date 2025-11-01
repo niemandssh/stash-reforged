@@ -56,9 +56,15 @@ export const StudioImageCropper: React.FC<IStudioImageCropperProps> = ({
       ready() {
         setCropperReady(true);
       },
-      crop(e: { detail: { x: number; y: number; width: number; height: number } }) {
+      crop(e: {
+        detail: { x: number; y: number; width: number; height: number };
+      }) {
         setCropInfo(
-          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(e.detail.y)}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(e.detail.height)}px`
+          `X: ${Math.round(e.detail.x)}, Y: ${Math.round(
+            e.detail.y
+          )}, Width: ${Math.round(e.detail.width)}px, Height: ${Math.round(
+            e.detail.height
+          )}px`
         );
       },
     };
@@ -75,7 +81,9 @@ export const StudioImageCropper: React.FC<IStudioImageCropperProps> = ({
     setCropInfo("");
 
     try {
-      const croppedCanvas = (cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }).getCroppedCanvas();
+      const croppedCanvas = (
+        cropperRef.current as { getCroppedCanvas: () => HTMLCanvasElement }
+      ).getCroppedCanvas();
       const imageDataUrl = croppedCanvas.toDataURL();
 
       const result = await updateStudio({
@@ -104,7 +112,11 @@ export const StudioImageCropper: React.FC<IStudioImageCropperProps> = ({
       setCropping(true);
       setCropperReady(true);
       setCropInfo(cropInfoText);
-      Toast.error(error instanceof Error ? error.message : "Ошибка при обрезке изображения");
+      Toast.error(
+        error instanceof Error
+          ? error.message
+          : "Ошибка при обрезке изображения"
+      );
     }
   };
 
@@ -119,7 +131,7 @@ export const StudioImageCropper: React.FC<IStudioImageCropperProps> = ({
     }
   };
 
-  if (!imageSrc || imageSrc.includes('default=true')) {
+  if (!imageSrc || imageSrc.includes("default=true")) {
     return null;
   }
 
@@ -158,7 +170,9 @@ export const StudioImageCropper: React.FC<IStudioImageCropperProps> = ({
           className="crop-accept"
           variant="success"
           onClick={handleCropAccept}
-          style={{ display: cropping && cropperReady ? "inline-block" : "none" }}
+          style={{
+            display: cropping && cropperReady ? "inline-block" : "none",
+          }}
         >
           OK
         </Button>

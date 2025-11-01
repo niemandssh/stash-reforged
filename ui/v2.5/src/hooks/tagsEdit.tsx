@@ -24,16 +24,16 @@ export function useTagsEdit(
   let sceneId: string | undefined;
   let finalShouldUpdateFromSrc = shouldUpdateFromSrc;
 
-  if (typeof setFieldValueOrSceneId === 'function') {
+  if (typeof setFieldValueOrSceneId === "function") {
     setFieldValue = setFieldValueOrSceneId;
-    if (typeof sceneIdOrShouldUpdate === 'string') {
+    if (typeof sceneIdOrShouldUpdate === "string") {
       sceneId = sceneIdOrShouldUpdate;
-    } else if (typeof sceneIdOrShouldUpdate === 'boolean') {
+    } else if (typeof sceneIdOrShouldUpdate === "boolean") {
       finalShouldUpdateFromSrc = sceneIdOrShouldUpdate;
     }
-  } else if (typeof setFieldValueOrSceneId === 'string') {
+  } else if (typeof setFieldValueOrSceneId === "string") {
     sceneId = setFieldValueOrSceneId;
-    if (typeof sceneIdOrShouldUpdate === 'boolean') {
+    if (typeof sceneIdOrShouldUpdate === "boolean") {
       finalShouldUpdateFromSrc = sceneIdOrShouldUpdate;
     }
   }
@@ -41,19 +41,13 @@ export function useTagsEdit(
   const [tags, setTags] = useState<Tag[]>([]);
   const [newTags, setNewTags] = useState<GQL.ScrapedTag[]>();
 
-  const {
-    addToHistory,
-    undo,
-    redo,
-    clearHistory,
-    canUndo,
-    canRedo
-  } = useTagsHistory(sceneId || undefined);
+  const { addToHistory, undo, redo, clearHistory, canUndo, canRedo } =
+    useTagsHistory(sceneId || undefined);
 
   function onSetTags(items: Tag[]) {
     // Remove duplicates by id
-    const uniqueItems = items.filter((item, index, arr) =>
-      arr.findIndex(t => t.id === item.id) === index
+    const uniqueItems = items.filter(
+      (item, index, arr) => arr.findIndex((t) => t.id === item.id) === index
     );
     setTags(uniqueItems);
     if (setFieldValue) {
@@ -67,8 +61,8 @@ export function useTagsEdit(
     const previousTags = undo();
     if (previousTags) {
       // Remove duplicates by id
-      const uniquePreviousTags = previousTags.filter((item, index, arr) =>
-        arr.findIndex(t => t.id === item.id) === index
+      const uniquePreviousTags = previousTags.filter(
+        (item, index, arr) => arr.findIndex((t) => t.id === item.id) === index
       );
       setTags(uniquePreviousTags);
       if (setFieldValue) {
@@ -83,8 +77,8 @@ export function useTagsEdit(
     const nextTags = redo();
     if (nextTags) {
       // Remove duplicates by id
-      const uniqueNextTags = nextTags.filter((item, index, arr) =>
-        arr.findIndex(t => t.id === item.id) === index
+      const uniqueNextTags = nextTags.filter(
+        (item, index, arr) => arr.findIndex((t) => t.id === item.id) === index
       );
       setTags(uniqueNextTags);
       if (setFieldValue) {
@@ -101,63 +95,66 @@ export function useTagsEdit(
     if (srcTags) {
       if (finalShouldUpdateFromSrc) {
         // User hasn't interacted - full sync
-        setTags(currentTags => {
-          const currentTagIds = new Set(currentTags.map(t => t.id));
-          const srcTagIds = new Set(srcTags.map(t => t.id));
+        setTags((currentTags) => {
+          const currentTagIds = new Set(currentTags.map((t) => t.id));
+          const srcTagIds = new Set(srcTags.map((t) => t.id));
 
           // Check if we actually need to update
-          const hasChanges = srcTags.some(tag => !currentTagIds.has(tag.id)) || 
-                           currentTags.some(tag => !srcTagIds.has(tag.id));
-          
+          const hasChanges =
+            srcTags.some((tag) => !currentTagIds.has(tag.id)) ||
+            currentTags.some((tag) => !srcTagIds.has(tag.id));
+
           if (!hasChanges) {
             return currentTags; // No changes, return same reference to prevent re-renders
           }
 
-          const updatedTags = currentTags.filter(tag => srcTagIds.has(tag.id));
+          const updatedTags = currentTags.filter((tag) =>
+            srcTagIds.has(tag.id)
+          );
 
-          const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
+          const tagsToAdd = srcTags.filter((tag) => !currentTagIds.has(tag.id));
           // Convert GQL.Tag to Tag type for TagSelect
-          const convertedNewTags = newTags.map(tag => ({
+          const convertedNewTags = tagsToAdd.map((tag) => ({
             id: tag.id,
             name: tag.name,
             sort_name: tag.sort_name,
             aliases: tag.aliases,
             image_path: tag.image_path,
             is_pose_tag: tag.is_pose_tag,
-            color: tag.color
+            color: tag.color,
           }));
           updatedTags.push(...convertedNewTags);
 
           // Remove duplicates
-          const uniqueUpdatedTags = updatedTags.filter((tag, index, arr) =>
-            arr.findIndex(t => t.id === tag.id) === index
+          const uniqueUpdatedTags = updatedTags.filter(
+            (tag, index, arr) => arr.findIndex((t) => t.id === tag.id) === index
           );
 
           return uniqueUpdatedTags;
         });
       } else {
         // User has interacted - only add missing tags from srcTags, don't remove existing
-        setTags(currentTags => {
-          const currentTagIds = new Set(currentTags.map(t => t.id));
-          const srcTagIds = new Set(srcTags.map(t => t.id));
+        setTags((currentTags) => {
+          const currentTagIds = new Set(currentTags.map((t) => t.id));
 
-          const newTags = srcTags.filter(tag => !currentTagIds.has(tag.id));
-          if (newTags.length > 0) {
+          const tagsToAdd = srcTags.filter((tag) => !currentTagIds.has(tag.id));
+          if (tagsToAdd.length > 0) {
             // Convert GQL.Tag to Tag type for TagSelect
-            const convertedNewTags = newTags.map(tag => ({
+            const convertedNewTags = tagsToAdd.map((tag) => ({
               id: tag.id,
               name: tag.name,
               sort_name: tag.sort_name,
               aliases: tag.aliases,
               image_path: tag.image_path,
               is_pose_tag: tag.is_pose_tag,
-              color: tag.color
+              color: tag.color,
             }));
 
             const combinedTags = [...currentTags, ...convertedNewTags];
             // Remove duplicates
-            const uniqueCombinedTags = combinedTags.filter((tag, index, arr) =>
-              arr.findIndex(t => t.id === tag.id) === index
+            const uniqueCombinedTags = combinedTags.filter(
+              (tag, index, arr) =>
+                arr.findIndex((t) => t.id === tag.id) === index
             );
             return uniqueCombinedTags;
           }
@@ -283,11 +280,11 @@ export function useTagsEdit(
     return (
       <>
         <TagSelect
-          key={`tag-select-${sceneId || 'unknown'}`}
+          key={`tag-select-${sceneId || "unknown"}`}
           isMulti
           onSelect={onSetTags}
           values={tags}
-          instanceId={sceneId || 'new-scene'}
+          instanceId={sceneId || "new-scene"}
           {...props}
         />
         {renderNewTags()}

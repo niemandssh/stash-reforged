@@ -30,11 +30,17 @@ export const GalleryImagesPanel: React.FC<IGalleryDetailsProps> = ({
 }) => {
   const intl = useIntl();
   const Toast = useToast();
-  const { setDisplayMode: setDisplayModeInDB } = useGalleryDisplayMode(gallery.id!, gallery.display_mode ?? 0);
+  const { setDisplayMode: setDisplayModeInDB } = useGalleryDisplayMode(
+    gallery.id!,
+    gallery.display_mode ?? 0
+  );
 
-  const setDisplayMode = useCallback(async (newDisplayMode: DisplayMode) => {
-    await setDisplayModeInDB(newDisplayMode);
-  }, [setDisplayModeInDB]);
+  const setDisplayMode = useCallback(
+    async (newDisplayMode: DisplayMode) => {
+      await setDisplayModeInDB(newDisplayMode);
+    },
+    [setDisplayModeInDB]
+  );
 
   function filterHook(filter: ListFilterModel) {
     const galleryValue = {

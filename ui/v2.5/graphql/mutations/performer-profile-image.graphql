@@ -1,15 +1,21 @@
-mutation PerformerProfileImageCreate($input: PerformerProfileImageCreateInput!) {
+mutation PerformerProfileImageCreate(
+  $input: PerformerProfileImageCreateInput!
+) {
   performerProfileImageCreate(input: $input) {
     ...PerformerProfileImageData
   }
 }
 
-mutation PerformerProfileImageUpdate($input: PerformerProfileImageUpdateInput!) {
+mutation PerformerProfileImageUpdate(
+  $input: PerformerProfileImageUpdateInput!
+) {
   performerProfileImageUpdate(input: $input) {
     ...PerformerProfileImageData
   }
 }
 
-mutation PerformerProfileImageDestroy($input: PerformerProfileImageDestroyInput!) {
+mutation PerformerProfileImageDestroy(
+  $input: PerformerProfileImageDestroyInput!
+) {
   performerProfileImageDestroy(input: $input)
 }

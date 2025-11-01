@@ -11,7 +11,7 @@ import { TextField, URLField, URLsField } from "src/utils/field";
 import { FileSize } from "src/components/Shared/FileSize";
 
 interface IFileInfoPanelProps {
-  file: GQL.ImageFileDataFragment | GQL.VideoFileDataFragment;
+  file: GQL.VisualFileDataFragment;
   primary?: boolean;
   ofMany?: boolean;
   onSetPrimaryFile?: () => void;
@@ -92,7 +92,7 @@ export const ImageFileInfoPanel: React.FC<IImageFileInfoPanelProps> = (
 
   const [loading, setLoading] = useState(false);
   const [deletingFile, setDeletingFile] = useState<
-    GQL.ImageFileDataFragment | GQL.VideoFileDataFragment | undefined
+    GQL.VisualFileDataFragment | undefined
   >();
 
   if (props.image.visual_files.length === 0) {
