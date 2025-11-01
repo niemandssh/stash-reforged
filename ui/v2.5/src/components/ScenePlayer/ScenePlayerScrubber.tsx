@@ -101,7 +101,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
       maxY = Math.max(maxY, sprite.y + sprite.h);
     });
 
-    const newSprites = spriteInfo?.map((sprite, index) => {
+    const newSprites = spriteInfo?.map((sprite) => {
       // Fixed display size for all scrubber items
       const displayWidth = 160;
       const displayHeight = 90;

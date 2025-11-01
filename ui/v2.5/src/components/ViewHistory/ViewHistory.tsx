@@ -6,7 +6,7 @@ import { LoadingIndicator } from "../Shared/LoadingIndicator";
 import { useTitleProps } from "src/hooks/title";
 import { FIND_VIEW_HISTORY } from "src/core/StashService/types/viewHistory";
 import { ViewHistoryCard } from "./ViewHistoryCard";
-import { ViewHistoryEntry, ViewHistoryResult } from "./types";
+import { IViewHistoryEntry, IViewHistoryResult } from "./types";
 import "./ViewHistory.scss";
 
 const ITEMS_PER_PAGE = 50;
@@ -16,12 +16,12 @@ export const ViewHistory: React.FC = () => {
   const titleProps = useTitleProps({ id: "view_history" });
 
   const [page, setPage] = useState(1);
-  const [items, setItems] = useState<ViewHistoryEntry[]>([]);
+  const [items, setItems] = useState<IViewHistoryEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef<HTMLDivElement>(null);
 
   const { data, loading, fetchMore } = useQuery<{
-    findViewHistory: ViewHistoryResult;
+    findViewHistory: IViewHistoryResult;
   }>(FIND_VIEW_HISTORY, {
     variables: {
       filter: {
@@ -96,7 +96,7 @@ export const ViewHistory: React.FC = () => {
     }
     acc[date].push(item);
     return acc;
-  }, {} as Record<string, ViewHistoryEntry[]>);
+  }, {} as Record<string, IViewHistoryEntry[]>);
 
     return (
       <>

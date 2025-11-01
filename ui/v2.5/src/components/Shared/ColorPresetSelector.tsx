@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Form, Button, Modal, Row, Col } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useFindColorPresets, useColorPresetCreate, useColorPresetUpdate, useColorPresetDestroy } from "src/core/StashService";
@@ -21,19 +21,17 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface SortablePresetCardProps {
+interface ISortablePresetCardProps {
   preset: ColorPreset;
   onEdit: (preset: ColorPreset) => void;
   isSelected: boolean;
 }
 
-const SortablePresetCard: React.FC<SortablePresetCardProps> = ({
+const SortablePresetCard: React.FC<ISortablePresetCardProps> = ({
   preset,
   onEdit,
   isSelected,
@@ -106,13 +104,13 @@ const SortablePresetCard: React.FC<SortablePresetCardProps> = ({
   );
 };
 
-interface ColorPresetSelectorProps {
+interface IColorPresetSelectorProps {
   selectedColor: string;
   onColorSelect: (color: string) => void;
   onPresetSelect: (preset: ColorPreset) => void;
 }
 
-export const ColorPresetSelector: React.FC<ColorPresetSelectorProps> = ({
+export const ColorPresetSelector: React.FC<IColorPresetSelectorProps> = ({
   selectedColor,
   onColorSelect,
   onPresetSelect,

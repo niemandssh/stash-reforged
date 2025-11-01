@@ -25,7 +25,7 @@ export class ColorPresetCriterion extends ModifierCriterion<string> {
     super(type, "");
   }
 
-  protected getLabelValue(_intl: IntlShape) {
+  protected getLabelValue() {
     return this.value;
   }
 

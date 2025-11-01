@@ -77,14 +77,6 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
     });
   }, [sprite]);
 
-  const currentTime = useMemo(() => {
-    if (!sprite) return undefined;
-
-    const start = TextUtils.secondsToTimestamp(sprite.start);
-
-    return start;
-  }, [sprite]);
-
   function onScrubberClick(index: number) {
     if (!onClick || !spriteInfo) {
       return;

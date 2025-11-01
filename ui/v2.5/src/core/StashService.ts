@@ -2019,7 +2019,7 @@ export const useGalleryResetO = (id: string) =>
   GQL.useGalleryResetOMutation({
     variables: { id },
     refetchQueries: [GQL.FindGalleryDocument],
-    update(cache, result, { variables }) {
+    update(cache) {
       const gallery = cache.readFragment<GQL.GalleryDataFragment>({
         id: cache.identify({ __typename: "Gallery", id }),
         fragment: GQL.GalleryDataFragmentDoc,
@@ -2783,12 +2783,12 @@ export const mutateDeleteFiles = (ids: string[]) =>
                 
                 return {
                   ...existingScenes,
-                  scenes: existingScenes.scenes.filter((scene: any) => {
+                  scenes: existingScenes.scenes.filter((scene: { __typename?: string }) => {
                     const sceneFiles = readField('files', scene);
                     if (!sceneFiles || !Array.isArray(sceneFiles)) return true;
                     
                     // Check if any of the deleted files are in this scene
-                    const hasDeletedFile = sceneFiles.some((file: any) => {
+                    const hasDeletedFile = sceneFiles.some((file: { __typename?: string }) => {
                       const fileId = readField('id', file);
                       return fileId && typeof fileId === 'string' && ids.includes(fileId);
                     });

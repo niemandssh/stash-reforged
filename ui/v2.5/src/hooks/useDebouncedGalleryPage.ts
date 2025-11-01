@@ -1,7 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
-import { useGalleryLastOpenedPage } from './useGalleryLastOpenedPage';
+import { useGalleryLastOpenedPage } from './useGalleryLastOpenedPage.ts';
 
-interface UseDebouncedGalleryPageOptions {
+interface IUseDebouncedGalleryPageOptions {
   galleryId: string;
   delay?: number;
   initialPage?: number;
@@ -11,7 +11,7 @@ export const useDebouncedGalleryPage = ({
   galleryId,
   delay = 1000,
   initialPage = 1,
-}: UseDebouncedGalleryPageOptions) => {
+}: IUseDebouncedGalleryPageOptions) => {
   const { updatePage } = useGalleryLastOpenedPage(galleryId);
   const timeoutRef = useRef<number | null>(null);
   const lastPageRef = useRef<number>(initialPage);

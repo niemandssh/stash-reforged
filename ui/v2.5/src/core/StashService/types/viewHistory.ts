@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
 export const FIND_VIEW_HISTORY = gql`
   query FindViewHistory($filter: FindFilterType, $historyFilter: ViewHistoryFilter) {

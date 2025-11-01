@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useConfigureUISetting, useConfiguration } from "src/core/StashService";
 
-export interface NotesData {
+export interface INotesData {
   content: string;
   lastModified: string;
 }

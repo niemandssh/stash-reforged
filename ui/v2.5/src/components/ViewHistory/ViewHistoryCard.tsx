@@ -13,19 +13,19 @@ import { PerformerPopover } from "../Performers/PerformerPopover";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 import { Icon } from "../Shared/Icon";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
-import { Scene, Gallery } from "./types";
+import { IScene, IGallery } from "./types";
 import NavUtils from "src/utils/navigation";
 import "./ViewHistoryCard.scss";
 
-interface ViewHistoryCardProps {
-  scene?: Scene;
-  gallery?: Gallery;
+interface IViewHistoryCardProps {
+  scene?: IScene;
+  gallery?: IGallery;
   viewDate: string;
   oDate?: string;
   viewCount?: number;
 }
 
-export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
+export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
   scene,
   gallery,
   viewDate,
@@ -116,12 +116,12 @@ export const ViewHistoryCard: React.FC<ViewHistoryCardProps> = ({
           preview: gallery!.paths?.preview || gallery!.paths?.cover || "",
         },
         image_count: gallery!.image_count || 0,
-        files: gallery!.files?.map(file => ({
-          id: file.id,
-          path: file.path,
-          size: file.size,
-          mod_time: file.mod_time,
-          fingerprints: file.fingerprints.map(fp => ({
+        files: gallery!.files?.map(fileItem => ({
+          id: fileItem.id,
+          path: fileItem.path,
+          size: fileItem.size,
+          mod_time: fileItem.mod_time,
+          fingerprints: fileItem.fingerprints.map(fp => ({
             type: fp.type,
             value: fp.value,
           })),

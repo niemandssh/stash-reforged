@@ -57,7 +57,7 @@ const getSelectedItems = <T,>(
 };
 
 const SelectComponent = <T, IsMulti extends boolean>(
-  props: ISelectProps<T, IsMulti> & { selectRef?: React.Ref<any> }
+  props: ISelectProps<T, IsMulti> & { selectRef?: React.Ref<unknown> }
 ) => {
   const {
     selectedOptions,
@@ -176,7 +176,7 @@ export const FilterSelectComponent = <
   }
   const uniquePrefix = uniquePrefixRef.current;
 
-  const selectRef = useRef<any>(null);
+  const selectRef = useRef<unknown>(null);
   const [loading, setLoading] = useState(false);
   const shouldRestoreFocus = useRef(false);
   const Toast = useToast();
@@ -226,7 +226,6 @@ export const FilterSelectComponent = <
             }
             setLoading(true);
             const {
-              value,
               item: newItem,
               message,
             } = await props.onCreate!(name);

@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface UseIntersectionObserverOptions {
+interface IUseIntersectionObserverOptions {
   threshold?: number | number[];
   rootMargin?: string;
   root?: Element | null;
 }
 
 export function useIntersectionObserver(
-  options: UseIntersectionObserverOptions = {}
+  options: IUseIntersectionObserverOptions = {}
 ) {
   const [entries, setEntries] = useState<IntersectionObserverEntry[]>([]);
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -24,7 +24,7 @@ export function useIntersectionObserver(
         let maxIntersectionRatio = 0;
         let maxIndex = 0;
         
-        observedEntries.forEach((entry, index) => {
+        observedEntries.forEach((entry) => {
           if (entry.isIntersecting) {
             // Get the index from data-index attribute
             const dataIndex = parseInt((entry.target as HTMLElement).getAttribute('data-index') || '0', 10);

@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { useIntl } from "react-intl";
-import * as GQL from "src/core/generated-graphql";
 import { Form, Row, Col } from "react-bootstrap";
 import { Performer, PerformerSelect } from "src/components/Performers/PerformerSelect";
 import cx from "classnames";

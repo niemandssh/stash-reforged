@@ -1,6 +1,5 @@
 import React, { useMemo, useCallback } from "react";
 import { Tabs, Tab } from "react-bootstrap";
-import { FormattedMessage } from "react-intl";
 import { useHistory, useLocation } from "react-router-dom";
 
 import { GeneralStats } from "./GeneralStats";

@@ -20,7 +20,6 @@ import {
   useGalleryResetPlayCount,
 } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
-import { useToast } from "src/hooks/Toast";
 import TextUtils from "src/utils/text";
 
 const History: React.FC<{

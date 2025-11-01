@@ -6,13 +6,13 @@ import { ApexOptions } from "apexcharts";
 import { FormattedMessage, FormattedNumber, useIntl } from "react-intl";
 import "./OCountStats.scss";
 
-interface DataPoint {
+interface IDataPoint {
   date: string;
   date_display: string;
   count: number;
 }
 
-const OCountChart: React.FC<{ data: DataPoint[] }> = ({ data }) => {
+const OCountChart: React.FC<{ data: IDataPoint[] }> = ({ data }) => {
   const intl = useIntl();
 
   const xaxisCategories = useMemo(() => {
@@ -41,7 +41,7 @@ const OCountChart: React.FC<{ data: DataPoint[] }> = ({ data }) => {
           autoScaleYaxis: true
         },
         events: {
-          mounted: function(chartContext, config) {
+          mounted: function(chartContext) {
             if (data && data.length > 0) {
               // Зум на последние 30 дней от последней точки в данных
               const lastIndex = data.length - 1;
@@ -154,7 +154,7 @@ const OCountChart: React.FC<{ data: DataPoint[] }> = ({ data }) => {
         fixed: {
           enabled: false
         },
-          custom: function({ series, seriesIndex, dataPointIndex, w }) {
+          custom: function({ series, seriesIndex, dataPointIndex }) {
             const value = series[seriesIndex][dataPointIndex];
             const dateDisplay = data[dataPointIndex] ? data[dataPointIndex].date_display : '';
 

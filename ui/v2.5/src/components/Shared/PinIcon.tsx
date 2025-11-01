@@ -1,11 +1,11 @@
 import React from "react";
 
-interface PinIconProps {
+interface IPinIconProps {
   className?: string;
   title?: string;
 }
 
-export const PinIcon: React.FC<PinIconProps> = ({ className, title }) => (
+export const PinIcon: React.FC<IPinIconProps> = ({ className, title }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"

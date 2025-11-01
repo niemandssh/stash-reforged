@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Tag } from 'src/components/Tags/TagSelect';
 
-interface TagsHistoryState {
+interface ITagsHistoryState {
   tags: Tag[];
   timestamp: number;
 }
@@ -10,7 +10,7 @@ const MAX_HISTORY_SIZE = 100;
 const STORAGE_KEY_PREFIX = 'scene-tags-history-';
 
 export function useTagsHistory(sceneId: string | undefined) {
-  const [history, setHistory] = useState<TagsHistoryState[]>([]);
+  const [history, setHistory] = useState<ITagsHistoryState[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
 
   const storageKey = sceneId ? `${STORAGE_KEY_PREFIX}${sceneId}` : null;
@@ -21,7 +21,7 @@ export function useTagsHistory(sceneId: string | undefined) {
     try {
       const stored = localStorage.getItem(storageKey);
       if (stored) {
-        const parsedHistory: TagsHistoryState[] = JSON.parse(stored);
+        const parsedHistory: ITagsHistoryState[] = JSON.parse(stored);
         setHistory(parsedHistory);
         setCurrentIndex(parsedHistory.length - 1);
       }
@@ -30,7 +30,7 @@ export function useTagsHistory(sceneId: string | undefined) {
     }
   }, [storageKey]);
 
-  const saveToStorage = useCallback((newHistory: TagsHistoryState[]) => {
+  const saveToStorage = useCallback((newHistory: ITagsHistoryState[]) => {
     if (!storageKey) return;
 
     try {
@@ -41,7 +41,7 @@ export function useTagsHistory(sceneId: string | undefined) {
   }, [storageKey]);
 
   const addToHistory = useCallback((tags: Tag[]) => {
-    const newState: TagsHistoryState = {
+    const newState: ITagsHistoryState = {
       tags: [...tags],
       timestamp: Date.now()
     };

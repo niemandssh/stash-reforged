@@ -1,4 +1,4 @@
-export interface Scene {
+export interface IScene {
   id: string;
   title?: string;
   play_count?: number;
@@ -28,7 +28,7 @@ export interface Scene {
   };
 }
 
-export interface Gallery {
+export interface IGallery {
   id: string;
   title?: string;
   code?: string;
@@ -69,15 +69,15 @@ export interface Gallery {
   }>;
 }
 
-export interface ViewHistoryEntry {
-  scene?: Scene;
-  gallery?: Gallery;
+export interface IViewHistoryEntry {
+  scene?: IScene;
+  gallery?: IGallery;
   viewDate: string;
   oDate?: string;
   viewCount?: number;
 }
 
-export interface ViewHistoryResult {
+export interface IViewHistoryResult {
   count: number;
-  items: ViewHistoryEntry[];
+  items: IViewHistoryEntry[];
 }

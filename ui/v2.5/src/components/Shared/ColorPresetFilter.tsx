@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Form } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useFindColorPresets } from "src/core/StashService";
 import { ColorPreset } from "src/core/generated-graphql";
 
-interface ColorPresetFilterProps {
+interface IColorPresetFilterProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
 }
 
-export const ColorPresetFilter: React.FC<ColorPresetFilterProps> = ({
+export const ColorPresetFilter: React.FC<IColorPresetFilterProps> = ({
   value,
   onChange,
   disabled = false,
@@ -19,7 +19,7 @@ export const ColorPresetFilter: React.FC<ColorPresetFilterProps> = ({
   const { data: presetsData, loading } = useFindColorPresets();
   const [options, setOptions] = useState<Array<{ value: string; label: string }>>([]);
 
-  const presets = presetsData?.findColorPresets?.color_presets || [];
+  const presets = useMemo(() => presetsData?.findColorPresets?.color_presets || [], [presetsData]);
 
   useEffect(() => {
     const newOptions = [

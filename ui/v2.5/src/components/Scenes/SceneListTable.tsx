@@ -15,7 +15,6 @@ import { useTableColumns } from "src/hooks/useTableColumns";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
-import { Icon } from "../Shared/Icon";
 import { PinIcon } from "../Shared/PinIcon";
 
 interface ISceneListTableProps {

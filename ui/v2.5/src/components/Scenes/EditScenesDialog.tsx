@@ -262,10 +262,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     const existingValues = existingUrls;
 
     // Ensure values is always a clean array of strings
-    const cleanValues = React.useMemo(() =>
-      (values || []).filter(v => typeof v === 'string' && v.trim() !== ''),
-      [values]
-    );
+    const cleanValues = (values || []).filter(v => typeof v === 'string' && v.trim() !== '');
 
     function onSetMode(m: GQL.BulkUpdateIdMode) {
       if (m === mode) {
