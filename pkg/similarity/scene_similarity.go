@@ -83,7 +83,10 @@ func (c *SceneSimilarityCalculator) calculateSimilarityScore(ctx context.Context
 	// Calculate tag similarity breakdown
 	tags1 := scene1.TagIDs.List()
 	tags2 := scene2.TagIDs.List()
-	tagBreakdown, _, _, _, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	tagBreakdown, enhancedCount, normalCount, reducedCount, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	_ = enhancedCount // count not used in this calculation
+	_ = normalCount
+	_ = reducedCount
 	if err != nil {
 		return 0, fmt.Errorf("calculating tag similarity breakdown: %w", err)
 	}
@@ -325,7 +328,10 @@ func (c *SceneSimilarityCalculator) calculateSimilarityBreakdown(ctx context.Con
 
 	tags1 := scene1.TagIDs.List()
 	tags2 := scene2.TagIDs.List()
-	tagBreakdown, _, _, _, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	tagBreakdown, enhancedCount, normalCount, reducedCount, err := c.calculateTagSimilarityBreakdown(ctx, tags1, tags2)
+	_ = enhancedCount // count not used in this calculation
+	_ = normalCount
+	_ = reducedCount
 	if err != nil {
 		return nil, fmt.Errorf("calculating tag similarity breakdown: %w", err)
 	}
@@ -547,13 +553,14 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 			var maxMultiplier float64
 			for _, tagID := range tags1 {
 				weight := tagWeights[tagID]
-				if weight >= 1.0 {
+				switch {
+				case weight >= 1.0:
 					maxMultiplier += 0.5
-				} else if weight > 0.7 {
+				case weight > 0.7:
 					maxMultiplier += 0.4
-				} else if weight > 0.5 {
+				case weight > 0.5:
 					maxMultiplier += 0.3
-				} else {
+				default:
 					maxMultiplier += 0.2
 				}
 			}
@@ -586,26 +593,28 @@ func (c *SceneSimilarityCalculator) calculateTagSimilarity(ctx context.Context, 
 		weight := tagWeights[tagID]
 		totalWeight += weight
 
-		if weight >= 1.0 {
+		switch {
+		case weight >= 1.0:
 			highWeightTags++
-		} else if weight > 0.7 {
+		case weight > 0.7:
 			highWeightTags++
-		} else if weight > 0.5 {
+		case weight > 0.5:
 			mediumWeightTags++
-		} else {
+		default:
 			lowWeightTags++
 		}
 	}
 
 	// Calculate multiplier based on weight distribution
 	var multiplier float64
-	if highWeightTags > 0 {
+	switch {
+	case highWeightTags > 0:
 		// Significant multiplier for high weight tags
 		multiplier = 1.0 + float64(highWeightTags)*0.3
-	} else if mediumWeightTags > 0 {
+	case mediumWeightTags > 0:
 		// Small multiplier for medium weight tags
 		multiplier = 1.0 + float64(mediumWeightTags)*0.1
-	} else {
+	default:
 		// Penalty for low weight tags
 		multiplier = 0.5 + float64(lowWeightTags)*0.1
 	}
