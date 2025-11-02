@@ -313,6 +313,19 @@ func (r *joinRepository) replace(ctx context.Context, id int, foreignIDs []int) 
 	return nil
 }
 
+func (r *joinRepository) modifyJoins(ctx context.Context, id int, foreignIDs []int, mode models.RelationshipUpdateMode) error {
+	switch mode {
+	case models.RelationshipUpdateModeSet:
+		return r.replace(ctx, id, foreignIDs)
+	case models.RelationshipUpdateModeAdd:
+		return r.insertOrIgnore(ctx, id, foreignIDs...)
+	case models.RelationshipUpdateModeRemove:
+		return r.destroyJoins(ctx, id, foreignIDs...)
+	}
+
+	return nil
+}
+
 type captionRepository struct {
 	repository
 }

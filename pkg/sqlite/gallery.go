@@ -863,6 +863,10 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 			query.sortAndPagination += fmt.Sprintf(", (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
 		} else if sort == "o_counter" {
 			query.sortAndPagination += getCountSortWithoutOrderBy(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+		} else if sort == "file_mod_time" {
+			sortCol := "mod_time"
+			addFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sortCol, direction, fileTable)
 		} else if sort == "path" {
 			// special handling for path
 			addFileTable()

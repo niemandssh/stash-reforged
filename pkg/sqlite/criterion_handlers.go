@@ -299,13 +299,14 @@ func resolutionCriterionHandler(resolution *models.ResolutionCriterionInput, hei
 			mn := resolution.Value.GetMinResolution()
 			mx := resolution.Value.GetMaxResolution()
 
-			widthHeight := fmt.Sprintf("MIN(%s, %s)", widthColumn, heightColumn)
+			// Use COALESCE to handle NULL values (for scenes without video_files or with NULL width/height)
+			widthHeight := fmt.Sprintf("COALESCE(MIN(%s, %s), 0)", widthColumn, heightColumn)
 
 			switch resolution.Modifier {
 			case models.CriterionModifierEquals:
 				f.addWhere(fmt.Sprintf("%s BETWEEN %d AND %d", widthHeight, mn, mx))
 			case models.CriterionModifierNotEquals:
-				f.addWhere(fmt.Sprintf("%s NOT BETWEEN %d AND %d", widthHeight, mn, mx))
+				f.addWhere(fmt.Sprintf("(%s < %d OR %s > %d)", widthHeight, mn, widthHeight, mx))
 			case models.CriterionModifierLessThan:
 				f.addWhere(fmt.Sprintf("%s < %d", widthHeight, mn))
 			case models.CriterionModifierGreaterThan:

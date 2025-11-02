@@ -471,7 +471,7 @@ func (qb *SceneStore) UpdatePartial(ctx context.Context, id int, partial models.
 		}
 	}
 	if partial.PerformerIDs != nil {
-		if err := sceneRepository.performers.replace(ctx, id, partial.PerformerIDs.IDs); err != nil {
+		if err := sceneRepository.performers.modifyJoins(ctx, id, partial.PerformerIDs.IDs, partial.PerformerIDs.Mode); err != nil {
 			return nil, err
 		}
 	}
@@ -1257,6 +1257,39 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		// Always start with pinned sorting first
 		query.sortAndPagination += " ORDER BY scenes.pinned DESC"
 
+		// Helper functions for adding joins
+		addFileTable := func() {
+			query.addJoins(
+				join{
+					table:    scenesFilesTable,
+					onClause: "scenes_files.scene_id = scenes.id",
+				},
+				join{
+					table:    fileTable,
+					onClause: "scenes_files.file_id = files.id",
+				},
+			)
+		}
+
+		addVideoFileTable := func() {
+			addFileTable()
+			query.addJoins(
+				join{
+					table:    videoFileTable,
+					onClause: "video_files.file_id = scenes_files.file_id",
+				},
+			)
+		}
+
+		addFolderTable := func() {
+			query.addJoins(
+				join{
+					table:    folderTable,
+					onClause: "files.parent_folder_id = folders.id",
+				},
+			)
+		}
+
 		// Handle pinned sorting for non-search queries
 		if sort == "play_count" {
 			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesViewDatesTable, sceneIDColumn, direction)
@@ -1273,17 +1306,46 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 			query.join(groupsScenesTable, "", "scenes.id = groups_scenes.scene_id")
 			query.sortAndPagination += getSortWithoutOrderBy("scene_index", direction, groupsScenesTable)
 		} else if sort == "filesize" {
+			addFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, fileTable)
+		} else if sort == "bitrate" {
+			sortCol := "bit_rate"
+			addVideoFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sortCol, direction, videoFileTable)
+		} else if sort == "file_mod_time" {
+			sortCol := "mod_time"
+			addFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sortCol, direction, fileTable)
+		} else if sort == "framerate" {
+			sortCol := "frame_rate"
+			addVideoFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sortCol, direction, videoFileTable)
+		} else if sort == "duration" {
+			addVideoFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, videoFileTable)
+		} else if sort == "path" {
+			addFileTable()
+			addFolderTable()
+			query.sortAndPagination += fmt.Sprintf(", COALESCE(folders.path, '') || COALESCE(files.basename, '') COLLATE NATURAL_CI %s", direction)
+		} else if sort == "perceptual_similarity" {
+			addFileTable()
 			query.addJoins(
 				join{
-					table:    scenesFilesTable,
-					onClause: "scenes_files.scene_id = scenes.id",
-				},
-				join{
-					table:    fileTable,
-					onClause: "scenes_files.file_id = files.id",
+					table:    fingerprintTable,
+					as:       "fingerprints_phash",
+					onClause: "scenes_files.file_id = fingerprints_phash.file_id AND fingerprints_phash.type = 'phash'",
 				},
 			)
-			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, fileTable)
+			query.sortAndPagination += ", fingerprints_phash.fingerprint " + direction + ", files.size DESC"
+		} else if sort == "tag_count" {
+			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesTagsTable, sceneIDColumn, direction)
+		} else if sort == "performer_count" {
+			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, performersScenesTable, sceneIDColumn, direction)
+		} else if sort == "file_count" {
+			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesFilesTable, sceneIDColumn, direction)
+		} else if sort == "interactive" || sort == "interactive_speed" {
+			addVideoFileTable()
+			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, videoFileTable)
 		} else {
 			query.sortAndPagination += getSortWithoutOrderBy(sort, direction, "scenes")
 		}

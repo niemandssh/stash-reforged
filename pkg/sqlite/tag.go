@@ -622,14 +622,14 @@ func (qb *TagStore) Query(ctx context.Context, tagFilter *models.TagFilterType, 
 	distinctIDs(&query, tagTable)
 
 	if findFilter != nil {
-		if q := findFilter.Q; q != nil && *q != "" {
-			query.join(tagAliasesTable, "", "tag_aliases.tag_id = tags.id")
-			searchColumns := []string{"tags.name", "tag_aliases.alias", "tags.sort_name"}
-			query.parseQueryString(searchColumns, *q)
-		}
+	if q := findFilter.Q; q != nil && *q != "" {
+		query.join(tagAliasesTable, "", "tag_aliases.tag_id = tags.id")
+		searchColumns := []string{"tags.name", "tag_aliases.alias", "tags.sort_name"}
+		query.parseQueryString(searchColumns, *q)
+	}
 
 		if findFilter.GetSort("name") == "color_preset" {
-			query.join(colorPresetTable, "", "color_presets.color = tags.color")
+		query.join(colorPresetTable, "", "color_presets.color = tags.color")
 		}
 	}
 
