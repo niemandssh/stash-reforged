@@ -5,6 +5,7 @@
 - [x] **Galleries views** - count views like in scenes! View counts automatically only for "Web mode" when you scroll after 3rd image (once per gallery open)
 - [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
 - [x] **Scene views history page** - you can view list of scene views like in YouTube! Grouping of views in a row and o-count marker shows in a history card
+- [x] **Play markers mode in scene** - allows you to play only segments by one marker (for example, if a marker has 3 segments, they will be played one after another with automatic jumps to the next segment) sequentially or play all marker segments at once. This mode is useful for large movies with overlapping scenes where you want to watch only one scene, or for viewing only interesting content
 - [x] **HLS correction** - special checkbox in Scene filters tab that correct sound in HLS MP4 direct stream (these videos is broken but this mode can fix it, buffering delay only on start of play. Original transcodes was very laggy for me)
 - [x] Setting for show/hide percent of similarity in suggested scenes
 - [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
@@ -12,6 +13,8 @@
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
 - [x] **"Review" button** - fore review unorganised scenes without tags or rating
 - [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
+- [x] **Trim original video** - re-encode video with trimming based on trimmed segments (start time and end time)
+- [x] **Convert - Reduce resolution** - you can reduce resolution for big videos (for example, 4k to 2k or fullhd) if you don't want to store big files
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
 - [x] **O-Count for galleries!** - now you can add count of times for your comics ;)
 - [x] **O-Count stats and graphics**
@@ -21,6 +24,8 @@
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
 - [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 - [x] **Scene tags requirements helper** - if you fill descriptions and requirement status in color presets, you can see tag helper with checklist of fillable tags
+- [x] **New selective scan** - now you can select not only folders, but also individual files for scanning. New convenient Grid mode, selected files and folders are now displayed on the right side 
+- [x] **Separate tags for performers in scene** - useful for add tags by each performer if there is 3 or more performers in scene and you need to describe each of them
 - [x] URLs for bulk edit scene
 - [x] Fake item was added to away enter misclick on scene tags editing, now you can't create tag by do something like "crea"+Enter, now you can create it by "crea"+Key down+Enter (or by click on create element by left click of course)
 - [x] Show current or dead age for performer in the Scene's performer cards
@@ -47,6 +52,12 @@
 - [x] Undo/redo for tags field (you can type Ctrl+Z for return accidentally deleted tag)
 - [x] Collapse for scene description in Scene Details tab
 - [x] Normalize tag names on scrapping ("e-girl" becomes "e girl") - resolves scrape problems with XVideos tags (a lot of tags with hyphens)
+- [x] Random button in scenes list now always displayed, no need to select a special filter!
+- [x] Fixes for parallel tasks
+- [x] You can force regenerate sprites for scene now
+- [x] Icons for operations menu in scene
+- [x] GPU is now mandatory for video conversion, speeding up the process up to 10x!
+- [x] You can hide UI of player (fo make screen, for example)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
