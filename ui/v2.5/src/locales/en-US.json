@@ -183,6 +183,9 @@
     "actions_name": "Actions",
     "scene_data_updated_notification": "Scene data has been updated, click here to refresh",
     "config": {
+        "tasks": {
+            "selected_folders_and_files": "Selected folders and files"
+        },
         "tools": {
             "scene_filename_parser": {
                 "ignore_organized": "Ignore organized scenes"

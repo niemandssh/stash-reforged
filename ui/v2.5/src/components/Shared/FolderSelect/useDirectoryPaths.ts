@@ -10,7 +10,8 @@ export const useDirectoryPaths = (path: string, hideError: boolean) => {
   const currentData = loading ? prevData.current : data;
   const directories =
     error && hideError ? [] : currentData?.directory.directories;
+  const files = error && hideError ? [] : currentData?.directory.files;
   const parent = currentData?.directory.parent;
 
-  return { directories, parent, loading, error };
+  return { directories, files, parent, loading, error };
 };

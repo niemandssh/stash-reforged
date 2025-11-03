@@ -631,6 +631,7 @@
         "scanning_paths": "Scanning the following paths"
       },
       "scan_for_content_desc": "Scan for new content and add it to the database.",
+      "selected_folders_and_files": "Selected folders and files",
       "set_name_date_details_from_metadata_if_present": "Set name, date, details from embedded file metadata"
     },
     "tools": {

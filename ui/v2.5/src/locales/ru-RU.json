@@ -554,6 +554,7 @@
                 "scanning_paths": "Сканирование следующих путей"
             },
             "scan_for_content_desc": "Поиск нового контента и добавление его в базу данных.",
+            "selected_folders_and_files": "Выбранные папки и файлы",
             "set_name_date_details_from_metadata_if_present": "Задать имя, дату, детали из встроенных метаданных файла",
             "optimise_database": "Попытаться улучшить производительность путем анализа и перестройки базы данных.",
             "migrate_scene_screenshots": {

@@ -61,3 +61,42 @@ func listDir(col *collate.Collator, path string) ([]string, error) {
 	}
 	return dirPaths, nil
 }
+
+// listFiles will return the files (non-directories) of a given directory path as a string slice
+func listFiles(col *collate.Collator, path string) ([]string, error) {
+	var filePaths []string
+	dirPath := path
+
+	files, err := os.ReadDir(path)
+	if err != nil {
+		dirPath = filepath.Dir(path)
+		dirFiles, err := os.ReadDir(dirPath)
+		if err != nil {
+			return filePaths, err
+		}
+
+		// Filter dir contents by last path fragment if the dir isn't an exact match
+		base := strings.ToLower(filepath.Base(path))
+		if base != "." && base != string(filepath.Separator) {
+			for _, file := range dirFiles {
+				if strings.HasPrefix(strings.ToLower(file.Name()), base) {
+					files = append(files, file)
+				}
+			}
+		} else {
+			files = dirFiles
+		}
+	}
+
+	if col != nil {
+		col.Sort(dirLister(files))
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		filePaths = append(filePaths, filepath.Join(dirPath, file.Name()))
+	}
+	return filePaths, nil
+}

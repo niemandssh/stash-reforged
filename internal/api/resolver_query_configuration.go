@@ -34,9 +34,15 @@ func (r *queryResolver) Directory(ctx context.Context, path, locale *string) (*D
 		return directory, err
 	}
 
+	files, err := listFiles(col, currentDir)
+	if err != nil {
+		return directory, err
+	}
+
 	directory.Path = currentDir
 	directory.Parent = getParent(currentDir)
 	directory.Directories = directories
+	directory.Files = files
 
 	return directory, err
 }

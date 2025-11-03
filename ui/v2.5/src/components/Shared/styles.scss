@@ -196,17 +196,6 @@
       text-align: left;
       width: 100%;
     }
-
-    &:last-child .btn span::before {
-      content: "└ \1F4C1";
-    }
-
-    .btn span::before {
-      content: "├ \1F4C1";
-      display: inline-block;
-      padding-right: 1rem;
-      transform: scale(1.5);
-    }
   }
 
   &-parent {

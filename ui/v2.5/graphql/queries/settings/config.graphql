@@ -9,6 +9,7 @@ query Directory($path: String) {
     path
     parent
     directories
+    files
   }
 }
 
