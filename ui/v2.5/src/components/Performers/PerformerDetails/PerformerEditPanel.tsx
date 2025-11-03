@@ -217,7 +217,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         : undefined
     );
     formik.setFieldValue("primary_tag_id", performer.primary_tag?.id ?? null);
-  }, [performer.primary_tag, formik]);
+  }, [performer.primary_tag]);
 
   function onSetPrimaryTag(tag: Tag | undefined) {
     setPrimaryTag(tag);

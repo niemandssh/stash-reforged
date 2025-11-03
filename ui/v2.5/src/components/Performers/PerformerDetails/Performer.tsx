@@ -449,13 +449,15 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const { refetch: refetchPerformer } = useFindPerformer(performer.id);
 
     // Update currentPerformer when performer prop changes
+    const prevPerformerIdRef = useRef(performer.id);
     useEffect(() => {
-      const isDifferentPerformer = currentPerformer.id !== performer.id;
+      const isDifferentPerformer = prevPerformerIdRef.current !== performer.id;
+      prevPerformerIdRef.current = performer.id;
       setCurrentPerformer(performer);
       if (isDifferentPerformer) {
         setCurrentImageIndex(0); // Reset to first image only when performer changes
       }
-    }, [performer, currentPerformer.id]);
+    }, [performer]);
 
     // Auto-switch to primary image when profileImages changes
     const prevProfileImagesRef = useRef(currentPerformer.profile_images);

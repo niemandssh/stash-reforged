@@ -7,13 +7,11 @@
 #settings-menu-container {
   .nav-pills {
     .nav-link {
-      padding: 0;
-      background: transparent !important;
       background-color: transparent !important;
       color: $text-color !important;
+      padding: 0;
 
       &:hover:not(.active) {
-        background: rgba(138, 155, 168, 0.15) !important;
         background-color: rgba(138, 155, 168, 0.15) !important;
         color: $text-color !important;
       }
@@ -21,42 +19,36 @@
       &.active,
       &.show {
         background-color: rgba(138, 155, 168, 0.3) !important;
-        background: rgba(138, 155, 168, 0.1) !important;
         color: #f5f8fa !important;
       }
 
       &.active:hover {
         background-color: rgba(138, 155, 168, 0.3) !important;
-        background: rgba(138, 155, 168, 0.1) !important;
       }
     }
 
     .show > .nav-link {
       background-color: rgba(138, 155, 168, 0.3) !important;
-      background: rgba(138, 155, 168, 0.1) !important;
       color: #f5f8fa !important;
     }
   }
 
   .btn.minimal,
   button.btn.minimal {
-    background: transparent !important;
     background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
     color: $text-color !important;
     transition: none;
-    box-shadow: none !important;
 
     &:hover:not(:disabled) {
-      background: rgba(138, 155, 168, 0.15) !important;
       background-color: rgba(138, 155, 168, 0.15) !important;
-      color: $text-color !important;
       border: none !important;
+      color: $text-color !important;
     }
 
     &:active:not(:disabled),
     &:focus {
-      background: transparent !important;
       background-color: transparent !important;
       border: none !important;
       color: $text-color !important;

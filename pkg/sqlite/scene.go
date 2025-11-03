@@ -674,6 +674,10 @@ func (qb *SceneStore) findBySubquery(ctx context.Context, sq *goqu.SelectDataset
 		table.Col(idColumn).Eq(
 			sq,
 		),
+	).Order(
+		table.Col("date").Asc().NullsLast(),
+		table.Col("created_at").Desc(),
+		table.Col(idColumn).Asc(),
 	)
 
 	return qb.getMany(ctx, q)

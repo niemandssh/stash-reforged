@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import Mousetrap from "mousetrap";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { useHistory, useLocation } from "react-router-dom";
@@ -498,11 +498,25 @@ export function useQueryResult<
 ) {
   const { filter, filterHook, useResult, getItems, getCount } = props;
 
+  const effectiveFilterRef = useRef<ListFilterModel | null>(null);
+
   const effectiveFilter = useMemo(() => {
+    let newFilter: ListFilterModel;
     if (filterHook) {
-      return filterHook(filter.clone());
+      newFilter = filterHook(filter.clone());
+    } else {
+      newFilter = filter;
     }
-    return filter;
+
+    if (
+      effectiveFilterRef.current &&
+      isEqual(newFilter, effectiveFilterRef.current)
+    ) {
+      return effectiveFilterRef.current;
+    }
+
+    effectiveFilterRef.current = newFilter;
+    return newFilter;
   }, [filter, filterHook]);
 
   const result = useResult(effectiveFilter);

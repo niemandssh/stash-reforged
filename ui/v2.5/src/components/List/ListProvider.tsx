@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { IListSelect, useCachedQueryResult, useListSelect } from "./util";
-import { isFunction } from "lodash-es";
+import { isEqual, isFunction } from "lodash-es";
 import { IHasID } from "src/utils/data";
 import { useFilter } from "./FilterProvider";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -115,11 +115,25 @@ export const QueryResultContext = <
   const { filterHook, useResult, getItems, getCount, children } = props;
 
   const { filter } = useFilter();
+  const effectiveFilterRef = useRef<ListFilterModel | null>(null);
+
   const effectiveFilter = useMemo(() => {
+    let newFilter: ListFilterModel;
     if (filterHook) {
-      return filterHook(filter.clone());
+      newFilter = filterHook(filter.clone());
+    } else {
+      newFilter = filter;
     }
-    return filter;
+
+    if (
+      effectiveFilterRef.current &&
+      isEqual(newFilter, effectiveFilterRef.current)
+    ) {
+      return effectiveFilterRef.current;
+    }
+
+    effectiveFilterRef.current = newFilter;
+    return newFilter;
   }, [filter, filterHook]);
 
   const result = useResult(effectiveFilter);
