@@ -56,6 +56,7 @@
         "generate": "Сгенерировать",
         "generate_thumb_default": "Сгенерировать миниатюру по умолчанию",
         "generate_thumb_from_current": "Сгенерировать миниатюру из текущей",
+        "make_screen_from_current": "Сделать скрин из текущего кадра",
         "regenerate": "Перегенерировать",
         "regenerate_sprites": "Перегенерировать спрайты",
         "regenerate_sprites_started": "Перегенерация спрайтов запущена (задача {jobId})",
@@ -1313,7 +1314,8 @@
         },
         "folder": {
             "file_path": "Путь файла",
-            "up_dir": "Каталогом выше"
+            "up_dir": "Каталогом выше",
+            "add_this_directory": "Добавить этот каталог"
         },
         "github_repository": "Репозиторий Github",
         "migrate": {
@@ -1432,6 +1434,7 @@
         "default_filter_set": "Стандартный набор фильтров",
         "delete_past_tense": "Удален {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
         "generating_screenshot": "Создание скриншота…",
+        "saved_filtered_screenshot": "Скрин сохранён и добавлен в галерею",
         "merged_scenes": "Объединенные сцены",
         "merged_tags": "Объединенные тэги",
         "reassign_past_tense": "Файл переназначен",

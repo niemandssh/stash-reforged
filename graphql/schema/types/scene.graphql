@@ -424,3 +424,9 @@ input TrimVideoInput {
   start_time: Float!
   end_time: Float!
 }
+
+input SceneSaveFilteredScreenshotInput {
+  id: ID!
+  image: String!
+  at: Float
+}

@@ -52,6 +52,10 @@ func isImage(pathname string) bool {
 
 func getScanPaths(inputPaths []string) []*config.StashConfig {
 	stashPaths := config.GetInstance().GetStashPaths()
+	var savedScreensPath string
+	if instance != nil && instance.Paths.Generated != nil {
+		savedScreensPath = instance.Paths.Generated.SavedScreens
+	}
 
 	if len(inputPaths) == 0 {
 		return stashPaths
@@ -61,6 +65,14 @@ func getScanPaths(inputPaths []string) []*config.StashConfig {
 	for _, p := range inputPaths {
 		s := stashPaths.GetStashFromDirPath(p)
 		if s == nil {
+			if savedScreensPath != "" && fsutil.IsPathInDir(savedScreensPath, p) {
+				ret = append(ret, &config.StashConfig{
+					Path:         savedScreensPath,
+					ExcludeVideo: true,
+					ExcludeImage: false,
+				})
+				continue
+			}
 			logger.Warnf("%s is not in the configured stash paths", p)
 			continue
 		}

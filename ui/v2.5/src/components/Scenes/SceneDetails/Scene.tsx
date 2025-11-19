@@ -24,6 +24,7 @@ import {
   useFindScene,
   useSceneIncrementO,
   useSceneGenerateScreenshot,
+  useSceneSaveFilteredScreenshot,
   useSceneUpdate,
   queryFindScenes,
   queryFindScenesByID,
@@ -64,6 +65,7 @@ import {
   faCompressAlt,
   faCut,
   faImages,
+  faPhotoVideo,
   faExclamationTriangle,
   faCheckCircle,
   faUpload,
@@ -120,6 +122,7 @@ import { TrimVideoModal } from "./TrimVideoModal";
 import { RegenerateSpritesModal } from "./RegenerateSpritesModal";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
+import { captureFilteredSceneScreenshot } from "./captureFilteredScreenshot";
 
 const VideoFrameRateResolution: React.FC<{
   width?: number;
@@ -231,6 +234,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const intl = useIntl();
   const [updateScene] = useSceneUpdate();
   const [generateScreenshot] = useSceneGenerateScreenshot();
+  const [saveFilteredScreenshot] = useSceneSaveFilteredScreenshot();
   const { configuration } = useContext(ConfigurationContext);
 
   const [showDraftModal, setShowDraftModal] = useState(false);
@@ -241,6 +245,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     useState(false);
   const [showConvertToMP4Confirm, setShowConvertToMP4Confirm] = useState(false);
   const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] =
+    useState(false);
+  const [isSavingFilteredScreenshot, setIsSavingFilteredScreenshot] =
     useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
 
@@ -528,6 +534,34 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       },
     });
     Toast.success(intl.formatMessage({ id: "toast.generating_screenshot" }));
+  }
+
+  async function onSaveFilteredScreenshot() {
+    if (isSavingFilteredScreenshot) {
+      return;
+    }
+
+    try {
+      setIsSavingFilteredScreenshot(true);
+      const captured = await captureFilteredSceneScreenshot(scene);
+      const at = captured.at ?? getPlayerPosition() ?? undefined;
+      await saveFilteredScreenshot({
+        variables: {
+          input: {
+            id: scene.id,
+            image: captured.dataUrl,
+            at,
+          },
+        },
+      });
+      Toast.success(
+        intl.formatMessage({ id: "toast.saved_filtered_screenshot" })
+      );
+    } catch (e) {
+      Toast.error(e);
+    } finally {
+      setIsSavingFilteredScreenshot(false);
+    }
   }
 
   function onConvertToMP4() {
@@ -902,6 +936,17 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <Icon icon={faCamera} className="mr-2" />
             <FormattedMessage id="actions.generate_thumb_from_current" />
           </Dropdown.Item>
+          {scene.files.length > 0 && (
+            <Dropdown.Item
+              key="save-filtered-screenshot"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => onSaveFilteredScreenshot()}
+              disabled={isSavingFilteredScreenshot}
+            >
+              <Icon icon={faPhotoVideo} className="mr-2" />
+              <FormattedMessage id="actions.make_screen_from_current" />
+            </Dropdown.Item>
+          )}
           <Dropdown.Item
             key="generate-default"
             className="bg-secondary text-white d-flex align-items-center"

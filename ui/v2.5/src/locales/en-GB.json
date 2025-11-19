@@ -74,6 +74,7 @@
     "generate": "Generate...",
     "generate_thumb_default": "Generate default thumbnail",
     "generate_thumb_from_current": "Generate thumbnail from current",
+    "make_screen_from_current": "Make screen from current",
     "hash_migration": "hash migration",
     "hide": "Hide",
     "hide_configuration": "Hide Configuration",
@@ -1479,7 +1480,8 @@
     },
     "folder": {
       "file_path": "File path",
-      "up_dir": "Up a directory"
+      "up_dir": "Up a directory",
+      "add_this_directory": "Add this directory"
     },
     "github_repository": "Github repository",
     "migrate": {
@@ -1647,6 +1649,7 @@
     "default_filter_set": "Default filter set",
     "delete_past_tense": "Deleted {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
     "generating_screenshot": "Generating screenshot…",
+    "saved_filtered_screenshot": "Saved filtered screen and scheduled scan",
     "image_index_too_large": "Error: Image index is larger than the number of images in the Gallery",
     "merged_scenes": "Merged scenes",
     "merged_tags": "Merged tags",

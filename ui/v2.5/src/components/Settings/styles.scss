@@ -675,6 +675,30 @@
     }
   }
 
+  .directory-action-buttons {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .directory-action-button {
+    flex: 1 1 50%;
+    max-width: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    min-height: 2.25rem;
+    text-align: center;
+    white-space: nowrap;
+    font-size: 0.9rem;
+
+    .directory-action-label {
+      margin: 0;
+    }
+  }
+
 
   .directory-tiles {
     display: grid;
@@ -691,22 +715,8 @@
 
       &.tile-up {
         grid-column: 1 / -1;
-        
-        .tile-button {
-          height: 35px;
-          flex-direction: row;
-          padding: 0.5rem 1rem;
-          justify-content: flex-start;
-          gap: 0.5rem;
-          
-          .fa-icon {
-            font-size: 1rem;
-          }
-          
-          .tile-label {
-            font-size: 0.875rem;
-            margin-top: 0;
-          }
+        .directory-action-buttons {
+          width: 100%;
         }
       }
 

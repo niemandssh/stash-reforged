@@ -962,8 +962,31 @@ export const useSceneResetActivity = (
     },
   });
 
+type SceneSaveFilteredScreenshotVars = {
+  input: {
+    id: string;
+    image: string;
+    at?: number | null;
+  };
+};
+
+type SceneSaveFilteredScreenshotData = {
+  sceneSaveFilteredScreenshot: boolean;
+};
+
 export const useSceneGenerateScreenshot = () =>
   GQL.useSceneGenerateScreenshotMutation();
+
+export const useSceneSaveFilteredScreenshot = () =>
+  useMutation<SceneSaveFilteredScreenshotData, SceneSaveFilteredScreenshotVars>(
+    gql`
+      mutation SceneSaveFilteredScreenshot(
+        $input: SceneSaveFilteredScreenshotInput!
+      ) {
+        sceneSaveFilteredScreenshot(input: $input)
+      }
+    `
+  );
 
 export const useOpenInExternalPlayer = () =>
   GQL.useOpenInExternalPlayerMutation();

@@ -251,12 +251,18 @@ type scanFilter struct {
 
 	stashPaths        config.StashConfigs
 	generatedPath     string
+	savedScreensPath  string
 	videoExcludeRegex []*regexp.Regexp
 	imageExcludeRegex []*regexp.Regexp
 	minModTime        time.Time
 }
 
 func newScanFilter(c *config.Config, repo models.Repository, minModTime time.Time) *scanFilter {
+	var savedScreensPath string
+	if instance != nil && instance.Paths.Generated != nil {
+		savedScreensPath = instance.Paths.Generated.SavedScreens
+	}
+
 	return &scanFilter{
 		extensionConfig:   newExtensionConfig(c),
 		txnManager:        repo.TxnManager,
@@ -264,6 +270,7 @@ func newScanFilter(c *config.Config, repo models.Repository, minModTime time.Tim
 		CaptionUpdater:    repo.File,
 		stashPaths:        c.GetStashPaths(),
 		generatedPath:     c.GetGeneratedPath(),
+		savedScreensPath:  savedScreensPath,
 		videoExcludeRegex: generateRegexps(c.GetExcludes()),
 		imageExcludeRegex: generateRegexps(c.GetImageExcludes()),
 		minModTime:        minModTime,
@@ -272,8 +279,12 @@ func newScanFilter(c *config.Config, repo models.Repository, minModTime time.Tim
 
 func (f *scanFilter) Accept(ctx context.Context, path string, info fs.FileInfo) bool {
 	if fsutil.IsPathInDir(f.generatedPath, path) {
-		logger.Warnf("Skipping %q as it overlaps with the generated folder", path)
-		return false
+		if f.savedScreensPath != "" && fsutil.IsPathInDir(f.savedScreensPath, path) {
+			// allow scanning saved_screens
+		} else {
+			logger.Warnf("Skipping %q as it overlaps with the generated folder", path)
+			return false
+		}
 	}
 
 	// exit early on cutoff
@@ -283,8 +294,16 @@ func (f *scanFilter) Accept(ctx context.Context, path string, info fs.FileInfo) 
 
 	s := f.stashPaths.GetStashFromDirPath(path)
 	if s == nil {
-		logger.Debugf("Skipping %s as it is not in the stash library", path)
-		return false
+		if f.savedScreensPath != "" && fsutil.IsPathInDir(f.savedScreensPath, path) {
+			s = &config.StashConfig{
+				Path:         f.savedScreensPath,
+				ExcludeVideo: true,
+				ExcludeImage: false,
+			}
+		} else {
+			logger.Debugf("Skipping %s as it is not in the stash library", path)
+			return false
+		}
 	}
 
 	isVideoFile := useAsVideo(path)

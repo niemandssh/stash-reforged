@@ -383,6 +383,11 @@ type Mutation {
   "Generates screenshot at specified time in seconds. Leave empty to generate default screenshot"
   sceneGenerateScreenshot(id: ID!, at: Float): String!
 
+  "Saves a filtered screenshot provided by the client to the saved_screens folder and schedules a scan"
+  sceneSaveFilteredScreenshot(
+    input: SceneSaveFilteredScreenshotInput!
+  ): Boolean!
+
   sceneMarkerCreate(input: SceneMarkerCreateInput!): SceneMarker
   sceneMarkerUpdate(input: SceneMarkerUpdateInput!): SceneMarker
   sceneMarkerDestroy(id: ID!): Boolean!

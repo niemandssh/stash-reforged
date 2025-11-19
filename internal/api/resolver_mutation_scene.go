@@ -1270,6 +1270,18 @@ func (r *mutationResolver) SceneGenerateScreenshot(ctx context.Context, id strin
 	return "todo", nil
 }
 
+func (r *mutationResolver) SceneSaveFilteredScreenshot(ctx context.Context, input SceneSaveFilteredScreenshotInput) (bool, error) {
+	if strings.TrimSpace(input.Image) == "" {
+		return false, errors.New("image payload is required")
+	}
+
+	if err := manager.GetInstance().SaveFilteredScreenshot(ctx, input.ID, input.Image, input.At); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (r *mutationResolver) RecalculateSceneSimilarities(ctx context.Context, sceneID *string) (string, error) {
 	var sceneIDInt *int
 	if sceneID != nil {

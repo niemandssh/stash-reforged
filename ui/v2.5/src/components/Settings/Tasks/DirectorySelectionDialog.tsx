@@ -4,7 +4,6 @@ import {
   faPlus,
   faFolder,
   faFile,
-  faFileAlt,
   faList,
   faThLarge,
   faArrowUp,
@@ -56,6 +55,15 @@ export const DirectorySelectionDialog: React.FC<
     }
   }
 
+  const isCurrentDirectorySelected =
+    !!currentDirectory && paths.includes(currentDirectory);
+
+  function addCurrentDirectory() {
+    if (currentDirectory) {
+      addPath(currentDirectory);
+    }
+  }
+
   function navigateToPath(path: string) {
     setCurrentDirectory(path);
     if (!navigatedPaths.includes(path)) {
@@ -76,16 +84,34 @@ export const DirectorySelectionDialog: React.FC<
       <ul className="folder-list">
         {currentDirectory && parent && (
           <li className="folder-list-parent folder-list-item">
-            <Button
-              variant="link"
-              onClick={() => navigateUp()}
-              disabled={loading}
-            >
-              <Icon icon={faArrowUp} className="mr-2" />
-              <span>
-                <FormattedMessage id="setup.folder.up_dir" />
-              </span>
-            </Button>
+            <div className="directory-action-buttons">
+              <Button
+                variant="secondary"
+                className="directory-action-button"
+                onClick={() => navigateUp()}
+                disabled={loading}
+              >
+                <Icon icon={faArrowUp} className="mr-2" />
+                <span>
+                  <FormattedMessage id="setup.folder.up_dir" />
+                </span>
+              </Button>
+              <Button
+                variant="secondary"
+                className="directory-action-button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  addCurrentDirectory();
+                }}
+                disabled={loading || isCurrentDirectorySelected}
+              >
+                <Icon icon={faPlus} className="mr-1" />
+                {intl.formatMessage({
+                  id: "setup.folder.add_this_directory",
+                  defaultMessage: "Add this directory",
+                })}
+              </Button>
+            </div>
           </li>
         )}
         {directories.map((dir) => (
@@ -175,17 +201,31 @@ export const DirectorySelectionDialog: React.FC<
       <div className="directory-tiles">
         {currentDirectory && parent && (
           <div className="tile-item tile-up">
-            <Button
-              variant="secondary"
-              className="tile-button"
-              onClick={() => navigateUp()}
-              disabled={loading}
-            >
-              <div className="tile-label">
+            <div className="directory-action-buttons">
+              <Button
+                variant="secondary"
+                className="directory-action-button"
+                onClick={() => navigateUp()}
+                disabled={loading}
+              >
                 <Icon icon={faArrowUp} className="mr-2" />
-                {intl.formatMessage({ id: "setup.folder.up_dir" })}
-              </div>
-            </Button>
+                <span className="directory-action-label">
+                  {intl.formatMessage({ id: "setup.folder.up_dir" })}
+                </span>
+              </Button>
+              <Button
+                variant="secondary"
+                className="directory-action-button"
+                onClick={() => addCurrentDirectory()}
+                disabled={loading || isCurrentDirectorySelected}
+              >
+                <Icon icon={faPlus} className="mr-1" />
+                {intl.formatMessage({
+                  id: "setup.folder.add_this_directory",
+                  defaultMessage: "Add this directory",
+                })}
+              </Button>
+            </div>
           </div>
         )}
         {directories.map((dir) => (
