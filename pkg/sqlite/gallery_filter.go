@@ -86,6 +86,8 @@ func (qb *galleryFilterHandler) criterionHandler() criterionHandler {
 		qb.pathCriterionHandler(filter.Path),
 		qb.fileCountCriterionHandler(filter.FileCount),
 		intCriterionHandler(filter.Rating100, "galleries.rating", nil),
+		intCriterionHandler(filter.OCounter, "galleries.o_counter", nil),
+		intCriterionHandler(filter.OmegCounter, "galleries.omg_counter", nil),
 		qb.urlsCriterionHandler(filter.URL),
 		boolCriterionHandler(filter.Organized, "galleries.organized", nil),
 		boolCriterionHandler(filter.Pinned, "galleries.pinned", nil),

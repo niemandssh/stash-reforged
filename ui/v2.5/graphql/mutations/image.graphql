@@ -28,6 +28,18 @@ mutation ImageResetO($id: ID!) {
   imageResetO(id: $id)
 }
 
+mutation ImageIncrementOmg($id: ID!) {
+  imageIncrementOmg(id: $id)
+}
+
+mutation ImageDecrementOmg($id: ID!) {
+  imageDecrementOmg(id: $id)
+}
+
+mutation ImageResetOmg($id: ID!) {
+  imageResetOmg(id: $id)
+}
+
 mutation ImageDestroy(
   $id: ID!
   $delete_file: Boolean

@@ -1,5 +1,6 @@
 import {
   faEllipsisV,
+  faMinus,
   faPlus,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -13,12 +14,17 @@ import { Icon } from "src/components/Shared/Icon";
 import { ModalComponent } from "src/components/Shared/Modal";
 import {
   useSceneDecrementO,
+  useSceneDecrementOmg,
   useSceneDecrementPlayCount,
   useSceneIncrementO,
+  useSceneIncrementOmg,
   useSceneIncrementPlayCount,
   useSceneResetO,
+  useSceneResetOmg,
   useSceneResetPlayCount,
   useSceneResetActivity,
+  useSceneAddOmg,
+  useSceneDeleteOmg,
 } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
 import { useToast } from "src/hooks/Toast";
@@ -175,8 +181,10 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
   const [dialogs, setDialogs] = React.useState({
     playHistory: false,
     oHistory: false,
+    omgHistory: false,
     addPlay: false,
     addO: false,
+    addOMG: false,
   });
 
   function setDialogPartial(partial: Partial<typeof dialogs>) {
@@ -189,6 +197,11 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
   const [incrementOCount] = useSceneIncrementO(scene.id);
   const [decrementOCount] = useSceneDecrementO(scene.id);
   const [resetO] = useSceneResetO(scene.id);
+  const [incrementOmg] = useSceneIncrementOmg(scene.id);
+  const [decrementOmg] = useSceneDecrementOmg(scene.id);
+  const [resetOmg] = useSceneResetOmg(scene.id);
+  const [addOmg] = useSceneAddOmg(scene.id);
+  const [deleteOmg] = useSceneDeleteOmg(scene.id);
   const [resetResume] = useSceneResetActivity(scene.id, true, false);
   const [resetDuration] = useSceneResetActivity(scene.id, false, true);
 
@@ -238,7 +251,7 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     decrementOCount({
       variables: {
         id: scene.id,
-        times: time ? [time] : undefined,
+        times: [time],
       },
     });
   }
@@ -246,6 +259,33 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
   function handleClearODates() {
     setDialogPartial({ oHistory: false });
     resetO({
+      variables: {
+        id: scene.id,
+      },
+    });
+  }
+
+  function handleAddOMGDate(time?: string) {
+    addOmg({
+      variables: {
+        id: scene.id,
+        times: time ? [time] : undefined,
+      },
+    });
+  }
+
+  function handleDeleteOMGDate(time: string) {
+    deleteOmg({
+      variables: {
+        id: scene.id,
+        times: [time],
+      },
+    });
+  }
+
+  function handleClearOMGDates() {
+    setDialogPartial({ omgHistory: false });
+    resetOmg({
       variables: {
         id: scene.id,
       },
@@ -307,6 +347,13 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
           onConfirm={() => handleClearODates()}
           onCancel={() => setDialogPartial({ oHistory: false })}
         />
+        <AlertModal
+          show={dialogs.omgHistory}
+          text={intl.formatMessage({ id: "dialogs.clear_omg_history_confirm" })}
+          confirmButtonText={intl.formatMessage({ id: "actions.clear" })}
+          onConfirm={() => handleClearOMGDates()}
+          onCancel={() => setDialogPartial({ omgHistory: false })}
+        />
         {/* add conditions here so that date is generated correctly */}
         {dialogs.addPlay && (
           <DatePickerModal
@@ -332,6 +379,18 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
             }}
           />
         )}
+        {dialogs.addOMG && (
+          <DatePickerModal
+            show
+            onClose={(t) => {
+              const tt = t ? dateStringToISOString(t) : null;
+              if (tt) {
+                handleAddOMGDate(tt);
+              }
+              setDialogPartial({ addOMG: false });
+            }}
+          />
+        )}
       </>
     );
   }
@@ -340,6 +399,7 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     (h) => h != null
   ) as string[];
   const oHistory = (scene.o_history ?? []).filter((h) => h != null) as string[];
+  const omgHistory = (scene.omg_history ?? []).filter((h) => h != null) as string[];
 
   return (
     <div>
@@ -420,6 +480,42 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
           noneID="odate_recorded_no"
           unknownDate={scene.created_at}
           onRemove={(t) => handleDeleteODate(t)}
+        />
+      </div>
+
+      <div className="omg-history">
+        <div className="history-header">
+          <h5>
+            <span>
+              <FormattedMessage id="omg_history" />
+              <Counter count={omgHistory.length} hideZero />
+            </span>
+            <span>
+              <Button
+                size="sm"
+                variant="minimal"
+                className="add-date-button"
+                title={intl.formatMessage({ id: "actions.add_omg" })}
+                onClick={() => handleAddOMGDate()}
+              >
+                <Icon icon={faPlus} />
+              </Button>
+              <HistoryMenu
+                hasHistory={omgHistory.length > 0}
+                showResetResumeDuration={false}
+                onAddDate={() => setDialogPartial({ addOMG: true })}
+                onClearDates={() => setDialogPartial({ omgHistory: true })}
+                resetResume={() => handleResetResume()}
+                resetDuration={() => handleResetDuration()}
+              />
+            </span>
+          </h5>
+        </div>
+        <History
+          history={omgHistory}
+          noneID="omgdate_recorded_no"
+          unknownDate={scene.created_at}
+          onRemove={(t) => handleDeleteOMGDate(t)}
         />
       </div>
     </div>

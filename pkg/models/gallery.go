@@ -23,6 +23,10 @@ type GalleryFilterType struct {
 	Organized *bool `json:"organized"`
 	// Filter by pinned
 	Pinned *bool `json:"pinned"`
+	// Filter by o-counter
+	OCounter *IntCriterionInput `json:"o_counter"`
+	// Filter by omg-counter
+	OmegCounter *IntCriterionInput `json:"omg_counter"`
 	// Filter by average image resolution
 	AverageResolution *ResolutionCriterionInput `json:"average_resolution"`
 	// Filter to only include scenes which have chapters. `true` or `false`

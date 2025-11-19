@@ -3,6 +3,7 @@ import React from "react";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { Icon } from "src/components/Shared/Icon";
 import { SweatDrops } from "./SweatDrops";
+import { OMGIcon } from "./OMGIcon";
 import cx from "classnames";
 import { useIntl } from "react-intl";
 
@@ -68,6 +69,18 @@ export const OCounterButton: React.FC<CountButtonPropsNoIcon> = (props) => {
       {...props}
       icon={<SweatDrops />}
       title={intl.formatMessage({ id: "o_count" })}
+      countTitle={intl.formatMessage({ id: "actions.view_history" })}
+    />
+  );
+};
+
+export const OMGCounterButton: React.FC<CountButtonPropsNoIcon> = (props) => {
+  const intl = useIntl();
+  return (
+    <CountButton
+      {...props}
+      icon={<OMGIcon />}
+      title={intl.formatMessage({ id: "omg_counter" })}
       countTitle={intl.formatMessage({ id: "actions.view_history" })}
     />
   );

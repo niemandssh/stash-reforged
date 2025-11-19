@@ -87,10 +87,16 @@ type GalleryOCounter interface {
 	DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
 	ResetO(ctx context.Context, id int) (int, error)
 	OCount(ctx context.Context) (int, error)
+	GetAllOCount(ctx context.Context) (int, error)
 	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
+	GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
 	OCountByPerformerID(ctx context.Context, performerID int) (int, error)
 	GetManyOCount(ctx context.Context, ids []int) ([]int, error)
 	GetManyODates(ctx context.Context, ids []int) ([][]time.Time, error)
+	IncrementOMGCounter(ctx context.Context, id int) (int, error)
+	DecrementOMGCounter(ctx context.Context, id int) (int, error)
+	ResetOMGCounter(ctx context.Context, id int) (int, error)
+	GetAllOMGCount(ctx context.Context) (int, error)
 }
 
 // GalleryWriter provides all methods to modify galleries.

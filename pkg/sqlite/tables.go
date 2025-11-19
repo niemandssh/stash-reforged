@@ -99,6 +99,14 @@ var (
 		},
 		valueColumn: imagesURLsJoinTable.Col(imageURLColumn),
 	}
+
+	imagesOMGTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T("images_omg_dates"),
+			idColumn: goqu.T("images_omg_dates").Col(imageIDColumn),
+		},
+		dateColumn: goqu.T("images_omg_dates").Col("omg_date"),
+	}
 )
 
 var (
@@ -159,6 +167,14 @@ var (
 			idColumn: galleriesODatesJoinTable.Col(galleryIDColumn),
 		},
 		dateColumn: galleriesODatesJoinTable.Col(galleryODateColumn),
+	}
+
+	galleriesOMGTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T("galleries_omg_dates"),
+			idColumn: goqu.T("galleries_omg_dates").Col(galleryIDColumn),
+		},
+		dateColumn: goqu.T("galleries_omg_dates").Col("omg_date"),
 	}
 
 	galleriesViewTableMgr = &viewHistoryTable{
@@ -254,6 +270,14 @@ var (
 			idColumn: goqu.T(scenesODatesTable).Col(sceneIDColumn),
 		},
 		dateColumn: goqu.T(scenesODatesTable).Col(sceneODateColumn),
+	}
+
+	scenesOMGTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T(scenesOMGDatesTable),
+			idColumn: goqu.T(scenesOMGDatesTable).Col(sceneIDColumn),
+		},
+		dateColumn: goqu.T(scenesOMGDatesTable).Col(sceneOMGDateColumn),
 	}
 
 	sceneSimilaritiesTableMgr = &table{

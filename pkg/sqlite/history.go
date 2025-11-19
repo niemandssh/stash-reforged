@@ -49,7 +49,15 @@ func (qb *viewDateManager) GetAggregatedViewHistory(ctx context.Context, page, p
 				AND sod.o_date > gv.earliest_view_date
 				ORDER BY sod.o_date ASC
 				LIMIT 1
-			) as o_date
+			) as o_date,
+			(
+				SELECT somgd.omg_date
+				FROM scenes_omg_dates somgd
+				WHERE somgd.scene_id = gv.scene_id
+				AND somgd.omg_date > gv.earliest_view_date
+				ORDER BY somgd.omg_date ASC
+				LIMIT 1
+			) as omg_date
 		FROM (
 			SELECT
 				svd.scene_id,
@@ -76,8 +84,9 @@ func (qb *viewDateManager) GetAggregatedViewHistory(ctx context.Context, page, p
 		var viewDateStr string
 		var viewCount int
 		var oDateStr *string
+		var omgDateStr *string
 
-		err := rows.Scan(&sceneID, &viewDateStr, &viewCount, &oDateStr)
+		err := rows.Scan(&sceneID, &viewDateStr, &viewCount, &oDateStr, &omgDateStr)
 		if err != nil {
 			return nil, err
 		}
@@ -98,6 +107,14 @@ func (qb *viewDateManager) GetAggregatedViewHistory(ctx context.Context, page, p
 				}
 				av.ODate = &oDate
 			}
+			// If we have omg_date, update it (take the first one)
+			if omgDateStr != nil && av.OmgDate == nil {
+				omgDate, err := time.Parse(time.RFC3339, *omgDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.OmgDate = &omgDate
+			}
 		} else {
 			// Create new entry
 			av := &models.AggregatedView{
@@ -112,6 +129,14 @@ func (qb *viewDateManager) GetAggregatedViewHistory(ctx context.Context, page, p
 					return nil, err
 				}
 				av.ODate = &oDate
+			}
+
+			if omgDateStr != nil {
+				omgDate, err := time.Parse(time.RFC3339, *omgDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.OmgDate = &omgDate
 			}
 
 			resultMap[sceneID] = av
@@ -207,5 +232,49 @@ func (qb *oDateManager) ResetO(ctx context.Context, id int) (int, error) {
 }
 
 func (qb *oDateManager) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.tableMgr.getDatesInRange(ctx, start, end)
+}
+
+type omgDateManager struct {
+	tableMgr *viewHistoryTable
+}
+
+func (qb *omgDateManager) GetOMGDates(ctx context.Context, id int) ([]time.Time, error) {
+	return qb.tableMgr.getDates(ctx, id)
+}
+
+func (qb *omgDateManager) GetManyOMGDates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	return qb.tableMgr.getManyDates(ctx, ids)
+}
+
+func (qb *omgDateManager) GetOMGCount(ctx context.Context, id int) (int, error) {
+	return qb.tableMgr.getCount(ctx, id)
+}
+
+func (qb *omgDateManager) GetManyOMGCount(ctx context.Context, ids []int) ([]int, error) {
+	return qb.tableMgr.getManyCount(ctx, ids)
+}
+
+func (qb *omgDateManager) GetAllOMGCount(ctx context.Context) (int, error) {
+	return qb.tableMgr.getAllCount(ctx)
+}
+
+func (qb *omgDateManager) GetUniqueOMGCount(ctx context.Context) (int, error) {
+	return qb.tableMgr.getUniqueCount(ctx)
+}
+
+func (qb *omgDateManager) AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.tableMgr.addDates(ctx, id, dates)
+}
+
+func (qb *omgDateManager) DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.tableMgr.deleteDates(ctx, id, dates)
+}
+
+func (qb *omgDateManager) ResetOMG(ctx context.Context, id int) (int, error) {
+	return qb.tableMgr.deleteAllDates(ctx, id)
+}
+
+func (qb *omgDateManager) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
 	return qb.tableMgr.getDatesInRange(ctx, start, end)
 }

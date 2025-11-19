@@ -500,6 +500,19 @@ func (r *sceneResolver) OCounter(ctx context.Context, obj *models.Scene) (*int, 
 	return &ret, nil
 }
 
+func (r *sceneResolver) OmgCounter(ctx context.Context, obj *models.Scene) (*int, error) {
+	var ret int
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		ret, err = r.repository.Scene.GetOMGCounter(ctx, obj.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &ret, nil
+}
+
 func (r *sceneResolver) LastPlayedAt(ctx context.Context, obj *models.Scene) (*time.Time, error) {
 	ret, err := loaders.From(ctx).SceneLastPlayed.Load(obj.ID)
 	if err != nil {
@@ -537,6 +550,26 @@ func (r *sceneResolver) PlayHistory(ctx context.Context, obj *models.Scene) ([]*
 func (r *sceneResolver) OHistory(ctx context.Context, obj *models.Scene) ([]*time.Time, error) {
 	ret, err := loaders.From(ctx).SceneOHistory.Load(obj.ID)
 	if err != nil {
+		return nil, err
+	}
+
+	// convert to pointer slice
+	ptrRet := make([]*time.Time, len(ret))
+	for i, t := range ret {
+		tt := t
+		ptrRet[i] = &tt
+	}
+
+	return ptrRet, nil
+}
+
+func (r *sceneResolver) OmgHistory(ctx context.Context, obj *models.Scene) ([]*time.Time, error) {
+	var ret []time.Time
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		ret, err = r.repository.Scene.GetOMGDates(ctx, obj.ID)
+		return err
+	}); err != nil {
 		return nil, err
 	}
 

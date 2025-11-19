@@ -154,6 +154,7 @@
         "assign_stashid_to_parent_studio": "Присвоить Stash ID для текущей родительской студии и обновить метаданные",
         "add_manual_date": "Добавить дату вручную",
         "add_o": "Добавить О",
+        "add_omg": "Добавить OMG",
         "add_play": "Добавить проигрывание",
         "choose_date": "Выбрать дату",
         "clean_generated": "Очистить сгенерированные файлы",
@@ -992,6 +993,7 @@
         "clear_play_history_confirm": "Вы уверены, что хотите удалить историю просмотра?",
         "performers_found": "{count} исполнителей найдено",
         "clear_o_history_confirm": "Вы уверены, что хотите очистить историю О?",
+        "clear_omg_history_confirm": "Вы уверены, что хотите очистить историю OMG?",
         "reduce_resolution": {
             "title": "Уменьшить разрешение видео",
             "confirm_title": "Подтвердить уменьшение разрешения",
@@ -1204,6 +1206,7 @@
     "new": "Новый",
     "none": "Отсутствует",
     "o_counter": "О-Счетчик",
+    "omg_counter": "OMG Count",
     "operations": "Операции",
     "organized": "Организован",
     "pagination": {
@@ -1404,6 +1407,7 @@
         "scenes_size": "Объем сцен",
         "scenes_played": "Количество показанных сцен",
         "total_o_count": "Значение О-счетчика",
+        "total_omg_count": "Значение OMG-счетчика",
         "total_play_count": "Общее количество просмотров",
         "total_play_duration": "Общая длительность просмотров",
         "tabs": {
@@ -1577,6 +1581,8 @@
     "last_o_at": "Последний О на",
     "o_history": "История О",
     "odate_recorded_no": "Нет записанной даты О",
+    "omg_history": "История OMG",
+    "omgdate_recorded_no": "Нет записанной даты OMG",
     "play_history": "История просмотров",
     "playdate_recorded_no": "Нет сохраненной даты просмотра",
     "subsidiary_studio_count": "Количество дочерних студий",

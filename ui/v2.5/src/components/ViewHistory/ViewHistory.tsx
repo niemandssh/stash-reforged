@@ -84,6 +84,8 @@ export const ViewHistory: React.FC = () => {
   }, [loadMore, hasMore, loading]);
 
   const totalViews = data?.findViewHistory?.count || 0;
+  const totalOCount = data?.findViewHistory?.totalOCount || 0;
+  const totalOMGCount = data?.findViewHistory?.totalOMGCount || 0;
 
   if (loading && page === 1) {
     return <LoadingIndicator />;
@@ -105,9 +107,21 @@ export const ViewHistory: React.FC = () => {
       <div className="view-history-container">
         <div className="view-history-header">
           <h1>{intl.formatMessage({ id: "view_history" })}</h1>
-          <span className="view-history-total-views">
-            {intl.formatMessage({ id: "total_views" }, { count: totalViews })}
-          </span>
+          <div className="view-history-stats">
+            <span className="view-history-total-views">
+              {intl.formatMessage({ id: "total_views" }, { count: totalViews })}
+            </span>
+            {totalOCount > 0 && (
+              <span className="view-history-total-o-count">
+                {intl.formatMessage({ id: "o_count" })}: {totalOCount}
+              </span>
+            )}
+            {totalOMGCount > 0 && (
+              <span className="view-history-total-omg-count">
+                {intl.formatMessage({ id: "omg_counter" })}: {totalOMGCount}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="view-history-content">
@@ -124,6 +138,7 @@ export const ViewHistory: React.FC = () => {
                     gallery={item.gallery}
                     viewDate={item.viewDate}
                     oDate={item.oDate}
+                    omgDate={item.omgDate}
                     viewCount={item.viewCount}
                   />
                 ))}

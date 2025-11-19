@@ -10,6 +10,7 @@ type Image {
   details: String
   photographer: String
   o_counter: Int
+  omgCounter: Int
   organized: Boolean!
   created_at: Time!
   updated_at: Time!

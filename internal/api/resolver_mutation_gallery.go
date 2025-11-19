@@ -813,6 +813,63 @@ func (r *mutationResolver) GalleryResetO(ctx context.Context, id string) (int, e
 	return ret, nil
 }
 
+func (r *mutationResolver) GalleryIncrementOmg(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.IncrementOMGCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) GalleryDecrementOmg(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.DecrementOMGCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) GalleryResetOmg(ctx context.Context, id string) (int, error) {
+	galleryID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, err
+	}
+
+	var ret int
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Gallery
+
+		ret, err = qb.ResetOMGCounter(ctx, galleryID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
 func (r *mutationResolver) GalleryIncrementPlay(ctx context.Context, id string) (int, error) {
 	galleryID, err := strconv.Atoi(id)
 	if err != nil {

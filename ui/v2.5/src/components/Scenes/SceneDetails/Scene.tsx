@@ -23,6 +23,9 @@ import {
   mutateMetadataScan,
   useFindScene,
   useSceneIncrementO,
+  useSceneIncrementOmg,
+  useSceneDecrementOmg,
+  useSceneResetOmg,
   useSceneGenerateScreenshot,
   useSceneSaveFilteredScreenshot,
   useSceneUpdate,
@@ -77,6 +80,7 @@ import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import TextUtils from "src/utils/text";
 import {
   OCounterButton,
+  OMGCounterButton,
   ViewCountButton,
 } from "src/components/Shared/CountButton";
 import { useRatingKeybinds } from "src/hooks/keybinds";
@@ -251,6 +255,9 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const boxes = configuration?.general?.stashBoxes ?? [];
 
   const [incrementO] = useSceneIncrementO(scene.id);
+  const [incrementOmg] = useSceneIncrementOmg(scene.id);
+  const [decrementOmg] = useSceneDecrementOmg(scene.id);
+  const [resetOmg] = useSceneResetOmg(scene.id);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
@@ -376,6 +383,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     // Trigger a refetch of the scene data
     if (onSaved) {
       onSaved();
+    }
+  };
+
+  const onIncrementOMGClick = async () => {
+    try {
+      await incrementOmg();
+    } catch (e) {
+      Toast.error(e);
     }
   };
 
@@ -1351,12 +1366,20 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
                 <ViewCountButton
                   value={scene.play_count ?? 0}
                   onIncrement={() => incrementPlayCount()}
+                  onValueClicked={() => setActiveTabKey("scene-history-panel")}
                 />
               </span>
               <span>
                 <OCounterButton
                   value={scene.o_counter ?? 0}
                   onIncrement={() => onIncrementOClick()}
+                />
+              </span>
+              <span>
+                <OMGCounterButton
+                  value={scene.omgCounter ?? 0}
+                  onIncrement={() => onIncrementOMGClick()}
+                  onValueClicked={() => setActiveTabKey("scene-history-panel")}
                 />
               </span>
               <span>

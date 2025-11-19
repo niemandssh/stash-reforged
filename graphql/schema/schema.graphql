@@ -320,6 +320,15 @@ type Mutation {
   "Resets the o-counter for a scene to 0. Returns the new value"
   sceneResetO(id: ID!): Int!
 
+  "Increments the omg-counter for a scene. Returns the new value"
+  sceneIncrementOmg(id: ID!): Int!
+  "Decrements the omg-counter for a scene. Returns the new value"
+  sceneDecrementOmg(id: ID!): Int!
+  "Resets the omg-counter for a scene to 0. Returns the new value"
+  sceneResetOmg(id: ID!): Int!
+  sceneAddOmg(id: ID!, times: [Timestamp!]): HistoryMutationResult!
+  sceneDeleteOmg(id: ID!, times: [Timestamp!]): HistoryMutationResult!
+
   "Increments the o-counter for a gallery. Returns the new value"
   galleryIncrementO(id: ID!): Int!
     @deprecated(reason: "Use galleryAddO instead")
@@ -334,6 +343,13 @@ type Mutation {
 
   "Resets the o-counter for a gallery to 0. Returns the new value"
   galleryResetO(id: ID!): Int!
+
+  "Increments the omg-counter for a gallery. Returns the new value"
+  galleryIncrementOmg(id: ID!): Int!
+  "Decrements the omg-counter for a gallery. Returns the new value"
+  galleryDecrementOmg(id: ID!): Int!
+  "Resets the omg-counter for a gallery to 0. Returns the new value"
+  galleryResetOmg(id: ID!): Int!
 
   "Increments the play count for a gallery. Returns the new value"
   galleryIncrementPlay(id: ID!): Int!
@@ -407,6 +423,13 @@ type Mutation {
   imageDecrementO(id: ID!): Int!
   "Resets the o-counter for a image to 0. Returns the new value"
   imageResetO(id: ID!): Int!
+
+  "Increments the omg-counter for an image. Returns the new value"
+  imageIncrementOmg(id: ID!): Int!
+  "Decrements the omg-counter for an image. Returns the new value"
+  imageDecrementOmg(id: ID!): Int!
+  "Resets the omg-counter for an image to 0. Returns the new value"
+  imageResetOmg(id: ID!): Int!
 
   galleryCreate(input: GalleryCreateInput!): Gallery
   galleryUpdate(input: GalleryUpdateInput!): Gallery

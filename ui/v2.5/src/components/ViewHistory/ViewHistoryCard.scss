@@ -168,16 +168,27 @@
   }
 }
 
-.view-history-o-count-indicator {
+.view-history-count-indicators {
   align-items: center;
   bottom: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  position: absolute;
+  right: 2rem;
+}
+
+.view-history-o-count-indicator,
+.view-history-omg-count-indicator {
+  align-items: center;
   color: white;
   display: flex;
   font-size: 16px;
   justify-content: center;
-  position: absolute;
-  right: 2rem;
-  transform: translateY(-50%);
+}
+
+.view-history-omg-count-indicator {
+  margin-right: -6px;
+  margin-left: 6px;
 }
 
 // Override object-fit for view history cards to show video fully
@@ -229,7 +240,7 @@
     width: 100%;
   }
 
-  .view-history-o-count-indicator {
+  .view-history-count-indicators {
     right: 0.5rem;
     top: 0.5rem;
   }

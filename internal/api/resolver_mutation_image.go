@@ -447,3 +447,57 @@ func (r *mutationResolver) ImageResetO(ctx context.Context, id string) (ret int,
 
 	return ret, nil
 }
+
+func (r *mutationResolver) ImageIncrementOmg(ctx context.Context, id string) (ret int, err error) {
+	imageID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Image
+
+		ret, err = qb.IncrementOMGCounter(ctx, imageID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) ImageDecrementOmg(ctx context.Context, id string) (ret int, err error) {
+	imageID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Image
+
+		ret, err = qb.DecrementOMGCounter(ctx, imageID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) ImageResetOmg(ctx context.Context, id string) (ret int, err error) {
+	imageID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Image
+
+		ret, err = qb.ResetOMGCounter(ctx, imageID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}

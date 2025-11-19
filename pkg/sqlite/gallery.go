@@ -30,6 +30,8 @@ const (
 	galleriesURLColumn       = "url"
 	galleriesODatesTable     = "galleries_o_dates"
 	galleryODateColumn       = "o_date"
+	galleriesOMGDatesTable   = "galleries_omg_dates"
+	galleryOMGDateColumn     = "omg_date"
 	galleriesViewDatesTable  = "galleries_view_dates"
 	galleryViewDateColumn    = "view_date"
 )
@@ -46,6 +48,7 @@ type galleryRow struct {
 	Organized   bool      `db:"organized"`
 	Pinned      bool      `db:"pinned"`
 	OCounter    int       `db:"o_counter"`
+	OmegCounter int       `db:"omg_counter"`
 	DisplayMode null.Int  `db:"display_mode"`
 	StudioID    null.Int  `db:"studio_id,omitempty"`
 	FolderID    null.Int  `db:"folder_id,omitempty"`
@@ -64,6 +67,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Organized = o.Organized
 	r.Pinned = o.Pinned
 	r.OCounter = o.OCounter
+	r.OmegCounter = o.OmegCounter
 	r.DisplayMode = intFromValue(o.DisplayMode)
 	r.StudioID = intFromPtr(o.StudioID)
 	r.FolderID = nullIntFromFolderIDPtr(o.FolderID)
@@ -92,6 +96,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Organized:     r.Organized,
 		Pinned:        r.Pinned,
 		OCounter:      r.OCounter,
+		OmegCounter:   r.OmegCounter,
 		DisplayMode:   int(r.DisplayMode.Int64),
 		StudioID:      nullIntPtr(r.StudioID),
 		FolderID:      nullIntFolderIDPtr(r.FolderID),
@@ -122,6 +127,7 @@ func (r *galleryRowRecord) fromPartial(o models.GalleryPartial) {
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
 	r.setBool("pinned", o.Pinned)
+	r.setInt("omg_counter", o.OmegCounter)
 	r.setNullInt("display_mode", o.DisplayMode)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
@@ -199,7 +205,9 @@ var (
 type GalleryStore struct {
 	tableMgr *table
 	oDateManager
+	omgDateManager
 	oCounterManager
+	omgCounterManager
 	viewDateManager
 
 	fileStore   *FileStore
@@ -208,12 +216,14 @@ type GalleryStore struct {
 
 func NewGalleryStore(fileStore *FileStore, folderStore *FolderStore) *GalleryStore {
 	return &GalleryStore{
-		tableMgr:        galleryTableMgr,
-		oDateManager:    oDateManager{galleriesOTableMgr},
-		oCounterManager: oCounterManager{galleryTableMgr},
-		viewDateManager: viewDateManager{tableMgr: galleriesViewTableMgr},
-		fileStore:       fileStore,
-		folderStore:     folderStore,
+		tableMgr:         galleryTableMgr,
+		oDateManager:     oDateManager{galleriesOTableMgr},
+		omgDateManager:   omgDateManager{galleriesOMGTableMgr},
+		oCounterManager:  oCounterManager{galleryTableMgr},
+		omgCounterManager: omgCounterManager{galleryTableMgr},
+		viewDateManager:  viewDateManager{tableMgr: galleriesViewTableMgr},
+		fileStore:        fileStore,
+		folderStore:      folderStore,
 	}
 }
 
@@ -799,6 +809,7 @@ var gallerySortOptions = sortOptions{
 	"images_count",
 	"last_played_at",
 	"o_counter",
+	"omg_counter",
 	"path",
 	"performer_count",
 	"play_count",
@@ -898,6 +909,8 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 		query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
 	case "o_counter":
 		query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+	case "omg_counter":
+		query.sortAndPagination += getSort(sort, direction, "galleries")
 	case "path":
 		// special handling for path
 		addFileTable()
@@ -981,6 +994,18 @@ func (qb *GalleryStore) ResetOCounter(ctx context.Context, id int) (int, error) 
 	return qb.oCounterManager.ResetOCounter(ctx, id)
 }
 
+func (qb *GalleryStore) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.IncrementOMGCounter(ctx, id)
+}
+
+func (qb *GalleryStore) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.DecrementOMGCounter(ctx, id)
+}
+
+func (qb *GalleryStore) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.ResetOMGCounter(ctx, id)
+}
+
 func (qb *GalleryStore) AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
 	return qb.oDateManager.AddO(ctx, id, dates)
 }
@@ -994,11 +1019,15 @@ func (qb *GalleryStore) ResetO(ctx context.Context, id int) (int, error) {
 }
 
 func (qb *GalleryStore) OCount(ctx context.Context) (int, error) {
-	return qb.oDateManager.GetOCount(ctx, 0) // 0 means get all count
+	return qb.oDateManager.GetAllOCount(ctx)
 }
 
 func (qb *GalleryStore) GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
 	return qb.oDateManager.GetODatesInRange(ctx, start, end)
+}
+
+func (qb *GalleryStore) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.GetOMGDatesInRange(ctx, start, end)
 }
 
 func (qb *GalleryStore) OCountByPerformerID(ctx context.Context, performerID int) (int, error) {
@@ -1034,6 +1063,14 @@ func (qb *GalleryStore) GetManyODates(ctx context.Context, ids []int) ([][]time.
 	return qb.oDateManager.GetManyODates(ctx, ids)
 }
 
+func (qb *GalleryStore) GetAllOCount(ctx context.Context) (int, error) {
+	return qb.oDateManager.GetAllOCount(ctx)
+}
+
+func (qb *GalleryStore) GetAllOMGCount(ctx context.Context) (int, error) {
+	return qb.omgDateManager.GetAllOMGCount(ctx)
+}
+
 func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perPage int) ([]models.AggregatedView, error) {
 	// Get all aggregated view history for galleries
 	query := `
@@ -1048,7 +1085,15 @@ func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perP
 				AND god.o_date > gv.earliest_view_date
 				ORDER BY god.o_date ASC
 				LIMIT 1
-			) as o_date
+			) as o_date,
+			(
+				SELECT gomgd.omg_date
+				FROM galleries_omg_dates gomgd
+				WHERE gomgd.gallery_id = gv.gallery_id
+				AND gomgd.omg_date > gv.earliest_view_date
+				ORDER BY gomgd.omg_date ASC
+				LIMIT 1
+			) as omg_date
 		FROM (
 			SELECT
 				gvd.gallery_id,
@@ -1075,8 +1120,9 @@ func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perP
 		var viewDateStr string
 		var viewCount int
 		var oDateStr *string
+		var omgDateStr *string
 
-		err := rows.Scan(&galleryID, &viewDateStr, &viewCount, &oDateStr)
+		err := rows.Scan(&galleryID, &viewDateStr, &viewCount, &oDateStr, &omgDateStr)
 		if err != nil {
 			return nil, err
 		}
@@ -1097,6 +1143,14 @@ func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perP
 				}
 				av.ODate = &oDate
 			}
+			// If we have omg_date, update it (take the first one)
+			if omgDateStr != nil && av.OmgDate == nil {
+				omgDate, err := time.Parse(time.RFC3339, *omgDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.OmgDate = &omgDate
+			}
 		} else {
 			// Create new entry
 			av := &models.AggregatedView{
@@ -1111,6 +1165,14 @@ func (qb *GalleryStore) GetAggregatedViewHistory(ctx context.Context, page, perP
 					return nil, err
 				}
 				av.ODate = &oDate
+			}
+
+			if omgDateStr != nil {
+				omgDate, err := time.Parse(time.RFC3339, *omgDateStr)
+				if err != nil {
+					return nil, err
+				}
+				av.OmgDate = &omgDate
 			}
 
 			resultMap[galleryID] = av

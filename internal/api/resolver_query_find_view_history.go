@@ -43,6 +43,7 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 					Scene:     scene,
 					ViewDate:  cv.ViewDate,
 					ODate:     cv.ODate,
+					OmgDate:   cv.OmgDate,
 					ViewCount: &cv.ViewCount,
 				}
 				entries = append(entries, entry)
@@ -60,6 +61,7 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 					Gallery:   gallery,
 					ViewDate:  cv.ViewDate,
 					ODate:     cv.ODate,
+					OmgDate:   cv.OmgDate,
 					ViewCount: &cv.ViewCount,
 				}
 				entries = append(entries, entry)
@@ -72,9 +74,33 @@ func (r *queryResolver) FindViewHistory(ctx context.Context, historyFilter *View
 			return err
 		}
 
+		// Get total O-Count for all scenes and galleries
+		scenesTotalOCount, err := r.repository.Scene.GetAllOCount(ctx)
+		if err != nil {
+			return err
+		}
+		galleriesTotalOCount, err := r.repository.Gallery.GetAllOCount(ctx)
+		if err != nil {
+			return err
+		}
+		totalOCount := scenesTotalOCount + galleriesTotalOCount
+
+		// Get total OMG-Count for all scenes and galleries
+		scenesTotalOMGCount, err := r.repository.Scene.GetAllOMGCount(ctx)
+		if err != nil {
+			return err
+		}
+		galleriesTotalOMGCount, err := r.repository.Gallery.GetAllOMGCount(ctx)
+		if err != nil {
+			return err
+		}
+		totalOMGCount := scenesTotalOMGCount + galleriesTotalOMGCount
+
 		ret = &ViewHistoryResult{
-			Count: totalCount,
-			Items: entries,
+			Count:        totalCount,
+			Items:        entries,
+			TotalOCount:  totalOCount,
+			TotalOMGCount: totalOMGCount,
 		}
 
 		return nil

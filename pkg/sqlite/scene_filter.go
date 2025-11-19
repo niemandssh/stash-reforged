@@ -94,6 +94,7 @@ func (qb *sceneFilterHandler) criterionHandler() criterionHandler {
 
 		intCriterionHandler(sceneFilter.Rating100, "scenes.rating", nil),
 		qb.oCountCriterionHandler(sceneFilter.OCounter),
+		intCriterionHandler(sceneFilter.OmegCounter, "scenes.omg_counter", nil),
 		boolCriterionHandler(sceneFilter.Organized, "scenes.organized", nil),
 		boolCriterionHandler(sceneFilter.Pinned, "scenes.pinned", nil),
 

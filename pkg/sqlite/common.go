@@ -73,3 +73,69 @@ func (qb *oCounterManager) ResetOCounter(ctx context.Context, id int) (int, erro
 
 	return qb.getOCounter(ctx, id)
 }
+
+type omgCounterManager struct {
+	tableMgr *table
+}
+
+func (qb *omgCounterManager) getOMGCounter(ctx context.Context, id int) (int, error) {
+	q := dialect.From(qb.tableMgr.table).Select("omg_counter").Where(goqu.Ex{"id": id})
+
+	const single = true
+	var ret int
+	if err := queryFunc(ctx, q, single, func(rows *sqlx.Rows) error {
+		if err := rows.Scan(&ret); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (qb *omgCounterManager) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	if err := qb.tableMgr.checkIDExists(ctx, id); err != nil {
+		return 0, err
+	}
+
+	if err := qb.tableMgr.updateByID(ctx, id, goqu.Record{
+		"omg_counter": goqu.L("omg_counter + 1"),
+	}); err != nil {
+		return 0, err
+	}
+
+	return qb.getOMGCounter(ctx, id)
+}
+
+func (qb *omgCounterManager) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	if err := qb.tableMgr.checkIDExists(ctx, id); err != nil {
+		return 0, err
+	}
+
+	table := qb.tableMgr.table
+	q := dialect.Update(table).Set(goqu.Record{
+		"omg_counter": goqu.L("omg_counter - 1"),
+	}).Where(qb.tableMgr.byID(id), goqu.L("omg_counter > 0"))
+
+	if _, err := exec(ctx, q); err != nil {
+		return 0, fmt.Errorf("updating %s: %w", table.GetTable(), err)
+	}
+
+	return qb.getOMGCounter(ctx, id)
+}
+
+func (qb *omgCounterManager) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	if err := qb.tableMgr.checkIDExists(ctx, id); err != nil {
+		return 0, err
+	}
+
+	if err := qb.tableMgr.updateByID(ctx, id, goqu.Record{
+		"omg_counter": 0,
+	}); err != nil {
+		return 0, err
+	}
+
+	return qb.getOMGCounter(ctx, id)
+}

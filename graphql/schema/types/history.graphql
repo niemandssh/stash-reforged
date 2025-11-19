@@ -7,6 +7,10 @@ type ViewHistoryEntry {
   """
   oDate: Time
   """
+  Время omg-count если он был в близком промежутке времени (в пределах 5 минут после просмотра)
+  """
+  omgDate: Time
+  """
   Количество просмотров в группе (для сгруппированных подряд идущих просмотров)
   """
   viewCount: Int
@@ -15,6 +19,8 @@ type ViewHistoryEntry {
 type ViewHistoryResult {
   count: Int!
   items: [ViewHistoryEntry!]!
+  totalOCount: Int!
+  totalOMGCount: Int!
 }
 
 input ViewHistoryFilter {

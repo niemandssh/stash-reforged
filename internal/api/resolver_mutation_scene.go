@@ -1201,6 +1201,119 @@ func (r *mutationResolver) SceneResetO(ctx context.Context, id string) (ret int,
 	return ret, nil
 }
 
+func (r *mutationResolver) SceneIncrementOmg(ctx context.Context, id string) (ret int, err error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Scene
+
+		ret, err = qb.IncrementOMGCounter(ctx, sceneID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) SceneDecrementOmg(ctx context.Context, id string) (ret int, err error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Scene
+
+		ret, err = qb.DecrementOMGCounter(ctx, sceneID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) SceneResetOmg(ctx context.Context, id string) (ret int, err error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return 0, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Scene
+
+		ret, err = qb.ResetOMGCounter(ctx, sceneID)
+		return err
+	}); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (r *mutationResolver) SceneAddOmg(ctx context.Context, id string, t []*time.Time) (*HistoryMutationResult, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var times []time.Time
+
+	// convert time to local time, so that sorting is consistent
+	for _, tt := range t {
+		times = append(times, tt.Local())
+	}
+
+	var updatedTimes []time.Time
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Scene
+
+		updatedTimes, err = qb.AddOMG(ctx, sceneID, times)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   len(updatedTimes),
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
+func (r *mutationResolver) SceneDeleteOmg(ctx context.Context, id string, t []*time.Time) (*HistoryMutationResult, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var times []time.Time
+
+	for _, tt := range t {
+		times = append(times, *tt)
+	}
+
+	var updatedTimes []time.Time
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		qb := r.repository.Scene
+
+		updatedTimes, err = qb.DeleteOMG(ctx, sceneID, times)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &HistoryMutationResult{
+		Count:   len(updatedTimes),
+		History: sliceutil.ValuesToPtrs(updatedTimes),
+	}, nil
+}
+
 func (r *mutationResolver) SceneAddO(ctx context.Context, id string, t []*time.Time) (*HistoryMutationResult, error) {
 	sceneID, err := strconv.Atoi(id)
 	if err != nil {

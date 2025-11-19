@@ -25,6 +25,8 @@ type ImageFilterType struct {
 	Organized *bool `json:"organized"`
 	// Filter by o-counter
 	OCounter *IntCriterionInput `json:"o_counter"`
+	// Filter by omg-counter
+	OmegCounter *IntCriterionInput `json:"omg_counter"`
 	// Filter by resolution
 	Resolution *ResolutionCriterionInput `json:"resolution"`
 	// Filter by landscape/portrait

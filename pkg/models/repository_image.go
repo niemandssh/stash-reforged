@@ -42,6 +42,8 @@ type ImageCounter interface {
 	OCount(ctx context.Context) (int, error)
 	OCountByPerformerID(ctx context.Context, performerID int) (int, error)
 	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
+	GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
+	GetAllOMGCount(ctx context.Context) (int, error)
 }
 
 // ImageCreator provides methods to create images.
@@ -97,6 +99,9 @@ type ImageWriter interface {
 	IncrementOCounter(ctx context.Context, id int) (int, error)
 	DecrementOCounter(ctx context.Context, id int) (int, error)
 	ResetOCounter(ctx context.Context, id int) (int, error)
+	IncrementOMGCounter(ctx context.Context, id int) (int, error)
+	DecrementOMGCounter(ctx context.Context, id int) (int, error)
+	ResetOMGCounter(ctx context.Context, id int) (int, error)
 }
 
 // ImageReaderWriter provides all image methods.

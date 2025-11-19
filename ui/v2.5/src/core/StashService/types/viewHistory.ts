@@ -7,6 +7,8 @@ export const FIND_VIEW_HISTORY = gql`
   ) {
     findViewHistory(filter: $filter, history_filter: $historyFilter) {
       count
+      totalOCount
+      totalOMGCount
       items {
         scene {
           id
@@ -96,6 +98,7 @@ export const FIND_VIEW_HISTORY = gql`
         }
         viewDate
         oDate
+        omgDate
         viewCount
       }
     }

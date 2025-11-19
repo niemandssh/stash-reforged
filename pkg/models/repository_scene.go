@@ -92,6 +92,7 @@ type AggregatedView struct {
 	SceneID   int        `json:"scene_id"`
 	ViewDate  time.Time  `json:"view_date"`
 	ODate     *time.Time `json:"o_date"`
+	OmgDate   *time.Time `json:"omg_date"`
 	ViewCount int        `json:"view_count"`
 }
 
@@ -100,6 +101,7 @@ type AggregatedGalleryView struct {
 	GalleryID int        `json:"gallery_id"`
 	ViewDate  time.Time  `json:"view_date"`
 	ODate     *time.Time `json:"o_date"`
+	OmgDate   *time.Time `json:"omg_date"`
 	ViewCount int        `json:"view_count"`
 }
 
@@ -109,6 +111,7 @@ type CombinedAggregatedView struct {
 	ContentID   int        `json:"content_id"`
 	ViewDate    time.Time  `json:"view_date"`
 	ODate       *time.Time `json:"o_date"`
+	OmgDate     *time.Time `json:"omg_date"`
 	ViewCount   int        `json:"view_count"`
 }
 
@@ -121,6 +124,15 @@ type ODateReader interface {
 	GetODatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
 }
 
+type OMGDateReader interface {
+	GetOMGCount(ctx context.Context, id int) (int, error)
+	GetManyOMGCount(ctx context.Context, ids []int) ([]int, error)
+	GetAllOMGCount(ctx context.Context) (int, error)
+	GetOMGDates(ctx context.Context, relatedID int) ([]time.Time, error)
+	GetManyOMGDates(ctx context.Context, ids []int) ([][]time.Time, error)
+	GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error)
+}
+
 // SceneReader provides all methods to read scenes.
 type SceneReader interface {
 	SceneFinder
@@ -130,6 +142,7 @@ type SceneReader interface {
 	URLLoader
 	ViewDateReader
 	ODateReader
+	OMGDateReader
 	FileIDLoader
 	GalleryIDLoader
 	PerformerIDLoader
@@ -142,6 +155,7 @@ type SceneReader interface {
 
 	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
 	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
+	GetOMGCounter(ctx context.Context, id int) (int, error)
 
 	All(ctx context.Context) ([]*Scene, error)
 	AllWithRelationships(ctx context.Context) ([]*Scene, error)
@@ -157,6 +171,12 @@ type OHistoryWriter interface {
 	AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
 	DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
 	ResetO(ctx context.Context, id int) (int, error)
+}
+
+type OMGHistoryWriter interface {
+	AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	ResetOMG(ctx context.Context, id int) (int, error)
 }
 
 type ViewHistoryWriter interface {
@@ -176,9 +196,13 @@ type SceneWriter interface {
 	AssignFiles(ctx context.Context, sceneID int, fileID []FileID) error
 
 	OHistoryWriter
+	OMGHistoryWriter
 	ViewHistoryWriter
 	SaveActivity(ctx context.Context, sceneID int, resumeTime *float64, playDuration *float64) (bool, error)
 	ResetActivity(ctx context.Context, sceneID int, resetResume bool, resetDuration bool) (bool, error)
+	IncrementOMGCounter(ctx context.Context, id int) (int, error)
+	DecrementOMGCounter(ctx context.Context, id int) (int, error)
+	ResetOMGCounter(ctx context.Context, id int) (int, error)
 }
 
 // SceneReaderWriter provides all scene methods.

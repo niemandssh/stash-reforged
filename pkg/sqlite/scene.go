@@ -38,6 +38,8 @@ const (
 	sceneViewDateColumn    = "view_date"
 	scenesODatesTable      = "scenes_o_dates"
 	sceneODateColumn       = "o_date"
+	scenesOMGDatesTable    = "scenes_omg_dates"
+	sceneOMGDateColumn     = "omg_date"
 	sceneSimilaritiesTable = "scene_similarities"
 
 	sceneCoverBlobColumn = "cover_blob"
@@ -104,6 +106,7 @@ type sceneRow struct {
 	EndTime            null.Float  `db:"end_time"`
 	VideoFilters       zero.String `db:"video_filters"`
 	VideoTransforms    zero.String `db:"video_transforms"`
+	OmegCounter        int         `db:"omg_counter"`
 
 	// not used in resolutions or updates
 	CoverBlob zero.String `db:"cover_blob"`
@@ -312,6 +315,8 @@ type SceneStore struct {
 
 	tableMgr *table
 	oDateManager
+	omgDateManager
+	omgCounterManager
 	viewDateManager
 
 	repo *storeRepository
@@ -324,10 +329,12 @@ func NewSceneStore(r *storeRepository, blobStore *BlobStore) *SceneStore {
 			joinTable: sceneTable,
 		},
 
-		tableMgr:        sceneTableMgr,
-		viewDateManager: viewDateManager{tableMgr: scenesViewTableMgr},
-		oDateManager:    oDateManager{scenesOTableMgr},
-		repo:            r,
+		tableMgr:         sceneTableMgr,
+		viewDateManager:  viewDateManager{tableMgr: scenesViewTableMgr},
+		oDateManager:     oDateManager{scenesOTableMgr},
+		omgDateManager:   omgDateManager{scenesOMGTableMgr},
+		omgCounterManager: omgCounterManager{sceneTableMgr},
+		repo:             r,
 	}
 }
 
@@ -1228,6 +1235,7 @@ var sceneSortOptions = sortOptions{
 	"last_played_at",
 	"movie_scene_number",
 	"o_counter",
+	"omg_counter",
 	"organized",
 	"performer_count",
 	"play_count",
@@ -1455,6 +1463,8 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
 	case "o_counter":
 		query.sortAndPagination += getCountSort(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+	case "omg_counter":
+		query.sortAndPagination += getSort(sort, direction, "scenes")
 	default:
 		query.sortAndPagination += getSort(sort, direction, "scenes")
 	}
@@ -1696,6 +1706,75 @@ func (qb *SceneStore) GetAggregatedViewHistory(ctx context.Context, page, perPag
 	return qb.viewDateManager.GetAggregatedViewHistory(ctx, page, perPage)
 }
 
+func (qb *SceneStore) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	_, err := qb.omgDateManager.AddOMG(ctx, id, nil)
+	if err != nil {
+		return 0, err
+	}
+	return qb.omgDateManager.GetOMGCount(ctx, id)
+}
+
+func (qb *SceneStore) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	_, err := qb.omgDateManager.DeleteOMG(ctx, id, nil)
+	if err != nil {
+		return 0, err
+	}
+	return qb.omgDateManager.GetOMGCount(ctx, id)
+}
+
+func (qb *SceneStore) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	ret, err := qb.omgDateManager.ResetOMG(ctx, id)
+	if err != nil {
+		return 0, err
+	}
+	if err := qb.tableMgr.updateByID(ctx, id, goqu.Record{
+		"omg_counter": ret,
+	}); err != nil {
+		return 0, err
+	}
+	return ret, nil
+}
+
+func (qb *SceneStore) GetOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgDateManager.GetOMGCount(ctx, id)
+}
+
+func (qb *SceneStore) AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.AddOMG(ctx, id, dates)
+}
+
+func (qb *SceneStore) DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.DeleteOMG(ctx, id, dates)
+}
+
+func (qb *SceneStore) ResetOMG(ctx context.Context, id int) (int, error) {
+	return qb.omgDateManager.ResetOMG(ctx, id)
+}
+
+func (qb *SceneStore) GetOMGDates(ctx context.Context, id int) ([]time.Time, error) {
+	return qb.omgDateManager.GetOMGDates(ctx, id)
+}
+
+func (qb *SceneStore) GetManyOMGDates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	return qb.omgDateManager.GetManyOMGDates(ctx, ids)
+}
+
+func (qb *SceneStore) GetOMGCount(ctx context.Context, id int) (int, error) {
+	return qb.omgDateManager.GetOMGCount(ctx, id)
+}
+
+func (qb *SceneStore) GetManyOMGCount(ctx context.Context, ids []int) ([]int, error) {
+	return qb.omgDateManager.GetManyOMGCount(ctx, ids)
+}
+
+func (qb *SceneStore) GetAllOMGCount(ctx context.Context) (int, error) {
+	return qb.omgDateManager.GetAllOMGCount(ctx)
+}
+
+func (qb *SceneStore) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.GetOMGDatesInRange(ctx, start, end)
+}
+
 func (qb *SceneStore) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {
 	return qb.viewDateManager.GetAggregatedViewHistoryCount(ctx)
 }
@@ -1716,7 +1795,15 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 				AND sod.o_date > gv.earliest_view_date
 				ORDER BY sod.o_date ASC
 				LIMIT 1
-			) as o_date
+			) as o_date,
+			(
+				SELECT somgd.omg_date
+				FROM scenes_omg_dates somgd
+				WHERE somgd.scene_id = gv.scene_id
+				AND somgd.omg_date > gv.earliest_view_date
+				ORDER BY somgd.omg_date ASC
+				LIMIT 1
+			) as omg_date
 		FROM (
 			SELECT
 				svd.scene_id,
@@ -1742,7 +1829,15 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 				AND god.o_date > gv.earliest_view_date
 				ORDER BY god.o_date ASC
 				LIMIT 1
-			) as o_date
+			) as o_date,
+			(
+				SELECT gomgd.omg_date
+				FROM galleries_omg_dates gomgd
+				WHERE gomgd.gallery_id = gv.gallery_id
+				AND gomgd.omg_date > gv.earliest_view_date
+				ORDER BY gomgd.omg_date ASC
+				LIMIT 1
+			) as omg_date
 		FROM (
 			SELECT
 				gvd.gallery_id,
@@ -1781,8 +1876,9 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 		var result models.CombinedAggregatedView
 		var viewDateStr string
 		var oDateStr *string
+		var omgDateStr *string
 
-		err := rows.Scan(&result.ContentType, &result.ContentID, &viewDateStr, &result.ViewCount, &oDateStr)
+		err := rows.Scan(&result.ContentType, &result.ContentID, &viewDateStr, &result.ViewCount, &oDateStr, &omgDateStr)
 		if err != nil {
 			return nil, err
 		}
@@ -1798,6 +1894,14 @@ func (qb *SceneStore) GetCombinedAggregatedViewHistory(ctx context.Context, page
 				return nil, err
 			}
 			result.ODate = &oDate
+		}
+
+		if omgDateStr != nil && *omgDateStr != "" {
+			omgDate, err := time.Parse(time.RFC3339, *omgDateStr)
+			if err != nil {
+				return nil, err
+			}
+			result.OmgDate = &omgDate
 		}
 
 		results = append(results, result)

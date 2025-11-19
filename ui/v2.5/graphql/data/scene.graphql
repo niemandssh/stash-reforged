@@ -8,6 +8,7 @@ fragment SceneData on Scene {
   date
   rating100
   o_counter
+  omgCounter
   organized
   interactive
   interactive_speed
@@ -51,6 +52,7 @@ fragment SceneData on Scene {
 
   play_history
   o_history
+  omg_history
 
   files {
     ...VideoFileData

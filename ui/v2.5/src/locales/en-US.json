@@ -6,6 +6,7 @@
         "add_manual_date": "Add manual date",
         "add_sub_groups": "Add Sub-Groups",
         "add_o": "Add O",
+        "add_omg": "Add OMG",
         "add_play": "Add play",
         "add_to_entity": "Add to {entityType}",
         "allow": "Allow",
@@ -300,6 +301,12 @@
         "force_hls_tooltip": "Force HTTP Live Streaming even with range requests. Useful for scenes with audio corrections where seeking may be limited."
     },
     "view_history": "History",
+    "o_history": "O History",
+    "o_counter": "O-Counter",
+    "omg_counter": "OMG Count",
+    "omg_history": "OMG History",
+    "odate_recorded_no": "No O Date Recorded",
+    "omgdate_recorded_no": "No OMG Date Recorded",
     "total_views": "{count, plural, one {# view} other {# views}}",
     "consecutive_views": "{count, plural, one {# view in a row} other {# views in a row}}",
     "tag_requirements": {
@@ -321,6 +328,9 @@
         "urls": "{count, plural, one {# URL} other {# URLs}}"
     },
     "dialogs": {
+        "clear_o_history_confirm": "Are you sure you want to clear the O history?",
+        "clear_omg_history_confirm": "Are you sure you want to clear the OMG history?",
+        "clear_play_history_confirm": "Are you sure you want to clear the play history?",
         "reduce_resolution": {
             "title": "Reduce Video Resolution",
             "confirm_title": "Confirm Resolution Reduction",
@@ -369,5 +379,16 @@
         }
     },
     "role_description": "Role Description",
-    "role_description_placeholder": "Role description"
+    "role_description_placeholder": "Role description",
+    "statistics": "Statistics",
+    "stats": {
+        "image_size": "Images size",
+        "scenes_duration": "Scenes duration",
+        "scenes_played": "Scenes Played",
+        "scenes_size": "Scenes size",
+        "total_o_count": "Total O-Count",
+        "total_omg_count": "Total OMG Count",
+        "total_play_count": "Total Play Count",
+        "total_play_duration": "Total Play Duration"
+    }
 }

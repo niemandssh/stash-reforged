@@ -95,6 +95,7 @@ type Scene {
   organized: Boolean!
   pinned: Boolean!
   o_counter: Int
+  omgCounter: Int
   interactive: Boolean!
   interactive_speed: Int
   captions: [VideoCaption!]
@@ -129,6 +130,8 @@ type Scene {
   play_history: [Time!]!
   "Times the o counter was incremented"
   o_history: [Time!]!
+  "Times the omg counter was incremented"
+  omg_history: [Time!]!
 
   files: [VideoFile!]!
   paths: ScenePathsType! # Resolver

@@ -37,6 +37,8 @@ type SceneFilterType struct {
 	IsBroken *bool `json:"is_broken"`
 	// Filter by o-counter
 	OCounter *IntCriterionInput `json:"o_counter"`
+	// Filter by omg-counter
+	OmegCounter *IntCriterionInput `json:"omg_counter"`
 	// Filter Scenes that have an exact phash match available
 	Duplicated *PHashDuplicationCriterionInput `json:"duplicated"`
 	// Filter by resolution

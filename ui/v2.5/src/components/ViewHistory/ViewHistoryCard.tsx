@@ -7,6 +7,7 @@ import TextUtils from "src/utils/text";
 import { ScenePreview } from "../Scenes/SceneCard";
 import { GalleryPreview } from "../Galleries/GalleryCard";
 import { SweatDrops } from "../Shared/SweatDrops";
+import { OMGIcon } from "../Shared/OMGIcon";
 import { HLSBadge } from "../Shared/HLSBadge";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
@@ -24,6 +25,7 @@ interface IViewHistoryCardProps {
   gallery?: IGallery;
   viewDate: string;
   oDate?: string;
+  omgDate?: string;
   viewCount?: number;
 }
 
@@ -32,6 +34,7 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
   gallery,
   viewDate,
   oDate,
+  omgDate,
   viewCount,
 }) => {
   const intl = useIntl();
@@ -297,12 +300,24 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
         </div>
       </div>
 
-      {oDate && (
-        <div
-          className="view-history-o-count-indicator"
-          title={`O-Count: ${new Date(oDate).toLocaleString()}`}
-        >
-          <SweatDrops />
+      {(oDate || omgDate) && (
+        <div className="view-history-count-indicators">
+          {oDate && (
+            <div
+              className="view-history-o-count-indicator"
+              title={`O-Count: ${new Date(oDate).toLocaleString()}`}
+            >
+              <SweatDrops />
+            </div>
+          )}
+          {omgDate && (
+            <div
+              className="view-history-omg-count-indicator"
+              title={`OMG-Count: ${new Date(omgDate).toLocaleString()}`}
+            >
+              <OMGIcon />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -962,6 +962,150 @@ export const useSceneResetActivity = (
     },
   });
 
+export const useSceneIncrementOmg = (id: string) =>
+  GQL.useSceneIncrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
+    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneIncrementOmgMutation>) {
+      const updatedCount = result.data?.sceneIncrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Scene", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindScenesDocument]);
+    },
+  });
+
+export const useSceneDecrementOmg = (id: string) =>
+  GQL.useSceneDecrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
+    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneDecrementOmgMutation>) {
+      const updatedCount = result.data?.sceneDecrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Scene", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindScenesDocument]);
+    },
+  });
+
+export const useSceneResetOmg = (id: string) =>
+  GQL.useSceneResetOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
+    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneResetOmgMutation>) {
+      const updatedCount = result.data?.sceneResetOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Scene", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+          omg_history() {
+            const ret: string[] = [];
+            return ret;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindScenesDocument]);
+    },
+  });
+
+export const useSceneAddOmg = (id: string) =>
+  GQL.useSceneAddOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
+    update(cache, result, { variables }) {
+      const at = new Date().toISOString();
+
+      const mutationResult = result.data?.sceneAddOmg;
+      if (!mutationResult || !variables) return;
+
+      const { history, count } = mutationResult;
+      const { times } = variables;
+      const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
+
+      const scene = cache.readFragment<GQL.SceneDataFragment>({
+        id: cache.identify({ __typename: "Scene", id }),
+        fragment: GQL.SceneDataFragmentDoc,
+        fragmentName: "SceneData",
+      });
+
+      if (scene) {
+        cache.writeFragment({
+          id: cache.identify({ __typename: "Scene", id }),
+          fragment: GQL.SceneDataFragmentDoc,
+          fragmentName: "SceneData",
+          data: {
+            ...scene,
+            omgCounter: count,
+            omg_history: history,
+          },
+        });
+      }
+
+      cache.modify({
+        id: cache.identify({ __typename: "Scene", id }),
+        fields: {
+          omgCounter() {
+            return count;
+          },
+          omg_history() {
+            return history;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindScenesDocument]);
+    },
+  });
+
+export const useSceneDeleteOmg = (id: string) =>
+  GQL.useSceneDeleteOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindSceneDocument],
+    update(cache, result, { variables }) {
+      const mutationResult = result.data?.sceneDeleteOmg;
+      if (!mutationResult || !variables) return;
+
+      const { history, count } = mutationResult;
+      const { times } = variables;
+      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
+
+      cache.modify({
+        id: cache.identify({ __typename: "Scene", id }),
+        fields: {
+          omgCounter() {
+            return count;
+          },
+          omg_history() {
+            return history;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindScenesDocument]);
+    },
+  });
+
 type SceneSaveFilteredScreenshotVars = {
   input: {
     id: string;
@@ -1602,6 +1746,69 @@ function updateImageResetO(id: string) {
   };
 }
 
+export const useImageIncrementOmg = (id: string) =>
+  GQL.useImageIncrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindImageDocument],
+    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.ImageIncrementOmgMutation>) {
+      const updatedCount = result.data?.imageIncrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Image", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindImagesDocument]);
+    },
+  });
+
+export const useImageDecrementOmg = (id: string) =>
+  GQL.useImageDecrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindImageDocument],
+    update(cache, result) {
+      const updatedCount = result.data?.imageDecrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Image", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindImagesDocument]);
+    },
+  });
+
+export const useImageResetOmg = (id: string) =>
+  GQL.useImageResetOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindImageDocument],
+    update(cache, result) {
+      const updatedCount = result.data?.imageResetOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Image", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindImagesDocument]);
+    },
+  });
+
 export const useImageResetO = (id: string) =>
   GQL.useImageResetOMutation({
     variables: { id },
@@ -2073,6 +2280,70 @@ export const useGalleryDecrementO = (id: string) =>
       }
     },
   });
+
+export const useGalleryIncrementOmg = (id: string) =>
+  GQL.useGalleryIncrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result) {
+      const updatedCount = result.data?.galleryIncrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindGalleriesDocument]);
+    },
+  });
+
+export const useGalleryDecrementOmg = (id: string) =>
+  GQL.useGalleryDecrementOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result) {
+      const updatedCount = result.data?.galleryDecrementOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindGalleriesDocument]);
+    },
+  });
+
+export const useGalleryResetOmg = (id: string) =>
+  GQL.useGalleryResetOmgMutation({
+    variables: { id },
+    refetchQueries: [GQL.FindGalleryDocument],
+    update(cache, result) {
+      const updatedCount = result.data?.galleryResetOmg;
+      if (updatedCount === undefined) return;
+
+      cache.modify({
+        id: cache.identify({ __typename: "Gallery", id }),
+        fields: {
+          omgCounter() {
+            return updatedCount;
+          },
+        },
+      });
+
+      evictQueries(cache, [GQL.FindGalleriesDocument]);
+    },
+  });
+
 export const useGalleryResetO = (id: string) =>
   GQL.useGalleryResetOMutation({
     variables: { id },

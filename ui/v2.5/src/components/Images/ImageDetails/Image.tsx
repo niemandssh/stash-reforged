@@ -6,6 +6,9 @@ import { Helmet } from "react-helmet";
 import {
   useFindImage,
   useImageIncrementO,
+  useImageIncrementOmg,
+  useImageDecrementOmg,
+  useImageResetOmg,
   useImageUpdate,
   mutateMetadataScan,
   useImageDecrementO,
@@ -18,7 +21,7 @@ import { Counter } from "src/components/Shared/Counter";
 import { useToast } from "src/hooks/Toast";
 import * as Mousetrap from "mousetrap";
 import * as GQL from "src/core/generated-graphql";
-import { OCounterButton } from "src/components/Scenes/SceneDetails/OCounterButton";
+import { OCounterButton, OMGCounterButton } from "src/components/Shared/CountButton";
 import { OrganizedButton } from "src/components/Scenes/SceneDetails/OrganizedButton";
 import { ImageFileInfoPanel } from "./ImageFileInfoPanel";
 import { ImageEditPanel } from "./ImageEditPanel";
@@ -52,6 +55,9 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
   const [incrementO] = useImageIncrementO(image.id);
   const [decrementO] = useImageDecrementO(image.id);
   const [resetO] = useImageResetO(image.id);
+  const [incrementOmg] = useImageIncrementOmg(image.id);
+  const [decrementOmg] = useImageDecrementOmg(image.id);
+  const [resetOmg] = useImageResetOmg(image.id);
 
   const [updateImage] = useImageUpdate();
 
@@ -350,6 +356,18 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
                 onIncrement={onIncrementClick}
                 onDecrement={onDecrementClick}
                 onReset={onResetClick}
+              />
+            </span>
+            <span>
+              <OMGCounterButton
+                value={image.omgCounter || 0}
+                onIncrement={async () => {
+                  try {
+                    await incrementOmg();
+                  } catch (e) {
+                    Toast.error(e);
+                  }
+                }}
               />
             </span>
             <span>

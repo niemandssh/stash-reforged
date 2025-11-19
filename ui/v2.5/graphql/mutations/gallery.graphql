@@ -66,6 +66,18 @@ mutation GalleryResetO($id: ID!) {
   galleryResetO(id: $id)
 }
 
+mutation GalleryIncrementOmg($id: ID!) {
+  galleryIncrementOmg(id: $id)
+}
+
+mutation GalleryDecrementOmg($id: ID!) {
+  galleryDecrementOmg(id: $id)
+}
+
+mutation GalleryResetOmg($id: ID!) {
+  galleryResetOmg(id: $id)
+}
+
 mutation GalleryAddO($id: ID!, $times: [Timestamp!]) {
   galleryAddO(id: $id, times: $times) {
     count

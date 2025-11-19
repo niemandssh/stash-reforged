@@ -91,10 +91,13 @@ export interface IViewHistoryEntry {
   gallery?: IGallery;
   viewDate: string;
   oDate?: string;
+  omgDate?: string;
   viewCount?: number;
 }
 
 export interface IViewHistoryResult {
   count: number;
+  totalOCount: number;
+  totalOMGCount: number;
   items: IViewHistoryEntry[];
 }

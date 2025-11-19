@@ -268,6 +268,20 @@ func (r *queryResolver) Stats(ctx context.Context) (*StatsResultType, error) {
 		}
 		totalOCount := scenesTotalOCount + imagesTotalOCount + galleriesTotalOCount
 
+		scenesTotalOMGCount, err := sceneQB.GetAllOMGCount(ctx)
+		if err != nil {
+			return err
+		}
+		imagesTotalOMGCount, err := imageQB.GetAllOMGCount(ctx)
+		if err != nil {
+			return err
+		}
+		galleriesTotalOMGCount, err := galleryQB.GetAllOMGCount(ctx)
+		if err != nil {
+			return err
+		}
+		totalOMGCount := scenesTotalOMGCount + imagesTotalOMGCount + galleriesTotalOMGCount
+
 		totalPlayDuration, err := sceneQB.PlayDuration(ctx)
 		if err != nil {
 			return err
@@ -296,6 +310,7 @@ func (r *queryResolver) Stats(ctx context.Context) (*StatsResultType, error) {
 			MovieCount:        groupsCount,
 			TagCount:          tagsCount,
 			TotalOCount:       totalOCount,
+			TotalOmgCount:     totalOMGCount,
 			TotalPlayDuration: totalPlayDuration,
 			TotalPlayCount:    totalPlayCount,
 			ScenesPlayed:      uniqueScenePlayCount,
@@ -339,10 +354,31 @@ func (r *queryResolver) OCountStats(ctx context.Context) (*OCountStatsResultType
 			return err
 		}
 
-		// Combine all o-dates
+		// Get all omg-count dates from scenes_omg_dates table
+		sceneOMGDates, err := sceneQB.GetOMGDatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Get all omg-count dates from images_omg_dates table
+		imageOMGDates, err := imageQB.GetOMGDatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Get all omg-count dates from galleries_omg_dates table
+		galleryOMGDates, err := galleryQB.GetOMGDatesInRange(ctx, oneYearAgo, now)
+		if err != nil {
+			return err
+		}
+
+		// Combine all o-dates and omg-dates
 		allODates := sceneODates
 		allODates = append(allODates, imageODates...)
 		allODates = append(allODates, galleryODates...)
+		allODates = append(allODates, sceneOMGDates...)
+		allODates = append(allODates, imageOMGDates...)
+		allODates = append(allODates, galleryOMGDates...)
 
 		// Group by date
 		dailyCounts := make(map[string]int)

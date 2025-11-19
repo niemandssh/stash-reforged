@@ -16,7 +16,15 @@
     margin: 0;
   }
 
-  .view-history-total-views {
+  .view-history-stats {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .view-history-total-views,
+  .view-history-total-o-count,
+  .view-history-total-omg-count {
     color: var(--text-color-secondary);
     font-size: 1.1rem;
   }

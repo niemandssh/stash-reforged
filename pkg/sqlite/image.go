@@ -28,6 +28,8 @@ const (
 	imagesFilesTable      = "images_files"
 	imagesURLsTable       = "image_urls"
 	imageURLColumn        = "url"
+	imagesOMGDatesTable   = "images_omg_dates"
+	imageOMGDateColumn    = "omg_date"
 )
 
 type imageRow struct {
@@ -41,6 +43,7 @@ type imageRow struct {
 	Photographer zero.String `db:"photographer"`
 	Organized    bool        `db:"organized"`
 	OCounter     int         `db:"o_counter"`
+	OmegCounter  int         `db:"omg_counter"`
 	StudioID     null.Int    `db:"studio_id,omitempty"`
 	CreatedAt    Timestamp   `db:"created_at"`
 	UpdatedAt    Timestamp   `db:"updated_at"`
@@ -56,6 +59,7 @@ func (r *imageRow) fromImage(i models.Image) {
 	r.Photographer = zero.StringFrom(i.Photographer)
 	r.Organized = i.Organized
 	r.OCounter = i.OCounter
+	r.OmegCounter = i.OmegCounter
 	r.StudioID = intFromPtr(i.StudioID)
 	r.CreatedAt = Timestamp{Timestamp: i.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: i.UpdatedAt}
@@ -80,6 +84,7 @@ func (r *imageQueryRow) resolve() *models.Image {
 		Photographer: r.Photographer.String,
 		Organized:    r.Organized,
 		OCounter:     r.OCounter,
+		OmegCounter:  r.OmegCounter,
 		StudioID:     nullIntPtr(r.StudioID),
 
 		PrimaryFileID: nullIntFileIDPtr(r.PrimaryFileID),
@@ -109,6 +114,7 @@ func (r *imageRowRecord) fromPartial(i models.ImagePartial) {
 	r.setNullString("photographer", i.Photographer)
 	r.setBool("organized", i.Organized)
 	r.setInt("o_counter", i.OCounter)
+	r.setInt("omg_counter", i.OmegCounter)
 	r.setNullInt("studio_id", i.StudioID)
 	r.setTimestamp("created_at", i.CreatedAt)
 	r.setTimestamp("updated_at", i.UpdatedAt)
@@ -186,15 +192,19 @@ var (
 type ImageStore struct {
 	tableMgr *table
 	oCounterManager
+	omgCounterManager
+	omgDateManager
 
 	repo *storeRepository
 }
 
 func NewImageStore(r *storeRepository) *ImageStore {
 	return &ImageStore{
-		tableMgr:        imageTableMgr,
-		oCounterManager: oCounterManager{imageTableMgr},
-		repo:            r,
+		tableMgr:         imageTableMgr,
+		oCounterManager:  oCounterManager{imageTableMgr},
+		omgCounterManager: omgCounterManager{imageTableMgr},
+		omgDateManager:   omgDateManager{imagesOMGTableMgr},
+		repo:             r,
 	}
 }
 
@@ -695,6 +705,18 @@ func (qb *ImageStore) OCount(ctx context.Context) (int, error) {
 	return ret, nil
 }
 
+func (qb *ImageStore) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.IncrementOMGCounter(ctx, id)
+}
+
+func (qb *ImageStore) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.DecrementOMGCounter(ctx, id)
+}
+
+func (qb *ImageStore) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	return qb.omgCounterManager.ResetOMGCounter(ctx, id)
+}
+
 func (qb *ImageStore) FindByFolderID(ctx context.Context, folderID models.FolderID) ([]*models.Image, error) {
 	table := qb.table()
 	fileTable := goqu.T(fileTable)
@@ -778,6 +800,14 @@ func (qb *ImageStore) GetODatesInRange(ctx context.Context, start, end time.Time
 	// Images don't have o-dates table like scenes and galleries
 	// They only have o_counter field, so we return empty slice
 	return []time.Time{}, nil
+}
+
+func (qb *ImageStore) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.GetOMGDatesInRange(ctx, start, end)
+}
+
+func (qb *ImageStore) GetAllOMGCount(ctx context.Context) (int, error) {
+	return qb.omgDateManager.GetAllOMGCount(ctx)
 }
 
 func (qb *ImageStore) makeQuery(ctx context.Context, imageFilter *models.ImageFilterType, findFilter *models.FindFilterType) (*queryBuilder, error) {
@@ -929,6 +959,7 @@ var imageSortOptions = sortOptions{
 	"filesize",
 	"id",
 	"o_counter",
+	"omg_counter",
 	"path",
 	"performer_count",
 	"random",
@@ -986,6 +1017,8 @@ func (qb *ImageStore) setImageSortAndPagination(q *queryBuilder, findFilter *mod
 			sortClause = getCountSort(imageTable, imagesTagsTable, imageIDColumn, direction)
 		case "performer_count":
 			sortClause = getCountSort(imageTable, performersImagesTable, imageIDColumn, direction)
+		case "o_counter", "omg_counter":
+			sortClause = getSort(sort, direction, "images")
 		case "mod_time", "filesize":
 			addFilesJoin()
 			sortClause = getSort(sort, direction, "files")

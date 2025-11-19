@@ -16,10 +16,11 @@ type Image struct {
 	Details      string `json:"details"`
 	Photographer string `json:"photographer"`
 	// Rating expressed in 1-100 scale
-	Rating    *int           `json:"rating"`
-	Organized bool           `json:"organized"`
-	OCounter  int            `json:"o_counter"`
-	StudioID  *int           `json:"studio_id"`
+	Rating     *int           `json:"rating"`
+	Organized  bool           `json:"organized"`
+	OCounter   int            `json:"o_counter"`
+	OmegCounter int           `json:"omg_counter"`
+	StudioID   *int           `json:"studio_id"`
 	URLs      RelatedStrings `json:"urls"`
 	Date      *Date          `json:"date"`
 
@@ -58,6 +59,7 @@ type ImagePartial struct {
 	Photographer OptionalString
 	Organized    OptionalBool
 	OCounter     OptionalInt
+	OmegCounter  OptionalInt
 	StudioID     OptionalInt
 	CreatedAt    OptionalTime
 	UpdatedAt    OptionalTime

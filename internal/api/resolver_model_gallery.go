@@ -231,6 +231,10 @@ func (r *galleryResolver) OCounter(ctx context.Context, obj *models.Gallery) (*i
 	return &ret, nil
 }
 
+func (r *galleryResolver) OmgCounter(ctx context.Context, obj *models.Gallery) (int, error) {
+	return obj.OmegCounter, nil
+}
+
 func (r *galleryResolver) OHistory(ctx context.Context, obj *models.Gallery) ([]*time.Time, error) {
 	ret, err := loaders.From(ctx).GalleryOHistory.Load(obj.ID)
 	if err != nil {

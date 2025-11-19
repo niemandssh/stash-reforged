@@ -19,6 +19,7 @@ query Stats {
     group_count
     tag_count
     total_o_count
+    total_omg_count
     total_play_duration
     total_play_count
     scenes_played

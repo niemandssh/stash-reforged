@@ -15,6 +15,9 @@ import {
   useFindGallery,
   useGalleryUpdate,
   useGalleryIncrementO,
+  useGalleryIncrementOmg,
+  useGalleryDecrementOmg,
+  useGalleryResetOmg,
   useGalleryIncrementPlayCount,
 } from "src/core/StashService";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
@@ -45,8 +48,7 @@ import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import cx from "classnames";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ConfigurationContext } from "src/hooks/Config";
-import { OCounterButton } from "src/components/Scenes/SceneDetails/OCounterButton";
-import { ViewCountButton } from "src/components/Shared/CountButton";
+import { OCounterButton, OMGCounterButton, ViewCountButton } from "src/components/Shared/CountButton";
 
 interface IProps {
   gallery: GQL.GalleryDataFragment;
@@ -120,6 +122,9 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
   };
 
   const [incrementO] = useGalleryIncrementO(gallery.id);
+  const [incrementOmg] = useGalleryIncrementOmg(gallery.id);
+  const [decrementOmg] = useGalleryDecrementOmg(gallery.id);
+  const [resetOmg] = useGalleryResetOmg(gallery.id);
 
   const onIncrementOClick = async () => {
     try {
@@ -473,6 +478,18 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
                 <OCounterButton
                   value={gallery.o_counter ?? 0}
                   onIncrement={() => onIncrementOClick()}
+                />
+              </span>
+              <span>
+                <OMGCounterButton
+                  value={gallery.omgCounter ?? 0}
+                  onIncrement={async () => {
+                    try {
+                      await incrementOmg();
+                    } catch (e) {
+                      Toast.error(e);
+                    }
+                  }}
                 />
               </span>
               <span>

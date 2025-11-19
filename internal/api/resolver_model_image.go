@@ -161,3 +161,13 @@ func (r *imageResolver) Urls(ctx context.Context, obj *models.Image) ([]string, 
 
 	return obj.URLs.List(), nil
 }
+
+func (r *imageResolver) OCounter(ctx context.Context, obj *models.Image) (*int, error) {
+	ret := obj.OCounter
+	return &ret, nil
+}
+
+func (r *imageResolver) OmgCounter(ctx context.Context, obj *models.Image) (*int, error) {
+	ret := obj.OmegCounter
+	return &ret, nil
+}

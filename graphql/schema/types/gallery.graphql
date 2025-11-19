@@ -18,6 +18,7 @@ type Gallery {
   organized: Boolean!
   pinned: Boolean!
   o_counter: Int!
+  omgCounter: Int!
   o_history: [Time!]!
   display_mode: Int!
   play_count: Int!

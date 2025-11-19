@@ -20,6 +20,7 @@ type Gallery struct {
 	Organized   bool `json:"organized"`
 	Pinned      bool `json:"pinned"`
 	OCounter    int  `json:"o_counter"`
+	OmegCounter int  `json:"omg_counter"`
 	DisplayMode int  `json:"display_mode"`
 	StudioID    *int `json:"studio_id"`
 
@@ -66,6 +67,7 @@ type GalleryPartial struct {
 	Organized   OptionalBool
 	Pinned      OptionalBool
 	OCounter    OptionalInt
+	OmegCounter OptionalInt
 	DisplayMode OptionalInt
 	StudioID    OptionalInt
 	// FileModTime OptionalTime

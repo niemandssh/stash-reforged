@@ -11,6 +11,7 @@ fragment GalleryData on Gallery {
   rating100
   organized
   o_counter
+  omgCounter
   o_history
   play_count
   view_history

@@ -288,6 +288,14 @@ export const OCountStats: React.FC = () => {
         </div>
         <div className="stats-element">
           <p className="title">
+            <FormattedNumber value={generalData?.stats.total_omg_count || 0} />
+          </p>
+          <p className="heading">
+            <FormattedMessage id="stats.total_omg_count" />
+          </p>
+        </div>
+        <div className="stats-element">
+          <p className="title">
             <FormattedNumber value={currentMonthOCount} />
           </p>
           <p className="heading">

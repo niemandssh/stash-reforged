@@ -82,6 +82,32 @@ mutation SceneResetO($id: ID!) {
   sceneResetO(id: $id)
 }
 
+mutation SceneIncrementOmg($id: ID!) {
+  sceneIncrementOmg(id: $id)
+}
+
+mutation SceneDecrementOmg($id: ID!) {
+  sceneDecrementOmg(id: $id)
+}
+
+mutation SceneResetOmg($id: ID!) {
+  sceneResetOmg(id: $id)
+}
+
+mutation SceneAddOmg($id: ID!, $times: [Timestamp!]) {
+  sceneAddOmg(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation SceneDeleteOmg($id: ID!, $times: [Timestamp!]) {
+  sceneDeleteOmg(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
 mutation SceneDestroy(
   $id: ID!
   $delete_file: Boolean
