@@ -19,6 +19,25 @@ fragment SlimSceneData on Scene {
   play_duration
   play_count
 
+  video_filters {
+    contrast
+    brightness
+    gamma
+    saturate
+    hue_rotate
+    white_balance
+    red
+    green
+    blue
+    blur
+  }
+
+  video_transforms {
+    rotate
+    scale
+    aspect_ratio
+  }
+
   files {
     ...VideoFileData
   }

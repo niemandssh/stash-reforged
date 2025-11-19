@@ -246,6 +246,8 @@ export const TaggerScene: React.FC<PropsWithChildren<ITaggerScene>> = ({
           <div className="scene-card mr-3">
             <Link to={url}>
               <ScenePreview
+                sceneId={scene.id}
+                filters={scene.video_filters}
                 image={scene.paths.screenshot ?? undefined}
                 video={scene.paths.preview ?? undefined}
                 isPortrait={isPortrait}

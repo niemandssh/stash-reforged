@@ -645,6 +645,9 @@ declare namespace PluginApi {
       soundActive: boolean;
       vttPath?: string;
       onScrubberClick?: (timestamp: number) => void;
+      sceneId?: string;
+      filters?: any;
+      transforms?: any;
     }
     function SceneCard(): Promise<{
       SceneCard: React.FC<ISceneCardProps>;

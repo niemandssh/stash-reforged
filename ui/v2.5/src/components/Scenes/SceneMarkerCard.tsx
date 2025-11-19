@@ -142,6 +142,8 @@ const SceneMarkerCardImage = (props: ISceneMarkerCardProps) => {
   return (
     <>
       <ScenePreview
+        sceneId={props.marker.scene.id}
+        filters={props.marker.scene.video_filters}
         image={props.marker.screenshot ?? undefined}
         video={props.marker.stream ?? undefined}
         soundActive={configuration?.interface?.soundOnPreview ?? false}

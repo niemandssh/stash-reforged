@@ -222,6 +222,8 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
       image={
         <>
           <ScenePreview
+            sceneId={scene.id}
+            filters={scene.video_filters}
             image={scene.paths.screenshot ?? undefined}
             video={scene.paths.preview ?? undefined}
             isPortrait={isPortrait()}

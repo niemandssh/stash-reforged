@@ -22,6 +22,8 @@ interface IScenePlayerScrubberProps {
   onSeek: (seconds: number) => void;
   onScroll: () => void;
   tagColors: { [tag: string]: string };
+  filters?: GQL.Maybe<GQL.VideoFilters>;
+  transforms?: GQL.Maybe<GQL.VideoTransforms>;
 }
 
 interface ISceneSpriteItem {

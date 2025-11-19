@@ -82,6 +82,8 @@ export const ViewHistoryCard: React.FC<IViewHistoryCardProps> = ({
       return (
         <>
           <ScenePreview
+            sceneId={scene!.id}
+            filters={scene!.video_filters}
             image={thumbnailUrl}
             video={previewUrl}
             vttPath={vttPath}

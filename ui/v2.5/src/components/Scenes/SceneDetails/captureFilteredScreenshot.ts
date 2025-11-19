@@ -1,31 +1,14 @@
 import * as GQL from "src/core/generated-graphql";
 import { VIDEO_PLAYER_ID } from "src/components/ScenePlayer/util";
-
-const FILTER_DEFAULTS = {
-  brightness: 100,
-  contrast: 100,
-  gamma: 100,
-  saturate: 100,
-  hueRotate: 0,
-  whiteBalance: 100,
-  red: 100,
-  green: 100,
-  blue: 100,
-  blur: 0,
-};
-
-const FILTER_DIVIDERS = {
-  gamma: 200,
-  whiteBalance: 200,
-  colour: 100,
-  blur: 10,
-};
-
-const SCALE_DEFAULT = 100;
-const ASPECT_RATIO_DEFAULT = 150;
-const ASPECT_RATIO_DIVIDER = 100;
-const ROTATE_DEFAULT = 2;
-const ROTATE_DIVIDER = 1 / 90;
+import {
+  FILTER_DEFAULTS,
+  FILTER_DIVIDERS,
+  SCALE_DEFAULT,
+  ASPECT_RATIO_DEFAULT,
+  ASPECT_RATIO_DIVIDER,
+  ROTATE_DEFAULT,
+  ROTATE_DIVIDER,
+} from "src/utils/videoFilters";
 
 type MediaElement = HTMLVideoElement | HTMLCanvasElement;
 

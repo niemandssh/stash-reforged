@@ -5,13 +5,23 @@ import React, {
   useLayoutEffect,
   useEffect,
 } from "react";
+import * as GQL from "src/core/generated-graphql";
 import { useSpriteInfo } from "src/hooks/sprite";
 import { useThrottle } from "src/hooks/throttle";
 import { HoverScrubber } from "../Shared/HoverScrubber";
+import {
+  buildSvgFilter,
+  getFilterTransformStyle,
+  needsColorMatrix,
+  needsGammaAdjustment,
+} from "src/utils/videoFilters";
 
 interface IScenePreviewProps {
   vttPath: string | undefined;
   onClick?: (timestamp: number) => void;
+  sceneId?: string;
+  filters?: GQL.Maybe<GQL.VideoFilters>;
+  transforms?: GQL.Maybe<GQL.VideoTransforms>;
 }
 
 function scaleToFit(dimensions: { w: number; h: number }, bounds: DOMRect) {
@@ -31,6 +41,9 @@ const defaultSprites = 81; // 9x9 grid by default
 export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
   vttPath,
   onClick,
+  sceneId,
+  filters,
+  transforms,
 }) => {
   const imageParentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState({});
@@ -57,24 +70,51 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
     }
   }, [activeIndex]);
 
+  const uniqueId = useMemo(
+    () =>
+      `scene-scrubber-${sceneId ?? "unknown"}-${Math.random()
+        .toString(36)
+        .slice(2)}`,
+    [sceneId]
+  );
+  const requiresSvg =
+    needsColorMatrix(filters) || needsGammaAdjustment(filters);
+  const svgFilterId = requiresSvg ? `${uniqueId}-svg` : undefined;
+  const filterTransformStyle = useMemo(
+    () => getFilterTransformStyle(filters, transforms, svgFilterId),
+    [filters, transforms, svgFilterId]
+  );
+  const svgFilter = useMemo(
+    () => (svgFilterId ? buildSvgFilter(filters, svgFilterId) : null),
+    [filters, svgFilterId]
+  );
+
   useLayoutEffect(() => {
     const imageParent = imageParentRef.current;
 
     if (!sprite || !imageParent) {
-      return setStyle({});
+      return setStyle(filterTransformStyle ?? {});
     }
 
     const clientRect = imageParent.getBoundingClientRect();
     const scale = scaleToFit(sprite, clientRect);
 
+    // Combine transforms from filterTransformStyle with scale
+    const transformParts: string[] = [];
+    if (filterTransformStyle?.transform) {
+      transformParts.push(filterTransformStyle.transform);
+    }
+    transformParts.push(`scale(${scale})`);
+
     setStyle({
+      ...(filterTransformStyle ?? {}),
       backgroundPosition: `${-sprite.x}px ${-sprite.y}px`,
       backgroundImage: `url(${sprite.url})`,
       width: `${sprite.w}px`,
       height: `${sprite.h}px`,
-      transform: `scale(${scale})`,
+      transform: transformParts.join(" "),
     });
-  }, [sprite]);
+  }, [sprite, filterTransformStyle]);
 
   function onScrubberClick(index: number) {
     if (!onClick || !spriteInfo) {
@@ -100,6 +140,7 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
         setActiveIndex={(i) => debounceSetActiveIndex(i)}
         onClick={onScrubberClick}
       />
+      {svgFilter}
     </div>
   );
 };

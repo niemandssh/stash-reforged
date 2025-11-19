@@ -35,6 +35,12 @@ import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 import { HLSBadge } from "../Shared/HLSBadge";
+import {
+  buildSvgFilter,
+  getFilterTransformStyle,
+  needsColorMatrix,
+  needsGammaAdjustment,
+} from "src/utils/videoFilters";
 
 interface IScenePreviewProps {
   isPortrait: boolean;
@@ -43,6 +49,9 @@ interface IScenePreviewProps {
   soundActive: boolean;
   vttPath?: string;
   onScrubberClick?: (timestamp: number) => void;
+  sceneId?: string;
+  filters?: GQL.Maybe<GQL.VideoFilters>;
+  transforms?: GQL.Maybe<GQL.VideoTransforms>;
 }
 
 export const ScenePreview: React.FC<IScenePreviewProps> = ({
@@ -52,8 +61,30 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
   soundActive,
   vttPath,
   onScrubberClick,
+  sceneId,
+  filters,
+  transforms,
 }) => {
   const videoEl = useRef<HTMLVideoElement>(null);
+  const uniqueId = useMemo(
+    () =>
+      `scene-preview-${sceneId ?? "unknown"}-${Math.random()
+        .toString(36)
+        .slice(2)}`,
+    [sceneId]
+  );
+
+  const requiresSvg =
+    needsColorMatrix(filters) || needsGammaAdjustment(filters);
+  const svgFilterId = requiresSvg ? `${uniqueId}-svg` : undefined;
+  const filterStyle = useMemo(
+    () => getFilterTransformStyle(filters, transforms, svgFilterId),
+    [filters, transforms, svgFilterId]
+  );
+  const svgFilter = useMemo(
+    () => (svgFilterId ? buildSvgFilter(filters, svgFilterId) : null),
+    [filters, svgFilterId]
+  );
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -73,6 +104,18 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
       videoEl.current.volume = soundActive ? 0.05 : 0;
   }, [soundActive]);
 
+  useEffect(() => {
+    if (!videoEl.current) return;
+    
+    if (filterStyle) {
+      Object.assign(videoEl.current.style, filterStyle);
+    } else {
+      videoEl.current.style.filter = "";
+      videoEl.current.style.transform = "";
+      videoEl.current.style.transformOrigin = "";
+    }
+  }, [filterStyle]);
+
   return (
     <div className={cx("scene-card-preview", { portrait: isPortrait })}>
       <img
@@ -80,6 +123,7 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
         loading="lazy"
         src={image}
         alt=""
+        style={filterStyle}
       />
       <video
         disableRemotePlayback
@@ -91,7 +135,14 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
         ref={videoEl}
         src={video}
       />
-      <PreviewScrubber vttPath={vttPath} onClick={onScrubberClick} />
+      <PreviewScrubber
+        vttPath={vttPath}
+        onClick={onScrubberClick}
+        sceneId={sceneId}
+        filters={filters}
+        transforms={transforms}
+      />
+      {svgFilter}
     </div>
   );
 };
@@ -462,6 +513,9 @@ const SceneCardImage = PatchComponent(
     return (
       <>
         <ScenePreview
+          sceneId={props.scene.id}
+          filters={props.scene.video_filters}
+          transforms={props.scene.video_transforms}
           image={props.scene.paths.screenshot ?? undefined}
           video={props.scene.paths.preview ?? undefined}
           isPortrait={isPortrait()}

@@ -131,6 +131,8 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
           <div className="next-scene-overlay-preview">
             <Link to={scenePath} onClick={handleSkip}>
               <ScenePreview
+                sceneId={nextScene.id}
+                filters={nextScene.video_filters}
                 image={nextScene.paths.screenshot ?? undefined}
                 video={nextScene.paths.preview ?? undefined}
                 isPortrait={false}

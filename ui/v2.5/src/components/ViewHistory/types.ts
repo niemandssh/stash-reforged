@@ -7,6 +7,23 @@ export interface IScene {
   is_broken?: boolean;
   is_probably_broken?: boolean;
   is_not_broken?: boolean;
+  video_filters?: {
+    contrast?: number | null;
+    brightness?: number | null;
+    gamma?: number | null;
+    saturate?: number | null;
+    hue_rotate?: number | null;
+    white_balance?: number | null;
+    red?: number | null;
+    green?: number | null;
+    blue?: number | null;
+    blur?: number | null;
+  } | null;
+  video_transforms?: {
+    rotate?: number | null;
+    scale?: number | null;
+    aspect_ratio?: number | null;
+  } | null;
   files?: Array<{
     path?: string;
     duration?: number;

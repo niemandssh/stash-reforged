@@ -17,6 +17,23 @@ export const FIND_VIEW_HISTORY = gql`
           is_broken
           is_probably_broken
           is_not_broken
+        video_filters {
+          contrast
+          brightness
+          gamma
+          saturate
+          hue_rotate
+          white_balance
+          red
+          green
+          blue
+          blur
+        }
+        video_transforms {
+          rotate
+          scale
+          aspect_ratio
+        }
           files {
             path
             duration
