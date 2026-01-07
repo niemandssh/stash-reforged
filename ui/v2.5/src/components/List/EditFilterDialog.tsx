@@ -199,6 +199,7 @@ const FilterModeToConfigKey = {
   [FilterMode.Scenes]: "scenes",
   [FilterMode.Studios]: "studios",
   [FilterMode.Tags]: "tags",
+  [FilterMode.Games]: "games",
 };
 
 function filterModeToConfigKey(filterMode: FilterMode) {

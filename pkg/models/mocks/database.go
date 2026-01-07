@@ -12,6 +12,7 @@ import (
 type Database struct {
 	File           *FileReaderWriter
 	Folder         *FolderReaderWriter
+	Game           *GameReaderWriter
 	Gallery        *GalleryReaderWriter
 	GalleryChapter *GalleryChapterReaderWriter
 	Image          *ImageReaderWriter
@@ -61,6 +62,7 @@ func NewDatabase() *Database {
 	return &Database{
 		File:           &FileReaderWriter{},
 		Folder:         &FolderReaderWriter{},
+		Game:           &GameReaderWriter{},
 		Gallery:        &GalleryReaderWriter{},
 		GalleryChapter: &GalleryChapterReaderWriter{},
 		Image:          &ImageReaderWriter{},
@@ -77,6 +79,7 @@ func NewDatabase() *Database {
 func (db *Database) AssertExpectations(t mock.TestingT) {
 	db.File.AssertExpectations(t)
 	db.Folder.AssertExpectations(t)
+	db.Game.AssertExpectations(t)
 	db.Gallery.AssertExpectations(t)
 	db.GalleryChapter.AssertExpectations(t)
 	db.Image.AssertExpectations(t)
@@ -94,6 +97,7 @@ func (db *Database) Repository() models.Repository {
 		TxnManager:     db,
 		File:           db.File,
 		Folder:         db.Folder,
+		Game:           db.Game,
 		Gallery:        db.Gallery,
 		GalleryChapter: db.GalleryChapter,
 		Image:          db.Image,

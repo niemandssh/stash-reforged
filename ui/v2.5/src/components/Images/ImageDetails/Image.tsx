@@ -7,12 +7,8 @@ import {
   useFindImage,
   useImageIncrementO,
   useImageIncrementOmg,
-  useImageDecrementOmg,
-  useImageResetOmg,
   useImageUpdate,
   mutateMetadataScan,
-  useImageDecrementO,
-  useImageResetO,
 } from "src/core/StashService";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -21,7 +17,10 @@ import { Counter } from "src/components/Shared/Counter";
 import { useToast } from "src/hooks/Toast";
 import * as Mousetrap from "mousetrap";
 import * as GQL from "src/core/generated-graphql";
-import { OCounterButton, OMGCounterButton } from "src/components/Shared/CountButton";
+import {
+  OCounterButton,
+  OMGCounterButton,
+} from "src/components/Shared/CountButton";
 import { OrganizedButton } from "src/components/Scenes/SceneDetails/OrganizedButton";
 import { ImageFileInfoPanel } from "./ImageFileInfoPanel";
 import { ImageEditPanel } from "./ImageEditPanel";
@@ -53,11 +52,7 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
   const { configuration } = useContext(ConfigurationContext);
 
   const [incrementO] = useImageIncrementO(image.id);
-  const [decrementO] = useImageDecrementO(image.id);
-  const [resetO] = useImageResetO(image.id);
   const [incrementOmg] = useImageIncrementOmg(image.id);
-  const [decrementOmg] = useImageDecrementOmg(image.id);
-  const [resetOmg] = useImageResetOmg(image.id);
 
   const [updateImage] = useImageUpdate();
 
@@ -121,22 +116,6 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
   const onIncrementClick = async () => {
     try {
       await incrementO();
-    } catch (e) {
-      Toast.error(e);
-    }
-  };
-
-  const onDecrementClick = async () => {
-    try {
-      await decrementO();
-    } catch (e) {
-      Toast.error(e);
-    }
-  };
-
-  const onResetClick = async () => {
-    try {
-      await resetO();
     } catch (e) {
       Toast.error(e);
     }
@@ -354,8 +333,6 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
               <OCounterButton
                 value={image.o_counter || 0}
                 onIncrement={onIncrementClick}
-                onDecrement={onDecrementClick}
-                onReset={onResetClick}
               />
             </span>
             <span>

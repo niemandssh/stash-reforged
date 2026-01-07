@@ -163,6 +163,8 @@
         "disable": "Выключить",
         "remove_date": "Удалить дату",
         "view_history": "Смотреть просмотренные",
+        "games": "Игры",
+        "game": "Игра",
         "reset_cover": "Восстановить обложку по умолчанию",
         "set_cover": "Установить как обложку",
         "add_sub_groups": "Добавить подгруппы",
@@ -836,6 +838,7 @@
     "configuration": "Настройки",
     "countables": {
         "files": "{count, plural, one {Файл} other {Файлы}}",
+        "games": "{count, plural, one {Игра} other {Игры}}",
         "galleries": "{count, plural, one {Галерея} other {Галереи}}",
         "images": "{count, plural, one {Изображение} other {Изображения}}",
         "markers": "{count, plural, one {Маркер} other {Маркеры}}",
@@ -1209,6 +1212,9 @@
     "omg_counter": "OMG Count",
     "operations": "Операции",
     "organized": "Организован",
+    "folder_path": "Путь к папке",
+    "executable_path": "Путь к файлу запуска",
+    "not_organized": "Не организован",
     "pagination": {
         "first": "Первая",
         "last": "Последняя",

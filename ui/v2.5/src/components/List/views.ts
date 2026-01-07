@@ -1,5 +1,6 @@
 export enum View {
   Galleries = "galleries",
+  Games = "games",
   Images = "images",
   Scenes = "scenes",
   Groups = "groups",

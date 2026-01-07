@@ -1,0 +1,89 @@
+mutation GameCreate($input: GameCreateInput!) {
+  gameCreate(input: $input) {
+    ...GameData
+  }
+}
+
+mutation GameUpdate($input: GameUpdateInput!) {
+  gameUpdate(input: $input) {
+    ...GameData
+  }
+}
+
+mutation GameDestroy($input: GameDestroyInput!) {
+  gameDestroy(input: $input)
+}
+
+mutation GameIncrementO($id: ID!, $times: [Timestamp!]) {
+  gameAddO(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameDecrementO($id: ID!, $times: [Timestamp!]) {
+  gameDeleteO(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameIncrementOCount($id: ID!) {
+  gameIncrementO(id: $id)
+}
+
+mutation GameDecrementOCount($id: ID!) {
+  gameDecrementO(id: $id)
+}
+
+mutation GameResetO($id: ID!) {
+  gameResetO(id: $id)
+}
+
+mutation GameIncrementOmg($id: ID!) {
+  gameIncrementOmg(id: $id)
+}
+
+mutation GameDecrementOmg($id: ID!) {
+  gameDecrementOmg(id: $id)
+}
+
+mutation GameResetOmg($id: ID!) {
+  gameResetOmg(id: $id)
+}
+
+mutation GameAddOmg($id: ID!, $times: [Timestamp!]) {
+  gameAddOmg(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameDeleteOmg($id: ID!, $times: [Timestamp!]) {
+  gameDeleteOmg(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameIncrementView($id: ID!) {
+  gameIncrementView(id: $id)
+}
+
+mutation GameAddView($id: ID!, $times: [Timestamp!]) {
+  gameAddView(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameDeleteView($id: ID!, $times: [Timestamp!]) {
+  gameDeleteView(id: $id, times: $times) {
+    count
+    history
+  }
+}
+
+mutation GameResetViews($id: ID!) {
+  gameResetViews(id: $id)
+}

@@ -128,6 +128,7 @@ export type CriterionType =
   | "rating100"
   | "organized"
   | "o_counter"
+  | "omg_counter"
   | "resolution"
   | "average_resolution"
   | "framerate"

@@ -35,8 +35,7 @@ export function needsColorMatrix(filters?: MaybeFilters) {
     return false;
   }
 
-  const whiteBalance =
-    filters.white_balance ?? FILTER_DEFAULTS.whiteBalance;
+  const whiteBalance = filters.white_balance ?? FILTER_DEFAULTS.whiteBalance;
   const red = filters.red ?? FILTER_DEFAULTS.red;
   const green = filters.green ?? FILTER_DEFAULTS.green;
   const blue = filters.blue ?? FILTER_DEFAULTS.blue;
@@ -73,8 +72,7 @@ export function buildSvgFilter(
     return null;
   }
 
-  const whiteBalance =
-    filters.white_balance ?? FILTER_DEFAULTS.whiteBalance;
+  const whiteBalance = filters.white_balance ?? FILTER_DEFAULTS.whiteBalance;
   const red = filters.red ?? FILTER_DEFAULTS.red;
   const green = filters.green ?? FILTER_DEFAULTS.green;
   const blue = filters.blue ?? FILTER_DEFAULTS.blue;
@@ -83,12 +81,9 @@ export function buildSvgFilter(
   const wbMatrixValue =
     (whiteBalance - FILTER_DEFAULTS.whiteBalance) /
     FILTER_DIVIDERS.whiteBalance;
-  const redAdjust =
-    (red - FILTER_DEFAULTS.red) / FILTER_DIVIDERS.colour;
-  const greenAdjust =
-    (green - FILTER_DEFAULTS.green) / FILTER_DIVIDERS.colour;
-  const blueAdjust =
-    (blue - FILTER_DEFAULTS.blue) / FILTER_DIVIDERS.colour;
+  const redAdjust = (red - FILTER_DEFAULTS.red) / FILTER_DIVIDERS.colour;
+  const greenAdjust = (green - FILTER_DEFAULTS.green) / FILTER_DIVIDERS.colour;
+  const blueAdjust = (blue - FILTER_DEFAULTS.blue) / FILTER_DIVIDERS.colour;
 
   const redMultiplier = 1 + wbMatrixValue + redAdjust;
   const greenMultiplier = 1 + greenAdjust;
@@ -112,9 +107,24 @@ export function buildSvgFilter(
         )}
         {needsGamma && (
           <feComponentTransfer>
-            <feFuncR type="gamma" amplitude="1" exponent={gammaExponent} offset="0" />
-            <feFuncG type="gamma" amplitude="1" exponent={gammaExponent} offset="0" />
-            <feFuncB type="gamma" amplitude="1" exponent={gammaExponent} offset="0" />
+            <feFuncR
+              type="gamma"
+              amplitude="1"
+              exponent={gammaExponent}
+              offset="0"
+            />
+            <feFuncG
+              type="gamma"
+              amplitude="1"
+              exponent={gammaExponent}
+              offset="0"
+            />
+            <feFuncB
+              type="gamma"
+              amplitude="1"
+              exponent={gammaExponent}
+              offset="0"
+            />
             <feFuncA type="gamma" amplitude="1" exponent="1" offset="0" />
           </feComponentTransfer>
         )}
@@ -185,8 +195,7 @@ export function buildTransformString(transforms?: MaybeTransforms) {
   const parts: string[] = [];
 
   if (rotateValue !== ROTATE_DEFAULT) {
-    const degrees =
-      (rotateValue - ROTATE_DEFAULT) / ROTATE_DIVIDER;
+    const degrees = (rotateValue - ROTATE_DEFAULT) / ROTATE_DIVIDER;
     parts.push(`rotate(${degrees}deg)`);
   }
 
@@ -195,13 +204,11 @@ export function buildTransformString(transforms?: MaybeTransforms) {
 
   if (aspectRatio > ASPECT_RATIO_DEFAULT) {
     xScale *=
-      (ASPECT_RATIO_DIVIDER +
-        (aspectRatio - ASPECT_RATIO_DEFAULT)) /
+      (ASPECT_RATIO_DIVIDER + (aspectRatio - ASPECT_RATIO_DEFAULT)) /
       ASPECT_RATIO_DIVIDER;
   } else if (aspectRatio < ASPECT_RATIO_DEFAULT) {
     yScale *=
-      (ASPECT_RATIO_DIVIDER +
-        (ASPECT_RATIO_DEFAULT - aspectRatio)) /
+      (ASPECT_RATIO_DIVIDER + (ASPECT_RATIO_DEFAULT - aspectRatio)) /
       ASPECT_RATIO_DIVIDER;
   }
 
@@ -219,10 +226,7 @@ export function buildTransformString(transforms?: MaybeTransforms) {
   return parts.join(" ");
 }
 
-export function getFilterStyle(
-  filters?: MaybeFilters,
-  svgFilterId?: string
-) {
+export function getFilterStyle(filters?: MaybeFilters, svgFilterId?: string) {
   const filter = buildCssFilterString(filters, svgFilterId);
   if (!filter) {
     return undefined;
@@ -244,9 +248,6 @@ export function getFilterTransformStyle(
 
   return {
     ...(filterStyle ?? {}),
-    ...(transform
-      ? { transform, transformOrigin: "center center" }
-      : {}),
+    ...(transform ? { transform, transformOrigin: "center center" } : {}),
   };
 }
-

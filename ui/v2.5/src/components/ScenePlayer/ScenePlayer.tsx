@@ -1204,10 +1204,13 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const posterFilterIdRef = useRef<string>();
     const posterFilterSceneIdRef = useRef<string>();
     useEffect(() => {
-      if (!posterFilterIdRef.current || posterFilterSceneIdRef.current !== scene.id) {
-        posterFilterIdRef.current = `scene-player-poster-${scene.id}-${Math.random()
-          .toString(36)
-          .slice(2)}`;
+      if (
+        !posterFilterIdRef.current ||
+        posterFilterSceneIdRef.current !== scene.id
+      ) {
+        posterFilterIdRef.current = `scene-player-poster-${
+          scene.id
+        }-${Math.random().toString(36).slice(2)}`;
         posterFilterSceneIdRef.current = scene.id;
       }
     }, [scene.id]);
@@ -1224,124 +1227,126 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const applyFiltersToPoster = () => {
         const posterEl = playerEl.querySelector(".vjs-poster") as HTMLElement;
         if (!posterEl) return;
-      const requiresSvg =
-        needsColorMatrix(scene.video_filters) ||
-        needsGammaAdjustment(scene.video_filters);
-      const svgFilterId = requiresSvg ? `${uniqueId}-svg` : undefined;
-      const filterStyle = getFilterTransformStyle(
-        scene.video_filters,
-        scene.video_transforms,
-        svgFilterId
-      );
+        const requiresSvg =
+          needsColorMatrix(scene.video_filters) ||
+          needsGammaAdjustment(scene.video_filters);
+        const svgFilterId = requiresSvg ? `${uniqueId}-svg` : undefined;
+        const filterStyle = getFilterTransformStyle(
+          scene.video_filters,
+          scene.video_transforms,
+          svgFilterId
+        );
 
-      if (filterStyle) {
-        Object.assign(posterEl.style, filterStyle);
-      } else {
-        posterEl.style.filter = "";
-        posterEl.style.transform = "";
-        posterEl.style.transformOrigin = "";
-      }
-
-      let svgContainer = playerEl.querySelector(
-        `svg[data-poster-filter="${uniqueId}"]`
-      ) as SVGSVGElement;
-      if (svgFilterId && scene.video_filters) {
-        if (!svgContainer) {
-          svgContainer = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "svg"
-          ) as SVGSVGElement;
-          svgContainer.setAttribute("data-poster-filter", uniqueId);
-          svgContainer.setAttribute("class", "video-filter-defs");
-          svgContainer.setAttribute("style", "position: absolute; width: 0; height: 0");
-          svgContainer.setAttribute("aria-hidden", "true");
-          svgContainer.setAttribute("focusable", "false");
-          playerEl.appendChild(svgContainer);
+        if (filterStyle) {
+          Object.assign(posterEl.style, filterStyle);
+        } else {
+          posterEl.style.filter = "";
+          posterEl.style.transform = "";
+          posterEl.style.transformOrigin = "";
         }
 
-        const filters = scene.video_filters;
-        const needsMatrix = needsColorMatrix(filters);
-        const needsGamma = needsGammaAdjustment(filters);
-
-        if (needsMatrix || needsGamma) {
-          let filter = svgContainer.querySelector(
-            `filter[id="${svgFilterId}"]`
-          ) as SVGFilterElement;
-          if (!filter) {
-            filter = document.createElementNS(
+        let svgContainer = playerEl.querySelector(
+          `svg[data-poster-filter="${uniqueId}"]`
+        ) as SVGSVGElement;
+        if (svgFilterId && scene.video_filters) {
+          if (!svgContainer) {
+            svgContainer = document.createElementNS(
               "http://www.w3.org/2000/svg",
-              "filter"
+              "svg"
+            ) as SVGSVGElement;
+            svgContainer.setAttribute("data-poster-filter", uniqueId);
+            svgContainer.setAttribute("class", "video-filter-defs");
+            svgContainer.setAttribute(
+              "style",
+              "position: absolute; width: 0; height: 0"
+            );
+            svgContainer.setAttribute("aria-hidden", "true");
+            svgContainer.setAttribute("focusable", "false");
+            playerEl.appendChild(svgContainer);
+          }
+
+          const filters = scene.video_filters;
+          const needsMatrix = needsColorMatrix(filters);
+          const needsGamma = needsGammaAdjustment(filters);
+
+          if (needsMatrix || needsGamma) {
+            let filter = svgContainer.querySelector(
+              `filter[id="${svgFilterId}"]`
             ) as SVGFilterElement;
-            filter.setAttribute("id", svgFilterId);
-            svgContainer.appendChild(filter);
-          }
-
-          filter.innerHTML = "";
-
-          if (needsMatrix) {
-            const whiteBalance =
-              filters.white_balance ?? 100;
-            const red = filters.red ?? 100;
-            const green = filters.green ?? 100;
-            const blue = filters.blue ?? 100;
-
-            const wbMatrixValue = (whiteBalance - 100) / 200;
-            const redAdjust = (red - 100) / 100;
-            const greenAdjust = (green - 100) / 100;
-            const blueAdjust = (blue - 100) / 100;
-
-            const redMultiplier = 1 + wbMatrixValue + redAdjust;
-            const greenMultiplier = 1 + greenAdjust;
-            const blueMultiplier = 1 - wbMatrixValue + blueAdjust;
-
-            const feColorMatrix = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "feColorMatrix"
-            );
-            feColorMatrix.setAttribute(
-              "values",
-              `${redMultiplier} 0 0 0 0   0 ${greenMultiplier} 0 0 0   0 0 ${blueMultiplier} 0 0   0 0 0 1 0`
-            );
-            filter.appendChild(feColorMatrix);
-          }
-
-          if (needsGamma) {
-            const gamma = filters.gamma ?? 100;
-            const gammaExponent = 1 + (100 - gamma) / 200;
-
-            const feComponentTransfer = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "feComponentTransfer"
-            );
-
-            ["R", "G", "B"].forEach((channel) => {
-              const feFunc = document.createElementNS(
+            if (!filter) {
+              filter = document.createElementNS(
                 "http://www.w3.org/2000/svg",
-                `feFunc${channel}`
+                "filter"
+              ) as SVGFilterElement;
+              filter.setAttribute("id", svgFilterId);
+              svgContainer.appendChild(filter);
+            }
+
+            filter.innerHTML = "";
+
+            if (needsMatrix) {
+              const whiteBalance = filters.white_balance ?? 100;
+              const red = filters.red ?? 100;
+              const green = filters.green ?? 100;
+              const blue = filters.blue ?? 100;
+
+              const wbMatrixValue = (whiteBalance - 100) / 200;
+              const redAdjust = (red - 100) / 100;
+              const greenAdjust = (green - 100) / 100;
+              const blueAdjust = (blue - 100) / 100;
+
+              const redMultiplier = 1 + wbMatrixValue + redAdjust;
+              const greenMultiplier = 1 + greenAdjust;
+              const blueMultiplier = 1 - wbMatrixValue + blueAdjust;
+
+              const feColorMatrix = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "feColorMatrix"
               );
-              feFunc.setAttribute("type", "gamma");
-              feFunc.setAttribute("amplitude", "1");
-              feFunc.setAttribute("exponent", String(gammaExponent));
-              feFunc.setAttribute("offset", "0");
-              feComponentTransfer.appendChild(feFunc);
-            });
+              feColorMatrix.setAttribute(
+                "values",
+                `${redMultiplier} 0 0 0 0   0 ${greenMultiplier} 0 0 0   0 0 ${blueMultiplier} 0 0   0 0 0 1 0`
+              );
+              filter.appendChild(feColorMatrix);
+            }
 
-            const feFuncA = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "feFuncA"
-            );
-            feFuncA.setAttribute("type", "gamma");
-            feFuncA.setAttribute("amplitude", "1");
-            feFuncA.setAttribute("exponent", "1");
-            feFuncA.setAttribute("offset", "0");
-            feComponentTransfer.appendChild(feFuncA);
+            if (needsGamma) {
+              const gamma = filters.gamma ?? 100;
+              const gammaExponent = 1 + (100 - gamma) / 200;
 
-            filter.appendChild(feComponentTransfer);
+              const feComponentTransfer = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "feComponentTransfer"
+              );
+
+              ["R", "G", "B"].forEach((channel) => {
+                const feFunc = document.createElementNS(
+                  "http://www.w3.org/2000/svg",
+                  `feFunc${channel}`
+                );
+                feFunc.setAttribute("type", "gamma");
+                feFunc.setAttribute("amplitude", "1");
+                feFunc.setAttribute("exponent", String(gammaExponent));
+                feFunc.setAttribute("offset", "0");
+                feComponentTransfer.appendChild(feFunc);
+              });
+
+              const feFuncA = document.createElementNS(
+                "http://www.w3.org/2000/svg",
+                "feFuncA"
+              );
+              feFuncA.setAttribute("type", "gamma");
+              feFuncA.setAttribute("amplitude", "1");
+              feFuncA.setAttribute("exponent", "1");
+              feFuncA.setAttribute("offset", "0");
+              feComponentTransfer.appendChild(feFuncA);
+
+              filter.appendChild(feComponentTransfer);
+            }
           }
+        } else if (svgContainer) {
+          svgContainer.remove();
         }
-      } else if (svgContainer) {
-        svgContainer.remove();
-      }
       };
 
       applyFiltersToPoster();

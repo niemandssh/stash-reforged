@@ -23,6 +23,9 @@ var (
 	galleriesODatesJoinTable     = goqu.T(galleriesODatesTable)
 	galleriesViewDatesJoinTable  = goqu.T(galleriesViewDatesTable)
 
+	gamesTagsJoinTable = goqu.T(gamesTagsTable)
+	gamesURLsJoinTable = goqu.T(gamesURLsTable)
+
 	scenesFilesJoinTable      = goqu.T(scenesFilesTable)
 	scenesTagsJoinTable       = goqu.T(scenesTagsTable)
 	scenesPerformersJoinTable = goqu.T(performersScenesTable)
@@ -183,6 +186,55 @@ var (
 			idColumn: galleriesViewDatesJoinTable.Col(galleryIDColumn),
 		},
 		dateColumn: galleriesViewDatesJoinTable.Col(galleryViewDateColumn),
+	}
+)
+
+var (
+	gameTableMgr = &table{
+		table:    goqu.T(gameTable),
+		idColumn: goqu.T(gameTable).Col(idColumn),
+	}
+
+	gamesTagsTableMgr = &joinTable{
+		table: table{
+			table:    gamesTagsJoinTable,
+			idColumn: gamesTagsJoinTable.Col(gameIDColumn),
+		},
+		fkColumn:     gamesTagsJoinTable.Col(tagIDColumn),
+		foreignTable: tagTableMgr,
+		orderBy:      goqu.COALESCE(tagTableMgr.table.Col("sort_name"), tagTableMgr.table.Col("name")).Asc(),
+	}
+
+	gamesURLsTableMgr = &orderedValueTable[string]{
+		table: table{
+			table:    gamesURLsJoinTable,
+			idColumn: gamesURLsJoinTable.Col(gameIDColumn),
+		},
+		valueColumn: gamesURLsJoinTable.Col(gameURLColumn),
+	}
+
+	gamesOTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T(gamesODatesTable),
+			idColumn: goqu.T(gamesODatesTable).Col(gameIDColumn),
+		},
+		dateColumn: goqu.T(gamesODatesTable).Col(gameODateColumn),
+	}
+
+	gamesOMGTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T(gamesOMGDatesTable),
+			idColumn: goqu.T(gamesOMGDatesTable).Col(gameIDColumn),
+		},
+		dateColumn: goqu.T(gamesOMGDatesTable).Col(gameOMGDateColumn),
+	}
+
+	gamesViewTableMgr = &viewHistoryTable{
+		table: table{
+			table:    goqu.T(gamesViewDatesTable),
+			idColumn: goqu.T(gamesViewDatesTable).Col(gameIDColumn),
+		},
+		dateColumn: goqu.T(gamesViewDatesTable).Col(gameViewDateColumn),
 	}
 )
 

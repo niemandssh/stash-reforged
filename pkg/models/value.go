@@ -287,3 +287,38 @@ func (o *OptionalTime) Ptr() *time.Time {
 	v := o.Value
 	return &v
 }
+
+// OptionalBytes represents an optional []byte argument that may be null. See OptionalString.
+type OptionalBytes struct {
+	Value []byte
+	Null  bool
+	Set   bool
+}
+
+// Ptr returns a pointer to the underlying value. Returns nil if Set is false or Null is true.
+func (o *OptionalBytes) Ptr() *[]byte {
+	if !o.Set || o.Null {
+		return nil
+	}
+
+	v := o.Value
+	return &v
+}
+
+// NewOptionalBytes returns a new OptionalBytes with the given value.
+func NewOptionalBytes(v []byte) OptionalBytes {
+	return OptionalBytes{v, false, true}
+}
+
+// NewOptionalBytesPtr returns a new OptionalBytes with the given value.
+// If the value is nil, the returned OptionalBytes will be set and null.
+func NewOptionalBytesPtr(v *[]byte) OptionalBytes {
+	if v == nil {
+		return OptionalBytes{
+			Null: true,
+			Set:  true,
+		}
+	}
+
+	return OptionalBytes{*v, false, true}
+}

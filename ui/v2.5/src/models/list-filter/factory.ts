@@ -1,6 +1,7 @@
 import { FilterMode } from "src/core/generated-graphql";
 import { ListFilterOptions } from "./filter-options";
 import { GalleryListFilterOptions } from "./galleries";
+import { GameListFilterOptions } from "./games";
 import { ImageListFilterOptions } from "./images";
 import { GroupListFilterOptions } from "./groups";
 import { PerformerListFilterOptions } from "./performers";
@@ -19,6 +20,8 @@ export function getFilterOptions(mode: FilterMode): ListFilterOptions {
       return StudioListFilterOptions;
     case FilterMode.Galleries:
       return GalleryListFilterOptions;
+    case FilterMode.Games:
+      return GameListFilterOptions;
     case FilterMode.SceneMarkers:
       return SceneMarkerListFilterOptions;
     case FilterMode.Movies:

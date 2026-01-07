@@ -121,6 +121,7 @@ func (db *Database) Repository() models.Repository {
 		Blob:                  db.Blobs,
 		File:                  db.File,
 		Folder:                db.Folder,
+		Game:                  db.Game,
 		Gallery:               db.Gallery,
 		GalleryChapter:        db.GalleryChapter,
 		Image:                 db.Image,

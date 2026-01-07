@@ -316,6 +316,29 @@ export const queryFindGalleriesByIDForSelect = (galleryIDs: string[]) =>
     },
   });
 
+export const useFindGame = (id: string) => {
+  const skip = id === "new" || id === "";
+  return GQL.useFindGameQuery({ variables: { id }, skip });
+};
+
+export const useFindGames = (filter?: ListFilterModel) =>
+  GQL.useFindGamesQuery({
+    skip: filter === undefined,
+    variables: {
+      filter: filter?.makeFindFilter(),
+      game_filter: filter?.makeFilter(),
+    },
+  });
+
+export const queryFindGames = (filter: ListFilterModel) =>
+  client.query<GQL.FindGamesQuery>({
+    query: GQL.FindGamesDocument,
+    variables: {
+      filter: filter.makeFindFilter(),
+      game_filter: filter.makeFilter(),
+    },
+  });
+
 export const useFindPerformer = (id: string) => {
   const skip = id === "new" || id === "";
   return GQL.useFindPerformerQuery({ variables: { id }, skip });
@@ -754,16 +777,12 @@ export const useSceneIncrementO = (id: string) =>
     variables: { id },
     refetchQueries: [GQL.FindSceneDocument],
     update(cache, result, { variables }) {
-      // this is not perfectly accurate, the time is set server-side
-      // it isn't even displayed anywhere in the UI anyway
-      const at = new Date().toISOString();
-
       const mutationResult = result.data?.sceneAddO;
       if (!mutationResult || !variables) return;
 
       const { history, count } = mutationResult;
       const { times } = variables;
-      const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
+      const countChange = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
@@ -778,7 +797,7 @@ export const useSceneIncrementO = (id: string) =>
             id: cache.identify(performer),
             fields: {
               o_counter(value) {
-                return value + timeArray.length;
+                return value + countChange;
               },
             },
           });
@@ -790,7 +809,7 @@ export const useSceneIncrementO = (id: string) =>
         });
       }
 
-      updateStats(cache, "total_o_count", timeArray.length);
+      updateStats(cache, "total_o_count", countChange);
 
       // Try using writeFragment to force a complete update
       if (scene) {
@@ -836,7 +855,7 @@ export const useSceneDecrementO = (id: string) =>
 
       const { history, count } = mutationResult;
       const { times } = variables;
-      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
+      const countChange = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
@@ -851,7 +870,7 @@ export const useSceneDecrementO = (id: string) =>
             id: cache.identify(performer),
             fields: {
               o_counter(value) {
-                return value - (timeArray?.length ?? 1);
+                return value - countChange;
               },
             },
           });
@@ -863,7 +882,7 @@ export const useSceneDecrementO = (id: string) =>
         });
       }
 
-      updateStats(cache, "total_o_count", -(timeArray?.length ?? 1));
+      updateStats(cache, "total_o_count", -countChange);
 
       cache.modify({
         id: cache.identify({ __typename: "Scene", id }),
@@ -966,7 +985,10 @@ export const useSceneIncrementOmg = (id: string) =>
   GQL.useSceneIncrementOmgMutation({
     variables: { id },
     refetchQueries: [GQL.FindSceneDocument],
-    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneIncrementOmgMutation>) {
+    update(
+      cache: ApolloCache<unknown>,
+      result: FetchResult<GQL.SceneIncrementOmgMutation>
+    ) {
       const updatedCount = result.data?.sceneIncrementOmg;
       if (updatedCount === undefined) return;
 
@@ -987,7 +1009,10 @@ export const useSceneDecrementOmg = (id: string) =>
   GQL.useSceneDecrementOmgMutation({
     variables: { id },
     refetchQueries: [GQL.FindSceneDocument],
-    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneDecrementOmgMutation>) {
+    update(
+      cache: ApolloCache<unknown>,
+      result: FetchResult<GQL.SceneDecrementOmgMutation>
+    ) {
       const updatedCount = result.data?.sceneDecrementOmg;
       if (updatedCount === undefined) return;
 
@@ -1008,7 +1033,10 @@ export const useSceneResetOmg = (id: string) =>
   GQL.useSceneResetOmgMutation({
     variables: { id },
     refetchQueries: [GQL.FindSceneDocument],
-    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.SceneResetOmgMutation>) {
+    update(
+      cache: ApolloCache<unknown>,
+      result: FetchResult<GQL.SceneResetOmgMutation>
+    ) {
       const updatedCount = result.data?.sceneResetOmg;
       if (updatedCount === undefined) return;
 
@@ -1034,14 +1062,10 @@ export const useSceneAddOmg = (id: string) =>
     variables: { id },
     refetchQueries: [GQL.FindSceneDocument],
     update(cache, result, { variables }) {
-      const at = new Date().toISOString();
-
       const mutationResult = result.data?.sceneAddOmg;
       if (!mutationResult || !variables) return;
 
       const { history, count } = mutationResult;
-      const { times } = variables;
-      const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
 
       const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
@@ -1087,8 +1111,6 @@ export const useSceneDeleteOmg = (id: string) =>
       if (!mutationResult || !variables) return;
 
       const { history, count } = mutationResult;
-      const { times } = variables;
-      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
 
       cache.modify({
         id: cache.identify({ __typename: "Scene", id }),
@@ -1419,8 +1441,7 @@ export const useSceneDecrementPlayCount = () =>
 
       const { history } = mutationResult;
       const { id, times } = variables;
-      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
-      const nRemoved = timeArray?.length ?? 1;
+      const nRemoved = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       let lastPlayCount = 0;
       let lastPlayedAt: string | null = null;
@@ -1750,7 +1771,10 @@ export const useImageIncrementOmg = (id: string) =>
   GQL.useImageIncrementOmgMutation({
     variables: { id },
     refetchQueries: [GQL.FindImageDocument],
-    update(cache: ApolloCache<unknown>, result: FetchResult<GQL.ImageIncrementOmgMutation>) {
+    update(
+      cache: ApolloCache<unknown>,
+      result: FetchResult<GQL.ImageIncrementOmgMutation>
+    ) {
       const updatedCount = result.data?.imageIncrementOmg;
       if (updatedCount === undefined) return;
 
@@ -2173,15 +2197,12 @@ export const useGalleryIncrementO = (id: string) =>
     variables: { id },
     refetchQueries: [GQL.FindGalleryDocument],
     update(cache, result, { variables }) {
-      const at = new Date().toISOString();
-
       const mutationResult = result.data?.galleryAddO;
       if (!mutationResult || !variables) return;
 
       const { history, count } = mutationResult;
       const { times } = variables;
-      const timeArray = !times ? [at] : Array.isArray(times) ? times : [times];
-      const countChange = !times ? 1 : timeArray.length;
+      const countChange = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       const gallery = cache.readFragment<GQL.GalleryDataFragment>({
         id: cache.identify({ __typename: "Gallery", id }),
@@ -2235,8 +2256,7 @@ export const useGalleryDecrementO = (id: string) =>
 
       const { history, count } = mutationResult;
       const { times } = variables;
-      const timeArray = !times ? [1] : Array.isArray(times) ? times : [times];
-      const countChange = !times ? 1 : timeArray.length;
+      const countChange = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       const gallery = cache.readFragment<GQL.GalleryDataFragment>({
         id: cache.identify({ __typename: "Gallery", id }),
@@ -3924,8 +3944,7 @@ export const useGalleryDecrementPlayCount = (id: string) =>
 
       const { history } = mutationResult;
       const { times } = variables;
-      const timeArray = !times ? null : Array.isArray(times) ? times : [times];
-      const nRemoved = timeArray?.length ?? 1;
+      const nRemoved = !times ? 1 : Array.isArray(times) ? times.length : 1;
 
       let lastPlayCount = 0;
       const playCount = history.length;
@@ -3988,6 +4007,231 @@ export const useGalleryResetPlayCount = (id: string) =>
         GQL.FindGalleriesDocument, // filter by play count
         GQL.FindGalleryDocument, // individual gallery page
       ]);
+    },
+  });
+
+const gameMutationImpactedQueries = [GQL.FindGamesDocument];
+
+export const useGameCreate = () =>
+  GQL.useGameCreateMutation({
+    update(cache) {
+      evictQueries(cache, gameMutationImpactedQueries);
+    },
+  });
+
+export const useGameUpdate = () =>
+  GQL.useGameUpdateMutation({
+    update(cache) {
+      evictQueries(cache, gameMutationImpactedQueries);
+    },
+  });
+
+export const useGameDestroy = () =>
+  GQL.useGameDestroyMutation({
+    update(cache, result, { variables }) {
+      if (!result.data?.gameDestroy) return;
+      const ids = variables?.input.ids ?? [];
+      ids.forEach((id) => {
+        cache.evict({ id: cache.identify({ __typename: "Game", id }) });
+      });
+      evictQueries(cache, gameMutationImpactedQueries);
+    },
+  });
+
+export const useGameAddO = () =>
+  GQL.useGameIncrementOMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameAddO;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          o_counter() {
+            return payload.count;
+          },
+          o_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameDeleteO = () =>
+  GQL.useGameDecrementOMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameDeleteO;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          o_counter() {
+            return payload.count;
+          },
+          o_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameResetO = () =>
+  GQL.useGameResetOMutation({
+    update(cache, result, { variables }) {
+      const count = result.data?.gameResetO;
+      const id = variables?.id;
+      if (count === undefined || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          o_counter() {
+            return count;
+          },
+          o_history() {
+            return [] as string[];
+          },
+        },
+      });
+    },
+  });
+
+export const useGameAddOmg = () =>
+  GQL.useGameAddOmgMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameAddOmg;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          omgCounter() {
+            return payload.count;
+          },
+          omg_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameDeleteOmg = () =>
+  GQL.useGameDeleteOmgMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameDeleteOmg;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          omgCounter() {
+            return payload.count;
+          },
+          omg_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameResetOmg = () =>
+  GQL.useGameResetOmgMutation({
+    update(cache, result, { variables }) {
+      const count = result.data?.gameResetOmg;
+      const id = variables?.id;
+      if (count === undefined || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          omgCounter() {
+            return count;
+          },
+          omg_history() {
+            return [] as string[];
+          },
+        },
+      });
+    },
+  });
+
+export const useGameAddView = () =>
+  GQL.useGameAddViewMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameAddView;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          play_count() {
+            return payload.count;
+          },
+          view_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameDeleteView = () =>
+  GQL.useGameDeleteViewMutation({
+    update(cache, result, { variables }) {
+      const payload = result.data?.gameDeleteView;
+      const id = variables?.id;
+      if (!payload || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          play_count() {
+            return payload.count;
+          },
+          view_history() {
+            return payload.history;
+          },
+        },
+      });
+    },
+  });
+
+export const useGameResetViews = () =>
+  GQL.useGameResetViewsMutation({
+    update(cache, result, { variables }) {
+      const count = result.data?.gameResetViews;
+      const id = variables?.id;
+      if (count === undefined || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          play_count() {
+            return count;
+          },
+          view_history() {
+            return [] as string[];
+          },
+        },
+      });
+    },
+  });
+
+export const useGameIncrementView = () =>
+  GQL.useGameIncrementViewMutation({
+    update(cache, result, { variables }) {
+      const count = result.data?.gameIncrementView;
+      const id = variables?.id;
+      if (count === undefined || !id) return;
+      cache.modify({
+        id: cache.identify({ __typename: "Game", id }),
+        fields: {
+          play_count() {
+            return count;
+          },
+        },
+      });
     },
   });
 

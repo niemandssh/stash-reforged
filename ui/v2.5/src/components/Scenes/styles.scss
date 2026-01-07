@@ -113,19 +113,32 @@
 }
 
 .scene-toolbar {
-  align-items: center;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   margin-bottom: 0.25rem;
   margin-top: 0.5rem;
   padding-bottom: 0.25rem;
   width: 100%;
 
+  .scene-toolbar-row {
+    align-items: center;
+    display: flex;
+    width: 100%;
+
+    &:first-child {
+      justify-content: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    &:last-child {
+      justify-content: space-between;
+    }
+  }
+
   .scene-toolbar-group {
     align-items: center;
     column-gap: 0.25rem;
     display: flex;
-    width: 100%;
 
     &:last-child {
       justify-content: flex-end;

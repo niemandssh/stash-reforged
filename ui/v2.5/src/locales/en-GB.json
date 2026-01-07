@@ -893,6 +893,7 @@
   "containing_groups": "Containing Groups",
   "countables": {
     "files": "{count, plural, one {File} other {Files}}",
+    "games": "{count, plural, one {Game} other {Games}}",
     "galleries": "{count, plural, one {Gallery} other {Galleries}}",
     "groups": "{count, plural, one {Group} other {Groups}}",
     "images": "{count, plural, one {Image} other {Images}}",
@@ -1328,6 +1329,7 @@
   "omgdate_recorded_no": "No OMG Date Recorded",
   "operations": "Operations",
   "organized": "Organised",
+  "not_organized": "Not organised",
   "orientation": "Orientation",
   "package_manager": {
     "add_source": "Add Source",
@@ -1701,6 +1703,8 @@
   "video_codec": "Video Codec",
   "videos": "Videos",
   "view_history": "History",
+  "games": "Games",
+  "game": "Game",
   "view_all": "View All",
   "weight": "Weight",
   "weight_kg": "Weight (kg)",

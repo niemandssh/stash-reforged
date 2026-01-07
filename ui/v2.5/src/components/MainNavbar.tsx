@@ -43,6 +43,7 @@ import {
   faUser,
   faVideo,
   faStickyNote,
+  faGamepad,
 } from "@fortawesome/free-solid-svg-icons";
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
@@ -60,6 +61,10 @@ const messages = defineMessages({
   scenes: {
     id: "scenes",
     defaultMessage: "Scenes",
+  },
+  games: {
+    id: "games",
+    defaultMessage: "Games",
   },
   images: {
     id: "images",
@@ -114,6 +119,14 @@ const allMenuItems: IMenuItem[] = [
     href: "/scenes",
     icon: faPlayCircle,
     hotkey: "g s",
+  },
+  {
+    name: "games",
+    message: messages.games,
+    href: "/games",
+    icon: faGamepad,
+    hotkey: "g a",
+    userCreatable: true,
   },
   {
     name: "images",

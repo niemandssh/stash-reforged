@@ -9,7 +9,14 @@ import {
   faArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import React, { useState } from "react";
-import { Button, Col, Form, Row, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Row,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import { useIntl, FormattedMessage } from "react-intl";
 import { Icon } from "src/components/Shared/Icon";
 import { ModalComponent } from "src/components/Shared/Modal";
@@ -240,9 +247,13 @@ export const DirectorySelectionDialog: React.FC<
                 <Icon icon={faFolder} size="2x" />
                 <OverlayTrigger
                   placement="top"
-                  overlay={<Tooltip id={`tile-dir-tooltip-${dir}`}>{dir}</Tooltip>}
+                  overlay={
+                    <Tooltip id={`tile-dir-tooltip-${dir}`}>{dir}</Tooltip>
+                  }
                 >
-                  <div className="tile-label">{TextUtils.fileNameFromPath(dir)}</div>
+                  <div className="tile-label">
+                    {TextUtils.fileNameFromPath(dir)}
+                  </div>
                 </OverlayTrigger>
               </Button>
               <OverlayTrigger
@@ -281,9 +292,13 @@ export const DirectorySelectionDialog: React.FC<
                 <Icon icon={faFile} size="2x" />
                 <OverlayTrigger
                   placement="top"
-                  overlay={<Tooltip id={`tile-file-tooltip-${file}`}>{file}</Tooltip>}
+                  overlay={
+                    <Tooltip id={`tile-file-tooltip-${file}`}>{file}</Tooltip>
+                  }
                 >
-                  <div className="tile-label">{TextUtils.fileNameFromPath(file)}</div>
+                  <div className="tile-label">
+                    {TextUtils.fileNameFromPath(file)}
+                  </div>
                 </OverlayTrigger>
               </Button>
               <OverlayTrigger
@@ -318,12 +333,16 @@ export const DirectorySelectionDialog: React.FC<
     if (!currentDirectory && libraryPaths && libraryPaths.length > 0) {
       setCurrentDirectory(libraryPaths[0]);
     }
-  }, [libraryPaths]);
+  }, [libraryPaths, currentDirectory]);
 
   return (
     <ModalComponent
       show
-      modalProps={{ animation, size: "xl", dialogClassName: "directory-selection-dialog" }}
+      modalProps={{
+        animation,
+        size: "xl",
+        dialogClassName: "directory-selection-dialog",
+      }}
       disabled={!allowEmpty && paths.length === 0}
       icon={faPencilAlt}
       header={intl.formatMessage({ id: "actions.select_folders" })}
@@ -344,101 +363,110 @@ export const DirectorySelectionDialog: React.FC<
           <Col xs={12} md={6}>
             <div className="selection-panel">
               <div className="selection-header">
-              <Form.Group className="flex-grow-1">
-                <Form.Control
-                  className="btn-secondary"
-                  placeholder={intl.formatMessage({ id: "setup.folder.file_path" })}
-                  onChange={(e) => {
-                    setCurrentDirectory(e.currentTarget.value);
-                  }}
-                  value={currentDirectory}
-                  spellCheck={false}
-                />
-              </Form.Group>
-              <div className="view-mode-toggle">
-                <Button
-                  variant={viewMode === "tiles" ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setViewMode("tiles")}
-                  title={intl.formatMessage({ id: "display_mode.grid" })}
-                >
-                  <Icon icon={faThLarge} />
-                </Button>
-                <Button
-                  variant={viewMode === "tree" ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setViewMode("tree")}
-                  title={intl.formatMessage({ id: "display_mode.list" })}
-                >
-                  <Icon icon={faList} />
-                </Button>
-              </div>
-            </div>
-            <div className="selection-content">
-              {loading ? (
-                <LoadingIndicator message="" />
-              ) : error ? (
-                <div className="text-danger">
-                  {intl.formatMessage({ id: "errors.error" })}: {error.message}
+                <Form.Group className="flex-grow-1">
+                  <Form.Control
+                    className="btn-secondary"
+                    placeholder={intl.formatMessage({
+                      id: "setup.folder.file_path",
+                    })}
+                    onChange={(e) => {
+                      setCurrentDirectory(e.currentTarget.value);
+                    }}
+                    value={currentDirectory}
+                    spellCheck={false}
+                  />
+                </Form.Group>
+                <div className="view-mode-toggle">
+                  <Button
+                    variant={viewMode === "tiles" ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => setViewMode("tiles")}
+                    title={intl.formatMessage({ id: "display_mode.grid" })}
+                  >
+                    <Icon icon={faThLarge} />
+                  </Button>
+                  <Button
+                    variant={viewMode === "tree" ? "primary" : "secondary"}
+                    size="sm"
+                    onClick={() => setViewMode("tree")}
+                    title={intl.formatMessage({ id: "display_mode.list" })}
+                  >
+                    <Icon icon={faList} />
+                  </Button>
                 </div>
-              ) : (
-                <>
-                  {viewMode === "tree" ? renderTreeView() : renderTilesView()}
-                </>
-              )}
+              </div>
+              <div className="selection-content">
+                {loading ? (
+                  <LoadingIndicator message="" />
+                ) : error ? (
+                  <div className="text-danger">
+                    {intl.formatMessage({ id: "errors.error" })}:{" "}
+                    {error.message}
+                  </div>
+                ) : (
+                  <>
+                    {viewMode === "tree" ? renderTreeView() : renderTilesView()}
+                  </>
+                )}
               </div>
             </div>
           </Col>
           <Col xs={12} md={6}>
             <div className="selected-panel">
               <div className="selected-header">
-              <h5>
-                <FormattedMessage
-                  id="config.tasks.selected_folders_and_files"
-                  defaultMessage="Selected folders and files"
-                />{" "}
-                ({paths.length})
-              </h5>
-            </div>
-            <div className="selected-content">
-              {paths.length === 0 ? (
-                <div className="text-muted text-center p-3">
-                  {intl.formatMessage({ id: "config.tasks.scan_for_content_desc" })}
-                </div>
-              ) : (
-                <div className="selected-list">
-                  {paths.map((p) => {
-                    const pathParts = p.split(/[\\/]/);
-                    const lastPart = pathParts[pathParts.length - 1];
-                    const isFile =
-                      lastPart &&
-                      lastPart.includes(".") &&
-                      !p.endsWith("/") &&
-                      !p.endsWith("\\");
-                    return (
-                      <div key={p} className="selected-item">
-                      <div className="selected-item-icon">
-                        <Icon icon={isFile ? faFile : faFolder} />
-                      </div>
-                      <OverlayTrigger
-                        placement="top"
-                        overlay={<Tooltip id={`selected-path-tooltip-${p}`}>{p}</Tooltip>}
-                      >
-                        <div className="selected-item-path">{p}</div>
-                      </OverlayTrigger>
-                      <Button
-                          size="sm"
-                          variant="danger"
-                          title={intl.formatMessage({ id: "actions.delete" })}
-                          onClick={() => removePath(p)}
-                        >
-                          <Icon icon={faMinus} />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                <h5>
+                  <FormattedMessage
+                    id="config.tasks.selected_folders_and_files"
+                    defaultMessage="Selected folders and files"
+                  />{" "}
+                  ({paths.length})
+                </h5>
+              </div>
+              <div className="selected-content">
+                {paths.length === 0 ? (
+                  <div className="text-muted text-center p-3">
+                    {intl.formatMessage({
+                      id: "config.tasks.scan_for_content_desc",
+                    })}
+                  </div>
+                ) : (
+                  <div className="selected-list">
+                    {paths.map((p) => {
+                      const pathParts = p.split(/[\\/]/);
+                      const lastPart = pathParts[pathParts.length - 1];
+                      const isFile =
+                        lastPart &&
+                        lastPart.includes(".") &&
+                        !p.endsWith("/") &&
+                        !p.endsWith("\\");
+                      return (
+                        <div key={p} className="selected-item">
+                          <div className="selected-item-icon">
+                            <Icon icon={isFile ? faFile : faFolder} />
+                          </div>
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id={`selected-path-tooltip-${p}`}>
+                                {p}
+                              </Tooltip>
+                            }
+                          >
+                            <div className="selected-item-path">{p}</div>
+                          </OverlayTrigger>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            title={intl.formatMessage({ id: "actions.delete" })}
+                            onClick={() => removePath(p)}
+                          >
+                            <Icon icon={faMinus} />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </Col>

@@ -1,0 +1,41 @@
+fragment GameData on Game {
+  id
+  title
+  details
+  urls
+  date
+  rating100
+  organized
+  folder_path
+  executable_path
+  tags {
+    ...SlimTagData
+  }
+  image_path
+  o_counter
+  omgCounter
+  play_count
+  o_history
+  omg_history
+  view_history
+  created_at
+  updated_at
+}
+
+fragment SlimGameData on Game {
+  id
+  title
+  organized
+  date
+  rating100
+  image_path
+  o_counter
+  omgCounter
+  play_count
+  tags {
+    ...SlimTagData
+  }
+  created_at
+  updated_at
+  details
+}

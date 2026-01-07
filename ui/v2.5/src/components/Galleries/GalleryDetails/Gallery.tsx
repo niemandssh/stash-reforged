@@ -16,8 +16,6 @@ import {
   useGalleryUpdate,
   useGalleryIncrementO,
   useGalleryIncrementOmg,
-  useGalleryDecrementOmg,
-  useGalleryResetOmg,
   useGalleryIncrementPlayCount,
 } from "src/core/StashService";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
@@ -48,7 +46,11 @@ import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import cx from "classnames";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ConfigurationContext } from "src/hooks/Config";
-import { OCounterButton, OMGCounterButton, ViewCountButton } from "src/components/Shared/CountButton";
+import {
+  OCounterButton,
+  OMGCounterButton,
+  ViewCountButton,
+} from "src/components/Shared/CountButton";
 
 interface IProps {
   gallery: GQL.GalleryDataFragment;
@@ -123,8 +125,6 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
 
   const [incrementO] = useGalleryIncrementO(gallery.id);
   const [incrementOmg] = useGalleryIncrementOmg(gallery.id);
-  const [decrementOmg] = useGalleryDecrementOmg(gallery.id);
-  const [resetOmg] = useGalleryResetOmg(gallery.id);
 
   const onIncrementOClick = async () => {
     try {
@@ -453,54 +453,60 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
           </div>
 
           <div className="gallery-toolbar">
-            <span className="gallery-toolbar-group">
-              <RatingSystem
-                value={gallery.rating100}
-                onSetRating={setRating}
-                clickToRate
-                withoutContext
-              />
-            </span>
-            <span className="gallery-toolbar-group">
-              <span>
-                <ViewCountButton
-                  value={gallery.play_count ?? 0}
-                  onIncrement={() =>
-                    incrementPlayCount({
-                      variables: {
-                        id: gallery.id,
-                      },
-                    })
-                  }
+            <div className="gallery-toolbar-row">
+              <span className="gallery-toolbar-group">
+                <RatingSystem
+                  value={gallery.rating100}
+                  onSetRating={setRating}
+                  clickToRate
+                  withoutContext
                 />
               </span>
-              <span>
-                <OCounterButton
-                  value={gallery.o_counter ?? 0}
-                  onIncrement={() => onIncrementOClick()}
-                />
-              </span>
-              <span>
-                <OMGCounterButton
-                  value={gallery.omgCounter ?? 0}
-                  onIncrement={async () => {
-                    try {
-                      await incrementOmg();
-                    } catch (e) {
-                      Toast.error(e);
+            </div>
+            <div className="gallery-toolbar-row">
+              <span className="gallery-toolbar-group">
+                <span>
+                  <ViewCountButton
+                    value={gallery.play_count ?? 0}
+                    onIncrement={() =>
+                      incrementPlayCount({
+                        variables: {
+                          id: gallery.id,
+                        },
+                      })
                     }
-                  }}
-                />
+                  />
+                </span>
+                <span>
+                  <OCounterButton
+                    value={gallery.o_counter ?? 0}
+                    onIncrement={() => onIncrementOClick()}
+                  />
+                </span>
+                <span>
+                  <OMGCounterButton
+                    value={gallery.omgCounter ?? 0}
+                    onIncrement={async () => {
+                      try {
+                        await incrementOmg();
+                      } catch (e) {
+                        Toast.error(e);
+                      }
+                    }}
+                  />
+                </span>
+                <span>
+                  <OrganizedButton
+                    loading={organizedLoading}
+                    organized={gallery.organized}
+                    onClick={onOrganizedClick}
+                  />
+                </span>
               </span>
-              <span>
-                <OrganizedButton
-                  loading={organizedLoading}
-                  organized={gallery.organized}
-                  onClick={onOrganizedClick}
-                />
+              <span className="gallery-toolbar-group">
+                <span>{renderOperations()}</span>
               </span>
-              <span>{renderOperations()}</span>
-            </span>
+            </div>
           </div>
         </div>
         {renderTabs()}

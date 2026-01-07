@@ -75,14 +75,15 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
   );
 
   const requiresSvg =
-    needsColorMatrix(filters) || needsGammaAdjustment(filters);
+    needsColorMatrix(filters ?? null) || needsGammaAdjustment(filters ?? null);
   const svgFilterId = requiresSvg ? `${uniqueId}-svg` : undefined;
   const filterStyle = useMemo(
-    () => getFilterTransformStyle(filters, transforms, svgFilterId),
+    () =>
+      getFilterTransformStyle(filters ?? null, transforms ?? null, svgFilterId),
     [filters, transforms, svgFilterId]
   );
   const svgFilter = useMemo(
-    () => (svgFilterId ? buildSvgFilter(filters, svgFilterId) : null),
+    () => (svgFilterId ? buildSvgFilter(filters ?? null, svgFilterId) : null),
     [filters, svgFilterId]
   );
 
@@ -106,7 +107,7 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
 
   useEffect(() => {
     if (!videoEl.current) return;
-    
+
     if (filterStyle) {
       Object.assign(videoEl.current.style, filterStyle);
     } else {

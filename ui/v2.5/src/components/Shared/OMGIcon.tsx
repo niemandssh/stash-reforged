@@ -17,4 +17,3 @@ export const OMGIcon: React.FC = PatchComponent("OMGIcon", () => (
     </svg>
   </span>
 ));
-

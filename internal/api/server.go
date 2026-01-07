@@ -218,6 +218,7 @@ func Initialize() (*Server, error) {
 	r.Mount("/studio", server.getStudioRoutes())
 	r.Mount("/group", server.getGroupRoutes())
 	r.Mount("/tag", server.getTagRoutes())
+	r.Mount("/game", server.getGameRoutes())
 	r.Mount("/downloads", server.getDownloadsRoutes())
 	r.Mount("/plugin", server.getPluginRoutes())
 
@@ -416,6 +417,14 @@ func (s *Server) getTagRoutes() chi.Router {
 	return tagRoutes{
 		routes:    routes{txnManager: repo.TxnManager},
 		tagFinder: repo.Tag,
+	}.Routes()
+}
+
+func (s *Server) getGameRoutes() chi.Router {
+	repo := s.manager.Repository
+	return gameRoutes{
+		routes:     routes{txnManager: repo.TxnManager},
+		gameFinder: repo.Game,
 	}.Routes()
 }
 

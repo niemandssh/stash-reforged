@@ -24,8 +24,6 @@ import {
   useFindScene,
   useSceneIncrementO,
   useSceneIncrementOmg,
-  useSceneDecrementOmg,
-  useSceneResetOmg,
   useSceneGenerateScreenshot,
   useSceneSaveFilteredScreenshot,
   useSceneUpdate,
@@ -256,8 +254,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [incrementO] = useSceneIncrementO(scene.id);
   const [incrementOmg] = useSceneIncrementOmg(scene.id);
-  const [decrementOmg] = useSceneDecrementOmg(scene.id);
-  const [resetOmg] = useSceneResetOmg(scene.id);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
@@ -1350,47 +1346,57 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           </div>
 
           <div className="scene-toolbar">
-            <span className="scene-toolbar-group">
-              <RatingSystem
-                value={scene.rating100}
-                onSetRating={setRating}
-                clickToRate
-                withoutContext
-              />
-            </span>
-            <span className="scene-toolbar-group">
-              <span>
-                <ExternalPlayerButton scene={scene} />
-              </span>
-              <span>
-                <ViewCountButton
-                  value={scene.play_count ?? 0}
-                  onIncrement={() => incrementPlayCount()}
-                  onValueClicked={() => setActiveTabKey("scene-history-panel")}
+            <div className="scene-toolbar-row">
+              <span className="scene-toolbar-group">
+                <RatingSystem
+                  value={scene.rating100}
+                  onSetRating={setRating}
+                  clickToRate
+                  withoutContext
                 />
               </span>
-              <span>
-                <OCounterButton
-                  value={scene.o_counter ?? 0}
-                  onIncrement={() => onIncrementOClick()}
-                />
+            </div>
+            <div className="scene-toolbar-row">
+              <span className="scene-toolbar-group">
+                <span>
+                  <ExternalPlayerButton scene={scene} />
+                </span>
+                <span>
+                  <ViewCountButton
+                    value={scene.play_count ?? 0}
+                    onIncrement={() => incrementPlayCount()}
+                    onValueClicked={() =>
+                      setActiveTabKey("scene-history-panel")
+                    }
+                  />
+                </span>
+                <span>
+                  <OCounterButton
+                    value={scene.o_counter ?? 0}
+                    onIncrement={() => onIncrementOClick()}
+                  />
+                </span>
+                <span>
+                  <OMGCounterButton
+                    value={scene.omgCounter ?? 0}
+                    onIncrement={() => onIncrementOMGClick()}
+                    onValueClicked={() =>
+                      setActiveTabKey("scene-history-panel")
+                    }
+                  />
+                </span>
+                <span>
+                  <OrganizedButton
+                    loading={organizedLoading}
+                    organized={scene.organized}
+                    onClick={onOrganizedClick}
+                  />
+                </span>
               </span>
-              <span>
-                <OMGCounterButton
-                  value={scene.omgCounter ?? 0}
-                  onIncrement={() => onIncrementOMGClick()}
-                  onValueClicked={() => setActiveTabKey("scene-history-panel")}
-                />
+              <span className="scene-toolbar-group">
+                <span>{renderOperations()}</span>
               </span>
-              <span>
-                <OrganizedButton
-                  loading={organizedLoading}
-                  organized={scene.organized}
-                  onClick={onOrganizedClick}
-                />
-              </span>
-              <span>{renderOperations()}</span>
-            </span>
+            </div>
           </div>
         </div>
         {renderTabs()}

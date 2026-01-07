@@ -1,6 +1,5 @@
 import {
   faEllipsisV,
-  faMinus,
   faPlus,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
@@ -14,10 +13,8 @@ import { Icon } from "src/components/Shared/Icon";
 import { ModalComponent } from "src/components/Shared/Modal";
 import {
   useSceneDecrementO,
-  useSceneDecrementOmg,
   useSceneDecrementPlayCount,
   useSceneIncrementO,
-  useSceneIncrementOmg,
   useSceneIncrementPlayCount,
   useSceneResetO,
   useSceneResetOmg,
@@ -197,8 +194,6 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
   const [incrementOCount] = useSceneIncrementO(scene.id);
   const [decrementOCount] = useSceneDecrementO(scene.id);
   const [resetO] = useSceneResetO(scene.id);
-  const [incrementOmg] = useSceneIncrementOmg(scene.id);
-  const [decrementOmg] = useSceneDecrementOmg(scene.id);
   const [resetOmg] = useSceneResetOmg(scene.id);
   const [addOmg] = useSceneAddOmg(scene.id);
   const [deleteOmg] = useSceneDeleteOmg(scene.id);
@@ -399,7 +394,9 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     (h) => h != null
   ) as string[];
   const oHistory = (scene.o_history ?? []).filter((h) => h != null) as string[];
-  const omgHistory = (scene.omg_history ?? []).filter((h) => h != null) as string[];
+  const omgHistory = (scene.omg_history ?? []).filter(
+    (h) => h != null
+  ) as string[];
 
   return (
     <div>

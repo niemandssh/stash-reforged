@@ -64,7 +64,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="tasks" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "tasks" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "tasks" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.tasks" />
                   </Button>
                 </Nav.Link>
@@ -81,7 +85,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="custom" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "custom" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "custom" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.custom" />
                   </Button>
                 </Nav.Link>
@@ -98,7 +106,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="library" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "library" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "library" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="library" />
                   </Button>
                 </Nav.Link>
@@ -115,7 +127,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="interface" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "interface" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "interface" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.interface" />
                   </Button>
                 </Nav.Link>
@@ -132,7 +148,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="security" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "security" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "security" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.security" />
                   </Button>
                 </Nav.Link>
@@ -149,7 +169,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="metadata-providers" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "metadata-providers" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "metadata-providers" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.metadata_providers" />
                   </Button>
                 </Nav.Link>
@@ -166,7 +190,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="services" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "services" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "services" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.services" />
                   </Button>
                 </Nav.Link>
@@ -183,7 +211,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="system" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "system" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "system" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.system" />
                   </Button>
                 </Nav.Link>
@@ -200,7 +232,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="plugins" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "plugins" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "plugins" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.plugins" />
                   </Button>
                 </Nav.Link>
@@ -217,7 +253,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="logs" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "logs" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "logs" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.logs" />
                   </Button>
                 </Nav.Link>
@@ -234,7 +274,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="tools" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "tools" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "tools" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.tools" />
                   </Button>
                 </Nav.Link>
@@ -251,7 +295,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="changelog" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "changelog" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "changelog" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.changelog" />
                   </Button>
                 </Nav.Link>
@@ -268,7 +316,11 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                 activeClassName="active"
               >
                 <Nav.Link eventKey="about" as="span">
-                  <Button className={`minimal w-100 text-left ${tab === "about" ? "active" : ""}`}>
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "about" ? "active" : ""
+                    }`}
+                  >
                     <FormattedMessage id="config.categories.about" />
                   </Button>
                 </Nav.Link>

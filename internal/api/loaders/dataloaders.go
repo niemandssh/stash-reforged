@@ -24,6 +24,12 @@
 //go:generate go run github.com/vektah/dataloaden GalleryOHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
 //go:generate go run github.com/vektah/dataloaden GalleryPlayCountLoader int int
 //go:generate go run github.com/vektah/dataloaden GalleryViewHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden GameLoader int *github.com/stashapp/stash/pkg/models.Game
+//go:generate go run github.com/vektah/dataloaden GameOCountLoader int int
+//go:generate go run github.com/vektah/dataloaden GameOHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden GameOMGHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
+//go:generate go run github.com/vektah/dataloaden GameViewCountLoader int int
+//go:generate go run github.com/vektah/dataloaden GameViewHistoryLoader int github.com/stashapp/stash/internal/api/loaders.TimeSlice
 package loaders
 
 import (
@@ -66,6 +72,13 @@ type Loaders struct {
 	GalleryPlayCount   *GalleryPlayCountLoader
 	GalleryViewHistory *GalleryViewHistoryLoader
 	ImageByID          *ImageLoader
+
+	GameByID        *GameLoader
+	GameOCount      *GameOCountLoader
+	GameOHistory    *GameOHistoryLoader
+	GameOMGHistory  *GameOMGHistoryLoader
+	GameViewCount   *GameViewCountLoader
+	GameViewHistory *GameViewHistoryLoader
 
 	PerformerByID         *PerformerLoader
 	PerformerCustomFields *CustomFieldsLoader
@@ -114,6 +127,36 @@ func (m Middleware) Middleware(next http.Handler) http.Handler {
 				wait:     wait,
 				maxBatch: maxBatch,
 				fetch:    m.fetchGalleriesViewHistory(ctx),
+			},
+			GameByID: &GameLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGames(ctx),
+			},
+			GameOCount: &GameOCountLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGamesOCount(ctx),
+			},
+			GameOHistory: &GameOHistoryLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGamesOHistory(ctx),
+			},
+			GameOMGHistory: &GameOMGHistoryLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGamesOMGHistory(ctx),
+			},
+			GameViewCount: &GameViewCountLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGamesViewCount(ctx),
+			},
+			GameViewHistory: &GameViewHistoryLoader{
+				wait:     wait,
+				maxBatch: maxBatch,
+				fetch:    m.fetchGamesViewHistory(ctx),
 			},
 			ImageByID: &ImageLoader{
 				wait:     wait,
@@ -454,6 +497,72 @@ func (m Middleware) fetchGalleriesViewHistory(ctx context.Context) func(keys []i
 		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
 			var err error
 			ret, err = m.Repository.Gallery.GetManyViewDates(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGames(ctx context.Context) func(keys []int) ([]*models.Game, []error) {
+	return func(keys []int) (ret []*models.Game, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.FindMany(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGamesOCount(ctx context.Context) func(keys []int) ([]int, []error) {
+	return func(keys []int) (ret []int, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.GetManyOCount(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGamesOHistory(ctx context.Context) func(keys []int) ([][]time.Time, []error) {
+	return func(keys []int) (ret [][]time.Time, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.GetManyODates(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGamesOMGHistory(ctx context.Context) func(keys []int) ([][]time.Time, []error) {
+	return func(keys []int) (ret [][]time.Time, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.GetManyOMGDates(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGamesViewCount(ctx context.Context) func(keys []int) ([]int, []error) {
+	return func(keys []int) (ret []int, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.GetManyViewCount(ctx, keys)
+			return err
+		})
+		return ret, toErrorSlice(err)
+	}
+}
+
+func (m Middleware) fetchGamesViewHistory(ctx context.Context) func(keys []int) ([][]time.Time, []error) {
+	return func(keys []int) (ret [][]time.Time, errs []error) {
+		err := m.Repository.WithDB(ctx, func(ctx context.Context) error {
+			var err error
+			ret, err = m.Repository.Game.GetManyViewDates(ctx, keys)
 			return err
 		})
 		return ret, toErrorSlice(err)

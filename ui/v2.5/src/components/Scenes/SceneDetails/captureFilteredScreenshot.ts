@@ -93,7 +93,10 @@ export async function captureFilteredSceneScreenshot(
 
   return {
     dataUrl: canvas.toDataURL("image/png"),
-    at: mediaElement instanceof HTMLVideoElement ? mediaElement.currentTime : undefined,
+    at:
+      mediaElement instanceof HTMLVideoElement
+        ? mediaElement.currentTime
+        : undefined,
   };
 }
 
@@ -178,15 +181,11 @@ function computeCanvasGeometry(
 
   if (transforms.aspectRatio > ASPECT_RATIO_DEFAULT) {
     scaleX *=
-      (ASPECT_RATIO_DIVIDER +
-        transforms.aspectRatio -
-        ASPECT_RATIO_DEFAULT) /
+      (ASPECT_RATIO_DIVIDER + transforms.aspectRatio - ASPECT_RATIO_DEFAULT) /
       ASPECT_RATIO_DIVIDER;
   } else if (transforms.aspectRatio < ASPECT_RATIO_DEFAULT) {
     scaleY *=
-      (ASPECT_RATIO_DIVIDER +
-        ASPECT_RATIO_DEFAULT -
-        transforms.aspectRatio) /
+      (ASPECT_RATIO_DIVIDER + ASPECT_RATIO_DEFAULT - transforms.aspectRatio) /
       ASPECT_RATIO_DIVIDER;
   }
 
@@ -264,8 +263,7 @@ function applyChannelAdjustments(
   const blueMultiplier = 1 - wbMatrixValue + blueAdjust;
 
   const gammaExponent = needsGamma
-    ? 1 +
-      (FILTER_DEFAULTS.gamma - filters.gamma) / FILTER_DIVIDERS.gamma
+    ? 1 + (FILTER_DEFAULTS.gamma - filters.gamma) / FILTER_DIVIDERS.gamma
     : 1;
 
   for (let i = 0; i < data.length; i += 4) {
@@ -301,4 +299,3 @@ function applyGamma(value: number, exponent: number) {
   const normalized = Math.max(0, Math.min(1, value / 255));
   return 255 * Math.pow(normalized, exponent);
 }
-

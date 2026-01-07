@@ -9,6 +9,7 @@ const (
 	performerKey
 	sceneKey
 	studioKey
+	gameKey
 	groupKey
 	tagKey
 	downloadKey

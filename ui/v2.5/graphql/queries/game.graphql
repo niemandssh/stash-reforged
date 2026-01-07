@@ -1,0 +1,18 @@
+query FindGames(
+  $filter: FindFilterType
+  $game_filter: GameFilterType
+  $ids: [ID!]
+) {
+  findGames(filter: $filter, game_filter: $game_filter, ids: $ids) {
+    count
+    games {
+      ...SlimGameData
+    }
+  }
+}
+
+query FindGame($id: ID!) {
+  findGame(id: $id) {
+    ...GameData
+  }
+}

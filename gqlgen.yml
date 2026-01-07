@@ -94,6 +94,12 @@ models:
     model: github.com/stashapp/stash/internal/manager.CleanMetadataInput
   StashBoxBatchTagInput:
     model: github.com/stashapp/stash/internal/manager.StashBoxBatchTagInput
+  GameCreateInput:
+    model: github.com/stashapp/stash/pkg/models.GameCreateInput
+  GameUpdateInput:
+    model: github.com/stashapp/stash/pkg/models.GameUpdateInput
+  GameDestroyInput:
+    model: github.com/stashapp/stash/pkg/models.GameDestroyInput
   SceneStreamEndpoint:
     model: github.com/stashapp/stash/internal/manager.SceneStreamEndpoint
   ExportObjectTypeInput:
