@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Button, Form, Dropdown } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import Mousetrap from "mousetrap";
@@ -139,35 +139,66 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     custom_fields: yup.object().required().defined(),
   });
 
-  const initialValues = {
-    name: performer.name ?? "",
-    disambiguation: performer.disambiguation ?? "",
-    alias_list: performer.alias_list ?? [],
-    gender: performer.gender ?? null,
-    birthdate: performer.birthdate ?? "",
-    death_date: performer.death_date ?? "",
-    country: performer.country ?? "",
-    ethnicity: performer.ethnicity ?? "",
-    hair_color: performer.hair_color ?? "",
-    eye_color: performer.eye_color ?? "",
-    height_cm: performer.height_cm ?? null,
-    weight: performer.weight ?? null,
-    measurements: performer.measurements ?? "",
-    fake_tits: performer.fake_tits ?? "",
-    penis_length: performer.penis_length ?? null,
-    circumcised: performer.circumcised ?? null,
-    tattoos: performer.tattoos ?? "",
-    piercings: performer.piercings ?? "",
-    career_length: performer.career_length ?? "",
-    urls: performer.urls ?? [],
-    details: performer.details ?? "",
-    tag_ids: (performer.tags ?? []).map((t) => t.id),
-    primary_tag_id: performer.primary_tag?.id ?? null,
-    ignore_auto_tag: performer.ignore_auto_tag ?? false,
-    small_role: performer.small_role ?? false,
-    stash_ids: getStashIDs(performer.stash_ids),
-    custom_fields: cloneDeep(performer.custom_fields ?? {}),
-  };
+  const initialValues = useMemo(
+    () => ({
+      name: performer.name ?? "",
+      disambiguation: performer.disambiguation ?? "",
+      alias_list: performer.alias_list ?? [],
+      gender: performer.gender ?? null,
+      birthdate: performer.birthdate ?? "",
+      death_date: performer.death_date ?? "",
+      country: performer.country ?? "",
+      ethnicity: performer.ethnicity ?? "",
+      hair_color: performer.hair_color ?? "",
+      eye_color: performer.eye_color ?? "",
+      height_cm: performer.height_cm ?? null,
+      weight: performer.weight ?? null,
+      measurements: performer.measurements ?? "",
+      fake_tits: performer.fake_tits ?? "",
+      penis_length: performer.penis_length ?? null,
+      circumcised: performer.circumcised ?? null,
+      tattoos: performer.tattoos ?? "",
+      piercings: performer.piercings ?? "",
+      career_length: performer.career_length ?? "",
+      urls: performer.urls ?? [],
+      details: performer.details ?? "",
+      tag_ids: (performer.tags ?? []).map((t) => t.id),
+      primary_tag_id: performer.primary_tag?.id ?? null,
+      ignore_auto_tag: performer.ignore_auto_tag ?? false,
+      small_role: performer.small_role ?? false,
+      stash_ids: getStashIDs(performer.stash_ids),
+      custom_fields: cloneDeep(performer.custom_fields ?? {}),
+    }),
+    [
+      performer.name,
+      performer.disambiguation,
+      performer.alias_list,
+      performer.gender,
+      performer.birthdate,
+      performer.death_date,
+      performer.country,
+      performer.ethnicity,
+      performer.hair_color,
+      performer.eye_color,
+      performer.height_cm,
+      performer.weight,
+      performer.measurements,
+      performer.fake_tits,
+      performer.penis_length,
+      performer.circumcised,
+      performer.tattoos,
+      performer.piercings,
+      performer.career_length,
+      performer.urls,
+      performer.details,
+      performer.tags,
+      performer.primary_tag?.id,
+      performer.ignore_auto_tag,
+      performer.small_role,
+      performer.stash_ids,
+      performer.custom_fields,
+    ]
+  );
 
   type InputValues = yup.InferType<typeof schema>;
 
@@ -217,7 +248,8 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         : undefined
     );
     formik.setFieldValue("primary_tag_id", performer.primary_tag?.id ?? null);
-  }, [performer.primary_tag, formik]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [performer.primary_tag?.id]);
 
   function onSetPrimaryTag(tag: Tag | undefined) {
     setPrimaryTag(tag);
@@ -370,11 +402,13 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
 
   useEffect(() => {
     setImage(formik.values.image);
-  }, [formik.values.image, setImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formik.values.image]);
 
   useEffect(() => {
     setEncodingImage(encodingImage);
-  }, [setEncodingImage, encodingImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encodingImage]);
 
   async function onImageLoad(imageData: string | null) {
     if (!imageData) {
@@ -475,7 +509,8 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         }
       };
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, isNew]);
 
   useEffect(() => {
     const newQueryableScrapers = (Scrapers?.data?.listScrapers ?? []).filter(
