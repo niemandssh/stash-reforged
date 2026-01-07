@@ -7,6 +7,7 @@ import { Icon } from "../Shared/Icon";
 import { GalleryLink, TagLink, SceneMarkerLink } from "../Shared/TagLink";
 import { HoverPopover } from "../Shared/HoverPopover";
 import { SweatDrops } from "../Shared/SweatDrops";
+import { OMGIcon } from "../Shared/OMGIcon";
 import { TruncatedText } from "../Shared/TruncatedText";
 import NavUtils from "src/utils/navigation";
 import TextUtils from "src/utils/text";
@@ -16,7 +17,12 @@ import { PerformerPopoverButton } from "../Shared/PerformerPopoverButton";
 import { GridCard } from "../Shared/GridCard/GridCard";
 import { RatingBanner } from "../Shared/RatingBanner";
 import { FormattedMessage } from "react-intl";
-import { useSceneUpdate } from "src/core/StashService";
+import {
+  useSceneUpdate,
+  useSceneIncrementO,
+  useSceneIncrementOmg,
+} from "src/core/StashService";
+import { useToast } from "src/hooks/Toast";
 import {
   faBox,
   faCopy,
@@ -182,6 +188,10 @@ const Description: React.FC<{
 const SceneCardPopovers = PatchComponent(
   "SceneCard.Popovers",
   (props: ISceneCardProps) => {
+    const Toast = useToast();
+    const [incrementO] = useSceneIncrementO(props.scene.id);
+    const [incrementOmg] = useSceneIncrementOmg(props.scene.id);
+
     const file = useMemo(
       () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
       [props.scene]
@@ -197,6 +207,30 @@ const SceneCardPopovers = PatchComponent(
       );
       return group?.scene_index ?? undefined;
     }, [props.fromGroupId, props.scene.groups]);
+
+    const onIncrementOClick = async (
+      event: React.MouseEvent<HTMLButtonElement>
+    ) => {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        await incrementO();
+      } catch (e) {
+        Toast.error(e);
+      }
+    };
+
+    const onIncrementOMGClick = async (
+      event: React.MouseEvent<HTMLButtonElement>
+    ) => {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        await incrementOmg();
+      } catch (e) {
+        Toast.error(e);
+      }
+    };
 
     function maybeRenderTagPopoverButton() {
       if (props.scene.tags.length <= 0) return;
@@ -274,18 +308,32 @@ const SceneCardPopovers = PatchComponent(
     }
 
     function maybeRenderOCounter() {
-      if (props.scene.o_counter) {
-        return (
-          <div className="o-count">
-            <Button className="minimal">
-              <span className="fa-icon">
-                <SweatDrops />
-              </span>
-              <span>{props.scene.o_counter}</span>
-            </Button>
-          </div>
-        );
-      }
+      return (
+        <div className="o-count">
+          <Button className="minimal" onClick={onIncrementOClick}>
+            <span className="fa-icon">
+              <SweatDrops />
+            </span>
+            <span>{props.scene.o_counter ?? 0}</span>
+          </Button>
+        </div>
+      );
+    }
+
+    function maybeRenderOMGCounter() {
+      return (
+        <div className="omg-count">
+          <Button
+            className="minimal btn btn-primary"
+            onClick={onIncrementOMGClick}
+          >
+            <span className="fa-icon">
+              <OMGIcon />
+            </span>
+            <span>{props.scene.omgCounter ?? 0}</span>
+          </Button>
+        </div>
+      );
     }
 
     function maybeRenderGallery() {
@@ -346,17 +394,7 @@ const SceneCardPopovers = PatchComponent(
     }
 
     function maybeRenderPopoverButtonGroup() {
-      if (
-        !props.compact &&
-        (props.scene.tags.length > 0 ||
-          props.scene.performers.length > 0 ||
-          props.scene.groups.length > 0 ||
-          props.scene.scene_markers.length > 0 ||
-          props.scene?.o_counter ||
-          props.scene.galleries.length > 0 ||
-          props.scene.organized ||
-          sceneNumber !== undefined)
-      ) {
+      if (!props.compact) {
         return (
           <>
             <Description sceneNumber={sceneNumber} />
@@ -367,6 +405,7 @@ const SceneCardPopovers = PatchComponent(
               {maybeRenderGroupPopoverButton()}
               {maybeRenderSceneMarkerPopoverButton()}
               {maybeRenderOCounter()}
+              {maybeRenderOMGCounter()}
               {maybeRenderGallery()}
               {maybeRenderOrganized()}
               {maybeRenderDupeCopies()}

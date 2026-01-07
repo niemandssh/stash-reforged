@@ -8,6 +8,7 @@ fragment SlimSceneData on Scene {
   date
   rating100
   o_counter
+  omgCounter
   organized
   pinned
   interactive
