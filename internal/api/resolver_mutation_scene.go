@@ -248,6 +248,7 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.AudioOffsetMs = translator.optionalInt(input.AudioOffsetMs, "audio_offset_ms")
 	updatedScene.AudioPlaybackSpeed = translator.optionalFloat64(input.AudioPlaybackSpeed, "audio_playback_speed")
 	updatedScene.ForceHLS = translator.optionalBool(input.ForceHLS, "force_hls")
+	updatedScene.DisableNextSceneOverlay = translator.optionalBool(input.DisableNextSceneOverlay, "disable_next_scene_overlay")
 
 	// If IsNotBroken is set to true, automatically set IsBroken to false
 	if updatedScene.IsNotBroken.Set && updatedScene.IsNotBroken.Value {

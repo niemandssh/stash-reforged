@@ -1178,6 +1178,7 @@
     "interactive_speed": "Интерактивная скорость",
     "isMissing": "Отсутствует",
     "is_not_broken": "Не сломано",
+    "disable_next_scene_overlay": "Отключить окно следующей сцены",
     "last_played_at": "Воспроизводился в последний раз",
     "library": "Библиотека",
     "loading": {

@@ -60,6 +60,11 @@ func (r *sceneUpdateInputResolver) ForceHLS(ctx context.Context, obj *models.Sce
 	return nil
 }
 
+func (r *sceneUpdateInputResolver) DisableNextSceneOverlay(ctx context.Context, obj *models.SceneUpdateInput, data *bool) error {
+	obj.DisableNextSceneOverlay = data
+	return nil
+}
+
 func (r *sceneUpdateInputResolver) PerformerTagIds(ctx context.Context, obj *models.SceneUpdateInput, data []*models.PerformerTagInput) error {
 	if data == nil {
 		obj.PerformerTagIds = nil

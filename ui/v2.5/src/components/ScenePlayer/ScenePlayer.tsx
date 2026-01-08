@@ -1434,12 +1434,16 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     // Handle video end - show next scene overlay if available
     const handleVideoEnd = useCallback(() => {
-      if (nextScene) {
+      if (
+        nextScene &&
+        !(scene as { disable_next_scene_overlay?: boolean })
+          .disable_next_scene_overlay
+      ) {
         setShowNextSceneOverlay(true);
       } else {
         onComplete();
       }
-    }, [nextScene, onComplete]);
+    }, [nextScene, scene, onComplete]);
 
     // Handle next scene overlay actions
     const handleNextScenePlay = useCallback(() => {

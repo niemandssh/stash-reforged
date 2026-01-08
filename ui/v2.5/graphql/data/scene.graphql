@@ -21,6 +21,7 @@ fragment SceneData on Scene {
   audio_offset_ms
   audio_playback_speed
   force_hls
+  disable_next_scene_overlay
   is_probably_broken
   created_at
   updated_at

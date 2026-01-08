@@ -104,6 +104,7 @@ type Scene {
   audio_offset_ms: Int!
   audio_playback_speed: Float!
   force_hls: Boolean!
+  disable_next_scene_overlay: Boolean!
   is_probably_broken: Boolean! # Resolver
   created_at: Time!
   updated_at: Time!
@@ -250,6 +251,7 @@ input SceneUpdateInput {
   audio_offset_ms: Int
   audio_playback_speed: Float
   force_hls: Boolean
+  disable_next_scene_overlay: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!] @deprecated(reason: "Use scene_performers")

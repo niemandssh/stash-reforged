@@ -304,6 +304,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     cover_image: yup.string().nullable().optional(),
     is_broken: yup.boolean().defined(),
     is_not_broken: yup.boolean().defined(),
+    disable_next_scene_overlay: yup.boolean().defined(),
     start_time: yup.number().nullable().optional(),
     end_time: yup.number().nullable().optional(),
   });
@@ -388,6 +389,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
       cover_image: initialCoverImage,
       is_broken: scene.is_broken ?? false,
       is_not_broken: scene.is_not_broken ?? false,
+      disable_next_scene_overlay:
+        (scene as { disable_next_scene_overlay?: boolean })
+          .disable_next_scene_overlay ?? false,
       start_time: scene.start_time ?? null,
       end_time: scene.end_time ?? null,
     }),
@@ -1575,6 +1579,23 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("is_not_broken", title, control);
   }
 
+  function renderDisableNextSceneOverlayField() {
+    const title = intl.formatMessage({ id: "disable_next_scene_overlay" });
+    const control = (
+      <Form.Check
+        type="checkbox"
+        id="disable_next_scene_overlay"
+        checked={formik.values.disable_next_scene_overlay}
+        onChange={(e) =>
+          formik.setFieldValue("disable_next_scene_overlay", e.target.checked)
+        }
+        isInvalid={!!formik.errors.disable_next_scene_overlay}
+      />
+    );
+
+    return renderField("disable_next_scene_overlay", title, control);
+  }
+
   function renderDurationField(
     fieldName: keyof InputValues & string,
     labelId: string
@@ -1703,6 +1724,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
           <Col lg={5} xl={12}>
             {renderIsBrokenField()}
             {renderIsNotBrokenField()}
+            {renderDisableNextSceneOverlayField()}
 
             {renderDetailsField()}
 

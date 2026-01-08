@@ -1,0 +1,3 @@
+-- Note: SQLite doesn't support DROP COLUMN directly.
+-- The column `disable_next_scene_overlay` will remain in the table but will be ignored.
+-- To fully remove it, you would need to recreate the entire table, which is not practical for this migration.

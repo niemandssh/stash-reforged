@@ -89,24 +89,25 @@ type sceneRow struct {
 	Date      NullDate    `db:"date"`
 	ShootDate NullDate    `db:"shoot_date"`
 	// expressed as 1-100
-	Rating             null.Int    `db:"rating"`
-	Organized          bool        `db:"organized"`
-	Pinned             bool        `db:"pinned"`
-	IsBroken           bool        `db:"is_broken"`
-	IsNotBroken        bool        `db:"is_not_broken"`
-	AudioOffsetMs      int         `db:"audio_offset_ms"`
-	AudioPlaybackSpeed float64     `db:"audio_playback_speed"`
-	ForceHLS           bool        `db:"force_hls"`
-	StudioID           null.Int    `db:"studio_id,omitempty"`
-	CreatedAt          Timestamp   `db:"created_at"`
-	UpdatedAt          Timestamp   `db:"updated_at"`
-	ResumeTime         float64     `db:"resume_time"`
-	PlayDuration       float64     `db:"play_duration"`
-	StartTime          null.Float  `db:"start_time"`
-	EndTime            null.Float  `db:"end_time"`
-	VideoFilters       zero.String `db:"video_filters"`
-	VideoTransforms    zero.String `db:"video_transforms"`
-	OmegCounter        int         `db:"omg_counter"`
+	Rating                  null.Int    `db:"rating"`
+	Organized               bool        `db:"organized"`
+	Pinned                  bool        `db:"pinned"`
+	IsBroken                bool        `db:"is_broken"`
+	IsNotBroken             bool        `db:"is_not_broken"`
+	AudioOffsetMs           int         `db:"audio_offset_ms"`
+	AudioPlaybackSpeed      float64     `db:"audio_playback_speed"`
+	ForceHLS                bool        `db:"force_hls"`
+	DisableNextSceneOverlay bool        `db:"disable_next_scene_overlay"`
+	StudioID                null.Int    `db:"studio_id,omitempty"`
+	CreatedAt               Timestamp   `db:"created_at"`
+	UpdatedAt               Timestamp   `db:"updated_at"`
+	ResumeTime              float64     `db:"resume_time"`
+	PlayDuration            float64     `db:"play_duration"`
+	StartTime               null.Float  `db:"start_time"`
+	EndTime                 null.Float  `db:"end_time"`
+	VideoFilters            zero.String `db:"video_filters"`
+	VideoTransforms         zero.String `db:"video_transforms"`
+	OmegCounter             int         `db:"omg_counter"`
 
 	// not used in resolutions or updates
 	CoverBlob zero.String `db:"cover_blob"`
@@ -128,6 +129,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.AudioOffsetMs = o.AudioOffsetMs
 	r.AudioPlaybackSpeed = o.AudioPlaybackSpeed
 	r.ForceHLS = o.ForceHLS
+	r.DisableNextSceneOverlay = o.DisableNextSceneOverlay
 	r.StudioID = intFromPtr(o.StudioID)
 	r.CreatedAt = Timestamp{Timestamp: o.CreatedAt}
 	r.UpdatedAt = Timestamp{Timestamp: o.UpdatedAt}
@@ -160,22 +162,23 @@ type sceneQueryRow struct {
 
 func (r *sceneQueryRow) resolve() *models.Scene {
 	ret := &models.Scene{
-		ID:                 r.ID,
-		Title:              r.Title.String,
-		Code:               r.Code.String,
-		Details:            r.Details.String,
-		Director:           r.Director.String,
-		Date:               r.Date.DatePtr(),
-		ShootDate:          r.ShootDate.DatePtr(),
-		Rating:             nullIntPtr(r.Rating),
-		Organized:          r.Organized,
-		Pinned:             r.Pinned,
-		IsBroken:           r.IsBroken,
-		IsNotBroken:        r.IsNotBroken,
-		AudioOffsetMs:      r.AudioOffsetMs,
-		AudioPlaybackSpeed: r.AudioPlaybackSpeed,
-		ForceHLS:           r.ForceHLS,
-		StudioID:           nullIntPtr(r.StudioID),
+		ID:                      r.ID,
+		Title:                   r.Title.String,
+		Code:                    r.Code.String,
+		Details:                 r.Details.String,
+		Director:                r.Director.String,
+		Date:                    r.Date.DatePtr(),
+		ShootDate:               r.ShootDate.DatePtr(),
+		Rating:                  nullIntPtr(r.Rating),
+		Organized:               r.Organized,
+		Pinned:                  r.Pinned,
+		IsBroken:                r.IsBroken,
+		IsNotBroken:             r.IsNotBroken,
+		AudioOffsetMs:           r.AudioOffsetMs,
+		AudioPlaybackSpeed:      r.AudioPlaybackSpeed,
+		ForceHLS:                r.ForceHLS,
+		DisableNextSceneOverlay: r.DisableNextSceneOverlay,
+		StudioID:                nullIntPtr(r.StudioID),
 
 		PrimaryFileID: nullIntFileIDPtr(r.PrimaryFileID),
 		OSHash:        r.PrimaryFileOshash.String,
@@ -229,6 +232,7 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setInt("audio_offset_ms", o.AudioOffsetMs)
 	r.setFloat64("audio_playback_speed", o.AudioPlaybackSpeed)
 	r.setBool("force_hls", o.ForceHLS)
+	r.setBool("disable_next_scene_overlay", o.DisableNextSceneOverlay)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setTimestamp("created_at", o.CreatedAt)
 	r.setTimestamp("updated_at", o.UpdatedAt)
@@ -329,12 +333,12 @@ func NewSceneStore(r *storeRepository, blobStore *BlobStore) *SceneStore {
 			joinTable: sceneTable,
 		},
 
-		tableMgr:         sceneTableMgr,
-		viewDateManager:  viewDateManager{tableMgr: scenesViewTableMgr},
-		oDateManager:     oDateManager{scenesOTableMgr},
-		omgDateManager:   omgDateManager{scenesOMGTableMgr},
+		tableMgr:          sceneTableMgr,
+		viewDateManager:   viewDateManager{tableMgr: scenesViewTableMgr},
+		oDateManager:      oDateManager{scenesOTableMgr},
+		omgDateManager:    omgDateManager{scenesOMGTableMgr},
 		omgCounterManager: omgCounterManager{sceneTableMgr},
-		repo:             r,
+		repo:              r,
 	}
 }
 

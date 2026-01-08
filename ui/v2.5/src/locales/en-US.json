@@ -209,6 +209,7 @@
     "performer_favorite": "Performer Favorited",
     "is_broken": "Broken",
     "is_not_broken": "Not Broken",
+    "disable_next_scene_overlay": "Disable next scene overlay",
     "tag_weight": "Tag Weight",
     "tag_weight_help": "Weight for similarity calculation (0.0 = least important, 1.0 = most important, default: 0.5)",
     "Color": "Color",
