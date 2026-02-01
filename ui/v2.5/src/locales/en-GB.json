@@ -125,8 +125,10 @@
     "save": "Save",
     "save_delete_settings": "Use these options by default when deleting",
     "save_filter": "Save filter",
-    "scan": "Scan",
-    "scrape": "Scrape",
+        "scan": "Scan",
+        "scan_for_threats": "Scan for threats",
+        "scan_all_scenes_for_threats": "Scan all scenes for threats",
+        "scrape": "Scrape",
     "scrape_query": "Scrape query",
     "scrape_scene_fragment": "Scrape by fragment",
     "scrape_with": "Scrape with…",
@@ -655,7 +657,8 @@
         "whitespace_chars": "Whitespace characters",
         "whitespace_chars_desc": "These characters will be replaced with whitespace in the title"
       },
-      "scene_tools": "Scene Tools"
+      "scene_tools": "Scene Tools",
+      "scan_all_scenes_for_threats_desc": "Scan all scenes for security threats. Progress and ETA shown in Tasks."
     },
     "ui": {
       "abbreviate_counters": {

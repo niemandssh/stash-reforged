@@ -1,0 +1,2 @@
+-- Note: SQLite doesn't support DROP COLUMN directly.
+-- The column `threats_scanned_at` will remain in the table but will be ignored.

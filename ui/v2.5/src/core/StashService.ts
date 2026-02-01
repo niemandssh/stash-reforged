@@ -1224,6 +1224,14 @@ export const useSceneSetNotBroken = () => {
   });
 };
 
+export const useScanVideoFileThreats = () =>
+  GQL.useScanVideoFileThreatsMutation({
+    refetchQueries: [GQL.FindSceneDocument],
+  });
+
+export const useScanAllScenesForThreats = () =>
+  GQL.useScanAllScenesForThreatsMutation();
+
 export const mutateSceneSetPrimaryFile = (id: string, fileID: string) =>
   client.mutate<GQL.SceneUpdateMutation>({
     mutation: GQL.SceneUpdateDocument,

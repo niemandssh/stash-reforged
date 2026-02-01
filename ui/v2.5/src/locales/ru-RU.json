@@ -105,6 +105,8 @@
         "use": "Использовать",
         "save_filter": "Сохранить фильтр",
         "scan": "Сканировать",
+        "scan_for_threats": "Сканировать на угрозы",
+        "scan_all_scenes_for_threats": "Сканировать все сцены на угрозы",
         "scrape": "Скрейпить",
         "scrape_query": "Запрос скрейпера",
         "scrape_scene_fragment": "Скрейпить по фрагменту",
@@ -592,6 +594,7 @@
         },
         "tools": {
             "scene_duplicate_checker": "Проверка сцен на дубликаты",
+            "scan_all_scenes_for_threats_desc": "Сканирование всех сцен на угрозы безопасности. Прогресс и оставшееся время — во вкладке Tasks.",
             "scene_filename_parser": {
                 "add_field": "Добавить поле",
                 "capitalize_title": "Название с заглавной буквы",
@@ -1407,6 +1410,11 @@
         "submit_update": "Уже существует в {endpoint_name}",
         "source": "Источник Stash-Box"
     },
+    "threats": "Угрозы",
+    "threats_checked": "Проверено на угрозы",
+    "threats_not_checked": "Не сканировалось",
+    "threats_found": "Обнаружены угрозы",
+    "threats_none": "Угроз не обнаружено",
     "statistics": "Статистика",
     "stats": {
         "image_size": "Объем изображений",
@@ -1451,6 +1459,7 @@
         "reassign_past_tense": "Файл переназначен",
         "removed_entity": "Удален {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
         "rescanning_entity": "Повторное сканирование {count, plural, one {{singularEntity}} other {{pluralEntity}}}…",
+        "scan_started": "Сканирование на угрозы запущено - проверьте задачи",
         "saved_entity": "Сохранено {entity}",
         "set_primary_success": "Установлено как основное изображение",
         "filters_for_scene_saved": "Фильтры для сцены сохранены",

@@ -559,6 +559,12 @@ type Mutation {
 
   fileSetFingerprints(input: FileSetFingerprintsInput!): Boolean!
 
+  "Scan a video file for security threats. Returns the job ID"
+  scanVideoFileThreats(fileId: ID!): ID!
+
+  "Scan all scenes for security threats. Returns the job ID. Progress shows scene count and ETA."
+  scanAllScenesForThreats: ID!
+
   # Saved filters
   saveFilter(input: SaveFilterInput!): SavedFilter!
   destroySavedFilter(input: DestroyFilterInput!): Boolean!

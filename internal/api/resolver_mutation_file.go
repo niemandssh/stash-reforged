@@ -272,3 +272,19 @@ func (r *mutationResolver) FileSetFingerprints(ctx context.Context, input FileSe
 
 	return true, nil
 }
+
+func (r *mutationResolver) ScanVideoFileThreats(ctx context.Context, fileID string) (string, error) {
+	jobID, err := manager.GetInstance().ScanVideoFileThreats(ctx, fileID)
+	if err != nil {
+		return "", err
+	}
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) ScanAllScenesForThreats(ctx context.Context) (string, error) {
+	jobID, err := manager.GetInstance().ScanAllScenesForThreats(ctx)
+	if err != nil {
+		return "", err
+	}
+	return strconv.Itoa(jobID), nil
+}

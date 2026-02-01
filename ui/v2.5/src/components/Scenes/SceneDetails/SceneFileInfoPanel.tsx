@@ -14,6 +14,7 @@ import * as GQL from "src/core/generated-graphql";
 import {
   mutateSceneSetPrimaryFile,
   useOpenInExternalPlayer,
+  useScanVideoFileThreats,
 } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import NavUtils from "src/utils/navigation";
@@ -31,7 +32,9 @@ interface IFileInfoPanelProps {
   onSetPrimaryFile?: () => void;
   onDeleteFile?: () => void;
   onReassign?: () => void;
+  onScanThreats?: (fileId: string) => void;
   loading?: boolean;
+  scanningThreats?: boolean;
 }
 
 const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
@@ -42,7 +45,9 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
   onSetPrimaryFile,
   onDeleteFile,
   onReassign,
+  onScanThreats,
   loading,
+  scanningThreats,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -107,6 +112,15 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
             >
               <FormattedMessage id="actions.open_in_external_player" />
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => onScanThreats?.(file.id)}
+              disabled={scanningThreats}
+              title="Scan for security threats"
+            >
+              <FormattedMessage id="actions.scan_for_threats" defaultMessage="Scan for threats" />
+            </Button>
           </dd>
         </>
         <TextField id="filesize">
@@ -157,6 +171,29 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
           value={file.audio_codec ?? ""}
           truncate
         />
+        <TextField id="threats_checked" name="Threats checked">
+          {file.threats_scanned_at ? (
+            <FormattedTime
+              dateStyle="medium"
+              timeStyle="medium"
+              value={new Date(file.threats_scanned_at)}
+            />
+          ) : (
+            <FormattedMessage id="threats_not_checked" defaultMessage="Not scanned" />
+          )}
+        </TextField>
+        {file.threats && (
+          <TextField id="threats" name="Threats">
+            <span className="text-danger">
+              {file.threats.split("\n").map((t, i, arr) => (
+                <span key={i}>
+                  {t}
+                  {i < arr.length - 1 && <br />}
+                </span>
+              ))}
+            </span>
+          </TextField>
+        )}
       </dl>
       {ofMany && onSetPrimaryFile && !primary && (
         <div>
@@ -196,11 +233,28 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
 ) => {
   const Toast = useToast();
   const intl = useIntl();
+  const [scanVideoFileThreats] = useScanVideoFileThreats();
 
   const [loading, setLoading] = useState(false);
+  const [scanningThreats, setScanningThreats] = useState<string | null>(null);
   const [deletingFile, setDeletingFile] = useState<GQL.VideoFileDataFragment>();
   const [reassigningFile, setReassigningFile] =
     useState<GQL.VideoFileDataFragment>();
+
+  async function onScanThreats(fileId: string) {
+    try {
+      setScanningThreats(fileId);
+      await scanVideoFileThreats({ variables: { fileId } });
+      Toast.success(intl.formatMessage({ id: "toast.scan_started" }));
+      if (props.onRefetch) {
+        setTimeout(() => props.onRefetch?.(), 15000);
+      }
+    } catch (e) {
+      Toast.error(e);
+    } finally {
+      setScanningThreats(null);
+    }
+  }
 
   function renderStashIDs() {
     if (!props.scene.stash_ids.length) {
@@ -257,7 +311,14 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
     }
 
     if (scene.files.length === 1) {
-      return <FileInfoPanel sceneID={scene.id} file={scene.files[0]} />;
+      return (
+        <FileInfoPanel
+          sceneID={scene.id}
+          file={scene.files[0]}
+          onScanThreats={onScanThreats}
+          scanningThreats={scanningThreats === scene.files[0].id}
+        />
+      );
     }
 
     async function onSetPrimaryFile(fileID: string) {
@@ -322,7 +383,9 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
                   onSetPrimaryFile={() => onSetPrimaryFile(file.id)}
                   onDeleteFile={() => setDeletingFile(file)}
                   onReassign={() => setReassigningFile(file)}
+                  onScanThreats={onScanThreats}
                   loading={loading}
+                  scanningThreats={scanningThreats === file.id}
                 />
               </Card.Body>
             </Accordion.Collapse>
@@ -330,7 +393,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
         ))}
       </Accordion>
     );
-  }, [scene, loading, Toast, deletingFile, reassigningFile, intl, onRefetch]);
+  }, [scene, loading, Toast, deletingFile, reassigningFile, intl, onRefetch, onScanThreats, scanningThreats]);
 
   return (
     <>

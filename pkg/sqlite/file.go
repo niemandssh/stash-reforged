@@ -63,6 +63,8 @@ type videoFileRow struct {
 	BitRate          int64         `db:"bit_rate"`
 	Interactive      bool          `db:"interactive"`
 	InteractiveSpeed null.Int      `db:"interactive_speed"`
+	Threats          null.String   `db:"threats"`
+	ThreatsScannedAt NullTimestamp `db:"threats_scanned_at"`
 }
 
 func (f *videoFileRow) fromVideoFile(ff models.VideoFile) {
@@ -77,6 +79,10 @@ func (f *videoFileRow) fromVideoFile(ff models.VideoFile) {
 	f.BitRate = ff.BitRate
 	f.Interactive = ff.Interactive
 	f.InteractiveSpeed = intFromPtr(ff.InteractiveSpeed)
+	if ff.Threats != "" {
+		f.Threats = null.StringFrom(ff.Threats)
+	}
+	f.ThreatsScannedAt = NullTimestampFromTimePtr(ff.ThreatsScannedAt)
 }
 
 type imageFileRow struct {
@@ -107,10 +113,12 @@ type videoFileQueryRow struct {
 	BitRate          null.Int    `db:"bit_rate"`
 	Interactive      null.Bool   `db:"interactive"`
 	InteractiveSpeed null.Int    `db:"interactive_speed"`
+	Threats          null.String `db:"threats"`
+	ThreatsScannedAt NullTimestamp `db:"threats_scanned_at"`
 }
 
 func (f *videoFileQueryRow) resolve() *models.VideoFile {
-	return &models.VideoFile{
+	ret := &models.VideoFile{
 		Format:           f.Format.String,
 		Width:            int(f.Width.Int64),
 		Height:           int(f.Height.Int64),
@@ -122,6 +130,11 @@ func (f *videoFileQueryRow) resolve() *models.VideoFile {
 		Interactive:      f.Interactive.Bool,
 		InteractiveSpeed: nullIntPtr(f.InteractiveSpeed),
 	}
+	if f.Threats.Valid {
+		ret.Threats = f.Threats.String
+	}
+	ret.ThreatsScannedAt = f.ThreatsScannedAt.TimePtr()
+	return ret
 }
 
 func videoFileQueryColumns() []interface{} {
@@ -138,6 +151,8 @@ func videoFileQueryColumns() []interface{} {
 		table.Col("bit_rate"),
 		table.Col("interactive"),
 		table.Col("interactive_speed"),
+		table.Col("threats"),
+		table.Col("threats_scanned_at"),
 	}
 }
 

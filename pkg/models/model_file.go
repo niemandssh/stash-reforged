@@ -289,6 +289,12 @@ type VideoFile struct {
 
 	Interactive      bool `json:"interactive"`
 	InteractiveSpeed *int `json:"interactive_speed"`
+
+	// Threats contains security threats detected during file scan (one per line).
+	Threats string `json:"threats,omitempty"`
+
+	// ThreatsScannedAt is when the file was last scanned for threats (nil = never scanned).
+	ThreatsScannedAt *time.Time `json:"threats_scanned_at,omitempty"`
 }
 
 func (f VideoFile) GetWidth() int {

@@ -1,5 +1,5 @@
 import React from "react";
-import { FormattedMessage, useIntl } from "react-intl";
+import { FormattedMessage, FormattedTime, useIntl } from "react-intl";
 import { Link } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
@@ -72,6 +72,49 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       setShouldShowToggle(fullHeight > threeLinesHeight);
     }
   }, [props.scene.details]);
+
+  function renderThreatScanInfo() {
+    const primaryFile = props.scene.files?.[0];
+    if (!primaryFile) return null;
+
+    const scannedAt = primaryFile.threats_scanned_at;
+    const threats = primaryFile.threats;
+
+    return (
+      <div className="mb-2 mt-3">
+        <h6 className="font-weight-bold">
+          <FormattedMessage id="threats_checked" defaultMessage="Threats checked" />:{" "}
+        </h6>
+        {scannedAt ? (
+          <>
+            <FormattedTime
+              dateStyle="medium"
+              timeStyle="medium"
+              value={new Date(scannedAt)}
+            />
+            {threats ? (
+              <div className="text-danger mt-1 pre" style={{ whiteSpace: "pre-wrap" }}>
+                {threats.split("\n").map((t, i) => (
+                  <span key={i}>
+                    {t}
+                    {i < threats.split("\n").length - 1 && <br />}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-success">
+                <FormattedMessage id="threats_none" defaultMessage="No threats found" />
+              </div>
+            )}
+          </>
+        ) : (
+          <span className="text-muted">
+            <FormattedMessage id="threats_not_checked" defaultMessage="Not scanned" />
+          </span>
+        )}
+      </div>
+    );
+  }
 
   function renderDetails() {
     if (!props.scene.details || props.scene.details === "") return;
@@ -463,6 +506,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       <div className="row">
         <div className="col-12">
           {renderDetails()}
+          {renderThreatScanInfo()}
           <PoseTagsDisplay scene={props.scene} />
           {renderGeneralTags()}
           {renderPerformerTags()}
