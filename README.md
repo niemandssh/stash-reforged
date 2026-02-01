@@ -9,6 +9,7 @@ This version will be always in develop branch.
 
 ### Some new features
 
+- [x] **Scenes threats scanner** - a simple scanner that try to find threats in your videos
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
 - [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
 - [x] **Galleries views** - count views like in scenes! View counts automatically only for "Web mode" when you scroll after 3rd image (once per gallery open)
