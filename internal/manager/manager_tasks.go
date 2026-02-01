@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/stashapp/stash/pkg/job"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
+	"github.com/stashapp/stash/pkg/threatscan"
 )
 
 func useAsVideo(pathname string) bool {
@@ -285,6 +287,178 @@ func (s *Manager) generateScreenshot(ctx context.Context, sceneId string, at *fl
 	})
 
 	return s.JobManager.Add(ctx, fmt.Sprintf("Generating screenshot for scene id %s", sceneId), j)
+}
+
+// ScanVideoFileThreats scans a video file for security threats and updates the file record.
+func (s *Manager) ScanVideoFileThreats(ctx context.Context, fileID string) (int, error) {
+	if err := s.validateFFmpeg(); err != nil {
+		return 0, err
+	}
+
+	j := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		fileIDInt, err := strconv.Atoi(fileID)
+		if err != nil {
+			return fmt.Errorf("invalid file id %s: %w", fileID, err)
+		}
+
+		var videoFile *models.VideoFile
+		if err := s.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			files, err := s.Repository.File.Find(ctx, models.FileID(fileIDInt))
+			if err != nil {
+				return err
+			}
+			if len(files) == 0 {
+				return fmt.Errorf("file with id %s not found", fileID)
+			}
+
+			var ok bool
+			videoFile, ok = files[0].(*models.VideoFile)
+			if !ok {
+				return fmt.Errorf("file %s is not a video file", fileID)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		if videoFile.ZipFileID != nil {
+			return fmt.Errorf("scanning files inside zip archives is not supported")
+		}
+
+		progress.SetTotal(2)
+		progress.ExecuteTask("Scanning metadata...", func() {})
+		progress.Increment()
+
+		scanner := threatscan.NewScanner(s.FFProbe, s.FFMpeg)
+		threats, err := scanner.Scan(ctx, videoFile.Path)
+		if err != nil {
+			return fmt.Errorf("scan failed: %w", err)
+		}
+
+		progress.ExecuteTask("Updating file...", func() {})
+		progress.Increment()
+
+		threatsStr := threatscan.FormatThreats(threats)
+		videoFile.Threats = threatsStr
+		scannedAt := time.Now()
+		videoFile.ThreatsScannedAt = &scannedAt
+
+		if err := s.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			return s.Repository.File.Update(ctx, videoFile)
+		}); err != nil {
+			return fmt.Errorf("failed to update file: %w", err)
+		}
+
+		if len(threats) > 0 {
+			logger.Infof("Threat scan found %d threat(s) in file %s: %s",
+				len(threats), videoFile.Path, strings.ReplaceAll(threatsStr, "\n", "; "))
+		} else {
+			logger.Infof("Threat scan completed: no threats found in file %s", videoFile.Path)
+		}
+
+		return nil
+	})
+
+	return s.JobManager.Add(ctx, fmt.Sprintf("Scanning file %s for threats", fileID), j), nil
+}
+
+// ScanAllScenesForThreats scans all scenes' primary video files for security threats.
+// Returns job ID. Progress shows "Scanning scene X of Y" and ETA.
+func (s *Manager) ScanAllScenesForThreats(ctx context.Context) (int, error) {
+	if err := s.validateFFmpeg(); err != nil {
+		return 0, err
+	}
+
+	j := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		var scenes []*models.Scene
+		if err := s.Repository.WithTxn(ctx, func(ctx context.Context) error {
+			var err error
+			scenes, err = s.Repository.Scene.All(ctx)
+			return err
+		}); err != nil {
+			return fmt.Errorf("failed to fetch scenes: %w", err)
+		}
+
+		// Filter to scenes with primary file (skip scenes with no files)
+		var scenesToScan []*models.Scene
+		for _, scene := range scenes {
+			if scene.PrimaryFileID != nil && scene.Path != "" {
+				scenesToScan = append(scenesToScan, scene)
+			}
+		}
+
+		total := len(scenesToScan)
+		if total == 0 {
+			logger.Info("No scenes with video files to scan for threats")
+			return nil
+		}
+
+		progress.SetTotal(total)
+		scanner := threatscan.NewScanner(s.FFProbe, s.FFMpeg)
+
+		for i, scene := range scenesToScan {
+			if job.IsCancelled(ctx) {
+				logger.Info("Threat scan cancelled by user")
+				return nil
+			}
+
+			fileID := strconv.Itoa(int(*scene.PrimaryFileID))
+			taskDesc := fmt.Sprintf("Scanning scene %d of %d: %s", i+1, total, scene.Path)
+
+			var videoFile *models.VideoFile
+			var threats []threatscan.Result
+			progress.ExecuteTask(taskDesc, func() {
+				if err := s.Repository.WithTxn(ctx, func(ctx context.Context) error {
+					files, err := s.Repository.File.Find(ctx, *scene.PrimaryFileID)
+					if err != nil || len(files) == 0 {
+						return fmt.Errorf("file %s not found", fileID)
+					}
+					var ok bool
+					videoFile, ok = files[0].(*models.VideoFile)
+					if !ok {
+						return fmt.Errorf("file %s is not a video file", fileID)
+					}
+					return nil
+				}); err != nil {
+					logger.Warnf("Skipping scene %d (file %s): %v", scene.ID, fileID, err)
+					return
+				}
+
+				if videoFile.ZipFileID != nil {
+					logger.Warnf("Skipping scene %d: zip-contained files not supported", scene.ID)
+					return
+				}
+
+				var err error
+				threats, err = scanner.Scan(ctx, videoFile.Path)
+				if err != nil {
+					logger.Warnf("Threat scan failed for scene %d (%s): %v", scene.ID, videoFile.Path, err)
+					return
+				}
+
+				threatsStr := threatscan.FormatThreats(threats)
+				videoFile.Threats = threatsStr
+				scannedAt := time.Now()
+				videoFile.ThreatsScannedAt = &scannedAt
+
+				if err := s.Repository.WithTxn(ctx, func(ctx context.Context) error {
+					return s.Repository.File.Update(ctx, videoFile)
+				}); err != nil {
+					logger.Warnf("Failed to update file %s after scan: %v", fileID, err)
+				} else if len(threats) > 0 {
+					logger.Infof("Threat scan found %d threat(s) in %s: %s",
+						len(threats), videoFile.Path, strings.ReplaceAll(threatsStr, "\n", "; "))
+				}
+			})
+
+			progress.Increment()
+		}
+
+		logger.Infof("Threat scan completed: %d scene(s) scanned", total)
+		return nil
+	})
+
+	return s.JobManager.Add(ctx, "Scanning all scenes for threats", j), nil
 }
 
 type AutoTagMetadataInput struct {

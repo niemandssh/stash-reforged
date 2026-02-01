@@ -342,11 +342,16 @@ server-clean:
 pre-ui:
 	cd ui/v2.5 && bun install --frozen-lockfile
 
+# Port from .local/config.yml for UI dev server (default 9999)
+STASH_DEV_PORT := $(shell grep -E '^\s*port:' .local/config.yml 2>/dev/null | grep -oE '[0-9]+' | head -1)
+VITE_APP_PLATFORM_PORT ?= $(or $(STASH_DEV_PORT),9999)
+
 .PHONY: ui-env
 ui-env: build-info
 	$(eval export VITE_APP_DATE := $(BUILD_DATE))
 	$(eval export VITE_APP_GITHASH := $(GITHASH))
 	$(eval export VITE_APP_STASH_VERSION := $(STASH_VERSION))
+	$(eval export VITE_APP_PLATFORM_PORT := $(VITE_APP_PLATFORM_PORT))
 ifdef STASH_NOLEGACY
 	$(eval export VITE_APP_NOLEGACY := true)
 endif

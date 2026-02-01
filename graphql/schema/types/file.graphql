@@ -87,6 +87,12 @@ type VideoFile implements BaseFile {
   frame_rate: Float!
   bit_rate: Int!
 
+  "Security threats detected during file scan"
+  threats: String
+
+  "When the file was last scanned for threats (null = never scanned)"
+  threats_scanned_at: Time
+
   created_at: Time!
   updated_at: Time!
 }

@@ -42,6 +42,14 @@ mutation MigrateHashNaming {
   migrateHashNaming
 }
 
+mutation ScanVideoFileThreats($fileId: ID!) {
+  scanVideoFileThreats(fileId: $fileId)
+}
+
+mutation ScanAllScenesForThreats {
+  scanAllScenesForThreats
+}
+
 mutation BackupDatabase($input: BackupDatabaseInput!) {
   backupDatabase(input: $input)
 }

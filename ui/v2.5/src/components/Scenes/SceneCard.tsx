@@ -29,6 +29,7 @@ import {
   faFilm,
   faImages,
   faMapMarkerAlt,
+  faShieldAlt,
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
@@ -640,11 +641,55 @@ export const SceneCard = PatchComponent(
       </Button>
     );
 
+    const primaryFile = props.scene.files?.[0];
+    const hasNoThreats =
+      primaryFile?.threats_scanned_at &&
+      (!primaryFile?.threats || primaryFile.threats.trim() === "");
+    const hasThreats =
+      primaryFile?.threats_scanned_at &&
+      primaryFile?.threats &&
+      primaryFile.threats.trim() !== "";
+
+    const titleElement = (
+      <>
+        {hasNoThreats && (
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip id={`threats-safe-${props.scene.id}`}>
+                <FormattedMessage id="threats_none" defaultMessage="No threats found" />
+              </Tooltip>
+            }
+          >
+            <Icon icon={faShieldAlt} className="text-success" style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }} />
+          </OverlayTrigger>
+        )}
+        {hasThreats && (
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip id={`threats-found-${props.scene.id}`}>
+                <FormattedMessage id="threats_found" defaultMessage="Threats found" />
+                {primaryFile.threats && (
+                  <pre className="text-danger small mb-0 mt-1" style={{ whiteSpace: "pre-wrap", maxWidth: 300 }}>
+                    {primaryFile.threats}
+                  </pre>
+                )}
+              </Tooltip>
+            }
+          >
+            <Icon icon={faShieldAlt} className="text-danger" style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }} />
+          </OverlayTrigger>
+        )}
+        {objectTitle(props.scene)}
+      </>
+    );
+
     return (
       <GridCard
         className={`scene-card ${zoomIndex()} ${filelessClass()}`}
         url={sceneLink}
-        title={objectTitle(props.scene)}
+        title={titleElement}
         width={props.width}
         linkClassName="scene-card-link"
         thumbnailSectionClassName="video-section"

@@ -131,6 +131,8 @@
         "use": "Use",
         "save_filter": "Save filter",
         "scan": "Scan",
+        "scan_for_threats": "Scan for threats",
+        "scan_all_scenes_for_threats": "Scan all scenes for threats",
         "scrape": "Scrape",
         "scrape_query": "Scrape query",
         "scrape_scene_fragment": "Scrape by fragment",
@@ -188,6 +190,7 @@
             "selected_folders_and_files": "Selected folders and files"
         },
         "tools": {
+            "scan_all_scenes_for_threats_desc": "Scan all scenes for security threats. Progress and ETA shown in Tasks.",
             "scene_filename_parser": {
                 "ignore_organized": "Ignore organized scenes"
             }
@@ -276,6 +279,7 @@
         "reassign_past_tense": "File reassigned",
         "removed_entity": "Removed {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
         "rescanning_entity": "Rescanning {count, plural, one {{singularEntity}} other {{pluralEntity}}}…",
+        "scan_started": "Threat scan started - check Tasks for progress",
         "rescanning_similarity": "Recalculating similarity for {entity}…",
         "saved_entity": "Saved {entity}",
         "set_primary_success": "Set as primary image",
@@ -387,6 +391,11 @@
     },
     "role_description": "Role Description",
     "role_description_placeholder": "Role description",
+    "threats": "Threats",
+    "threats_checked": "Threats checked",
+    "threats_not_checked": "Not scanned",
+    "threats_found": "Threats found",
+    "threats_none": "No threats found",
     "statistics": "Statistics",
     "stats": {
         "image_size": "Images size",

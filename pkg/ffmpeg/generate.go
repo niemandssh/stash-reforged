@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/stashapp/stash/pkg/job"
 	"github.com/stashapp/stash/pkg/logger"
@@ -65,7 +66,7 @@ func (f *FFMpeg) GenerateWithProgress(ctx context.Context, args Args, progress *
 
 	logger.Infof("[ffmpeg] running command with progress: %v", args)
 
-	stderr, err := cmd.StderrPipe()
+	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("error creating stderr pipe: %w", err)
 	}
@@ -74,56 +75,64 @@ func (f *FFMpeg) GenerateWithProgress(ctx context.Context, args Args, progress *
 		return fmt.Errorf("error starting command: %w", err)
 	}
 
-	// Читаем stderr для получения прогресса
+	// Capture stderr for error reporting (StderrPipe doesn't populate exec.ExitError.Stderr)
+	var stderrBuf bytes.Buffer
+	stderr := io.TeeReader(stderrPipe, &stderrBuf)
+	var stderrDone sync.WaitGroup
+	stderrDone.Add(1)
+
+	// Read stderr for progress and capture for error logging
 	go func() {
+		defer stderrDone.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			line := scanner.Text()
-			logger.Debugf("[ffmpeg] stderr: %s", line) // Логируем все строки для отладки
+			logger.Debugf("[ffmpeg] stderr: %s", line)
 
-			// Парсим прогресс из вывода ffmpeg
-			// Ищем строки вида: frame=xxx fps=xx q=xx size=xx time=00:00:xx bitrate=xxx speed=xx
+			// Parse progress from ffmpeg output
 			if strings.Contains(line, "frame=") && strings.Contains(line, "time=") {
-				logger.Infof("[ffmpeg] found progress line: %s", line)
-				// Извлекаем время из строки
 				if timeStr := extractTimeFromFFmpegOutput(line); timeStr != "" {
-					logger.Infof("[ffmpeg] extracted time: %s", timeStr)
 					if currentTime, err := parseFFmpegTime(timeStr); err == nil {
-						// Вычисляем процент прогресса
 						if duration > 0 {
 							percent := (currentTime / duration) * 100
 							if percent > 100 {
 								percent = 100
 							}
-							progress.SetPercent(percent / 100) // SetPercent ожидает значение от 0 до 1
-
+							progress.SetPercent(percent / 100)
 							logger.Infof("[ffmpeg] progress: %s (%.2f/%.2f seconds, %.1f%%)", timeStr, currentTime, duration, percent)
 						} else {
 							logger.Infof("[ffmpeg] progress: %s (%.2f seconds, duration unknown)", timeStr, currentTime)
 						}
-					} else {
-						logger.Errorf("[ffmpeg] failed to parse time %s: %v", timeStr, err)
 					}
-				} else {
-					logger.Warnf("[ffmpeg] could not extract time from line: %s", line)
 				}
 			}
 		}
 	}()
 
-	if err := cmd.Wait(); err != nil {
+	waitErr := cmd.Wait()
+	stderrDone.Wait() // Ensure stderr is fully captured before reading
+
+	if waitErr != nil {
+		err := waitErr
+		stderrStr := stderrBuf.String()
+		if stderrStr != "" {
+			logger.Errorf("[ffmpeg] stderr: %s", stderrStr)
+		}
+
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			// Log the stderr for debugging
-			logger.Errorf("[ffmpeg] stderr: %s", string(exitErr.Stderr))
-
-			// Check if the error is related to audio processing
-			if strings.Contains(string(exitErr.Stderr), "Error submitting packet to decoder") ||
-				strings.Contains(string(exitErr.Stderr), "Invalid data found when processing input") ||
-				strings.Contains(string(exitErr.Stderr), "audio processing error") {
-				return fmt.Errorf("audio processing error: %w", exitErr)
+			// Check for known error patterns
+			if strings.Contains(stderrStr, "Error submitting packet to decoder") ||
+				strings.Contains(stderrStr, "Invalid data found when processing input") ||
+				strings.Contains(stderrStr, "audio processing error") {
+				return fmt.Errorf("audio processing error (exit %d): %s: %w",
+					exitErr.ExitCode(), strings.TrimSpace(stderrStr), exitErr)
 			}
-			return exitErr
+			if stderrStr != "" {
+				return fmt.Errorf("ffmpeg failed (exit %d): %s: %w",
+					exitErr.ExitCode(), strings.TrimSpace(stderrStr), exitErr)
+			}
+			return fmt.Errorf("ffmpeg failed with exit code %d: %w", exitErr.ExitCode(), exitErr)
 		}
 		return fmt.Errorf("error running ffmpeg command <%s>: %w", strings.Join(args, " "), err)
 	}

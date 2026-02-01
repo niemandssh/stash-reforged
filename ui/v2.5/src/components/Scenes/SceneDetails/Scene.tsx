@@ -34,6 +34,7 @@ import {
   useSceneConvertHLSToMP4,
   useSceneSetBroken,
   useSceneSetNotBroken,
+  useScanVideoFileThreats,
   useFindColorPresets,
 } from "src/core/StashService";
 
@@ -72,6 +73,7 @@ import {
   faUpload,
   faExchangeAlt,
   faTrash,
+  faShieldAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
@@ -260,6 +262,9 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
   const [setBroken] = useSceneSetBroken();
   const [setNotBroken] = useSceneSetNotBroken();
+  const [scanVideoFileThreats] = useScanVideoFileThreats();
+
+  const [scanningThreats, setScanningThreats] = useState(false);
 
   const { data: presetsData } = useFindColorPresets();
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
@@ -920,6 +925,31 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             >
               <Icon icon={faSync} className="mr-2" />
               <FormattedMessage id="actions.rescan" />
+            </Dropdown.Item>
+          )}
+          {!!scene.files.length && (
+            <Dropdown.Item
+              key="scan-threats"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={async () => {
+                const fileId = scene.files[0].id;
+                try {
+                  setScanningThreats(true);
+                  await scanVideoFileThreats({ variables: { fileId } });
+                  Toast.success(intl.formatMessage({ id: "toast.scan_started" }));
+                  if (onSaved) {
+                    setTimeout(() => onSaved(), 15000);
+                  }
+                } catch (e) {
+                  Toast.error(e);
+                } finally {
+                  setScanningThreats(false);
+                }
+              }}
+              disabled={scanningThreats}
+            >
+              <Icon icon={faShieldAlt} className="mr-2" />
+              <FormattedMessage id="actions.scan_for_threats" defaultMessage="Scan for threats" />
             </Dropdown.Item>
           )}
           <Dropdown.Item

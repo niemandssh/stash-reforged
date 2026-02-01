@@ -16,6 +16,8 @@ fragment VideoFileData on VideoFile {
   frame_rate
   bit_rate
   format
+  threats
+  threats_scanned_at
   fingerprints {
     type
     value

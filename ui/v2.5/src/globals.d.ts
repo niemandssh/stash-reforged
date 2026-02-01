@@ -11,4 +11,5 @@ interface ImportMetaEnv {
   readonly VITE_APP_STASH_VERSION?: string;
   readonly VITE_APP_DATE?: string;
   readonly VITE_APP_PLATFORM_URL?: string;
+  readonly VITE_APP_PLATFORM_PORT?: string;
 }
