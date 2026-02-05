@@ -36,6 +36,7 @@ import {
   generateSearchVariants,
   translateRussianToEnglish,
   translateEnglishToRussian,
+  isFuzzyMatch,
 } from "src/utils/keyboardLayout";
 
 const getContrastColor = (backgroundColor: string): string => {
@@ -156,6 +157,35 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         });
       }
 
+      // If no results and input is long enough, try fuzzy search
+      // Search with first 2 characters and filter with fuzzy matching
+      if (allResults.size === 0 && input.length >= 3) {
+        const prefix = input.substring(0, 2);
+        const prefixVariants = generateSearchVariants(prefix);
+
+        for (const searchTerm of prefixVariants) {
+          const filter = new ListFilterModel(GQL.FilterMode.Tags);
+          filter.searchTerm = searchTerm;
+          filter.currentPage = 1;
+          filter.itemsPerPage = 100; // Load more for fuzzy filtering
+          filter.sortBy = "name";
+          filter.sortDirection = GQL.SortDirectionEnum.Asc;
+          const query = await queryFindTagsForSelect(filter);
+          const tags = query.data.findTags.tags.filter((tag) => {
+            if (exclude.includes(tag.id.toString())) return false;
+            // Apply fuzzy matching
+            if (isFuzzyMatch(input, tag.name)) return true;
+            // Check aliases
+            if (tag.aliases?.some((a) => isFuzzyMatch(input, a))) return true;
+            return false;
+          });
+
+          tags.forEach((tag) => {
+            allResults.set(tag.id, tag);
+          });
+        }
+      }
+
       const ret = Array.from(allResults.values());
       return tagSelectSort(input, ret).map((tag) => ({
         value: tag.id,
@@ -208,36 +238,79 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     const isHighlighted = () => {
       if (!currentInputValue) return false;
 
-      const directMatch = object.name
-        .toLowerCase()
-        .includes(currentInputValue.toLowerCase());
-      if (directMatch) return true;
+      const input = currentInputValue.toLowerCase();
+      const tagName = object.name.toLowerCase();
 
+      // Direct match
+      if (tagName.includes(input)) return true;
+
+      // Keyboard layout translations
       const englishTranslation = translateRussianToEnglish(currentInputValue);
       const russianTranslation = translateEnglishToRussian(currentInputValue);
 
-      return (
-        object.name.toLowerCase().includes(englishTranslation.toLowerCase()) ||
-        object.name.toLowerCase().includes(russianTranslation.toLowerCase()) ||
+      if (
+        tagName.includes(englishTranslation.toLowerCase()) ||
+        tagName.includes(russianTranslation.toLowerCase())
+      ) {
+        return true;
+      }
+
+      // Check aliases
+      if (
         object.aliases?.some(
           (a) =>
+            a.toLowerCase().includes(input) ||
             a.toLowerCase().includes(englishTranslation.toLowerCase()) ||
             a.toLowerCase().includes(russianTranslation.toLowerCase())
         )
-      );
+      ) {
+        return true;
+      }
+
+      // Fuzzy matching with typo tolerance
+      if (isFuzzyMatch(currentInputValue, object.name)) {
+        return true;
+      }
+
+      // Fuzzy match with keyboard layout translations
+      if (
+        isFuzzyMatch(englishTranslation, object.name) ||
+        isFuzzyMatch(russianTranslation, object.name)
+      ) {
+        return true;
+      }
+
+      // Fuzzy match aliases
+      if (
+        object.aliases?.some(
+          (a) =>
+            isFuzzyMatch(currentInputValue, a) ||
+            isFuzzyMatch(englishTranslation, a) ||
+            isFuzzyMatch(russianTranslation, a)
+        )
+      ) {
+        return true;
+      }
+
+      return false;
     };
 
-    const highlightedClass = isHighlighted() ? "highlighted-tag-chip" : "";
+    const highlighted = isHighlighted();
+    const highlightedClass = highlighted ? "highlighted-tag-chip" : "";
 
-    let thisOptionProps = {
-      ...optionProps,
-      className: `${optionProps.className || ""} ${highlightedClass}`.trim(),
-      style: object.color
+    // Don't apply color style when highlighted - let CSS handle it
+    const colorStyle =
+      !highlighted && object.color
         ? {
             backgroundColor: object.color,
             color: getContrastColor(object.color),
           }
-        : undefined,
+        : undefined;
+
+    let thisOptionProps = {
+      ...optionProps,
+      className: `${optionProps.className || ""} ${highlightedClass}`.trim(),
+      style: colorStyle,
     };
 
     return (

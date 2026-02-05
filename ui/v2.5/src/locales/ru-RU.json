@@ -170,7 +170,11 @@
         "reset_cover": "Восстановить обложку по умолчанию",
         "set_cover": "Установить как обложку",
         "add_sub_groups": "Добавить подгруппы",
-        "remove_from_containing_group": "Удалить из группы"
+        "remove_from_containing_group": "Удалить из группы",
+        "copy_tags": "Копировать теги",
+        "paste_tags": "Вставить теги",
+        "copy_dates": "Копировать даты",
+        "paste_dates": "Вставить даты"
     },
     "actions_name": "Действия",
     "age": "Возраст",
@@ -1478,7 +1482,16 @@
         "similarity_recalculation_completed": "Пересчёт похожих сцен завершён для сцены {sceneId}",
         "similarity_recalculation_failed": "Ошибка пересчёта похожих сцен для сцены {sceneId}",
         "scene_set_broken": "Сцена помечена как сломанная",
-        "scene_set_not_broken": "Сцена помечена как НЕ сломанная"
+        "scene_set_not_broken": "Сцена помечена как НЕ сломанная",
+        "tags_copied": "Скопировано {count, plural, one {# тег} few {# тега} many {# тегов} other {# тегов}}",
+        "tags_pasted": "Вставлено {count, plural, one {# тег} few {# тега} many {# тегов} other {# тегов}}",
+        "no_tags_in_clipboard": "Теги в буфере обмена не найдены",
+        "all_tags_already_present": "Все теги уже добавлены",
+        "clipboard_error": "Ошибка доступа к буферу обмена",
+        "history_dates_copied": "Скопировано {count, plural, one {# дата} few {# даты} many {# дат} other {# дат}}",
+        "history_dates_pasted": "Вставлено {count, plural, one {# дата} few {# даты} many {# дат} other {# дат}}",
+        "no_dates_in_clipboard": "Даты в буфере обмена не найдены",
+        "all_dates_already_present": "Все даты уже добавлены"
     },
     "total": "Всего",
     "total_views": "{count, plural, one {# просмотр} few {# просмотра} many {# просмотров} other {# просмотров}}",

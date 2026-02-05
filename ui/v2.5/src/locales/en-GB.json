@@ -173,7 +173,11 @@
     "temp_enable": "Enable temporarily…",
     "unset": "Unset",
     "use_default": "Use default",
-    "view_random": "View Random"
+    "view_random": "View Random",
+    "copy_tags": "Copy tags",
+    "paste_tags": "Paste tags",
+    "copy_dates": "Copy dates",
+    "paste_dates": "Paste dates"
   },
   "color_preset": {
     "presets": "Colour Presets",
@@ -1685,7 +1689,16 @@
     "similarity_recalculation_completed": "Similarity recalculation completed for scene {sceneId}",
     "similarity_recalculation_failed": "Similarity recalculation failed for scene {sceneId}",
     "scene_set_broken": "Scene marked as broken",
-    "scene_set_not_broken": "Scene marked as not broken"
+    "scene_set_not_broken": "Scene marked as not broken",
+    "tags_copied": "Copied {count, plural, one {# tag} other {# tags}}",
+    "tags_pasted": "Pasted {count, plural, one {# tag} other {# tags}}",
+    "no_tags_in_clipboard": "No tags found in clipboard",
+    "all_tags_already_present": "All tags are already present",
+    "clipboard_error": "Clipboard access error",
+    "history_dates_copied": "Copied {count, plural, one {# date} other {# dates}}",
+    "history_dates_pasted": "Pasted {count, plural, one {# date} other {# dates}}",
+    "no_dates_in_clipboard": "No dates found in clipboard",
+    "all_dates_already_present": "All dates are already present"
   },
   "total": "Total",
   "total_views": "{count, plural, one {# view} other {# views}}",

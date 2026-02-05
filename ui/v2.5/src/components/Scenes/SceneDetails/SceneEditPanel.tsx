@@ -51,6 +51,7 @@ import { Gallery, GallerySelect } from "src/components/Galleries/GallerySelect";
 import { Group } from "src/components/Groups/GroupSelect";
 import { useTagsEdit } from "src/hooks/tagsEdit";
 import { Tag, TagSelect } from "src/components/Tags/TagSelect";
+import { TagCopyPaste } from "src/components/Tags/TagCopyPaste";
 import { ScraperMenu } from "src/components/Shared/ScraperMenu";
 import { PoseTagSelector } from "src/components/Shared/PoseTagSelector";
 
@@ -81,22 +82,23 @@ const PerformerTagField: React.FC<IPerformerTagFieldProps> = ({
     [onTagsChange]
   );
 
-  const title = (
-    <>
-      <FormattedMessage id="tags" />
-      <PerformerPopover id={performer.id}>
-        <span className="ml-2 text-muted">({performer.name})</span>
-      </PerformerPopover>
-    </>
-  );
-
   return (
     <Form.Group
       key={performer.id}
       controlId={`performer_tags_${performer.id}`}
       as={Row}
     >
-      <Form.Label {...fullWidthProps.labelProps}>{title}</Form.Label>
+      <Form.Label {...fullWidthProps.labelProps} className="d-flex align-items-center">
+        <FormattedMessage id="tags" />
+        <PerformerPopover id={performer.id}>
+          <span className="ml-2 text-muted">({performer.name})</span>
+        </PerformerPopover>
+        <TagCopyPaste
+          tags={tags}
+          onSetTags={onTagsChange}
+          className="ml-auto"
+        />
+      </Form.Label>
       <Col {...fullWidthProps.fieldProps}>
         <TagSelect
           values={tags}
@@ -1504,8 +1506,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
   function renderTagsField() {
     return (
       <Form.Group controlId="tag_ids" as={Row}>
-        <Form.Label {...fullWidthProps.labelProps}>
+        <Form.Label {...fullWidthProps.labelProps} className="d-flex align-items-center">
           <FormattedMessage id="tags" />
+          <TagCopyPaste
+            tags={tags}
+            onSetTags={onSetTags}
+            className="ml-auto"
+          />
         </Form.Label>
         <Col {...fullWidthProps.fieldProps}>
           <div key="main-tag-select">{tagsControl()}</div>

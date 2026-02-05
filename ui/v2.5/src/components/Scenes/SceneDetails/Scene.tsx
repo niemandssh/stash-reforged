@@ -452,10 +452,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   });
 
   async function onSave(input: GQL.SceneUpdateInput) {
-    // Debug: log the input data
-    console.log("Scene onSave input:", input);
-    console.log("performer_tag_ids:", input.performer_tag_ids);
-
     await updateScene({
       variables: {
         input: input,

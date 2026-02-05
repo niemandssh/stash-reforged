@@ -734,7 +734,7 @@ div.dropdown-menu {
 
 /* Подсветка выбранных тегов при поиске */
 .react-select__multi-value.highlighted-tag-chip {
-  background-color: #ffeb3b;
+  background-color: #ffeb3b !important;
   color: #000;
 
   .react-select__multi-value__label {

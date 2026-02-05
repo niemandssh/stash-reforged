@@ -27,6 +27,7 @@ import * as GQL from "src/core/generated-graphql";
 import { useToast } from "src/hooks/Toast";
 import { TextField } from "src/utils/field";
 import TextUtils from "src/utils/text";
+import { HistoryCopyPaste } from "./HistoryCopyPaste";
 
 const History: React.FC<{
   className?: string;
@@ -242,6 +243,16 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     });
   }
 
+  function handleAddODates(times: string[]) {
+    if (times.length === 0) return;
+    incrementOCount({
+      variables: {
+        id: scene.id,
+        times: times,
+      },
+    });
+  }
+
   function handleDeleteODate(time: string) {
     decrementOCount({
       variables: {
@@ -265,6 +276,16 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
       variables: {
         id: scene.id,
         times: time ? [time] : undefined,
+      },
+    });
+  }
+
+  function handleAddOMGDates(times: string[]) {
+    if (times.length === 0) return;
+    addOmg({
+      variables: {
+        id: scene.id,
+        times: times,
       },
     });
   }
@@ -452,6 +473,11 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
               <Counter count={oHistory.length} hideZero />
             </span>
             <span>
+              <HistoryCopyPaste
+                history={oHistory}
+                onAddDates={handleAddODates}
+                historyType="o"
+              />
               <Button
                 size="sm"
                 variant="minimal"
@@ -488,6 +514,11 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
               <Counter count={omgHistory.length} hideZero />
             </span>
             <span>
+              <HistoryCopyPaste
+                history={omgHistory}
+                onAddDates={handleAddOMGDates}
+                historyType="omg"
+              />
               <Button
                 size="sm"
                 variant="minimal"

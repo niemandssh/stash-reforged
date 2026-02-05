@@ -27,6 +27,7 @@
 - [x] **Scene tags requirements helper** - if you fill descriptions and requirement status in color presets, you can see tag helper with checklist of fillable tags
 - [x] **New selective scan** - now you can select not only folders, but also individual files for scanning. New convenient Grid mode, selected files and folders are now displayed on the right side 
 - [x] **Separate tags for performers in scene** - useful for add tags by each performer if there is 3 or more performers in scene and you need to describe each of them
+- [x] **Non-strict tags search** - you can make mistakes on tag search now!
 - [x] URLs for bulk edit scene
 - [x] Fake item was added to away enter misclick on scene tags editing, now you can't create tag by do something like "crea"+Enter, now you can create it by "crea"+Key down+Enter (or by click on create element by left click of course)
 - [x] Show current or dead age for performer in the Scene's performer cards
@@ -59,6 +60,7 @@
 - [x] Icons for operations menu in scene
 - [x] GPU is now mandatory for video conversion, speeding up the process up to 10x!
 - [x] You can hide UI of player (fo make screen, for example)
+- [x] Copy/paste tags, o-counts, omg-counts
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

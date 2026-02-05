@@ -603,9 +603,6 @@ export const useSceneUpdate = () =>
       if (needsSimilarityUpdate) {
         // Don't evict immediately - let the similarity job monitor handle it
         // when the backend job completes
-        console.log(
-          `Similarity job will be triggered for scene ${variables.input.id}`
-        );
       } else {
         // For non-similarity affecting changes, evict immediately
         cache.evict({
@@ -657,7 +654,6 @@ export const useBulkSceneUpdate = (input: GQL.BulkSceneUpdateInput) =>
         input.ids.forEach((id) => {
           if (needsSimilarityUpdate) {
             // Don't evict immediately - let the similarity job monitor handle it
-            console.log(`Similarity job will be triggered for scene ${id}`);
           } else {
             // For non-similarity affecting changes, only evict if rating was not updated
             // to avoid overriding the cache.modify above
@@ -714,9 +710,6 @@ export const useScenesUpdate = (input: GQL.SceneUpdateInput[]) =>
 
         if (needsSimilarityUpdate) {
           // Don't evict immediately - let the similarity job monitor handle it
-          console.log(
-            `Similarity job will be triggered for scene ${sceneInput.id}`
-          );
         } else {
           // For non-similarity affecting changes, only evict if rating was not updated
           // to avoid overriding the cache.modify above

@@ -928,6 +928,45 @@ input[type="range"].blue-slider {
     color: $danger;
   }
 
+  .history-copy-paste-buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-right: 4px;
+  }
+
+  .history-copy-paste-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    opacity: 0.6;
+    padding: 2px 4px;
+    transition: opacity 0.2s ease, color 0.2s ease;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+      opacity: 1;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.3;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.4);
+        opacity: 0.3;
+      }
+    }
+
+    svg {
+      height: 12px;
+      width: 12px;
+    }
+  }
+
   ul {
     padding-inline-start: 1rem;
 
