@@ -7,23 +7,20 @@ import {
 
 export const useUpdatePerformer = () => {
   const [updatePerformer] = GQL.usePerformerUpdateMutation({
-    onError: (errors) => errors,
+    onError: (errors: any) => errors,
     errorPolicy: "all",
-  });
+  } as any);
 
   const updatePerformerHandler = (input: GQL.PerformerUpdateInput) =>
     updatePerformer({
       variables: {
         input,
       },
-      update: (store, updatedPerformer) => {
+      update: (store: any, updatedPerformer: any) => {
         if (!updatedPerformer.data?.performerUpdate) return;
 
-        updatedPerformer.data.performerUpdate.stash_ids.forEach((id) => {
-          store.writeQuery<
-            GQL.FindPerformersQuery,
-            GQL.FindPerformersQueryVariables
-          >({
+        updatedPerformer.data.performerUpdate.stash_ids.forEach((id: any) => {
+          store.writeQuery({
             query: GQL.FindPerformersDocument,
             variables: {
               performer_filter: {
@@ -44,34 +41,31 @@ export const useUpdatePerformer = () => {
           });
         });
       },
-    });
+    } as any);
 
   return updatePerformerHandler;
 };
 
 export const useUpdateStudio = () => {
   const [updateStudio] = GQL.useStudioUpdateMutation({
-    onError: (errors) => errors,
+    onError: (errors: any) => errors,
     errorPolicy: "all",
-  });
+  } as any);
 
   const updateStudioHandler = (input: GQL.StudioUpdateInput) =>
     updateStudio({
       variables: {
         input,
       },
-      update: (store, updatedStudio) => {
+      update: (store: any, updatedStudio: any) => {
         if (!updatedStudio.data?.studioUpdate) return;
 
         if (updatedStudio.data?.studioUpdate?.parent_studio) {
-          const ac = getClient();
+          const ac = getClient() as any;
           evictQueries(ac.cache, studioMutationImpactedQueries);
         } else {
-          updatedStudio.data.studioUpdate.stash_ids.forEach((id) => {
-            store.writeQuery<
-              GQL.FindStudiosQuery,
-              GQL.FindStudiosQueryVariables
-            >({
+          updatedStudio.data.studioUpdate.stash_ids.forEach((id: any) => {
+            store.writeQuery({
               query: GQL.FindStudiosDocument,
               variables: {
                 studio_filter: {
@@ -93,7 +87,7 @@ export const useUpdateStudio = () => {
           });
         }
       },
-    });
+    } as any);
 
   return updateStudioHandler;
 };

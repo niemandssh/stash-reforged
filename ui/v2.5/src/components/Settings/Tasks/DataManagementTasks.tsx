@@ -47,7 +47,7 @@ const CleanDialog: React.FC<ICleanDialog> = ({
   const intl = useIntl();
   const { configuration } = React.useContext(ConfigurationContext);
 
-  const libraryPaths = configuration?.general.stashes.map((s) => s.path);
+  const libraryPaths = (configuration as any)?.general.stashes.map((s: any) => s.path);
 
   const [paths, setPaths] = useState<string[]>([]);
   const [currentDirectory, setCurrentDirectory] = useState<string>("");
@@ -207,7 +207,7 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -250,7 +250,7 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setDialogOpen({ clean: false });
     }
@@ -273,7 +273,7 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -355,10 +355,10 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
       // download the result
       if (download && ret.data && ret.data.backupDatabase) {
         const link = ret.data.backupDatabase;
-        downloadFile(link);
+        downloadFile(link as any);
       }
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsBackupRunning(false);
     }
@@ -378,7 +378,7 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -396,7 +396,7 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -410,10 +410,10 @@ export const DataManagementTasks: React.FC<IDataManagementTasks> = ({
       // download the result
       if (download && ret.data && ret.data.anonymiseDatabase) {
         const link = ret.data.anonymiseDatabase;
-        downloadFile(link);
+        downloadFile(link as any);
       }
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsAnonymiseRunning(false);
     }

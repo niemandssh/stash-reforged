@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import * as GQL from "src/core/generated-graphql";
-import { QueryResult } from "@apollo/client";
+import { QueryResult } from "src/core/generated-graphql";
 import { Criterion } from "src/models/list-filter/criteria/criterion";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";

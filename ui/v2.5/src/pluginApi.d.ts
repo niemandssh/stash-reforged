@@ -610,7 +610,7 @@ declare namespace PluginApi {
     function useVersionSuspenseQuery(...args: any[]): any;
   }
   namespace libraries {
-    const Apollo: typeof import("@apollo/client");
+    const ReactQuery: typeof import("@tanstack/react-query");
     const Bootstrap: typeof import("react-bootstrap");
     const FontAwesomeRegular: typeof import("@fortawesome/free-regular-svg-icons");
     const FontAwesomeSolid: typeof import("@fortawesome/free-solid-svg-icons");

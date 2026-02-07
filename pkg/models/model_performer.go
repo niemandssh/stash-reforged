@@ -26,7 +26,7 @@ type Performer struct {
 	CreatedAt      time.Time       `json:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"`
 	// Rating expressed in 1-100 scale
-	Rating        *int   `json:"rating"`
+	Rating        *int   `json:"rating100"`
 	Details       string `json:"details"`
 	DeathDate     *Date  `json:"death_date"`
 	HairColor     string `json:"hair_color"`

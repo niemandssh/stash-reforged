@@ -21,9 +21,13 @@ export const StudioOverlay: React.FC<{
     }
 
     // If the studio has a default image, show the studio name as text
-    const studioImageURL = new URL(studio.image_path);
-    if (studioImageURL.searchParams.get("default") === "true") {
-      return true;
+    try {
+      const studioImageURL = new URL(studio.image_path, window.location.origin);
+      if (studioImageURL.searchParams.get("default") === "true") {
+        return true;
+      }
+    } catch {
+      // If the URL is invalid, fall through to show image anyway
     }
 
     return false;

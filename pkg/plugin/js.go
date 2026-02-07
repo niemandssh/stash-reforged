@@ -93,13 +93,16 @@ func (t *jsPluginTask) initVM() error {
 		return fmt.Errorf("error adding util API: %w", err)
 	}
 
-	gql := &javascript.GQL{
-		Context:    context.TODO(),
-		Cookie:     t.input.ServerConnection.SessionCookie,
-		GQLHandler: t.gqlHandler,
-	}
-	if err := gql.AddToVM("gql", t.vm); err != nil {
-		return fmt.Errorf("error adding GraphQL API: %w", err)
+	// REST API client for plugins
+	if t.restHandler != nil {
+		rest := &javascript.REST{
+			Context:     context.TODO(),
+			Cookie:      t.input.ServerConnection.SessionCookie,
+			RESTHandler: t.restHandler,
+		}
+		if err := rest.AddToVM("rest", t.vm); err != nil {
+			return fmt.Errorf("error adding REST API: %w", err)
+		}
 	}
 
 	return nil

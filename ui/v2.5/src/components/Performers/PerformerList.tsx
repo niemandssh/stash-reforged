@@ -214,8 +214,8 @@ export const PerformerList: React.FC<IPerformerList> = ({
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindPerformers(filterCopy);
-      if (singleResult.data.findPerformers.performers.length === 1) {
-        const { id } = singleResult.data.findPerformers.performers[0]!;
+      if ((singleResult.data as any).findPerformers.performers.length === 1) {
+        const { id } = (singleResult.data as any).findPerformers.performers[0]!;
         history.push(`/performers/${id}`);
       }
     }

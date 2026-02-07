@@ -153,7 +153,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
       const client = getClient();
 
       // First get count of scenes with rating >= 55
-      const countResult = await client.query<GQL.FindScenesQuery>({
+      const countResult = await (client as any).query({
         query: GQL.FindScenesDocument,
         variables: {
           filter: {
@@ -168,7 +168,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
         },
       });
 
-      const totalCount = countResult.data?.findScenes?.count || 0;
+      const totalCount = (countResult.data?.findScenes as any)?.count || 0;
       if (totalCount === 0) {
         return;
       }
@@ -177,7 +177,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
       const randomPage = Math.floor(Math.random() * totalCount) + 1;
 
       // Get scene from that page
-      const result = await client.query<GQL.FindScenesQuery>({
+      const result = await (client as any).query({
         query: GQL.FindScenesDocument,
         variables: {
           filter: {
@@ -194,7 +194,7 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
         },
       });
 
-      const scenes = result.data?.findScenes?.scenes || [];
+      const scenes = (result.data?.findScenes as any)?.scenes || [];
       if (scenes.length === 0) {
         return;
       }
@@ -744,16 +744,16 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
   }
 
   function onPinSelected() {
-    getClient()
+    (getClient() as any)
       .mutate({
-        mutation: GQL.BulkSceneUpdateDocument,
+        mutation: (GQL as any).BulkSceneUpdateDocument,
         variables: {
           input: {
             ids: selectedItems,
             pinned: true,
           },
         },
-      })
+      } as any)
       .then(() => {
         // Refresh the list
         result.refetch();
@@ -764,16 +764,16 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
   }
 
   function onUnpinSelected() {
-    getClient()
+    (getClient() as any)
       .mutate({
-        mutation: GQL.BulkSceneUpdateDocument,
+        mutation: (GQL as any).BulkSceneUpdateDocument,
         variables: {
           input: {
             ids: selectedItems,
             pinned: false,
           },
         },
-      })
+      } as any)
       .then(() => {
         // Refresh the list
         result.refetch();

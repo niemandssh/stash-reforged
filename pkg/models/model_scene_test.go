@@ -50,7 +50,7 @@ func TestScenePartial_UpdateInput(t *testing.T) {
 				StudioID:  NewOptionalInt(studioID),
 			},
 			SceneUpdateInput{
-				ID:        idStr,
+				ID:        FlexibleID(idStr),
 				Title:     &title,
 				Code:      &code,
 				Details:   &details,
@@ -67,7 +67,7 @@ func TestScenePartial_UpdateInput(t *testing.T) {
 			id,
 			ScenePartial{},
 			SceneUpdateInput{
-				ID: idStr,
+				ID: FlexibleID(idStr),
 			},
 		},
 	}

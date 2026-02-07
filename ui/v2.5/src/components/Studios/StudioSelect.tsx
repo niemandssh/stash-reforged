@@ -45,9 +45,9 @@ type FindStudiosResult = Awaited<
 function sortStudiosByRelevance(input: string, studios: FindStudiosResult) {
   return sortByRelevance(
     input,
-    studios,
-    (s) => s.name,
-    (s) => s.aliases
+    studios as any,
+    (s: any) => s.name,
+    (s: any) => s.aliases
   );
 }
 
@@ -82,13 +82,13 @@ const _StudioSelect: React.FC<
     filter.sortBy = "name";
     filter.sortDirection = GQL.SortDirectionEnum.Asc;
     const query = await queryFindStudiosForSelect(filter);
-    let ret = query.data.findStudios.studios.filter((studio) => {
+    let ret = ((query as any).data.findStudios.studios as any[]).filter((studio: any) => {
       // HACK - we should probably exclude these in the backend query, but
       // this will do in the short-term
       return !exclude.includes(studio.id.toString());
     });
 
-    return studioSelectSort(input, ret).map((studio) => ({
+    return (studioSelectSort(input, ret as any) as any[]).map((studio: any) => ({
       value: studio.id,
       object: studio,
     }));
@@ -247,9 +247,9 @@ const _StudioIDSelect: React.FC<IFilterProps & IFilterIDProps<Studio>> = (
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Studio[]> {
     const query = await queryFindStudiosByIDForSelect(idsToLoad);
-    const { studios: loadedStudios } = query.data.findStudios;
+    const { studios: loadedStudios } = (query as any).data.findStudios;
 
-    return loadedStudios;
+    return loadedStudios as any;
   }
 
   useEffect(() => {

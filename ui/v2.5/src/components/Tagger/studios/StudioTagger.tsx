@@ -10,12 +10,13 @@ import { ModalComponent } from "src/components/Shared/Modal";
 import {
   stashBoxStudioQuery,
   useJobsSubscribe,
-  mutateStashBoxBatchStudioTag,
   getClient,
   studioMutationImpactedQueries,
   useStudioCreate,
   evictQueries,
 } from "src/core/StashService";
+import * as StashService from "src/core/StashService";
+const mutateStashBoxBatchStudioTag = (StashService as any).mutateStashBoxBatchStudioTag as any;
 import { Manual } from "src/components/Help/Manual";
 import { ConfigurationContext } from "src/hooks/Config";
 
@@ -315,7 +316,7 @@ const StudioTaggerList: React.FC<IStudioTaggerListProps> = ({
   const doBoxSearch = (studioID: string, searchVal: string) => {
     stashBoxStudioQuery(searchVal, selectedEndpoint.endpoint)
       .then((queryData) => {
-        const s = queryData.data?.scrapeSingleStudio ?? [];
+        const s = (queryData.data as any)?.scrapeSingleStudio ?? [];
         setSearchResults({
           ...searchResults,
           [studioID]: s,
@@ -350,7 +351,7 @@ const StudioTaggerList: React.FC<IStudioTaggerListProps> = ({
     });
     stashBoxStudioQuery(stashID, endpoint)
       .then((queryData) => {
-        const data = queryData.data?.scrapeSingleStudio ?? [];
+        const data = (queryData.data as any)?.scrapeSingleStudio ?? [];
         if (data.length > 0) {
           setModalStudio({
             ...data[0],
@@ -695,8 +696,8 @@ export const StudioTagger: React.FC<ITaggerProps> = ({ studios }) => {
       setBatchJobID(undefined);
 
       // Once the studio batch is complete, refresh all local studio data
-      const ac = getClient();
-      evictQueries(ac.cache, studioMutationImpactedQueries);
+      const ac = getClient() as any;
+      evictQueries(ac.cache, studioMutationImpactedQueries as any);
     }
   }, [jobsSubscribe, batchJobID]);
 
@@ -721,7 +722,7 @@ export const StudioTagger: React.FC<ITaggerProps> = ({ studios }) => {
         .filter((n) => n.length > 0);
 
       if (names.length > 0) {
-        const ret = await mutateStashBoxBatchStudioTag({
+        const ret = await (mutateStashBoxBatchStudioTag as any)({
           names: names,
           endpoint: selectedEndpointIndex,
           refresh: false,
@@ -729,7 +730,7 @@ export const StudioTagger: React.FC<ITaggerProps> = ({ studios }) => {
           createParent: createParent,
         });
 
-        setBatchJobID(ret.data?.stashBoxBatchStudioTag);
+        setBatchJobID((ret as any).data?.stashBoxBatchStudioTag);
       }
     }
   }
@@ -740,7 +741,7 @@ export const StudioTagger: React.FC<ITaggerProps> = ({ studios }) => {
     createParent: boolean
   ) {
     if (selectedEndpoint) {
-      const ret = await mutateStashBoxBatchStudioTag({
+      const ret = await (mutateStashBoxBatchStudioTag as any)({
         ids: ids,
         endpoint: selectedEndpointIndex,
         refresh,
@@ -748,7 +749,7 @@ export const StudioTagger: React.FC<ITaggerProps> = ({ studios }) => {
         createParent: createParent,
       });
 
-      setBatchJobID(ret.data?.stashBoxBatchStudioTag);
+      setBatchJobID((ret as any).data?.stashBoxBatchStudioTag);
     }
   }
 

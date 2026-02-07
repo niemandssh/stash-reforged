@@ -213,14 +213,14 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
   const [destroyFilter] = useSavedFilterDestroy();
   const [saveUISetting] = useConfigureUISetting();
 
-  const savedFilters = data?.findSavedFilters ?? [];
+  const savedFilters = (data as any)?.findSavedFilters ?? [];
 
   async function onSaveFilter(name: string, id?: string) {
     const filterCopy = filter.clone();
 
     try {
       setSaving(true);
-      await saveFilter(filterCopy, name, id);
+      await (saveFilter as any)(filterCopy, name, id);
 
       Toast.success(
         intl.formatMessage(
@@ -236,7 +236,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
       setOverwritingFilter(undefined);
       refetch();
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
     }
@@ -268,7 +268,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
       );
       refetch();
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
       setDeletingFilter(undefined);
@@ -303,7 +303,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
         })
       );
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
     }
@@ -362,7 +362,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
   };
 
   function renderSavedFilters() {
-    if (error) return <h6 className="text-center">{error.message}</h6>;
+    if (error) return <h6 className="text-center">{(error as any).message}</h6>;
 
     if (loading || saving) {
       return (
@@ -376,13 +376,13 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
       <ul className="saved-filter-list">
         {savedFilters
           .filter(
-            (f) =>
+            ((f: any) =>
               !filterName ||
-              f.name.toLowerCase().includes(filterName.toLowerCase())
+              f.name.toLowerCase().includes(filterName.toLowerCase())) as any
           )
-          .map((f) => (
+          .map(((f: any) => (
             <SavedFilterItem key={f.name} item={f} />
-          ))}
+          )) as any)}
       </ul>
     );
   }
@@ -444,7 +444,7 @@ export const SavedFilterList: React.FC<ISavedFilterListProps> = ({
           >
             <Button
               disabled={
-                !filterName || !!savedFilters.find((f) => f.name === filterName)
+                !filterName || !!(savedFilters.find as any)((f: any) => f.name === filterName)
               }
               variant="secondary"
               onClick={() => {
@@ -602,7 +602,7 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
   async function onSaveFilter(name: string, id?: string) {
     try {
       setSaving(true);
-      await saveFilter(filter, name, id);
+      await (saveFilter as any)(filter, name, id);
 
       Toast.success(
         intl.formatMessage(
@@ -618,7 +618,7 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
       setShowSaveDialog(false);
       refetch();
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
     }
@@ -650,7 +650,7 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
       );
       refetch();
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
       setDeletingFilter(undefined);
@@ -685,7 +685,7 @@ export const SidebarSavedFilterList: React.FC<ISavedFilterListProps> = ({
         })
       );
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setSaving(false);
       setSettingDefault(false);

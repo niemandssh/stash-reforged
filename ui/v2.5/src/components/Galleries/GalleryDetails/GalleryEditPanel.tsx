@@ -185,7 +185,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
 
         const result = await queryFindTags(filter);
-        const loadedTags = result.data.findTags.tags as unknown as Tag[];
+        const loadedTags = ((result.data as any).findTags.tags as unknown as Tag[]);
         setAllTags(loadedTags);
       } catch (error) {
         console.error("Error loading tags:", error);
@@ -224,7 +224,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
   });
 
   const fragmentScrapers = useMemo(() => {
-    return (scrapers?.data?.listScrapers ?? []).filter((s) =>
+    return ((scrapers as any)?.data?.listScrapers ?? []).filter((s: any) =>
       s.gallery?.supported_scrapes.includes(GQL.ScrapeType.Fragment)
     );
   }, [scrapers]);
@@ -235,7 +235,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
       await onSubmit(input);
       formik.resetForm();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
     setIsLoading(false);
   }
@@ -245,14 +245,14 @@ export const GalleryEditPanel: React.FC<IProps> = ({
 
     setIsLoading(true);
     try {
-      const result = await queryScrapeGallery(s.scraper_id!, gallery.id);
-      if (!result.data || !result.data.scrapeSingleGallery?.length) {
+      const result = await queryScrapeGallery(s.scraper_id! as any, gallery.id as any);
+      if (!result.data || !(result.data as any).scrapeSingleGallery?.length) {
         Toast.success("No galleries found");
         return;
       }
-      setScrapedGallery(result.data.scrapeSingleGallery[0]);
+      setScrapedGallery((result.data as any).scrapeSingleGallery[0]);
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsLoading(false);
     }
@@ -263,7 +263,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     try {
       await mutateReloadScrapers();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsLoading(false);
     }
@@ -375,7 +375,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
       }
       setScrapedGallery(result.data.scrapeGalleryURL);
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsLoading(false);
     }

@@ -47,7 +47,7 @@ function maybeRenderParent(
 }
 
 function maybeRenderChildren(studio: GQL.StudioDataFragment) {
-  if (studio.child_studios.length > 0) {
+  if (studio.child_studios?.length > 0) {
     return (
       <div className="studio-child-studios">
         <FormattedMessage
@@ -55,10 +55,10 @@ function maybeRenderChildren(studio: GQL.StudioDataFragment) {
           values={{
             children: (
               <Link to={NavUtils.makeChildStudiosUrl(studio)}>
-                {studio.child_studios.length}&nbsp;
+                {studio.child_studios?.length}&nbsp;
                 <FormattedMessage
                   id="countables.studios"
-                  values={{ count: studio.child_studios.length }}
+                  values={{ count: studio.child_studios?.length }}
                 />
               </Link>
             ),
@@ -159,9 +159,9 @@ export const StudioCard: React.FC<IProps> = ({
   }
 
   function maybeRenderTagPopoverButton() {
-    if (studio.tags.length <= 0) return;
+    if (studio.tags?.length <= 0) return;
 
-    const popoverContent = studio.tags.map((tag) => (
+    const popoverContent = studio.tags?.map((tag) => (
       <TagLink key={tag.id} linkType="studio" tag={tag} />
     ));
 
@@ -169,7 +169,7 @@ export const StudioCard: React.FC<IProps> = ({
       <HoverPopover placement="bottom" content={popoverContent}>
         <Button className="minimal tag-count">
           <Icon icon={faTag} />
-          <span>{studio.tags.length}</span>
+          <span>{studio.tags?.length}</span>
         </Button>
       </HoverPopover>
     );
@@ -182,7 +182,7 @@ export const StudioCard: React.FC<IProps> = ({
       studio.gallery_count ||
       studio.group_count ||
       studio.performer_count ||
-      studio.tags.length > 0
+      studio.tags?.length > 0
     ) {
       return (
         <>

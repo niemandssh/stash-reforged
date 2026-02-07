@@ -1,9 +1,0 @@
-fragment PerformerProfileImageData on PerformerProfileImage {
-  id
-  performer_id
-  is_primary
-  position
-  image_path
-  created_at
-  updated_at
-}

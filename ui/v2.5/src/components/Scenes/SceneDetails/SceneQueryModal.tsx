@@ -136,8 +136,8 @@ export const SceneQueryModal: React.FC<IProps> = ({
 
       setLoading(true);
       try {
-        const r = await queryScrapeSceneQuery(scraper, input);
-        setScenes(r.data.scrapeSingleScene);
+        const r = await queryScrapeSceneQuery(scraper as any, input);
+        setScenes((r.data as any).scrapeSingleScene);
       } catch (err) {
         if (err instanceof Error) setError(err);
       } finally {
@@ -150,7 +150,7 @@ export const SceneQueryModal: React.FC<IProps> = ({
   useEffect(() => inputRef.current?.focus(), []);
   useEffect(() => {
     if (error) {
-      Toast.error(error);
+      Toast.error(error as any);
       setError(undefined);
     }
   }, [error, Toast]);

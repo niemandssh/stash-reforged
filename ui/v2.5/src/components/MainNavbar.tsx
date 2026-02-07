@@ -197,9 +197,9 @@ const newPathsList = allMenuItems
 
 const getRandomUnratedScene = async (): Promise<string | null> => {
   try {
-    const client = getClient();
+    const client = getClient() as any;
 
-    const unratedCountResult = await client.query<GQL.FindScenesQuery>({
+    const unratedCountResult = (await client.query({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -212,13 +212,13 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
           },
         },
       },
-    });
+    })) as any;
 
     const unratedCount = unratedCountResult.data?.findScenes?.count || 0;
     if (unratedCount > 0) {
       const randomPage = Math.floor(Math.random() * unratedCount) + 1;
 
-      const result = await client.query<GQL.FindScenesQuery>({
+      const result = (await client.query({
         query: GQL.FindScenesDocument,
         variables: {
           filter: {
@@ -232,7 +232,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
             },
           },
         },
-      });
+      })) as any;
 
       const scenes = result.data?.findScenes?.scenes || [];
       if (scenes.length > 0) {
@@ -240,7 +240,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       }
     }
 
-    const untaggedCountResult = await client.query<GQL.FindScenesQuery>({
+    const untaggedCountResult = (await client.query({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -253,13 +253,13 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
           },
         },
       },
-    });
+    })) as any;
 
     const untaggedCount = untaggedCountResult.data?.findScenes?.count || 0;
     if (untaggedCount > 0) {
       const randomPage = Math.floor(Math.random() * untaggedCount) + 1;
 
-      const result = await client.query<GQL.FindScenesQuery>({
+      const result = (await client.query({
         query: GQL.FindScenesDocument,
         variables: {
           filter: {
@@ -273,7 +273,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
             },
           },
         },
-      });
+      })) as any;
 
       const scenes = result.data?.findScenes?.scenes || [];
       if (scenes.length > 0) {
@@ -281,7 +281,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       }
     }
 
-    const unorganizedCountResult = await client.query<GQL.FindScenesQuery>({
+    const unorganizedCountResult = (await client.query({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -291,14 +291,14 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
           organized: false,
         },
       },
-    });
+    })) as any;
 
     const unorganizedCount =
       unorganizedCountResult.data?.findScenes?.count || 0;
     if (unorganizedCount > 0) {
       const randomPage = Math.floor(Math.random() * unorganizedCount) + 1;
 
-      const result = await client.query<GQL.FindScenesQuery>({
+      const result = (await client.query({
         query: GQL.FindScenesDocument,
         variables: {
           filter: {
@@ -309,7 +309,7 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
             organized: false,
           },
         },
-      });
+      })) as any;
 
       const scenes = result.data?.findScenes?.scenes || [];
       if (scenes.length > 0) {
@@ -328,9 +328,9 @@ const getRandomScene = async (
   ratingThreshold: number = 55
 ): Promise<string | null> => {
   try {
-    const client = getClient();
+    const client = getClient() as any;
 
-    const countResult = await client.query<GQL.FindScenesQuery>({
+    const countResult = (await client.query({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -343,7 +343,7 @@ const getRandomScene = async (
           },
         },
       },
-    });
+    })) as any;
 
     const totalCount = countResult.data?.findScenes?.count || 0;
     if (totalCount === 0) {
@@ -352,7 +352,7 @@ const getRandomScene = async (
 
     const randomPage = Math.floor(Math.random() * totalCount) + 1;
 
-    const result = await client.query<GQL.FindScenesQuery>({
+    const result = (await client.query({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -367,7 +367,7 @@ const getRandomScene = async (
           },
         },
       },
-    });
+    })) as any;
 
     const scenes = result.data?.findScenes?.scenes || [];
     if (scenes.length === 0) {

@@ -107,15 +107,15 @@ export const GalleryList: React.FC<IGalleryList> = ({
   ) {
     // query for a random image
     if (result.data?.findGalleries) {
-      const { count } = result.data.findGalleries;
+      const { count } = result.data.findGalleries as any;
 
       const index = Math.floor(Math.random() * count);
       const filterCopy = cloneDeep(filter);
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindGalleries(filterCopy);
-      if (singleResult.data.findGalleries.galleries.length === 1) {
-        const { id } = singleResult.data.findGalleries.galleries[0];
+      if ((singleResult.data.findGalleries as any).galleries.length === 1) {
+        const { id } = (singleResult.data.findGalleries as any).galleries[0];
         // navigate to the image player page
         history.push(`/galleries/${id}`);
       }
@@ -135,15 +135,15 @@ export const GalleryList: React.FC<IGalleryList> = ({
   function onPinSelected(selectedIds: string[]) {
     const client = getClient();
     const updatePromises = selectedIds.map((galleryId) =>
-      client.mutate({
-        mutation: GQL.BulkGalleryUpdateDocument,
+      (client as any).mutate({
+        mutation: (GQL as any).BulkGalleryUpdateDocument,
         variables: {
           input: {
             ids: [galleryId],
             pinned: true,
           },
         },
-      })
+      } as any)
     );
 
     Promise.all(updatePromises).catch((error) => {
@@ -154,15 +154,15 @@ export const GalleryList: React.FC<IGalleryList> = ({
   function onUnpinSelected(selectedIds: string[]) {
     const client = getClient();
     const updatePromises = selectedIds.map((galleryId) =>
-      client.mutate({
-        mutation: GQL.BulkGalleryUpdateDocument,
+      (client as any).mutate({
+        mutation: (GQL as any).BulkGalleryUpdateDocument,
         variables: {
           input: {
             ids: [galleryId],
             pinned: false,
           },
         },
-      })
+      } as any)
     );
 
     Promise.all(updatePromises).catch((error) => {

@@ -68,7 +68,7 @@ export const AddSubGroupsDialog: React.FC<IListOperationProps> = (
         props.containingGroup.id,
         entries.map((m) => ({
           group_id: m.group.id,
-          description: m.description,
+          description: m.description as any,
         }))
       );
 

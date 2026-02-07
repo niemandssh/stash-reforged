@@ -103,7 +103,7 @@ type Cache struct {
 	config       ServerConfig
 	plugins      []Config
 	sessionStore *session.Store
-	gqlHandler   http.Handler
+	restHandler  http.Handler
 }
 
 // NewCache returns a new Cache.
@@ -119,8 +119,10 @@ func NewCache(config ServerConfig) *Cache {
 	}
 }
 
-func (c *Cache) RegisterGQLHandler(handler http.Handler) {
-	c.gqlHandler = handler
+// RegisterRESTHandler registers the REST API HTTP handler.
+// This handler is called directly by JS plugins via the `rest` object.
+func (c *Cache) RegisterRESTHandler(handler http.Handler) {
+	c.restHandler = handler
 }
 
 func (c *Cache) RegisterSessionStore(sessionStore *session.Store) {
@@ -289,7 +291,7 @@ func (c Cache) CreateTask(ctx context.Context, pluginID string, operationName *s
 		operation:    operation,
 		input:        buildPluginInput(plugin, operation, serverConnection, args),
 		progress:     progress,
-		gqlHandler:   c.gqlHandler,
+		restHandler:  c.restHandler,
 		serverConfig: c.config,
 	}
 	return task.createTask(), nil
@@ -310,7 +312,7 @@ func (c Cache) RunPlugin(ctx context.Context, pluginID string, args OperationInp
 	pt := pluginTask{
 		plugin:       plugin,
 		input:        pluginInput,
-		gqlHandler:   c.gqlHandler,
+		restHandler:  c.restHandler,
 		serverConfig: c.config,
 	}
 
@@ -375,7 +377,7 @@ func (c Cache) RegisterPostHooks(ctx context.Context, id int, hookType hook.Trig
 }
 
 func (c Cache) ExecuteSceneUpdatePostHooks(ctx context.Context, input models.SceneUpdateInput, inputFields []string) {
-	id, err := strconv.Atoi(input.ID)
+	id, err := strconv.Atoi(string(input.ID))
 	if err != nil {
 		logger.Errorf("error converting id in SceneUpdatePostHooks: %v", err)
 		return
@@ -411,7 +413,7 @@ func (c Cache) executePostHooks(ctx context.Context, hookType hook.TriggerEnum, 
 				plugin:       &p,
 				operation:    &h.OperationConfig,
 				input:        pluginInput,
-				gqlHandler:   c.gqlHandler,
+				restHandler:  c.restHandler,
 				serverConfig: c.config,
 			}
 

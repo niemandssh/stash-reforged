@@ -135,10 +135,10 @@ export const TaggerContext: React.FC = ({ children }) => {
       return;
     }
 
-    const { stashBoxes } = stashConfig.general;
-    const scrapers = Scrapers.data.listScrapers;
+    const stashBoxes = stashConfig.general.stashBoxes ?? [];
+    const scrapers = Scrapers.data.listScrapers ?? [];
 
-    const stashboxSources: ITaggerSource[] = stashBoxes.map((s, i) => ({
+    const stashboxSources: ITaggerSource[] = stashBoxes.map((s: any, i: number) => ({
       id: `${STASH_BOX_PREFIX}${s.endpoint}`,
       sourceInput: {
         stash_box_endpoint: s.endpoint,
@@ -224,7 +224,7 @@ export const TaggerContext: React.FC = ({ children }) => {
 
       clearSubmissionQueue();
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setLoading(false);
     }
@@ -261,21 +261,21 @@ export const TaggerContext: React.FC = ({ children }) => {
       clearSearchResults(sceneID);
 
       const results = await queryScrapeSceneQuery(
-        currentSource.sourceInput,
+        currentSource.sourceInput as any,
         searchVal
-      );
+      ) as any;
       let newResult: ISceneQueryResult;
       // scenes are already resolved if they come from stash-box
       const resolved =
         currentSource.sourceInput.stash_box_endpoint !== undefined;
 
-      if (results.error) {
-        newResult = { error: results.error.message };
-      } else if (results.errors) {
-        newResult = { error: results.errors.toString() };
+      if ((results as any).error) {
+        newResult = { error: (results as any).error.message };
+      } else if ((results as any).errors) {
+        newResult = { error: (results as any).errors.toString() };
       } else {
         newResult = {
-          results: results.data.scrapeSingleScene.map((r) => ({
+          results: (results as any).data.scrapeSingleScene.map((r: any) => ({
             ...r,
             resolved,
           })),
@@ -284,7 +284,7 @@ export const TaggerContext: React.FC = ({ children }) => {
 
       setSearchResults({ ...searchResults, [sceneID]: newResult });
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setLoading(false);
     }
@@ -301,17 +301,17 @@ export const TaggerContext: React.FC = ({ children }) => {
 
     try {
       const results = await queryScrapeScene(
-        currentSource.sourceInput,
-        sceneID
-      );
+        currentSource.sourceInput as any,
+        sceneID as any
+      ) as any;
 
-      if (results.error) {
-        newResult = { error: results.error.message };
-      } else if (results.errors) {
-        newResult = { error: results.errors.toString() };
+      if ((results as any).error) {
+        newResult = { error: (results as any).error.message };
+      } else if ((results as any).errors) {
+        newResult = { error: (results as any).errors.toString() };
       } else {
         newResult = {
-          results: results.data.scrapeSingleScene.map((r) => ({
+          results: (results as any).data.scrapeSingleScene.map((r: any) => ({
             ...r,
             // scenes are already resolved if they are scraped via fragment
             resolved: true,
@@ -319,7 +319,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         };
       }
     } catch (err: unknown) {
-      newResult = { error: errorToString(err) };
+      newResult = { error: errorToString(err as any) };
     }
 
     setSearchResults((current) => {
@@ -338,7 +338,7 @@ export const TaggerContext: React.FC = ({ children }) => {
       setLoading(true);
       await sceneFragmentScrape(sceneID);
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setLoading(false);
     }
@@ -365,21 +365,21 @@ export const TaggerContext: React.FC = ({ children }) => {
         const results = await stashBoxSceneBatchQuery(
           sceneIDs,
           stashBoxEndpoint
-        );
+        ) as any;
 
-        if (results.error) {
-          setMultiError(results.error.message);
-        } else if (results.errors) {
-          setMultiError(results.errors.toString());
+        if ((results as any).error) {
+          setMultiError((results as any).error.message);
+        } else if ((results as any).errors) {
+          setMultiError((results as any).errors.toString());
         } else {
           const newSearchResults = { ...searchResults };
           sceneIDs.forEach((sceneID, index) => {
-            const newResults = results.data.scrapeMultiScenes[index].map(
-              (r) => ({
-                ...r,
-                resolved: true,
-              })
-            );
+          const newResults = (results as any).data.scrapeMultiScenes[index].map(
+            (r: any) => ({
+              ...r,
+              resolved: true,
+            })
+          );
 
             newSearchResults[sceneID] = {
               results: newResults,
@@ -400,7 +400,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         }, Promise.resolve());
       }
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setLoading(false);
       setLoadingMulti(false);
@@ -430,12 +430,12 @@ export const TaggerContext: React.FC = ({ children }) => {
       };
 
       const result = await queryScrapeSceneQueryFragment(
-        currentSource.sourceInput,
-        sceneInput
-      );
+        currentSource.sourceInput as any,
+        sceneInput as any
+      ) as any;
 
-      if (result.data.scrapeSingleScene.length) {
-        const resolvedScene = result.data.scrapeSingleScene[0];
+      if ((result as any).data.scrapeSingleScene.length) {
+        const resolvedScene = (result as any).data.scrapeSingleScene[0] as any;
 
         // set the scene in the results and mark as resolved
         const newResult = [...searchResults[sceneID].results!];
@@ -446,7 +446,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         });
       }
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
 
       const newResult = [...searchResults[sceneID].results!];
       newResult[index] = { ...newResult[index], resolved: true };
@@ -470,14 +470,14 @@ export const TaggerContext: React.FC = ({ children }) => {
             organized: config?.markSceneAsOrganizedOnSave || undefined,
           },
         },
-      });
+      } as any);
 
       if (queueFingerprint) {
-        queueFingerprintSubmission(sceneCreateInput.id);
+        queueFingerprintSubmission(sceneCreateInput.id as any);
       }
       clearSearchResults(sceneCreateInput.id);
     } catch (err) {
-      Toast.error(err);
+      Toast.error(err as any);
     } finally {
       setLoading(false);
     }
@@ -542,7 +542,7 @@ export const TaggerContext: React.FC = ({ children }) => {
 
       return tagID;
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -590,7 +590,7 @@ export const TaggerContext: React.FC = ({ children }) => {
 
       return performerID;
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -605,11 +605,11 @@ export const TaggerContext: React.FC = ({ children }) => {
       return;
 
     try {
-      const queryResult = await queryFindPerformer(performerID);
-      if (queryResult.data.findPerformer) {
-        const target = queryResult.data.findPerformer;
+      const queryResult = await queryFindPerformer(performerID) as any;
+      if ((queryResult as any).data.findPerformer) {
+        const target = (queryResult as any).data.findPerformer as any;
 
-        const stashIDs: GQL.StashIdInput[] = target.stash_ids.map((e) => {
+        const stashIDs: GQL.StashIdInput[] = (target as any).stash_ids.map((e: any) => {
           return {
             endpoint: e.endpoint,
             stash_id: e.stash_id,
@@ -657,7 +657,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         Toast.success(<span>Added stash-id to performer</span>);
       }
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -715,7 +715,7 @@ export const TaggerContext: React.FC = ({ children }) => {
 
       return studioID;
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -765,7 +765,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         </span>
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -777,11 +777,11 @@ export const TaggerContext: React.FC = ({ children }) => {
       return;
 
     try {
-      const queryResult = await queryFindStudio(studioID);
-      if (queryResult.data.findStudio) {
-        const target = queryResult.data.findStudio;
+      const queryResult = await queryFindStudio(studioID) as any;
+      if ((queryResult as any).data.findStudio) {
+        const target = (queryResult as any).data.findStudio as any;
 
-        const stashIDs: GQL.StashIdInput[] = target.stash_ids.map((e) => {
+        const stashIDs: GQL.StashIdInput[] = (target as any).stash_ids.map((e: any) => {
           return {
             endpoint: e.endpoint,
             stash_id: e.stash_id,
@@ -826,7 +826,7 @@ export const TaggerContext: React.FC = ({ children }) => {
         Toast.success(<span>Added stash-id to studio</span>);
       }
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 

@@ -542,6 +542,29 @@ func (_m *GameReaderWriter) GetViewDates(ctx context.Context, id int) ([]time.Ti
 	return r0, r1
 }
 
+// GetImage provides a mock function with given fields: ctx, gameID
+func (_m *GameReaderWriter) GetImage(ctx context.Context, gameID int) ([]byte, error) {
+	ret := _m.Called(ctx, gameID)
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func(context.Context, int) []byte); ok {
+		r0 = rf(ctx, gameID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, gameID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // IncrementOCounter provides a mock function with given fields: ctx, id
 func (_m *GameReaderWriter) IncrementOCounter(ctx context.Context, id int) (int, error) {
 	ret := _m.Called(ctx, id)
@@ -749,6 +772,73 @@ func (_m *GameReaderWriter) UpdatePartial(ctx context.Context, id int, partial m
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int, models.GamePartial) error); ok {
 		r1 = rf(ctx, id, partial)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTagIDs provides a mock function with given fields: ctx, relatedID
+func (_m *GameReaderWriter) GetTagIDs(ctx context.Context, relatedID int) ([]int, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []int
+	if rf, ok := ret.Get(0).(func(context.Context, int) []int); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// HasImage provides a mock function with given fields: ctx, gameID
+func (_m *GameReaderWriter) HasImage(ctx context.Context, gameID int) (bool, error) {
+	ret := _m.Called(ctx, gameID)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, int) bool); ok {
+		r0 = rf(ctx, gameID)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, gameID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetURLs provides a mock function with given fields: ctx, relatedID
+func (_m *GameReaderWriter) GetURLs(ctx context.Context, relatedID int) ([]string, error) {
+	ret := _m.Called(ctx, relatedID)
+
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(context.Context, int) []string); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
 	} else {
 		r1 = ret.Error(1)
 	}

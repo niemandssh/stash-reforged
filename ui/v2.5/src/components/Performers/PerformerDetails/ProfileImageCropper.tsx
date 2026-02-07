@@ -142,9 +142,9 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
             position: profileImages.length,
           },
         },
-      });
+      } as any);
 
-      if (result.data?.performerProfileImageCreate) {
+      if ((result.data as any)?.performerProfileImageCreate) {
         const newImageIndex = profileImages.length + 1;
         Toast.success(
           intl.formatMessage(
@@ -158,7 +158,7 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
         );
 
         // Update performer with new profile image
-        const newProfileImage = result.data.performerProfileImageCreate;
+        const newProfileImage = (result.data as any).performerProfileImageCreate;
         const updatedProfileImages = [...profileImages, newProfileImage];
         const updatedPerformer = {
           profile_images: updatedProfileImages,
@@ -230,9 +230,9 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
             image: imageDataUrl,
           },
         },
-      });
+      } as any);
 
-      if (result.data?.performerProfileImageUpdate) {
+      if ((result.data as any)?.performerProfileImageUpdate) {
         Toast.success("Image cropped successfully");
         onImageUpdate?.();
       }

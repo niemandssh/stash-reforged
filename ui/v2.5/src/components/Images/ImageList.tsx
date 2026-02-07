@@ -359,8 +359,8 @@ export const ImageList: React.FC<IImageList> = ({
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindImages(filterCopy);
-      if (singleResult.data.findImages.images.length === 1) {
-        const { id } = singleResult.data.findImages.images[0];
+      if ((singleResult.data as any).findImages.images.length === 1) {
+        const { id } = (singleResult.data as any).findImages.images[0];
         // navigate to the image player page
         history.push(`/images/${id}`);
       }

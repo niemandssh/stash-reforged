@@ -49,7 +49,7 @@ import {
 import { useTagsEdit } from "src/hooks/tagsEdit";
 import { TagSelect, Tag } from "src/components/Tags/TagSelect";
 import { CustomFieldsInput } from "src/components/Shared/CustomFields";
-import { cloneDeep } from "@apollo/client/utilities";
+import cloneDeep from "lodash-es/cloneDeep";
 
 const isScraper = (
   scraper: GQL.Scraper | GQL.StashBox
@@ -434,9 +434,9 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
             position: profileImages.length,
           },
         },
-      });
+      } as any);
 
-      if (result.data?.performerProfileImageCreate) {
+      if ((result.data as any)?.performerProfileImageCreate) {
         const newImageIndex = (performer.profile_images || []).length + 1;
         Toast.success(
           intl.formatMessage(
@@ -450,7 +450,7 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
         );
 
         // Update performer with new profile image
-        const newProfileImage = result.data.performerProfileImageCreate;
+        const newProfileImage = (result.data as any).performerProfileImageCreate;
         const updatedProfileImages = [
           ...(performer.profile_images || []),
           newProfileImage,
@@ -550,17 +550,17 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
       } = selectedPerformer;
 
       const result = await queryScrapePerformer(selectedScraper.id, ret);
-      if (!result?.data?.scrapeSinglePerformer?.length) return;
+      if (!(result?.data as any)?.scrapeSinglePerformer?.length) return;
 
       // assume one result
       // if this is a new performer, just dump the data
       if (isNew) {
         updatePerformerEditStateFromScraper(
-          result.data.scrapeSinglePerformer[0]
+          (result.data as any).scrapeSinglePerformer[0]
         );
         setScraper(undefined);
       } else {
-        setScrapedPerformer(result.data.scrapeSinglePerformer[0]);
+        setScrapedPerformer((result.data as any).scrapeSinglePerformer[0]);
       }
     } catch (e) {
       Toast.error(e);

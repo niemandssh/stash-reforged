@@ -19,11 +19,11 @@ import { StudioCardGrid } from "./StudioCardGrid";
 import { View } from "../List/views";
 
 function getItems(result: GQL.FindStudiosQueryResult) {
-  return result?.data?.findStudios?.studios ?? [];
+  return (result as any)?.data?.findStudios?.studios ?? [];
 }
 
 function getCount(result: GQL.FindStudiosQueryResult) {
-  return result?.data?.findStudios?.count ?? 0;
+  return (result as any)?.data?.findStudios?.count ?? 0;
 }
 
 interface IStudioList {
@@ -88,8 +88,8 @@ export const StudioList: React.FC<IStudioList> = ({
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindStudios(filterCopy);
-      if (singleResult.data.findStudios.studios.length === 1) {
-        const { id } = singleResult.data.findStudios.studios[0];
+      if ((singleResult.data as any).findStudios.studios.length === 1) {
+        const { id } = (singleResult.data as any).findStudios.studios[0];
         // navigate to the studio page
         history.push(`/studios/${id}`);
       }

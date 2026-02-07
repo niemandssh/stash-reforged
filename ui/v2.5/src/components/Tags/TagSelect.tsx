@@ -91,13 +91,13 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
   }
 
   const inputLower = input.toLowerCase().trim();
-  const inputWords = inputLower.split(/[\s\-_]+/).filter((w) => w.length > 0);
+  const inputWords = inputLower.split(/[\s\-_]+/).filter((w: string) => w.length > 0);
 
   // Calculate relevance score for each tag
   // Lower score = higher priority
-  function getRelevanceScore(tag: (typeof tags)[0]): number {
+  function getRelevanceScore(tag: any): number {
     const nameLower = tag.name.toLowerCase();
-    const nameWords = nameLower.split(/[\s\-_]+/).filter((w) => w.length > 0);
+    const nameWords = nameLower.split(/[\s\-_]+/).filter((w: string) => w.length > 0);
 
     // Exact match
     if (nameLower === inputLower) return 0;
@@ -121,7 +121,7 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
     }
 
     // Any word starts with input (exact)
-    const wordStartIndex = nameWords.findIndex((w) => w.startsWith(inputLower));
+    const wordStartIndex = nameWords.findIndex((w: string) => w.startsWith(inputLower));
     if (wordStartIndex !== -1) return 40 + wordStartIndex;
 
     // Name contains input
@@ -169,7 +169,7 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
     return 100;
   }
 
-  return tags.slice().sort((a, b) => {
+  return (tags as any).slice().sort((a: any, b: any) => {
     const scoreA = getRelevanceScore(a);
     const scoreB = getRelevanceScore(b);
     if (scoreA !== scoreB) {
@@ -223,7 +223,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const loadTags = React.useCallback(
     async (input: string): Promise<Option[]> => {
       const searchVariants = generateSearchVariants(input);
-      const allResults = new Map<string, FindTagsResult[0]>();
+      const allResults = new Map<string, any>();
 
       for (const searchTerm of searchVariants) {
         const filter = new ListFilterModel(GQL.FilterMode.Tags);
@@ -233,7 +233,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         filter.sortBy = "name";
         filter.sortDirection = GQL.SortDirectionEnum.Asc;
         const query = await queryFindTagsForSelect(filter);
-        const tags = query.data.findTags.tags.filter((tag) => {
+        const tags = ((query as any).data.findTags.tags as any[]).filter((tag: any) => {
           return !exclude.includes(tag.id.toString());
         });
 
@@ -256,23 +256,23 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
           filter.sortBy = "name";
           filter.sortDirection = GQL.SortDirectionEnum.Asc;
           const query = await queryFindTagsForSelect(filter);
-          const tags = query.data.findTags.tags.filter((tag) => {
+          const tags = ((query as any).data.findTags.tags as any[]).filter((tag: any) => {
             if (exclude.includes(tag.id.toString())) return false;
             // Apply fuzzy matching
             if (isFuzzyMatch(input, tag.name)) return true;
             // Check aliases
-            if (tag.aliases?.some((a) => isFuzzyMatch(input, a))) return true;
+            if (tag.aliases?.some((a: any) => isFuzzyMatch(input, a))) return true;
             return false;
           });
 
-          tags.forEach((tag) => {
+          tags.forEach((tag: any) => {
             allResults.set(tag.id, tag);
           });
         }
       }
 
       const ret = Array.from(allResults.values());
-      return tagSelectSort(input, ret).map((tag) => ({
+      return (tagSelectSort(input, ret as any) as any[]).map((tag: any) => ({
         value: tag.id,
         object: tag,
       }));
@@ -681,9 +681,9 @@ const _TagIDSelect: React.FC<IFilterProps & IFilterIDProps<Tag>> = (props) => {
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Tag[]> {
     const query = await queryFindTagsByIDForSelect(idsToLoad);
-    const { tags: loadedTags } = query.data.findTags;
+    const { tags: loadedTags } = (query as any).data.findTags;
 
-    return loadedTags;
+    return loadedTags as any;
   }
 
   useEffect(() => {

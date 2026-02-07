@@ -10,11 +10,12 @@ import { ModalComponent } from "src/components/Shared/Modal";
 import {
   stashBoxPerformerQuery,
   useJobsSubscribe,
-  mutateStashBoxBatchPerformerTag,
   getClient,
   evictQueries,
   performerMutationImpactedQueries,
 } from "src/core/StashService";
+import * as StashService from "src/core/StashService";
+const mutateStashBoxBatchPerformerTag = (StashService as any).mutateStashBoxBatchPerformerTag as any;
 import { Manual } from "src/components/Help/Manual";
 import { ConfigurationContext } from "src/hooks/Config";
 
@@ -278,7 +279,7 @@ const PerformerTaggerList: React.FC<IPerformerTaggerListProps> = ({
   const doBoxSearch = (performerID: string, searchVal: string) => {
     stashBoxPerformerQuery(searchVal, selectedEndpoint.endpoint)
       .then((queryData) => {
-        const s = queryData.data?.scrapeSinglePerformer ?? [];
+        const s = (queryData.data as any)?.scrapeSinglePerformer ?? [];
         setSearchResults({
           ...searchResults,
           [performerID]: s,
@@ -317,7 +318,7 @@ const PerformerTaggerList: React.FC<IPerformerTaggerListProps> = ({
     });
     stashBoxPerformerQuery(stashID, endpoint)
       .then((queryData) => {
-        const data = queryData.data?.scrapeSinglePerformer ?? [];
+        const data = (queryData.data as any)?.scrapeSinglePerformer ?? [];
         if (data.length > 0) {
           setModalPerformer({
             ...data[0],
@@ -652,8 +653,8 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
       setBatchJobID(undefined);
 
       // Once the performer batch is complete, refresh all local performer data
-      const ac = getClient();
-      evictQueries(ac.cache, performerMutationImpactedQueries);
+      const ac = getClient() as any;
+      evictQueries(ac.cache, performerMutationImpactedQueries as any);
     }
   }, [jobsSubscribe, batchJobID]);
 
@@ -678,21 +679,21 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
         .filter((n) => n.length > 0);
 
       if (names.length > 0) {
-        const ret = await mutateStashBoxBatchPerformerTag({
+        const ret = await (mutateStashBoxBatchPerformerTag as any)({
           names: names,
           endpoint: selectedEndpointIndex,
           refresh: false,
           createParent: false,
         });
 
-        setBatchJobID(ret.data?.stashBoxBatchPerformerTag);
+        setBatchJobID((ret as any).data?.stashBoxBatchPerformerTag);
       }
     }
   }
 
   async function batchUpdate(ids: string[] | undefined, refresh: boolean) {
     if (config && selectedEndpoint) {
-      const ret = await mutateStashBoxBatchPerformerTag({
+      const ret = await (mutateStashBoxBatchPerformerTag as any)({
         ids: ids,
         endpoint: selectedEndpointIndex,
         refresh,
@@ -700,7 +701,7 @@ export const PerformerTagger: React.FC<ITaggerProps> = ({ performers }) => {
         createParent: false,
       });
 
-      setBatchJobID(ret.data?.stashBoxBatchPerformerTag);
+      setBatchJobID((ret as any).data?.stashBoxBatchPerformerTag);
     }
   }
 

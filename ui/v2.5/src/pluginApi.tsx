@@ -6,7 +6,9 @@ import MousetrapPause from "mousetrap-pause";
 import NavUtils from "./utils/navigation";
 import * as GQL from "src/core/generated-graphql";
 import * as StashService from "src/core/StashService";
-import * as Apollo from "@apollo/client";
+import * as ReactQuery from "@tanstack/react-query";
+import * as RestClient from "src/core/rest-client";
+import * as SSEClient from "src/core/sse-client";
 import * as Bootstrap from "react-bootstrap";
 import * as Intl from "react-intl";
 import * as FontAwesomeSolid from "@fortawesome/free-solid-svg-icons";
@@ -67,10 +69,22 @@ export const PluginApi = {
   React,
   ReactDOM,
   GQL,
+  // REST API client - replaces GraphQL for data fetching
+  rest: RestClient.restApi,
+  restUtils: {
+    apiGet: RestClient.apiGet,
+    apiPost: RestClient.apiPost,
+    apiPut: RestClient.apiPut,
+    apiPatch: RestClient.apiPatch,
+    apiDelete: RestClient.apiDelete,
+    ApiError: RestClient.ApiError,
+  },
+  // SSE client for real-time events
+  sse: SSEClient.getSSEClient(),
   libraries: {
     ReactRouterDOM,
     Bootstrap,
-    Apollo,
+    ReactQuery,
     Intl,
     FontAwesomeRegular,
     FontAwesomeSolid,

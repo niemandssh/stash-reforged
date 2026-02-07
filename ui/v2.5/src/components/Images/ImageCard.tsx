@@ -34,16 +34,16 @@ export const ImageCard: React.FC<IImageCardProps> = (
 ) => {
   const file = useMemo(
     () =>
-      props.image.visual_files.length > 0
+      props.image.visual_files?.length > 0
         ? props.image.visual_files[0]
         : undefined,
     [props.image]
   );
 
   function maybeRenderTagPopoverButton() {
-    if (props.image.tags.length <= 0) return;
+    if (props.image.tags?.length <= 0) return;
 
-    const popoverContent = props.image.tags.map((tag) => (
+    const popoverContent = props.image.tags?.map((tag) => (
       <TagLink key={tag.id} tag={tag} linkType="image" />
     ));
 
@@ -55,14 +55,14 @@ export const ImageCard: React.FC<IImageCardProps> = (
       >
         <Button className="minimal">
           <Icon icon={faTag} />
-          <span>{props.image.tags.length}</span>
+          <span>{props.image.tags?.length}</span>
         </Button>
       </HoverPopover>
     );
   }
 
   function maybeRenderPerformerPopoverButton() {
-    if (props.image.performers.length <= 0) return;
+    if (props.image.performers?.length <= 0) return;
 
     return (
       <PerformerPopoverButton
@@ -90,7 +90,7 @@ export const ImageCard: React.FC<IImageCardProps> = (
   function maybeRenderGallery() {
     if (props.image.galleries.length <= 0) return;
 
-    const popoverContent = props.image.galleries.map((gallery) => (
+    const popoverContent = props.image.galleries?.map((gallery) => (
       <GalleryLink key={gallery.id} gallery={gallery} />
     ));
 
@@ -122,8 +122,8 @@ export const ImageCard: React.FC<IImageCardProps> = (
 
   function maybeRenderPopoverButtonGroup() {
     if (
-      props.image.tags.length > 0 ||
-      props.image.performers.length > 0 ||
+      props.image.tags?.length > 0 ||
+      props.image.performers?.length > 0 ||
       props.image.o_counter ||
       props.image.galleries.length > 0 ||
       props.image.organized
@@ -150,9 +150,9 @@ export const ImageCard: React.FC<IImageCardProps> = (
   }
 
   const source =
-    props.image.paths.preview != ""
-      ? props.image.paths.preview ?? ""
-      : props.image.paths.thumbnail ?? "";
+    props.image.paths?.preview != ""
+      ? props.image.paths?.preview ?? ""
+      : props.image.paths?.thumbnail ?? "";
   const video = source.includes("preview");
   const ImagePreview = video ? "video" : "img";
 

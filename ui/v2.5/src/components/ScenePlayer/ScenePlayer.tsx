@@ -47,7 +47,7 @@ import {
 import { SceneInteractiveStatus } from "src/hooks/Interactive/status";
 import { languageMap } from "src/utils/caption";
 import { VIDEO_PLAYER_ID } from "./util";
-import { useQuery } from "@apollo/client";
+import { useFindSimilarScenesQuery } from "src/core/rest-hooks";
 
 // @ts-ignore
 import airplay from "@silvermine/videojs-airplay";
@@ -339,10 +339,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     // Query for similar scenes to determine next scene for autoplay
     // Get enough scenes to handle multiple batches when some are already viewed
-    const { data: similarScenesData } = useQuery<
-      GQL.FindSimilarScenesQuery,
-      GQL.FindSimilarScenesQueryVariables
-    >(GQL.FindSimilarScenesDocument, {
+    const { data: similarScenesData } = useFindSimilarScenesQuery({
       variables: { id: scene.id, limit: 50 }, // Get more scenes to handle viewed scenes
       skip: !scene.id,
     });
@@ -950,7 +947,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const { duration } = file;
       const sourceSelector = player.sourceSelector();
       sourceSelector.setSources(
-        scene.sceneStreams
+        (scene.sceneStreams ?? [])
           .filter((stream) => {
             const src = new URL(stream.url);
             const isFileTranscode = !isDirect(src);

@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useQuery } from "@apollo/client";
 import { useIntl } from "react-intl";
 import { Helmet } from "react-helmet";
 import { LoadingIndicator } from "../Shared/LoadingIndicator";
 import { useTitleProps } from "src/hooks/title";
-import { FIND_VIEW_HISTORY } from "src/core/StashService/types/viewHistory";
+import { useFindViewHistoryQuery } from "src/core/rest-hooks";
 import { ViewHistoryCard } from "./ViewHistoryCard";
 import { IViewHistoryEntry, IViewHistoryResult } from "./types";
 import "./ViewHistory.scss";
@@ -20,9 +19,7 @@ export const ViewHistory: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const loadingRef = useRef<HTMLDivElement>(null);
 
-  const { data, loading, fetchMore } = useQuery<{
-    findViewHistory: IViewHistoryResult;
-  }>(FIND_VIEW_HISTORY, {
+  const { data, loading } = useFindViewHistoryQuery({
     variables: {
       filter: {
         page,
@@ -36,27 +33,19 @@ export const ViewHistory: React.FC = () => {
     if (data?.findViewHistory?.items) {
       setItems((prev) => {
         if (page === 1) {
-          return data.findViewHistory.items;
+          return (data.findViewHistory as any).items as any;
         }
-        return [...prev, ...data.findViewHistory.items];
+        return [...prev, ...(data.findViewHistory as any).items] as any;
       });
-      setHasMore(data.findViewHistory.items.length === ITEMS_PER_PAGE);
+      setHasMore(((data.findViewHistory as any).items as any).length === ITEMS_PER_PAGE);
     }
   }, [data, page]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
       setPage((prev) => prev + 1);
-      fetchMore({
-        variables: {
-          filter: {
-            page: page + 1,
-            per_page: ITEMS_PER_PAGE,
-          },
-        },
-      });
     }
-  }, [loading, hasMore, page, fetchMore]);
+  }, [loading, hasMore]);
 
   // Infinite scroll
   useEffect(() => {
@@ -84,8 +73,8 @@ export const ViewHistory: React.FC = () => {
   }, [loadMore, hasMore, loading]);
 
   const totalViews = data?.findViewHistory?.count || 0;
-  const totalOCount = data?.findViewHistory?.totalOCount || 0;
-  const totalOMGCount = data?.findViewHistory?.totalOMGCount || 0;
+  const totalOCount = (data?.findViewHistory as any)?.totalOCount || 0;
+  const totalOMGCount = (data?.findViewHistory as any)?.totalOMGCount || 0;
 
   if (loading && page === 1) {
     return <LoadingIndicator />;

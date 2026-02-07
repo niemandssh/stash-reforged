@@ -1,6 +1,9 @@
 package models
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+)
 
 type PHashDuplicationCriterionInput struct {
 	Duplicated *bool `json:"duplicated"`
@@ -190,9 +193,33 @@ type PerformerTag struct {
 	TagIds      []string `json:"tag_ids"`
 }
 
+// FlexibleID unmarshals from JSON number or string into string (REST clients may send id as number).
+type FlexibleID string
+
+// UnmarshalJSON accepts either a JSON number or string for API compatibility.
+func (f *FlexibleID) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return nil
+	}
+	if data[0] == '"' {
+		var s string
+		if err := json.Unmarshal(data, &s); err != nil {
+			return err
+		}
+		*f = FlexibleID(s)
+		return nil
+	}
+	var n json.Number
+	if err := json.Unmarshal(data, &n); err != nil {
+		return err
+	}
+	*f = FlexibleID(n.String())
+	return nil
+}
+
 type SceneUpdateInput struct {
 	ClientMutationID        *string              `json:"clientMutationId"`
-	ID                      string               `json:"id"`
+	ID                      FlexibleID            `json:"id"`
 	Title                   *string              `json:"title"`
 	Code                    *string              `json:"code"`
 	Details                 *string              `json:"details"`

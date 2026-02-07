@@ -18,7 +18,7 @@ type Scene struct {
 	Date      *Date  `json:"date"`       // Date of release
 	ShootDate *Date  `json:"shoot_date"` // Date of filming/shooting
 	// Rating expressed in 1-100 scale
-	Rating                  *int    `json:"rating"`
+	Rating                  *int    `json:"rating100"`
 	Organized               bool    `json:"organized"`
 	Pinned                  bool    `json:"pinned"`
 	IsBroken                bool    `json:"is_broken"`
@@ -279,7 +279,7 @@ func (s ScenePartial) UpdateInput(id int) SceneUpdateInput {
 	}
 
 	ret := SceneUpdateInput{
-		ID:           strconv.Itoa(id),
+		ID:           FlexibleID(strconv.Itoa(id)),
 		Title:        s.Title.Ptr(),
 		Code:         s.Code.Ptr(),
 		Details:      s.Details.Ptr(),
@@ -335,14 +335,14 @@ func (s Scene) GetHash(hashAlgorithm HashAlgorithm) string {
 
 // SceneFileType represents the file metadata for a scene.
 type SceneFileType struct {
-	Size       *string  `graphql:"size" json:"size"`
-	Duration   *float64 `graphql:"duration" json:"duration"`
-	VideoCodec *string  `graphql:"video_codec" json:"video_codec"`
-	AudioCodec *string  `graphql:"audio_codec" json:"audio_codec"`
-	Width      *int     `graphql:"width" json:"width"`
-	Height     *int     `graphql:"height" json:"height"`
-	Framerate  *float64 `graphql:"framerate" json:"framerate"`
-	Bitrate    *int     `graphql:"bitrate" json:"bitrate"`
+	Size       *string  `json:"size"`
+	Duration   *float64 `json:"duration"`
+	VideoCodec *string  `json:"video_codec"`
+	AudioCodec *string  `json:"audio_codec"`
+	Width      *int     `json:"width"`
+	Height     *int     `json:"height"`
+	Framerate  *float64 `json:"framerate"`
+	Bitrate    *int     `json:"bitrate"`
 }
 
 type VideoCaption struct {

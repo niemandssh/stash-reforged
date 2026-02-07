@@ -8,18 +8,15 @@ import (
 	"net/url"
 	"strconv"
 
-	graphql "github.com/hasura/go-graphql-client"
-
 	"github.com/stashapp/stash/pkg/plugin/common"
 )
 
-// NewClient creates a graphql Client connecting to the stash server using
-// the provided server connection details.
-// Always connects to the graphql endpoint of the localhost.
-func NewClient(provider common.StashServerConnection) *graphql.Client {
+// NewHTTPClient creates an HTTP client configured with authentication
+// connecting to the stash server using the provided server connection details.
+func NewHTTPClient(provider common.StashServerConnection) *http.Client {
 	portStr := strconv.Itoa(provider.Port)
 
-	u, _ := url.Parse("http://" + provider.Host + ":" + portStr + "/graphql")
+	u, _ := url.Parse("http://" + provider.Host + ":" + portStr + "/api/v1")
 	u.Scheme = provider.Scheme
 
 	cookieJar, _ := cookiejar.New(nil)
@@ -31,9 +28,7 @@ func NewClient(provider common.StashServerConnection) *graphql.Client {
 		})
 	}
 
-	httpClient := &http.Client{
+	return &http.Client{
 		Jar: cookieJar,
 	}
-
-	return graphql.NewClient(u.String(), httpClient)
 }

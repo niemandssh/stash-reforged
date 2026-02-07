@@ -81,7 +81,7 @@ const handleSpecialStrings = (input: string): string => {
   const javcodeIndex = output.search(javcodeRegex);
   // if we find a javcode, then replace hyphens with spaces outside of the javcode
   if (javcodeIndex !== -1) {
-    const javcodeLength = output.match(javcodeRegex)![1].length;
+    const javcodeLength = (output.match(javcodeRegex) as any)![1].length;
     return (
       output.slice(0, javcodeIndex).replace(/-/g, " ") +
       output.slice(javcodeIndex, javcodeIndex + javcodeLength) +
@@ -178,8 +178,8 @@ export async function mergeStudioStashIDs(
   newStashIDs: GQL.StashIdInput[]
 ) {
   const existing = await queryFindStudio(id);
-  if (existing?.data?.findStudio?.stash_ids) {
-    return mergeStashIDs(existing.data.findStudio.stash_ids, newStashIDs);
+  if ((existing as any)?.data?.findStudio?.stash_ids) {
+    return mergeStashIDs((existing.data as any).findStudio.stash_ids, newStashIDs);
   }
 
   return newStashIDs;

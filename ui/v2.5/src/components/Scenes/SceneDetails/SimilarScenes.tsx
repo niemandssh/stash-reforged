@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import { FormattedMessage } from "react-intl";
-import { useQuery } from "@apollo/client";
 import * as GQL from "src/core/generated-graphql";
+import { useFindSimilarScenesQuery } from "src/core/rest-hooks";
 import { useSimilarityJobMonitor } from "src/hooks/useSimilarityJobMonitor";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
@@ -418,11 +418,8 @@ export const SimilarScenes: React.FC<ISimilarScenesProps> = ({
   const [displayLimit, setDisplayLimit] = useState(limit);
   const { configuration } = React.useContext(ConfigurationContext);
 
-  // Use GraphQL query to fetch similar scenes
-  const { data, loading, error, refetch } = useQuery<
-    GQL.FindSimilarScenesQuery,
-    GQL.FindSimilarScenesQueryVariables
-  >(GQL.FindSimilarScenesDocument, {
+  // Use REST query to fetch similar scenes
+  const { data, loading, error, refetch } = useFindSimilarScenesQuery({
     variables: { id: scene.id, limit: 100 }, // Fetch more than needed
     skip: !scene.id,
   });

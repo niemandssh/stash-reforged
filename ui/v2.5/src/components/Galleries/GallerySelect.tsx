@@ -57,8 +57,8 @@ function sortGalleriesByRelevance(
   input: string,
   galleries: FindGalleriesResult
 ) {
-  return sortByRelevance(input, galleries, galleryTitle, (g) => {
-    return g.files.map((f) => f.path).concat(g.folder?.path ?? []);
+  return sortByRelevance(input, galleries as any, galleryTitle as any, (g: any) => {
+    return g.files.map((f: any) => f.path).concat(g.folder?.path ?? []);
   });
 }
 
@@ -90,13 +90,13 @@ const _GallerySelect: React.FC<
     }
 
     const query = await queryFindGalleriesForSelect(filter);
-    let ret = query.data.findGalleries.galleries.filter((gallery) => {
+    let ret = ((query as any).data.findGalleries.galleries as any[]).filter((gallery: any) => {
       // HACK - we should probably exclude these in the backend query, but
       // this will do in the short-term
       return !exclude.includes(gallery.id.toString());
     });
 
-    return gallerySelectSort(input, ret).map((gallery) => ({
+    return (gallerySelectSort(input, ret as any) as any[]).map((gallery: any) => ({
       value: gallery.id,
       object: gallery,
     }));
@@ -253,9 +253,9 @@ const _GalleryIDSelect: React.FC<
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Gallery[]> {
     const query = await queryFindGalleriesByIDForSelect(idsToLoad);
-    const { galleries: loadedGalleries } = query.data.findGalleries;
+    const { galleries: loadedGalleries } = (query as any).data.findGalleries;
 
-    return loadedGalleries;
+    return loadedGalleries as any;
   }
 
   useEffect(() => {

@@ -1,12 +1,16 @@
-import { ApolloProvider } from "@apollo/client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
-import { getClient } from "./core/StashService";
+import { getQueryClient } from "./core/query-client";
 import { baseURL, getPlatformURL } from "./core/createClient";
+import { getSSEClient } from "./core/sse-client";
 import "./index.scss";
 import "cropperjs/dist/cropper.css";
 import * as serviceWorker from "./serviceWorker";
+
+// Initialize SSE connection for real-time updates
+getSSEClient();
 
 ReactDOM.render(
   <>
@@ -16,9 +20,9 @@ ReactDOM.render(
       href={getPlatformURL("css").toString()}
     />
     <BrowserRouter basename={baseURL}>
-      <ApolloProvider client={getClient()}>
+      <QueryClientProvider client={getQueryClient()}>
         <App />
-      </ApolloProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   </>,
   document.getElementById("root")

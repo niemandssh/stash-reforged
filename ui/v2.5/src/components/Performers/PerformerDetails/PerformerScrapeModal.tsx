@@ -66,10 +66,10 @@ const PerformerScrapeModal: React.FC<IProps> = ({
               <li key={i}>
                 <Button
                   variant="link"
-                  onClick={() => onSelectPerformer(p, scraper)}
+                  onClick={() => onSelectPerformer(p as any, scraper)}
                 >
-                  {p.name}
-                  {p.disambiguation && ` (${p.disambiguation})`}
+                  {(p as any).name}
+                  {(p as any).disambiguation && ` (${(p as any).disambiguation})`}
                 </Button>
               </li>
             ))}

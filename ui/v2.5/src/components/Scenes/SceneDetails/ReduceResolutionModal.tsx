@@ -119,14 +119,14 @@ export const ReduceResolutionModal: React.FC<IReduceResolutionModalProps> = ({
             target_width: width,
             target_height: height,
           },
-        },
+        } as any,
       });
 
-      if (result.data?.sceneReduceResolution) {
+      if ((result.data as any)?.sceneReduceResolution) {
         Toast.success(
           intl.formatMessage(
             { id: "actions.reduce_resolution_started" },
-            { jobId: result.data.sceneReduceResolution }
+            { jobId: (result.data as any).sceneReduceResolution }
           )
         );
         onClose();

@@ -1,7 +1,5 @@
-import { ApolloError } from "@apollo/client";
-
 export const apolloError = (error: unknown) =>
-  error instanceof ApolloError ? error.message : "";
+  error instanceof Error ? error.message : "";
 
 export function errorToString(error: unknown) {
   let message;

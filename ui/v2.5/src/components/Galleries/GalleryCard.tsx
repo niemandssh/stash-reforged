@@ -31,7 +31,7 @@ export const GalleryPreview: React.FC<IGalleryPreviewProps> = ({
   onScrubberClick,
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(
-    gallery.paths.cover ?? undefined
+    gallery.paths?.cover ?? undefined
   );
 
   return (
@@ -46,8 +46,8 @@ export const GalleryPreview: React.FC<IGalleryPreviewProps> = ({
       )}
       {gallery.image_count > 0 && (
         <GalleryPreviewScrubber
-          previewPath={gallery.paths.preview}
-          defaultPath={gallery.paths.cover ?? ""}
+          previewPath={gallery.paths?.preview}
+          defaultPath={gallery.paths?.cover ?? ""}
           imageCount={gallery.image_count}
           onClick={onScrubberClick}
           onPathChanged={setImgSrc}
@@ -70,9 +70,9 @@ const GalleryCardPopovers = PatchComponent(
   "GalleryCard.Popovers",
   (props: IGalleryCardProps) => {
     function maybeRenderScenePopoverButton() {
-      if (props.gallery.scenes.length === 0) return;
+      if (props.gallery.scenes?.length === 0) return;
 
-      const popoverContent = props.gallery.scenes.map((scene) => (
+      const popoverContent = props.gallery.scenes?.map((scene) => (
         <SceneLink key={scene.id} scene={scene} />
       ));
 
@@ -84,16 +84,16 @@ const GalleryCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faPlayCircle} />
-            <span>{props.gallery.scenes.length}</span>
+            <span>{props.gallery.scenes?.length}</span>
           </Button>
         </HoverPopover>
       );
     }
 
     function maybeRenderTagPopoverButton() {
-      if (props.gallery.tags.length <= 0) return;
+      if (props.gallery.tags?.length <= 0) return;
 
-      const popoverContent = props.gallery.tags.map((tag) => (
+      const popoverContent = props.gallery.tags?.map((tag) => (
         <TagLink key={tag.id} tag={tag} linkType="details" />
       ));
 
@@ -105,14 +105,14 @@ const GalleryCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faTag} />
-            <span>{props.gallery.tags.length}</span>
+            <span>{props.gallery.tags?.length}</span>
           </Button>
         </HoverPopover>
       );
     }
 
     function maybeRenderPerformerPopoverButton() {
-      if (props.gallery.performers.length <= 0) return;
+      if (props.gallery.performers?.length <= 0) return;
 
       return (
         <PerformerPopoverButton
@@ -169,9 +169,9 @@ const GalleryCardPopovers = PatchComponent(
 
     function maybeRenderPopoverButtonGroup() {
       if (
-        props.gallery.scenes.length > 0 ||
-        props.gallery.performers.length > 0 ||
-        props.gallery.tags.length > 0 ||
+        props.gallery.scenes?.length > 0 ||
+        props.gallery.performers?.length > 0 ||
+        props.gallery.tags?.length > 0 ||
         props.gallery.organized ||
         props.gallery.image_count > 0 ||
         props.gallery?.o_counter

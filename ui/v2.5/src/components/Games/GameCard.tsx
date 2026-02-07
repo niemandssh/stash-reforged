@@ -67,9 +67,9 @@ const GameCardDetails: React.FC<{
           lineCount={3}
         />
       )}
-      {game.tags && game.tags.length > 0 && (
+      {game.tags && game.tags?.length > 0 && (
         <div className="gallery-card__tags tag-list">
-          {game.tags.slice(0, 3).map((tag) => (
+          {game.tags?.slice(0, 3).map((tag) => (
             <TagLink key={tag.id} tag={tag} linkType="details" />
           ))}
         </div>

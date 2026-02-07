@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useApolloClient } from "@apollo/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useJobsSubscribeSubscription,
   JobStatus,
@@ -16,7 +16,7 @@ interface ISimilarityJobMonitorOptions {
 export const useSimilarityJobMonitor = (
   options?: ISimilarityJobMonitorOptions
 ) => {
-  const client = useApolloClient();
+  const queryClient = useQueryClient();
   const { data: jobsData } = useJobsSubscribeSubscription();
   const onCompleteRef = useRef(options?.onSimilarityJobComplete);
   const refetchRef = useRef(options?.refetch);
@@ -108,10 +108,9 @@ export const useSimilarityJobMonitor = (
         );
       }
 
-      // Evict similar scenes cache to force refetch
-      client.cache.evict({
-        fieldName: "findScene",
-        args: { id: sceneId },
+      // Invalidate similar scenes cache to force refetch
+      queryClient.invalidateQueries({
+        queryKey: ["scenes", "similar", sceneId],
       });
 
       // Also trigger a refetch if available
@@ -120,5 +119,5 @@ export const useSimilarityJobMonitor = (
       // Call the completion callback
       onCompleteRef.current?.(sceneId);
     }
-  }, [jobsData, client.cache, Toast, intl, processedJobs]);
+  }, [jobsData, queryClient, Toast, intl, processedJobs]);
 };

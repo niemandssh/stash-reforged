@@ -53,8 +53,8 @@ type FindScenesResult = Awaited<
 >["data"]["findScenes"]["scenes"];
 
 function sortScenesByRelevance(input: string, scenes: FindScenesResult) {
-  return sortByRelevance(input, scenes, objectTitle, (s) => {
-    return s.files.map((f) => f.path);
+  return sortByRelevance(input, scenes as any, objectTitle as any, (s: any) => {
+    return s.files.map((f: any) => f.path);
   });
 }
 
@@ -86,13 +86,13 @@ const _SceneSelect: React.FC<
     }
 
     const query = await queryFindScenesForSelect(filter);
-    let ret = query.data.findScenes.scenes.filter((scene) => {
+    let ret = ((query as any).data.findScenes.scenes as any[]).filter((scene: any) => {
       // HACK - we should probably exclude these in the backend query, but
       // this will do in the short-term
       return !exclude.includes(scene.id.toString());
     });
 
-    return sceneSelectSort(input, ret).map((scene) => ({
+    return (sceneSelectSort(input, ret as any) as any[]).map((scene: any) => ({
       value: scene.id,
       object: scene,
     }));
@@ -240,9 +240,9 @@ const _SceneIDSelect: React.FC<
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Scene[]> {
     const query = await queryFindScenesByIDForSelect(idsToLoad);
-    const { scenes: loadedScenes } = query.data.findScenes;
+    const { scenes: loadedScenes } = (query as any).data.findScenes;
 
-    return loadedScenes;
+    return loadedScenes as any;
   }
 
   useEffect(() => {

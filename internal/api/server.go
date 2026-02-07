@@ -11,25 +11,15 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"runtime/debug"
 	"strconv"
 	"strings"
-	"time"
 
-	gqlHandler "github.com/99designs/gqlgen/graphql/handler"
-	gqlExtension "github.com/99designs/gqlgen/graphql/handler/extension"
-	gqlLru "github.com/99designs/gqlgen/graphql/handler/lru"
-	gqlTransport "github.com/99designs/gqlgen/graphql/handler/transport"
-	gqlPlayground "github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog"
-	"github.com/gorilla/websocket"
 	"github.com/vearutop/statigz"
-	"github.com/vektah/gqlparser/v2/ast"
 
-	"github.com/stashapp/stash/internal/api/loaders"
 	"github.com/stashapp/stash/internal/build"
 	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/internal/manager/config"
@@ -45,8 +35,6 @@ const (
 	loginEndpoint       = "/login"
 	loginLocaleEndpoint = loginEndpoint + "/locale"
 	logoutEndpoint      = "/logout"
-	gqlEndpoint         = "/graphql"
-	playgroundEndpoint  = "/playground"
 )
 
 type Server struct {
@@ -123,7 +111,16 @@ func Initialize() (*Server, error) {
 	}
 
 	r.Use(middleware.Heartbeat("/healthz"))
-	r.Use(cors.AllowAll().Handler)
+	r.Use(cors.Handler(cors.Options{
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
+			return true // allow all origins
+		},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 	r.Use(authenticateHandler())
 	visitedPluginHandler := mgr.SessionStore.VisitedPluginHandler()
 	r.Use(visitedPluginHandler)
@@ -141,75 +138,31 @@ func Initialize() (*Server, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(BaseURLMiddleware)
 
-	recoverFunc := func(ctx context.Context, err interface{}) error {
-		logger.Error(err)
-		debug.PrintStack()
-
-		message := fmt.Sprintf("Internal system error. Error <%v>", err)
-		return errors.New(message)
-	}
-
 	repo := mgr.Repository
-
-	dataloaders := loaders.Middleware{
-		Repository: repo,
-	}
-
-	r.Use(dataloaders.Middleware)
 
 	pluginCache := mgr.PluginCache
 	sceneService := mgr.SceneService
 	imageService := mgr.ImageService
 	galleryService := mgr.GalleryService
 	groupService := mgr.GroupService
-	resolver := &Resolver{
-		repository:     repo,
-		sceneService:   sceneService,
-		imageService:   imageService,
-		galleryService: galleryService,
-		groupService:   groupService,
-		hookExecutor:   pluginCache,
-	}
 
-	gqlSrv := gqlHandler.New(NewExecutableSchema(Config{Resolvers: resolver}))
-	gqlSrv.SetRecoverFunc(recoverFunc)
-	gqlSrv.AddTransport(gqlTransport.Websocket{
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-		KeepAlivePingInterval: 10 * time.Second,
-	})
-	gqlSrv.AddTransport(gqlTransport.Options{})
-	gqlSrv.AddTransport(gqlTransport.GET{})
-	gqlSrv.AddTransport(gqlTransport.POST{})
-	gqlSrv.AddTransport(gqlTransport.MultipartForm{
-		MaxUploadSize: cfg.GetMaxUploadSize(),
-	})
+	// REST API v1
+	sseBroker := NewSSEBroker()
+	sseBroker.Start()
+	restHandler := NewRESTHandler(
+		repo,
+		sceneService,
+		imageService,
+		galleryService,
+		groupService,
+		pluginCache,
+		sseBroker,
+	)
+	restRoutes := restHandler.RESTRoutes()
+	r.Mount("/api/v1", restRoutes)
 
-	gqlSrv.SetQueryCache(gqlLru.New[*ast.QueryDocument](1000))
-	gqlSrv.Use(gqlExtension.Introspection{})
-
-	gqlSrv.SetErrorPresenter(gqlErrorHandler)
-
-	gqlHandlerFunc := func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "no-store")
-		gqlSrv.ServeHTTP(w, r)
-	}
-
-	// register GQL handler with plugin cache
-	// chain the visited plugin handler
-	// also requires the dataloader middleware
-	gqlHandler := visitedPluginHandler(dataloaders.Middleware(http.HandlerFunc(gqlHandlerFunc)))
-	pluginCache.RegisterGQLHandler(gqlHandler)
-
-	r.HandleFunc(gqlEndpoint, gqlHandlerFunc)
-	r.HandleFunc(playgroundEndpoint, func(w http.ResponseWriter, r *http.Request) {
-		setPageSecurityHeaders(w, r, pluginCache.ListPlugins())
-		endpoint := getProxyPrefix(r) + gqlEndpoint
-		gqlPlayground.Handler("GraphQL playground", endpoint, gqlPlayground.WithGraphiqlEnablePluginExplorer(true))(w, r)
-	})
+	// Register REST handler for plugin access (JS plugins call it directly)
+	pluginCache.RegisterRESTHandler(restRoutes)
 
 	r.Mount("/performer", server.getPerformerRoutes())
 	r.Mount("/scene", server.getSceneRoutes())
@@ -594,13 +547,6 @@ func setPageSecurityHeaders(w http.ResponseWriter, r *http.Request, plugins []*p
 	// Workaround Safari bug https://bugs.webkit.org/show_bug.cgi?id=201591
 	// Allows websocket requests to any origin
 	connectSrcSlice = append(connectSrcSlice, "ws:", "wss:")
-
-	// The graphql playground pulls its frontend from a cdn
-	if r.URL.Path == playgroundEndpoint {
-		connectSrcSlice = append(connectSrcSlice, "https://cdn.jsdelivr.net")
-		scriptSrcSlice = append(scriptSrcSlice, "https://cdn.jsdelivr.net")
-		styleSrcSlice = append(styleSrcSlice, "https://cdn.jsdelivr.net")
-	}
 
 	if !c.IsNewSystem() && c.GetHandyKey() != "" {
 		connectSrcSlice = append(connectSrcSlice, "https://www.handyfeeling.com")

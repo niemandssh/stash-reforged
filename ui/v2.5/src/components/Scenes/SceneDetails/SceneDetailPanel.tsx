@@ -345,7 +345,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     );
 
     // Create cards for main performers
-    const mainCards = sortedMainPerformers.map((performer) => {
+    const mainCards = sortedMainPerformers.map((performer, index) => {
       // Find the corresponding scene_performer data for role_description
       const scenePerformerData = performersData.find(
         (sp) =>
@@ -362,7 +362,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
       return (
         <PerformerCard
-          key={performer.id}
+          key={performer?.id ?? `performer-${index}`}
           performer={performer}
           ageFromDate={props.scene.date ?? undefined}
           roleDescription={roleDescription}
@@ -381,7 +381,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
             />
           </h6>
           <div className="scene-performers-small-role">
-            {smallRolePerformers.map((performer) => {
+            {smallRolePerformers.map((performer, index) => {
               const performerData =
                 "performer" in performer && performer.performer
                   ? performer.performer
@@ -416,8 +416,8 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
 
               return (
                 <Link
-                  key={performerData.id}
-                  to={`/performers/${performerData.id}`}
+                  key={performerData?.id ?? `small-${index}`}
+                  to={`/performers/${performerData?.id ?? ""}`}
                   className="scene-performer-small-role-tag"
                 >
                   <div className="performer-info">

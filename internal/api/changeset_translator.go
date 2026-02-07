@@ -1,75 +1,14 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"strconv"
-	"strings"
-
-	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/sliceutil/stringslice"
 )
 
 const updateInputField = "input"
-
-func getArgumentMap(ctx context.Context) map[string]interface{} {
-	rctx := graphql.GetFieldContext(ctx)
-	reqCtx := graphql.GetOperationContext(ctx)
-	return rctx.Field.ArgumentMap(reqCtx.Variables)
-}
-
-func getUpdateInputMap(ctx context.Context) map[string]interface{} {
-	return getNamedUpdateInputMap(ctx, updateInputField)
-}
-
-func getNamedUpdateInputMap(ctx context.Context, field string) map[string]interface{} {
-	args := getArgumentMap(ctx)
-
-	// field can be qualified
-	fields := strings.Split(field, ".")
-
-	currArgs := args
-
-	for _, f := range fields {
-		v, found := currArgs[f]
-		if !found {
-			currArgs = nil
-			break
-		}
-
-		currArgs, _ = v.(map[string]interface{})
-		if currArgs == nil {
-			break
-		}
-	}
-
-	if currArgs != nil {
-		return currArgs
-	}
-
-	return make(map[string]interface{})
-}
-
-func getUpdateInputMaps(ctx context.Context) []map[string]interface{} {
-	args := getArgumentMap(ctx)
-
-	input := args[updateInputField]
-	var ret []map[string]interface{}
-	if input != nil {
-		// convert []interface{} into []map[string]interface{}
-		iSlice, _ := input.([]interface{})
-		for _, i := range iSlice {
-			m, _ := i.(map[string]interface{})
-			if m != nil {
-				ret = append(ret, m)
-			}
-		}
-	}
-
-	return ret
-}
 
 type changesetTranslator struct {
 	inputMap map[string]interface{}
@@ -280,7 +219,6 @@ func (t changesetTranslator) updatePerformerTags(value []*models.PerformerTagInp
 
 	var performerTags []models.ScenesTagsPerformer
 	for _, pt := range value {
-		// Skip entries with empty tag arrays
 		if len(pt.TagIds) == 0 {
 			continue
 		}
@@ -301,7 +239,7 @@ func (t changesetTranslator) updatePerformerTags(value []*models.PerformerTagInp
 			}
 
 			performerTags = append(performerTags, models.ScenesTagsPerformer{
-				SceneID:     0, // Will be set when processing the update
+				SceneID:     0,
 				TagID:       tagID,
 				PerformerID: performerID,
 			})
@@ -320,7 +258,6 @@ func (t changesetTranslator) optionalURLs(value []string, legacyValue *string) *
 		field       = "urls"
 	)
 
-	// prefer urls over url
 	if t.hasField(field) {
 		return t.updateStrings(value, field)
 	} else if t.hasField(legacyField) {
@@ -340,7 +277,6 @@ func (t changesetTranslator) optionalURLsBulk(value *BulkUpdateStrings, legacyVa
 		field       = "urls"
 	)
 
-	// prefer urls over url
 	if t.hasField("urls") {
 		return t.updateStringsBulk(value, field)
 	} else if t.hasField(legacyField) {

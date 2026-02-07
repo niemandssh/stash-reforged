@@ -4,7 +4,7 @@ import { isEqual, isFunction } from "lodash-es";
 import { IHasID } from "src/utils/data";
 import { useFilter } from "./FilterProvider";
 import { ListFilterModel } from "src/models/list-filter/filter";
-import { QueryResult } from "@apollo/client";
+import { QueryResult } from "src/core/generated-graphql";
 
 interface IListContextOptions<T extends IHasID> {
   selectable?: boolean;

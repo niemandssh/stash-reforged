@@ -168,11 +168,11 @@ export const LightboxComponent: React.FC<IProps> = ({
   const lightboxSettings = interfaceLocalForage.data?.imageLightbox;
 
   function setLightboxSettings(v: Partial<GQL.ConfigImageLightboxInput>) {
-    setInterfaceLocalForage((prev) => {
+    setInterfaceLocalForage((prev: any) => {
       return {
         ...prev,
         imageLightbox: {
-          ...prev.imageLightbox,
+          ...(prev.imageLightbox as any),
           ...v,
         },
       };
@@ -721,7 +721,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       try {
         await mutateImageIncrementO(currentImage.id);
       } catch (e) {
-        Toast.error(e);
+        Toast.error(e as any);
       }
     }
 
@@ -730,7 +730,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       try {
         await mutateImageDecrementO(currentImage.id);
       } catch (e) {
-        Toast.error(e);
+        Toast.error(e as any);
       }
     }
 
@@ -739,7 +739,7 @@ export const LightboxComponent: React.FC<IProps> = ({
       try {
         await mutateImageResetO(currentImage?.id);
       } catch (e) {
-        Toast.error(e);
+        Toast.error(e as any);
       }
     }
 

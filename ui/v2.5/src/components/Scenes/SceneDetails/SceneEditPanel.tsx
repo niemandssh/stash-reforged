@@ -326,19 +326,25 @@ export const SceneEditPanel: React.FC<IProps> = ({
         (
           scene as {
             scene_performers?: Array<{
-              performer: GQL.PerformerDataFragment;
+              performer?: GQL.PerformerDataFragment | null;
               small_role?: boolean;
               role_description?: string;
             }>;
           }
         ).scene_performers ?? []
-      ).map((sp) => ({
-        performer_id: sp.performer.id,
-        small_role: Boolean(sp.performer.small_role || sp.small_role || false),
-        role_description: sp.role_description ?? null,
-      })),
+      )
+        .filter((sp) => sp != null && sp.performer != null && sp.performer.id != null)
+        .map((sp) => ({
+          performer_id: sp.performer!.id,
+          small_role: Boolean(sp.performer!.small_role || sp.small_role || false),
+          role_description: sp.role_description ?? null,
+        })),
       groups: (scene.groups ?? []).map((m) => {
-        return { group_id: m.group.id, scene_index: m.scene_index ?? null };
+        const group = m?.group ?? (m as { id?: string });
+        return {
+          group_id: group?.id ?? "",
+          scene_index: (m as { scene_index?: number | null }).scene_index ?? null,
+        };
       }),
       tag_ids: (() => {
         const allSceneTags = scene.tags ?? [];
@@ -900,13 +906,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
       setIsLoading(true);
     }
     try {
-      const result = await queryScrapeScene(s, scene.id!);
-      if (!result.data || !result.data.scrapeSingleScene?.length) {
+      const result = await queryScrapeScene(s as any, scene.id! as any);
+      if (!result.data || !(result.data.scrapeSingleScene as any)?.length) {
         Toast.success("No scenes found");
         return;
       }
       // assume one returned scene
-      setScrapedScene(result.data.scrapeSingleScene[0]);
+      setScrapedScene((result.data.scrapeSingleScene as any)[0]);
       setEndpoint(s.stash_box_endpoint ?? undefined);
     } catch (e) {
       Toast.error(e);
@@ -935,13 +941,13 @@ export const SceneEditPanel: React.FC<IProps> = ({
         urls: fragment.urls,
       };
 
-      const result = await queryScrapeSceneQueryFragment(s, input);
-      if (!result.data || !result.data.scrapeSingleScene?.length) {
+      const result = await queryScrapeSceneQueryFragment(s, input as any);
+      if (!result.data || !(result.data.scrapeSingleScene as any)?.length) {
         Toast.success("No scenes found");
         return;
       }
       // assume one returned scene
-      setScrapedScene(result.data.scrapeSingleScene[0]);
+      setScrapedScene((result.data.scrapeSingleScene as any)[0]);
     } catch (e) {
       Toast.error(e);
     } finally {

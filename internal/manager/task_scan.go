@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/99designs/gqlgen/graphql/handler/lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/stashapp/stash/internal/manager/config"
 	"github.com/stashapp/stash/pkg/file"
 	"github.com/stashapp/stash/pkg/file/video"
@@ -26,6 +26,14 @@ import (
 
 type scanner interface {
 	Scan(ctx context.Context, handlers []file.Handler, options file.ScanOptions, progressReporter file.ProgressReporter)
+}
+
+func mustNewLRU[K comparable, V any](size int) *lru.Cache[K, V] {
+	c, err := lru.New[K, V](size)
+	if err != nil {
+		panic(err)
+	}
+	return c
 }
 
 type ScanJob struct {
@@ -123,7 +131,7 @@ type handlerRequiredFilter struct {
 	GalleryFinder  galleryFinder
 	CaptionUpdater video.CaptionUpdater
 
-	FolderCache *lru.LRU[bool]
+	FolderCache *lru.Cache[string, bool]
 
 	videoFileNamingAlgorithm models.HashAlgorithm
 }
@@ -138,7 +146,7 @@ func newHandlerRequiredFilter(c *config.Config, repo models.Repository) *handler
 		ImageFinder:              repo.Image,
 		GalleryFinder:            repo.Gallery,
 		CaptionUpdater:           repo.File,
-		FolderCache:              lru.New[bool](processes * 2),
+		FolderCache:              mustNewLRU[string, bool](processes * 2),
 		videoFileNamingAlgorithm: c.GetVideoFileNamingAlgorithm(),
 	}
 }
@@ -183,13 +191,13 @@ func (f *handlerRequiredFilter) Accept(ctx context.Context, ff models.File) bool
 	if isImageFile && ff.Base().ZipFileID == nil {
 		// only do this for the first time it encounters the folder
 		// the first instance should create the gallery
-		_, found := f.FolderCache.Get(ctx, ff.Base().ParentFolderID.String())
+		_, found := f.FolderCache.Get(ff.Base().ParentFolderID.String())
 		if found {
 			// should already be handled
 			return false
 		}
 
-		f.FolderCache.Add(ctx, ff.Base().ParentFolderID.String(), true)
+		f.FolderCache.Add(ff.Base().ParentFolderID.String(), true)
 
 		createGallery := instance.Config.GetCreateGalleriesFromFolders()
 		if !createGallery {

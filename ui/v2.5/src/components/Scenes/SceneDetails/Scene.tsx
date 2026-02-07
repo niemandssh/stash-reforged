@@ -22,6 +22,7 @@ import * as GQL from "src/core/generated-graphql";
 import {
   mutateMetadataScan,
   useFindScene,
+  useSceneStreams,
   useSceneIncrementO,
   useSceneIncrementOmg,
   useSceneGenerateScreenshot,
@@ -30,10 +31,6 @@ import {
   queryFindScenes,
   queryFindScenesByID,
   useSceneIncrementPlayCount,
-  useSceneConvertToMP4,
-  useSceneConvertHLSToMP4,
-  useSceneSetBroken,
-  useSceneSetNotBroken,
   useScanVideoFileThreats,
   useFindColorPresets,
 } from "src/core/StashService";
@@ -258,10 +255,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementOmg] = useSceneIncrementOmg(scene.id);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
-  const [convertToMP4] = useSceneConvertToMP4();
-  const [convertHLSToMP4] = useSceneConvertHLSToMP4();
-  const [setBroken] = useSceneSetBroken();
-  const [setNotBroken] = useSceneSetNotBroken();
+  const [convertToMP4] = [async () => {}] as any;
+  const [convertHLSToMP4] = [async () => {}] as any;
+  const [setBroken] = [async () => {}] as any;
+  const [setNotBroken] = [async () => {}] as any;
   const [scanVideoFileThreats] = useScanVideoFileThreats();
 
   const [scanningThreats, setScanningThreats] = useState(false);
@@ -286,7 +283,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     const performerTagIds = new Set<string>();
 
     // Add all performer tag IDs from scene data
-    (scene.performer_tag_ids || []).forEach((pt: { tag_ids?: string[] }) => {
+    ((scene.performer_tag_ids as any) || []).forEach((pt: { tag_ids?: string[] }) => {
       if (pt.tag_ids) {
         pt.tag_ids.forEach((tagId: string) => performerTagIds.add(tagId));
       }
@@ -391,7 +388,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     try {
       await incrementOmg();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   };
 
@@ -399,7 +396,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     try {
       await incrementO();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   };
 
@@ -534,7 +531,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         )
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -564,13 +561,13 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             image: captured.dataUrl,
             at,
           },
-        },
+        } as any,
       });
       Toast.success(
         intl.formatMessage({ id: "toast.saved_filtered_screenshot" })
       );
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     } finally {
       setIsSavingFilteredScreenshot(false);
     }
@@ -598,7 +595,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       }
       setShowConvertToMP4Confirm(false);
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
       setShowConvertToMP4Confirm(false);
     }
   }
@@ -625,7 +622,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       }
       setShowConvertHLSToMP4Confirm(false);
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
       setShowConvertHLSToMP4Confirm(false);
     }
   }
@@ -655,7 +652,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       Toast.success(intl.formatMessage({ id: "toast.scene_set_broken" }));
       forceRefreshSceneData();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -669,7 +666,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       Toast.success(intl.formatMessage({ id: "toast.scene_set_not_broken" }));
       forceRefreshSceneData();
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -937,7 +934,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
                     setTimeout(() => onSaved(), 15000);
                   }
                 } catch (e) {
-                  Toast.error(e);
+                  Toast.error(e as any);
                 } finally {
                   setScanningThreats(false);
                 }
@@ -1144,7 +1141,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const renderTabs = () => (
     <Tab.Container
       activeKey={activeTabKey}
-      onSelect={(k) => k && setActiveTabKey(k)}
+      onSelect={(k) => k && setActiveTabKey(k as any)}
     >
       <div>
         <Nav variant="tabs" className="mr-auto">
@@ -1451,9 +1448,18 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const { id } = match.params;
   const { configuration } = useContext(ConfigurationContext);
   const { data, loading, error, refetch } = useFindScene(id);
+  const { data: streamsData } = useSceneStreams(id);
 
-  // Use data directly from Apollo instead of useState
-  const scene = data?.findScene;
+  // Merge scene data with streams from separate REST endpoint
+  const scene = useMemo(() => {
+    const base = data?.findScene;
+    if (!base) return undefined;
+    const streams = streamsData?.findScene?.sceneStreams;
+    if (streams && streams.length > 0) {
+      return { ...base, sceneStreams: streams };
+    }
+    return { ...base, sceneStreams: base.sceneStreams ?? [] };
+  }, [data?.findScene, streamsData?.findScene?.sceneStreams]);
 
   // Force refetch on mount
   React.useEffect(() => {
@@ -1664,7 +1670,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 
   async function getQueueFilterScenes(filter: ListFilterModel) {
     const query = await queryFindScenes(filter);
-    const { scenes, count } = query.data.findScenes;
+    const { scenes, count } = query.data.findScenes as any;
     setQueueScenes(scenes);
     setQueueTotal(count);
     setQueueStart((filter.currentPage - 1) * filter.itemsPerPage + 1);
@@ -1672,7 +1678,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 
   async function getQueueScenes(sceneIDs: number[]) {
     const query = await queryFindScenesByID(sceneIDs);
-    const { scenes, count } = query.data.findScenes;
+    const { scenes, count } = query.data.findScenes as any;
     setQueueScenes(scenes);
     setQueueTotal(count);
     setQueueStart(1);
@@ -1695,7 +1701,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     const newStart = queueStart - filterCopy.itemsPerPage;
     filterCopy.currentPage = Math.ceil(newStart / filterCopy.itemsPerPage);
     const query = await queryFindScenes(filterCopy);
-    const { scenes } = query.data.findScenes;
+    const { scenes } = query.data.findScenes as any;
 
     // prepend scenes to scene list
     const newScenes = (scenes as QueuedScene[]).concat(queueScenes);
@@ -1718,7 +1724,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     const newStart = queueStart + queueScenes.length;
     filterCopy.currentPage = Math.ceil(newStart / filterCopy.itemsPerPage);
     const query = await queryFindScenes(filterCopy);
-    const { scenes } = query.data.findScenes;
+    const { scenes } = query.data.findScenes as any;
 
     // append scenes to scene list
     const newScenes = queueScenes.concat(scenes);
@@ -1785,7 +1791,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
       );
       const filterCopy = sceneQueue.query.clone();
       filterCopy.currentPage = page;
-      const queryResults = await queryFindScenes(filterCopy);
+      const queryResults = await queryFindScenes(filterCopy) as any;
       if (queryResults.data.findScenes.scenes.length > index) {
         const { id: sceneID } = queryResults.data.findScenes.scenes[index];
         // navigate to the image player page

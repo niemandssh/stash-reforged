@@ -149,8 +149,8 @@ export const GroupList: React.FC<IGroupList> = ({
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindGroups(filterCopy);
-      if (singleResult.data.findGroups.groups.length === 1) {
-        const { id } = singleResult.data.findGroups.groups[0];
+      if ((singleResult.data as any).findGroups.groups.length === 1) {
+        const { id } = (singleResult.data as any).findGroups.groups[0];
         // navigate to the group page
         history.push(`/groups/${id}`);
       }

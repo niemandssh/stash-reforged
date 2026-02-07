@@ -20,7 +20,7 @@ export const SettingsButton: React.FC = () => {
 
   useEffect(() => {
     setQueue(jobStatus.data?.jobQueue ?? []);
-  }, [jobStatus]);
+  }, [jobStatus.data]);
 
   useEffect(() => {
     if (!jobsSubscribe.data) {

@@ -41,6 +41,12 @@ export default defineConfig(() => {
     server: {
       port: 3000,
       cors: false,
+      proxy: {
+        "/api/v1": {
+          target: `http://localhost:${process.env.VITE_APP_PLATFORM_PORT || "9999"}`,
+          changeOrigin: true,
+        },
+      },
     },
     publicDir: "public",
     assetsInclude: ["**/*.md"],

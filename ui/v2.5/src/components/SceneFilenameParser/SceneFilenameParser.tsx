@@ -134,8 +134,8 @@ export const SceneFilenameParser: React.FC = () => {
       .then((response) => {
         const result = response?.data?.parseSceneFilenames;
         if (result) {
-          parseResults(result.results);
-          setTotalItems(result.count);
+          parseResults((result as any).results);
+          setTotalItems((result as any).count);
         }
       })
       .catch((err) => Toast.error(err))

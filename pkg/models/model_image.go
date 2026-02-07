@@ -16,7 +16,7 @@ type Image struct {
 	Details      string `json:"details"`
 	Photographer string `json:"photographer"`
 	// Rating expressed in 1-100 scale
-	Rating     *int           `json:"rating"`
+	Rating     *int           `json:"rating100"`
 	Organized  bool           `json:"organized"`
 	OCounter   int            `json:"o_counter"`
 	OmegCounter int           `json:"omg_counter"`

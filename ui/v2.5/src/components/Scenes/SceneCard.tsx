@@ -194,7 +194,7 @@ const SceneCardPopovers = PatchComponent(
     const [incrementOmg] = useSceneIncrementOmg(props.scene.id);
 
     const file = useMemo(
-      () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
+      () => (props.scene.files?.length > 0 ? props.scene.files[0] : undefined),
       [props.scene]
     );
 
@@ -203,7 +203,7 @@ const SceneCardPopovers = PatchComponent(
         return undefined;
       }
 
-      const group = props.scene.groups.find(
+      const group = props.scene.groups?.find(
         (g) => g.group.id === props.fromGroupId
       );
       return group?.scene_index ?? undefined;
@@ -234,9 +234,9 @@ const SceneCardPopovers = PatchComponent(
     };
 
     function maybeRenderTagPopoverButton() {
-      if (props.scene.tags.length <= 0) return;
+      if (props.scene.tags?.length <= 0) return;
 
-      const popoverContent = props.scene.tags.map((tag) => (
+      const popoverContent = props.scene.tags?.map((tag) => (
         <TagLink key={tag.id} tag={tag} linkType="details" />
       ));
 
@@ -248,14 +248,14 @@ const SceneCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faTag} />
-            <span>{props.scene.tags.length}</span>
+            <span>{props.scene.tags?.length}</span>
           </Button>
         </HoverPopover>
       );
     }
 
     function maybeRenderPerformerPopoverButton() {
-      if (props.scene.performers.length <= 0) return;
+      if (props.scene.performers?.length <= 0) return;
 
       return (
         <PerformerPopoverButton
@@ -266,9 +266,9 @@ const SceneCardPopovers = PatchComponent(
     }
 
     function maybeRenderGroupPopoverButton() {
-      if (props.scene.groups.length <= 0) return;
+      if (props.scene.groups?.length <= 0) return;
 
-      const popoverContent = props.scene.groups.map((sceneGroup) => (
+      const popoverContent = props.scene.groups?.map((sceneGroup) => (
         <GroupTag key={sceneGroup.group.id} group={sceneGroup.group} />
       ));
 
@@ -280,16 +280,16 @@ const SceneCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faFilm} />
-            <span>{props.scene.groups.length}</span>
+            <span>{props.scene.groups?.length}</span>
           </Button>
         </HoverPopover>
       );
     }
 
     function maybeRenderSceneMarkerPopoverButton() {
-      if (props.scene.scene_markers.length <= 0) return;
+      if (!props.scene.scene_markers?.length) return;
 
-      const popoverContent = props.scene.scene_markers.map((marker) => {
+      const popoverContent = props.scene.scene_markers?.map((marker: any) => {
         const markerWithScene = { ...marker, scene: { id: props.scene.id } };
         return <SceneMarkerLink key={marker.id} marker={markerWithScene} />;
       });
@@ -338,9 +338,9 @@ const SceneCardPopovers = PatchComponent(
     }
 
     function maybeRenderGallery() {
-      if (props.scene.galleries.length <= 0) return;
+      if (props.scene.galleries?.length <= 0) return;
 
-      const popoverContent = props.scene.galleries.map((gallery) => (
+      const popoverContent = props.scene.galleries?.map((gallery) => (
         <GalleryLink key={gallery.id} gallery={gallery} />
       ));
 
@@ -352,7 +352,7 @@ const SceneCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faImages} />
-            <span>{props.scene.galleries.length}</span>
+            <span>{props.scene.galleries?.length}</span>
           </Button>
         </HoverPopover>
       );
@@ -424,7 +424,7 @@ const SceneCardDetails = PatchComponent(
   "SceneCard.Details",
   (props: ISceneCardProps) => {
     const file = useMemo(
-      () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
+      () => (props.scene.files?.length > 0 ? props.scene.files[0] : undefined),
       [props.scene]
     );
 
@@ -462,7 +462,7 @@ const SceneCardOverlays = PatchComponent(
       <>
         <StudioOverlay studio={props.scene.studio} />
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {"force_hls" in props.scene && (props.scene as any).force_hls ? (
+        {"force_hls" in props.scene && ((props.scene as any).force_hls as any) ? (
           <div className="hls-badge-overlay">
             <HLSBadge />
           </div>
@@ -492,7 +492,7 @@ const SceneCardImage = PatchComponent(
     const cont = configuration?.interface.continuePlaylistDefault ?? false;
 
     const file = useMemo(
-      () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
+      () => (props.scene.files?.length > 0 ? props.scene.files[0] : undefined),
       [props.scene]
     );
 
@@ -557,11 +557,11 @@ const SceneCardImage = PatchComponent(
           sceneId={props.scene.id}
           filters={props.scene.video_filters}
           transforms={props.scene.video_transforms}
-          image={props.scene.paths.screenshot ?? undefined}
-          video={props.scene.paths.preview ?? undefined}
+          image={props.scene.paths?.screenshot ?? undefined}
+          video={props.scene.paths?.preview ?? undefined}
           isPortrait={isPortrait()}
           soundActive={configuration?.interface?.soundOnPreview ?? false}
-          vttPath={props.scene.paths.vtt ?? undefined}
+          vttPath={props.scene.paths?.vtt ?? undefined}
           onScrubberClick={onScrubberClick}
         />
         <RatingBanner rating={props.scene.rating100} />
@@ -579,7 +579,8 @@ export const SceneCard = PatchComponent(
     const [updateScene] = useSceneUpdate();
 
     const file = useMemo(
-      () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
+      () =>
+        props.scene.files?.length > 0 ? props.scene.files[0] : undefined,
       [props.scene]
     );
 
@@ -592,7 +593,7 @@ export const SceneCard = PatchComponent(
     }
 
     function filelessClass() {
-      if (!props.scene.files.length) {
+      if (!props.scene.files?.length) {
         return "fileless";
       }
 
@@ -603,20 +604,14 @@ export const SceneCard = PatchComponent(
       event.preventDefault();
       event.stopPropagation();
 
-      updateScene({
+      (updateScene as any)({
         variables: {
           input: {
             id: props.scene.id,
             pinned: !props.scene.pinned,
           },
         },
-        onCompleted: () => {
-          // The cache will be updated automatically by Apollo
-        },
-        onError: (error) => {
-          console.error("Error toggling pin:", error);
-        },
-      });
+      } as any);
     }
 
     const cont = configuration?.interface.continuePlaylistDefault ?? false;
@@ -643,12 +638,12 @@ export const SceneCard = PatchComponent(
 
     const primaryFile = props.scene.files?.[0];
     const hasNoThreats =
-      primaryFile?.threats_scanned_at &&
-      (!primaryFile?.threats || primaryFile.threats.trim() === "");
+      (primaryFile as any)?.threats_scanned_at &&
+      (!(primaryFile as any)?.threats || (primaryFile as any).threats.trim() === "");
     const hasThreats =
-      primaryFile?.threats_scanned_at &&
-      primaryFile?.threats &&
-      primaryFile.threats.trim() !== "";
+      (primaryFile as any)?.threats_scanned_at &&
+      (primaryFile as any)?.threats &&
+      (primaryFile as any).threats.trim() !== "";
 
     const titleElement = (
       <>
@@ -670,9 +665,9 @@ export const SceneCard = PatchComponent(
             overlay={
               <Tooltip id={`threats-found-${props.scene.id}`}>
                 <FormattedMessage id="threats_found" defaultMessage="Threats found" />
-                {primaryFile.threats && (
+                {(primaryFile as any).threats && (
                   <pre className="text-danger small mb-0 mt-1" style={{ whiteSpace: "pre-wrap", maxWidth: 300 }}>
-                    {primaryFile.threats}
+                    {(primaryFile as any).threats}
                   </pre>
                 )}
               </Tooltip>
@@ -697,7 +692,7 @@ export const SceneCard = PatchComponent(
         duration={file?.duration ?? undefined}
         interactiveHeatmap={
           props.scene.interactive_speed
-            ? props.scene.paths.interactive_heatmap ?? undefined
+            ? props.scene.paths?.interactive_heatmap ?? undefined
             : undefined
         }
         image={<SceneCardImage {...props} />}

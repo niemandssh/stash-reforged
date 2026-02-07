@@ -436,13 +436,13 @@ start:
 	make server-start
 
 dev:
-	make generate && make server-start
+	make server-start
 
 gstart:
 	make generate && make server-start
 
 fdev:
-	make generate && make ui-start
+	make ui-start
 
 compile:
 	make generate && make ui

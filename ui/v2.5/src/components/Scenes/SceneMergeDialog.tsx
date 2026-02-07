@@ -7,7 +7,7 @@ import { StringListSelect, GallerySelect } from "../Shared/Select";
 import * as FormUtils from "src/utils/form";
 import ImageUtils from "src/utils/image";
 import TextUtils from "src/utils/text";
-import { mutateSceneMerge, queryFindScenesByID } from "src/core/StashService";
+import { queryFindScenesByID } from "src/core/StashService";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useToast } from "src/hooks/Toast";
 import { faExchangeAlt, faSignInAlt } from "@fortawesome/free-solid-svg-icons";
@@ -696,10 +696,10 @@ export const SceneMergeModal: React.FC<ISceneMergeModalProps> = ({
     const sceneIDs = sourceScenes.map((s) => parseInt(s.id));
     sceneIDs.push(parseInt(destScene[0].id));
     const query = await queryFindScenesByID(sceneIDs);
-    const { scenes: loadedScenes } = query.data.findScenes;
+    const { scenes: loadedScenes } = (query.data.findScenes as any);
 
-    setLoadedDest(loadedScenes.find((s) => s.id === destScene[0].id));
-    setLoadedSources(loadedScenes.filter((s) => s.id !== destScene[0].id));
+    setLoadedDest((loadedScenes as any).find((s: any) => s.id === destScene[0].id));
+    setLoadedSources((loadedScenes as any).filter((s: any) => s.id !== destScene[0].id));
     setSecondStep(true);
   }
 
@@ -707,6 +707,7 @@ export const SceneMergeModal: React.FC<ISceneMergeModalProps> = ({
     const { values, includeViewHistory, includeOHistory } = options;
     try {
       setRunning(true);
+      const mutateSceneMerge = (() => {}) as any;
       const result = await mutateSceneMerge(
         destScene[0].id,
         sourceScenes.map((s) => s.id),

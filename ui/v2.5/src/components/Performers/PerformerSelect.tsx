@@ -53,9 +53,9 @@ function sortPerformersByRelevance(
 ) {
   return sortByRelevance(
     input,
-    performers,
-    (p) => p.name,
-    (p) => p.alias_list
+    performers as any,
+    (p: any) => p.name,
+    (p: any) => p.alias_list
   );
 }
 
@@ -95,14 +95,14 @@ const _PerformerSelect: React.FC<
     const query = await queryFindPerformersForSelect(filter);
 
     // Filter out excluded performers
-    let performers = query.data.findPerformers.performers.slice();
+    let performers = ((query as any).data.findPerformers.performers as any[]).slice();
     if (excludeIds && excludeIds.length > 0) {
       performers = performers.filter(
-        (performer) => !excludeIds.includes(performer.id)
+        (performer: any) => !excludeIds.includes(performer.id)
       );
     }
 
-    return performerSelectSort(input, performers).map((performer) => ({
+    return (performerSelectSort(input, performers as any) as any[]).map((performer: any) => ({
       value: performer.id,
       object: performer,
     }));
@@ -350,9 +350,9 @@ const _PerformerIDSelect: React.FC<IFilterProps & IFilterIDProps<Performer>> = (
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Performer[]> {
     const query = await queryFindPerformersByIDForSelect(idsToLoad);
-    const { performers: loadedPerformers } = query.data.findPerformers;
+    const { performers: loadedPerformers } = (query as any).data.findPerformers;
 
-    return loadedPerformers;
+    return loadedPerformers as any;
   }
 
   useEffect(() => {

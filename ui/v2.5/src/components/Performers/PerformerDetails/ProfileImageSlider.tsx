@@ -322,7 +322,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         variables: {
           input: { id: currentImage.id },
         },
-      });
+      } as any);
 
       Toast.success(
         intl.formatMessage(
@@ -380,9 +380,9 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
             position: profileImages.length,
           },
         },
-      });
+      } as any);
 
-      if (result.data?.performerProfileImageCreate) {
+      if ((result.data as any)?.performerProfileImageCreate) {
         const newImageIndex = profileImages.length + 1;
         Toast.success(
           intl.formatMessage(
@@ -396,7 +396,7 @@ export const ProfileImageSlider: React.FC<IProfileImageSliderProps> = ({
         );
 
         // Update performer with new profile image
-        const newProfileImage = result.data.performerProfileImageCreate;
+        const newProfileImage = (result.data as any).performerProfileImageCreate;
         const updatedProfileImages = [...profileImages, newProfileImage];
         const updatedPerformer = {
           profile_images: updatedProfileImages,

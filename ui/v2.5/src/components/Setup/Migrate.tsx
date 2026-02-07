@@ -165,7 +165,7 @@ export const Migrate: React.FC = () => {
         backupPath: backupPath ?? "",
       });
 
-      setJobID(ret.data?.migrate);
+      setJobID(ret.data?.migrate as any);
     } catch (e) {
       if (e instanceof Error) setMigrateError(e.message ?? e.toString());
       setMigrateLoading(false);

@@ -348,8 +348,8 @@ export const GalleryImagesList: React.FC<IGalleryImagesList> = ({
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindImages(filterCopy);
-      if (singleResult.data.findImages.images.length === 1) {
-        const { id } = singleResult.data.findImages.images[0];
+      if ((singleResult.data as any).findImages.images.length === 1) {
+        const { id } = (singleResult.data as any).findImages.images[0];
         history.push(`/images/${id}`);
       }
     }

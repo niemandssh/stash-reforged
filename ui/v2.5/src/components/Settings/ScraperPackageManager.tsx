@@ -34,19 +34,19 @@ export const InstalledScraperPackages: React.FC = () => {
   async function onUpdatePackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateUpdateScraperPackages(packages);
 
-    setJobID(r.data?.updatePackages);
+    setJobID(r.data?.updatePackages as any);
   }
 
   async function onUninstallPackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateUninstallScraperPackages(packages);
 
-    setJobID(r.data?.uninstallPackages);
+    setJobID(r.data?.uninstallPackages as any);
   }
 
   function onPackageChanges() {
     // job is complete, refresh all local data
     const ac = getClient();
-    evictQueries(ac.cache, scraperMutationImpactedQueries);
+    evictQueries((ac as any).cache, scraperMutationImpactedQueries as any);
   }
 
   function onCheckForUpdates() {
@@ -103,18 +103,18 @@ export const AvailableScraperPackages: React.FC = () => {
   async function onInstallPackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateInstallScraperPackages(packages);
 
-    setJobID(r.data?.installPackages);
+    setJobID(r.data?.installPackages as any);
   }
 
   function onPackageChanges() {
     // job is complete, refresh all local data
     const ac = getClient();
-    evictQueries(ac.cache, scraperMutationImpactedQueries);
+    evictQueries((ac as any).cache, scraperMutationImpactedQueries as any);
   }
 
   async function loadSource(source: string): Promise<RemotePackage[]> {
     const { data } = await queryAvailableScraperPackages(source);
-    return data.availablePackages;
+    return (data.availablePackages as any) as RemotePackage[];
   }
 
   function addSource(source: GQL.PackageSource) {

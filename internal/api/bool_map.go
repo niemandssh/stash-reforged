@@ -1,21 +1,8 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-
-	"github.com/99designs/gqlgen/graphql"
 )
-
-func MarshalBoolMap(val map[string]bool) graphql.Marshaler {
-	return graphql.WriterFunc(func(w io.Writer) {
-		err := json.NewEncoder(w).Encode(val)
-		if err != nil {
-			panic(err)
-		}
-	})
-}
 
 func UnmarshalBoolMap(v interface{}) (map[string]bool, error) {
 	m, ok := v.(map[string]interface{})

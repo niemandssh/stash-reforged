@@ -52,9 +52,9 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
             position: profileImages.length,
           },
         },
-      });
+      } as any);
 
-      if (result.data?.performerProfileImageCreate) {
+      if ((result.data as any)?.performerProfileImageCreate) {
         const newImageIndex = profileImages.length + 1; // +1 because image is added to array after this
         Toast.success(
           intl.formatMessage(
@@ -70,7 +70,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
         // Update the images list and set current index to the new image
         const updatedImages = [
           ...profileImages,
-          result.data.performerProfileImageCreate,
+          (result.data as any).performerProfileImageCreate,
         ];
         onImagesChange?.(updatedImages);
 
@@ -96,7 +96,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
         variables: {
           input: { id: imageId },
         },
-      });
+      } as any);
 
       Toast.success(
         intl.formatMessage(
@@ -140,7 +140,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
                   is_primary: false,
                 },
               },
-            })
+            } as any)
           )
       );
 
@@ -152,7 +152,7 @@ export const ProfileImageEditor: React.FC<IProfileImageEditorProps> = ({
             is_primary: true,
           },
         },
-      });
+      } as any);
 
       Toast.success(
         intl.formatMessage(

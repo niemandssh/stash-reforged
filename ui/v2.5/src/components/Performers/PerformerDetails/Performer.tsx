@@ -270,7 +270,7 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
                       is_primary: false,
                     },
                   },
-                });
+                } as any);
               }
             }
 
@@ -282,7 +282,7 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
                   is_primary: true,
                 },
               },
-            });
+            } as any);
 
             // Update the local state - update profile_images with correct is_primary flags
             const updatedProfileImages =
@@ -338,7 +338,7 @@ const PerformerHeaderImage: React.FC<IPerformerHeaderImageProps> =
               variables: {
                 input: { id: imageId },
               },
-            });
+            } as any);
 
             Toast.success(
               intl.formatMessage(
@@ -485,8 +485,8 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       try {
         // Refetch performer data to update the image after cropping
         const result = await refetchPerformer();
-        if (result.data?.findPerformer) {
-          setCurrentPerformer(result.data.findPerformer);
+        if ((result as any).data?.findPerformer) {
+          setCurrentPerformer((result as any).data.findPerformer);
         }
       } catch (error) {
         console.error("Error refetching performer data:", error);

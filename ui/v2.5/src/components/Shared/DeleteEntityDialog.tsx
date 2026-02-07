@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { defineMessages, FormattedMessage, useIntl } from "react-intl";
-import { FetchResult } from "@apollo/client";
 
 import { ModalComponent } from "./Modal";
+
+type FetchResult<T = unknown> = { data?: T | null };
 import { useToast } from "src/hooks/Toast";
 import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 

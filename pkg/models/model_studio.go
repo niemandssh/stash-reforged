@@ -13,7 +13,7 @@ type Studio struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	// Rating expressed in 1-100 scale
-	Rating        *int   `json:"rating"`
+	Rating        *int   `json:"rating100"`
 	Favorite      bool   `json:"favorite"`
 	Details       string `json:"details"`
 	IgnoreAutoTag bool   `json:"ignore_auto_tag"`

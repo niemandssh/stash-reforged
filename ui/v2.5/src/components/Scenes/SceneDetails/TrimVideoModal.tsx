@@ -137,14 +137,14 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
             start_time: startTime || 0,
             end_time: endTime || 0,
           },
-        },
+        } as any,
       });
 
-      if (result.data?.sceneTrimVideo) {
+      if ((result.data as any)?.sceneTrimVideo) {
         Toast.success(
           intl.formatMessage(
             { id: "actions.trim_video_started" },
-            { jobId: result.data.sceneTrimVideo }
+            { jobId: (result.data as any).sceneTrimVideo }
           )
         );
         onClose();

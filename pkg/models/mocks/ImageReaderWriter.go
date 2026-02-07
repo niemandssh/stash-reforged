@@ -782,3 +782,107 @@ func (_m *ImageReaderWriter) GetODatesInRange(ctx context.Context, start, end ti
 
 	return r0, r1
 }
+
+// DecrementOMGCounter provides a mock function with given fields: ctx, id
+func (_m *ImageReaderWriter) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAllOMGCount provides a mock function with given fields: ctx
+func (_m *ImageReaderWriter) GetAllOMGCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetOMGCounter provides a mock function with given fields: ctx, id
+func (_m *ImageReaderWriter) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// IncrementOMGCounter provides a mock function with given fields: ctx, id
+func (_m *ImageReaderWriter) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetOMGDatesInRange provides a mock function with given fields: ctx, start, end
+func (_m *ImageReaderWriter) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, start, end)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []time.Time); ok {
+		r0 = rf(ctx, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

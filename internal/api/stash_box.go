@@ -10,7 +10,7 @@ import (
 	"github.com/stashapp/stash/pkg/stashbox"
 )
 
-func (r *Resolver) newStashBoxClient(box models.StashBox) *stashbox.Client {
+func newStashBoxClient(box models.StashBox) *stashbox.Client {
 	return stashbox.NewClient(box, stashbox.ExcludeTagPatterns(manager.GetInstance().Config.GetScraperExcludeTagPatterns()))
 }
 

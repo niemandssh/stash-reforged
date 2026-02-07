@@ -268,7 +268,7 @@ func TestUpdateSet_UpdateInput(t *testing.T) {
 				ID: sceneID,
 			},
 			models.SceneUpdateInput{
-				ID: sceneIDStr,
+				ID: models.FlexibleID(sceneIDStr),
 			},
 		},
 		{
@@ -308,7 +308,7 @@ func TestUpdateSet_UpdateInput(t *testing.T) {
 				},
 			},
 			models.SceneUpdateInput{
-				ID:    sceneIDStr,
+				ID:    models.FlexibleID(sceneIDStr),
 				Title: &title,
 			},
 		},

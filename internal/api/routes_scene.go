@@ -74,6 +74,10 @@ func (rs sceneRoutes) Routes() chi.Router {
 		r.Get("/vtt/chapter", rs.VttChapter)
 		r.Get("/vtt/thumbs", rs.VttThumbs)
 		r.Get("/vtt/sprite", rs.VttSprite)
+		// Catch-all for sprite files referenced by relative URL in VTT content
+		// e.g. VTT loaded from /scene/{id}/vtt/thumbs references "{hash}_sprite.jpg"
+		// which the browser resolves to /scene/{id}/vtt/{hash}_sprite.jpg
+		r.Get("/vtt/{spriteFile}", rs.VttSprite)
 		r.Get("/funscript", rs.Funscript)
 		r.Get("/interactive_csv", rs.InteractiveCSV)
 		r.Get("/interactive_heatmap", rs.InteractiveHeatmap)

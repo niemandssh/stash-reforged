@@ -76,9 +76,9 @@ func authenticateHandler() func(http.Handler) http.Handler {
 			if c.HasCredentials() {
 				// authentication is required
 				if userID == "" && !allowUnauthenticated(r) {
-					// if graphql or a non-webpage was requested, we just return a forbidden error
-					ext := path.Ext(r.URL.Path)
-					if r.URL.Path == gqlEndpoint || (ext != "" && ext != ".html") {
+				// if an API endpoint or a non-webpage was requested, we just return a forbidden error
+				ext := path.Ext(r.URL.Path)
+				if strings.HasPrefix(r.URL.Path, "/api/") || (ext != "" && ext != ".html") {
 						w.Header().Add("WWW-Authenticate", "FormBased")
 						w.WriteHeader(http.StatusUnauthorized)
 						return

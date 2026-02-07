@@ -1,6 +1,5 @@
-import { gql } from "@apollo/client";
 import * as GQL from "src/core/generated-graphql";
-import { getClient } from "src/core/StashService";
+import { getQueryClient } from "src/core/query-client";
 import {
   TagsCriterion,
   TagsCriterionOption,
@@ -62,51 +61,29 @@ export const tagRelationHook = (
   old: ITagRelationTuple,
   updated: ITagRelationTuple
 ) => {
-  const { cache } = getClient();
+  const queryClient = getQueryClient();
 
-  const tagRef = cache.writeFragment({
-    data: tag,
-    fragment: gql`
-      fragment Tag on Tag {
-        id
-      }
-    `,
+  // Invalidate tag queries to force refetch when tag relations change
+  // This replaces Apollo cache manipulation with TanStack Query invalidation
+  queryClient.invalidateQueries({
+    queryKey: ["tags", tag.id],
   });
 
-  function updater(
-    property: "parents" | "children",
-    oldTags: GQL.SlimTagDataFragment[],
-    updatedTags: GQL.SlimTagDataFragment[]
-  ) {
-    oldTags.forEach((o) => {
-      if (!updatedTags.some((u) => u.id === o.id)) {
-        cache.modify({
-          id: cache.identify(o),
-          fields: {
-            [property](value, { readField }) {
-              return (value as GQL.SlimTagDataFragment[]).filter(
-                (t) => readField("id", t) !== tag.id
-              );
-            },
-          },
-        });
-      }
-    });
+  // Invalidate queries for all affected tags (parents and children)
+  const allAffectedTagIds = new Set<string>();
+  old.parents.forEach((t) => allAffectedTagIds.add(t.id));
+  old.children.forEach((t) => allAffectedTagIds.add(t.id));
+  updated.parents.forEach((t) => allAffectedTagIds.add(t.id));
+  updated.children.forEach((t) => allAffectedTagIds.add(t.id));
 
-    updatedTags.forEach((u) => {
-      if (!oldTags.some((o) => o.id === u.id)) {
-        cache.modify({
-          id: cache.identify(u),
-          fields: {
-            [property](value) {
-              return [...(value as unknown[]), tagRef];
-            },
-          },
-        });
-      }
+  allAffectedTagIds.forEach((tagId) => {
+    queryClient.invalidateQueries({
+      queryKey: ["tags", tagId],
     });
-  }
+  });
 
-  updater("children", old.parents, updated.parents);
-  updater("parents", old.children, updated.children);
+  // Also invalidate the tags list query
+  queryClient.invalidateQueries({
+    queryKey: ["tags"],
+  });
 };

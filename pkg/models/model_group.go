@@ -12,7 +12,7 @@ type Group struct {
 	Duration *int   `json:"duration"`
 	Date     *Date  `json:"date"`
 	// Rating expressed in 1-100 scale
-	Rating    *int      `json:"rating"`
+	Rating    *int      `json:"rating100"`
 	StudioID  *int      `json:"studio_id"`
 	Director  string    `json:"director"`
 	Synopsis  string    `json:"synopsis"`

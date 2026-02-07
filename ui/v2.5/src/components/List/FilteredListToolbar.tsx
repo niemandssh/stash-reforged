@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
-import { QueryResult } from "@apollo/client";
 import { ListFilterModel } from "src/models/list-filter/filter";
+import { QueryResult } from "src/core/generated-graphql";
 import { DisplayMode } from "src/models/list-filter/types";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { ListFilter } from "./ListFilter";

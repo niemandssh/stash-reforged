@@ -115,9 +115,9 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
     }
 
     function maybeRenderTagPopoverButton() {
-      if (performer.tags.length <= 0) return;
+      if (performer.tags?.length <= 0) return;
 
-      const popoverContent = performer.tags.map((tag) => (
+      const popoverContent = performer.tags?.map((tag) => (
         <TagLink key={tag.id} linkType="performer" tag={tag} />
       ));
 
@@ -125,7 +125,7 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
         <HoverPopover placement="bottom" content={popoverContent}>
           <Button className="minimal tag-count">
             <Icon icon={faTag} />
-            <span>{performer.tags.length}</span>
+            <span>{performer.tags?.length}</span>
           </Button>
         </HoverPopover>
       );
@@ -152,7 +152,7 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
       performer.scene_count ||
       performer.image_count ||
       performer.gallery_count ||
-      performer.tags.length > 0 ||
+      performer.tags?.length > 0 ||
       performer.o_counter ||
       performer.group_count
     ) {

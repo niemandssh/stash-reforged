@@ -64,6 +64,10 @@
 - [x] You can enable saving timer of video on 5 minutes (even if you enable option "Always play video from beginning")
 - [x] Info about video play time can be saved now on reload page
 
+### Technical
+- [x] {Frontend} Bun now using instead of Yarn
+- [x] {Fullstack} GraphQL was removed. For original developers: did you really think that it's good idea to get technology for highload and use it for local application?
+
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
 - [ ] Fix scene sprites after convert video (don't run generate manually)

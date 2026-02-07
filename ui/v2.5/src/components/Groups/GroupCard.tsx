@@ -62,7 +62,7 @@ export const GroupCard: React.FC<IProps> = ({
       return undefined;
     }
 
-    const containingGroup = group.containing_groups.find(
+    const containingGroup = group.containing_groups?.find(
       (cg) => cg.group.id === fromGroupId
     );
 
@@ -70,9 +70,9 @@ export const GroupCard: React.FC<IProps> = ({
   }, [fromGroupId, group.containing_groups]);
 
   function maybeRenderScenesPopoverButton() {
-    if (group.scenes.length === 0) return;
+    if (group.scenes?.length === 0) return;
 
-    const popoverContent = group.scenes.map((scene) => (
+    const popoverContent = group.scenes?.map((scene) => (
       <SceneLink key={scene.id} scene={scene} />
     ));
 
@@ -84,16 +84,16 @@ export const GroupCard: React.FC<IProps> = ({
       >
         <Button className="minimal">
           <Icon icon={faPlayCircle} />
-          <span>{group.scenes.length}</span>
+          <span>{group.scenes?.length}</span>
         </Button>
       </HoverPopover>
     );
   }
 
   function maybeRenderTagPopoverButton() {
-    if (group.tags.length <= 0) return;
+    if (group.tags?.length <= 0) return;
 
-    const popoverContent = group.tags.map((tag) => (
+    const popoverContent = group.tags?.map((tag) => (
       <TagLink key={tag.id} linkType="group" tag={tag} />
     ));
 
@@ -101,7 +101,7 @@ export const GroupCard: React.FC<IProps> = ({
       <HoverPopover placement="bottom" content={popoverContent}>
         <Button className="minimal tag-count">
           <Icon icon={faTag} />
-          <span>{group.tags.length}</span>
+          <span>{group.tags?.length}</span>
         </Button>
       </HoverPopover>
     );
@@ -111,9 +111,9 @@ export const GroupCard: React.FC<IProps> = ({
     if (
       sceneNumber ||
       groupDescription ||
-      group.scenes.length > 0 ||
-      group.tags.length > 0 ||
-      group.containing_groups.length > 0 ||
+      group.scenes?.length > 0 ||
+      group.tags?.length > 0 ||
+      group.containing_groups?.length > 0 ||
       group.sub_group_count > 0
     ) {
       return (
@@ -127,7 +127,7 @@ export const GroupCard: React.FC<IProps> = ({
             {maybeRenderScenesPopoverButton()}
             {maybeRenderTagPopoverButton()}
             {(group.sub_group_count > 0 ||
-              group.containing_groups.length > 0) && (
+              group.containing_groups?.length > 0) && (
               <RelatedGroupPopoverButton group={group} />
             )}
           </ButtonGroup>

@@ -198,12 +198,12 @@ export const ImageEditPanel: React.FC<IProps> = ({
 
     setIsLoading(true);
     try {
-      const result = await queryScrapeImage(s.scraper_id!, image.id);
-      if (!result.data || !result.data.scrapeSingleImage?.length) {
+      const result = await queryScrapeImage(s.scraper_id! as any, image.id as any);
+      if (!result.data || !(result.data as any).scrapeSingleImage?.length) {
         Toast.success("No images found");
         return;
       }
-      setScrapedImage(result.data.scrapeSingleImage[0]);
+      setScrapedImage((result.data as any).scrapeSingleImage[0]);
     } catch (e) {
       Toast.error(e);
     } finally {

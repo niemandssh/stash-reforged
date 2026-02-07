@@ -30,7 +30,7 @@ interface ISceneMarkerCardProps {
 
 const SceneMarkerCardPopovers = (props: ISceneMarkerCardProps) => {
   function maybeRenderPerformerPopoverButton() {
-    if (props.marker.scene.performers.length <= 0) return;
+    if (props.marker.scene.performers?.length <= 0) return;
 
     return (
       <PerformerPopoverButton
@@ -49,7 +49,7 @@ const SceneMarkerCardPopovers = (props: ISceneMarkerCardProps) => {
       />,
     ];
 
-    props.marker.tags.map((tag) =>
+    props.marker.tags?.map((tag) =>
       popoverContent.push(
         <TagLink key={tag.id} tag={tag} linkType="scene_marker" />
       )
@@ -113,7 +113,7 @@ const SceneMarkerCardImage = (props: ISceneMarkerCardProps) => {
 
   const file = useMemo(
     () =>
-      props.marker.scene.files.length > 0
+      props.marker.scene.files?.length > 0
         ? props.marker.scene.files[0]
         : undefined,
     [props.marker.scene]

@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/stashapp/stash/pkg/file"
 	"github.com/stashapp/stash/pkg/fsutil"
 	"github.com/stashapp/stash/pkg/gallery"
@@ -44,8 +43,16 @@ type ImportTask struct {
 	fileNamingAlgorithm models.HashAlgorithm
 }
 
+// FileUpload represents an uploaded file, replacing the previous graphql.Upload.
+type FileUpload struct {
+	File        io.ReadSeeker
+	Filename    string
+	Size        int64
+	ContentType string
+}
+
 type ImportObjectsInput struct {
-	File                graphql.Upload              `json:"file"`
+	File                FileUpload                  `json:"file"`
 	DuplicateBehaviour  ImportDuplicateEnum         `json:"duplicateBehaviour"`
 	MissingRefBehaviour models.ImportMissingRefEnum `json:"missingRefBehaviour"`
 }

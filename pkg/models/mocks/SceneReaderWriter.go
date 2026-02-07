@@ -67,6 +67,29 @@ func (_m *SceneReaderWriter) AddO(ctx context.Context, id int, dates []time.Time
 	return r0, r1
 }
 
+// AddOMG provides a mock function with given fields: ctx, id, dates
+func (_m *SceneReaderWriter) AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, id, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, id, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, id, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AddViews provides a mock function with given fields: ctx, sceneID, dates
 func (_m *SceneReaderWriter) AddViews(ctx context.Context, sceneID int, dates []time.Time) ([]time.Time, error) {
 	ret := _m.Called(ctx, sceneID, dates)
@@ -1558,6 +1581,244 @@ func (_m *SceneReaderWriter) Wall(ctx context.Context, q *string) ([]*models.Sce
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *string) error); ok {
 		r1 = rf(ctx, q)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DecrementOMGCounter provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) DecrementOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// DeleteOMG provides a mock function with given fields: ctx, id, dates
+func (_m *SceneReaderWriter) DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, id, dates)
+
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int, []time.Time) []time.Time); ok {
+		r0 = rf(ctx, id, dates)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, []time.Time) error); ok {
+		r1 = rf(ctx, id, dates)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetOMGCount provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) GetOMGCount(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetOMGCounter provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) GetOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetOMGDatesInRange provides a mock function with given fields: ctx, start, end
+func (_m *SceneReaderWriter) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
+	ret := _m.Called(ctx, start, end)
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, time.Time, time.Time) []time.Time); ok {
+		r0 = rf(ctx, start, end)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
+		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetOMGDates provides a mock function with given fields: ctx, relatedID
+func (_m *SceneReaderWriter) GetOMGDates(ctx context.Context, relatedID int) ([]time.Time, error) {
+	ret := _m.Called(ctx, relatedID)
+	var r0 []time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int) []time.Time); ok {
+		r0 = rf(ctx, relatedID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]time.Time)
+		}
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, relatedID)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetManyOMGDates provides a mock function with given fields: ctx, ids
+func (_m *SceneReaderWriter) GetManyOMGDates(ctx context.Context, ids []int) ([][]time.Time, error) {
+	ret := _m.Called(ctx, ids)
+	var r0 [][]time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, []int) [][]time.Time); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([][]time.Time)
+		}
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// ResetOMG provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) ResetOMG(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// IncrementOMGCounter provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) IncrementOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// ResetOMGCounter provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) ResetOMGCounter(ctx context.Context, id int) (int, error) {
+	ret := _m.Called(ctx, id)
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context, int) int); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+	return r0, r1
+}
+
+// GetManyOMGCount provides a mock function with given fields: ctx, ids
+func (_m *SceneReaderWriter) GetManyOMGCount(ctx context.Context, ids []int) ([]int, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []int
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []int); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetAllOMGCount provides a mock function with given fields: ctx
+func (_m *SceneReaderWriter) GetAllOMGCount(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}

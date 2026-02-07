@@ -63,8 +63,8 @@ const SceneCreate: React.FC = () => {
       ...input,
       file_ids: fileID ? [fileID] : undefined,
     });
-    if (result.data?.sceneCreate?.id) {
-      history.push(`/scenes/${result.data.sceneCreate.id}`);
+    if ((result as any).data?.sceneCreate?.id) {
+      history.push(`/scenes/${(result as any).data.sceneCreate.id}`);
       Toast.success(
         intl.formatMessage(
           { id: "toast.created_entity" },

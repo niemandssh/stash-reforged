@@ -141,7 +141,7 @@ const TagCardDetails: React.FC<IProps> = PatchComponent(
     }
 
     function maybeRenderParents() {
-      if (tag.parents.length === 1) {
+      if (tag.parents?.length === 1) {
         const parent = tag.parents[0];
         return (
           <div className="tag-parent-tags">
@@ -155,7 +155,7 @@ const TagCardDetails: React.FC<IProps> = PatchComponent(
         );
       }
 
-      if (tag.parents.length > 1) {
+      if (tag.parents?.length > 1) {
         return (
           <div className="tag-parent-tags">
             <FormattedMessage
@@ -163,10 +163,10 @@ const TagCardDetails: React.FC<IProps> = PatchComponent(
               values={{
                 parent: (
                   <Link to={NavUtils.makeParentTagsUrl(tag)}>
-                    {tag.parents.length}&nbsp;
+                    {tag.parents?.length}&nbsp;
                     <FormattedMessage
                       id="countables.tags"
-                      values={{ count: tag.parents.length }}
+                      values={{ count: tag.parents?.length }}
                     />
                   </Link>
                 ),
@@ -178,7 +178,7 @@ const TagCardDetails: React.FC<IProps> = PatchComponent(
     }
 
     function maybeRenderChildren() {
-      if (tag.children.length > 0) {
+      if (tag.children?.length > 0) {
         return (
           <div className="tag-sub-tags">
             <FormattedMessage
@@ -186,10 +186,10 @@ const TagCardDetails: React.FC<IProps> = PatchComponent(
               values={{
                 children: (
                   <Link to={NavUtils.makeChildTagsUrl(tag)}>
-                    {tag.children.length}&nbsp;
+                    {tag.children?.length}&nbsp;
                     <FormattedMessage
                       id="countables.tags"
-                      values={{ count: tag.children.length }}
+                      values={{ count: tag.children?.length }}
                     />
                   </Link>
                 ),

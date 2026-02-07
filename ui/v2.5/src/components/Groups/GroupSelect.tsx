@@ -45,9 +45,9 @@ type FindGroupsResult = Awaited<
 function sortGroupsByRelevance(input: string, groups: FindGroupsResult) {
   return sortByRelevance(
     input,
-    groups,
-    (m) => m.name,
-    (m) => (m.aliases ? [m.aliases] : [])
+    groups as any,
+    (m: any) => m.name,
+    (m: any) => (m.aliases ? [m.aliases] : [])
   );
 }
 
@@ -88,13 +88,13 @@ export const GroupSelect: React.FC<
     }
 
     const query = await queryFindGroupsForSelect(filter);
-    let ret = query.data.findGroups.groups.filter((group) => {
+    let ret = ((query as any).data.findGroups.groups as any[]).filter((group: any) => {
       // HACK - we should probably exclude these in the backend query, but
       // this will do in the short-term
       return !exclude.includes(group.id.toString());
     });
 
-    return groupSelectSort(input, ret).map((group) => ({
+    return (groupSelectSort(input, ret as any) as any[]).map((group: any) => ({
       value: group.id,
       object: group,
     }));
@@ -278,9 +278,9 @@ const _GroupIDSelect: React.FC<IFilterProps & IFilterIDProps<Group>> = (
 
   async function loadObjectsByID(idsToLoad: string[]): Promise<Group[]> {
     const query = await queryFindGroupsByIDForSelect(idsToLoad);
-    const { groups: loadedGroups } = query.data.findGroups;
+    const { groups: loadedGroups } = (query as any).data.findGroups;
 
-    return loadedGroups;
+    return loadedGroups as any;
   }
 
   useEffect(() => {

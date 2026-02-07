@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useMemo } from "react";
-import { ApolloError, QueryResult } from "@apollo/client";
 import { ListFilterModel } from "src/models/list-filter/filter";
+import { QueryResult } from "src/core/generated-graphql";
 import { Pagination, PaginationIndex } from "./Pagination";
 import { LoadingIndicator } from "../Shared/LoadingIndicator";
 import { ErrorMessage } from "../Shared/ErrorMessage";
@@ -9,7 +9,7 @@ import { FormattedMessage } from "react-intl";
 export const LoadedContent: React.FC<
   PropsWithChildren<{
     loading?: boolean;
-    error?: ApolloError;
+    error?: Error;
   }>
 > = ({ loading, error, children }) => {
   if (loading) {

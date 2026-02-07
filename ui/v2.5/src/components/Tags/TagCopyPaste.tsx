@@ -125,8 +125,8 @@ export const TagCopyPaste: React.FC<ITagCopyPasteProps> = ({
         filter.itemsPerPage = 100;
 
         const result = await queryFindTagsForSelect(filter);
-        const foundTag = result.data.findTags.tags.find(
-          (t) => t.name.toLowerCase() === parsedTag.name.toLowerCase()
+        const foundTag = (result.data as any).findTags.tags.find(
+          (t: any) => t.name.toLowerCase() === parsedTag.name.toLowerCase()
         );
 
         if (foundTag) {
@@ -175,7 +175,7 @@ export const TagCopyPaste: React.FC<ITagCopyPasteProps> = ({
             );
           }
         } catch (error) {
-          Toast.error(error);
+          Toast.error(error as any);
         }
       }
 

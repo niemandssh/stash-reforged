@@ -34,19 +34,19 @@ export const InstalledPluginPackages: React.FC = () => {
   async function onUpdatePackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateUpdatePluginPackages(packages);
 
-    setJobID(r.data?.updatePackages);
+    setJobID(r.data?.updatePackages as any);
   }
 
   async function onUninstallPackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateUninstallPluginPackages(packages);
 
-    setJobID(r.data?.uninstallPackages);
+    setJobID(r.data?.uninstallPackages as any);
   }
 
   function onPackageChanges() {
     // job is complete, refresh all local data
     const ac = getClient();
-    evictQueries(ac.cache, pluginMutationImpactedQueries);
+    evictQueries((ac as any).cache, pluginMutationImpactedQueries as any);
   }
 
   function onCheckForUpdates() {
@@ -103,18 +103,18 @@ export const AvailablePluginPackages: React.FC = () => {
   async function onInstallPackages(packages: GQL.PackageSpecInput[]) {
     const r = await mutateInstallPluginPackages(packages);
 
-    setJobID(r.data?.installPackages);
+    setJobID(r.data?.installPackages as any);
   }
 
   function onPackageChanges() {
     // job is complete, refresh all local data
     const ac = getClient();
-    evictQueries(ac.cache, pluginMutationImpactedQueries);
+    evictQueries((ac as any).cache, pluginMutationImpactedQueries as any);
   }
 
   async function loadSource(source: string): Promise<RemotePackage[]> {
     const { data } = await queryAvailablePluginPackages(source);
-    return data.availablePackages;
+    return (data.availablePackages as any) as RemotePackage[];
   }
 
   function addSource(source: GQL.PackageSource) {

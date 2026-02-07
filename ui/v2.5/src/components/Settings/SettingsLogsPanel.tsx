@@ -83,7 +83,7 @@ export const SettingsLogsPanel: React.FC = () => {
       const logQuery = await queryLogs();
       if (logQuery.error) return;
 
-      const initEntries = logQuery.data.logs.map((e) => new LogEntry(e));
+      const initEntries = ((logQuery.data as any).logs as any[]).map((e) => new LogEntry(e));
       if (initEntries.length !== 0) {
         setEntries((prev) => {
           return [...prev, ...initEntries].slice(0, MAX_LOG_ENTRIES);
@@ -97,7 +97,7 @@ export const SettingsLogsPanel: React.FC = () => {
   useEffect(() => {
     if (!data) return;
 
-    const newEntries = data.loggingSubscribe.map((e) => new LogEntry(e));
+    const newEntries = ((data as any).loggingSubscribe as any[]).map((e) => new LogEntry(e));
     newEntries.reverse();
     setEntries((prev) => {
       return [...newEntries, ...prev].slice(0, MAX_LOG_ENTRIES);

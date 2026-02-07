@@ -35,7 +35,7 @@ export const ExportDialog: React.FC<IExportDialogProps> = (
       // download the result
       if (ret.data && ret.data.exportObjects) {
         const link = ret.data.exportObjects;
-        downloadFile(link);
+        downloadFile(link as any);
       }
     } catch (e) {
       Toast.error(e);

@@ -45,7 +45,7 @@ export const GameList: React.FC<IProps> = ({ filterHook, view }) => {
     filterCopy.itemsPerPage = 1;
     filterCopy.currentPage = index + 1;
     const singleResult = await queryFindGames(filterCopy);
-    const game = singleResult.data.findGames?.games?.[0];
+    const game = (singleResult.data as any).findGames?.games?.[0];
     if (game) {
       history.push(`/games/${game.id}`);
     }

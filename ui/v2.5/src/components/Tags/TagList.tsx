@@ -29,11 +29,11 @@ import { View } from "../List/views";
 import { TagColorIndicator } from "./TagColorIndicator";
 
 function getItems(result: GQL.FindTagsQueryResult) {
-  return result?.data?.findTags?.tags ?? [];
+  return (result as any)?.data?.findTags?.tags ?? [];
 }
 
 function getCount(result: GQL.FindTagsQueryResult) {
-  return result?.data?.findTags?.count ?? 0;
+  return (result as any)?.data?.findTags?.count ?? 0;
 }
 
 interface ITagList {
@@ -105,8 +105,8 @@ export const TagList: React.FC<ITagList> = ({ filterHook, alterQuery }) => {
       filterCopy.itemsPerPage = 1;
       filterCopy.currentPage = index + 1;
       const singleResult = await queryFindTags(filterCopy);
-      if (singleResult.data.findTags.tags.length === 1) {
-        const { id } = singleResult.data.findTags.tags[0];
+      if ((singleResult.data as any).findTags.tags.length === 1) {
+        const { id } = (singleResult.data as any).findTags.tags[0];
         // navigate to the tag page
         history.push(`/tags/${id}`);
       }
@@ -129,7 +129,7 @@ export const TagList: React.FC<ITagList> = ({ filterHook, alterQuery }) => {
       await mutateMetadataAutoTag({ tags: [tag.id] });
       Toast.success(intl.formatMessage({ id: "toast.started_auto_tagging" }));
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
@@ -156,7 +156,7 @@ export const TagList: React.FC<ITagList> = ({ filterHook, alterQuery }) => {
       );
       setDeletingTag(null);
     } catch (e) {
-      Toast.error(e);
+      Toast.error(e as any);
     }
   }
 
