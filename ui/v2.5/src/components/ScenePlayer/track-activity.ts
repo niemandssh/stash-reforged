@@ -22,6 +22,9 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
   private lastResumeTime = 0;
   private lastDuration = 0;
 
+  private boundBeforeUnload: () => void;
+  private boundVisibilityChange: () => void;
+
   constructor(player: VideoJsPlayer) {
     super(player);
 
@@ -43,7 +46,27 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
 
     player.on("dispose", () => {
       this.stop();
+      this.removePageListeners();
     });
+
+    // Save activity before page unload (refresh, close, navigate away)
+    this.boundBeforeUnload = () => {
+      this.sendActivitySync();
+    };
+    window.addEventListener("beforeunload", this.boundBeforeUnload);
+
+    // Save activity when page becomes hidden (tab switch, minimize)
+    this.boundVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        this.sendActivitySync();
+      }
+    };
+    document.addEventListener("visibilitychange", this.boundVisibilityChange);
+  }
+
+  private removePageListeners() {
+    window.removeEventListener("beforeunload", this.boundBeforeUnload);
+    document.removeEventListener("visibilitychange", this.boundVisibilityChange);
   }
 
   private start() {
@@ -116,6 +139,26 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
       }
 
       this.saveActivity(resumeTime, this.currentPlayDuration);
+      this.currentPlayDuration = 0;
+    }
+  }
+
+  // Synchronous version for beforeunload/visibilitychange
+  // Saves current position even if not enough time has accumulated
+  private sendActivitySync() {
+    if (!this.enabled) return;
+
+    const resumeTime = this.player?.currentTime() ?? this.lastResumeTime;
+    const videoDuration = this.player?.duration() ?? this.lastDuration;
+
+    if (resumeTime > 0 && videoDuration > 0) {
+      const percentCompleted = (100 / videoDuration) * resumeTime;
+
+      // if video is 98% or more complete then reset resume_time
+      const finalResumeTime = percentCompleted >= 98 ? 0 : resumeTime;
+
+      // Send with current accumulated play duration
+      this.saveActivity(finalResumeTime, this.currentPlayDuration);
       this.currentPlayDuration = 0;
     }
   }

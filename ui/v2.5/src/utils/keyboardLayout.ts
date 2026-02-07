@@ -191,8 +191,8 @@ export function levenshteinDistance(
 
 // Calculate allowed errors based on input length
 function getAllowedErrors(inputLength: number, maxErrors: number = 3): number {
-  if (inputLength <= 4) return 1;
-  if (inputLength <= 7) return 2;
+  if (inputLength <= 3) return 1;
+  if (inputLength <= 5) return 2;
   return maxErrors;
 }
 
@@ -202,8 +202,8 @@ export function isFuzzyMatch(
   target: string,
   maxErrors: number = 3
 ): boolean {
-  const inputLower = input.toLowerCase();
-  const targetLower = target.toLowerCase();
+  const inputLower = input.toLowerCase().trim();
+  const targetLower = target.toLowerCase().trim();
 
   // Direct match - fast path
   if (targetLower.includes(inputLower)) {
@@ -217,33 +217,101 @@ export function isFuzzyMatch(
 
   const allowedErrors = getAllowedErrors(inputLower.length, maxErrors);
 
-  // Split target into words and check each word
-  const targetWords = targetLower.split(/[\s\-_]+/);
+  // Check full phrase match first (for multi-word inputs like "show cum in face")
+  const lengthDiff = Math.abs(inputLower.length - targetLower.length);
+  if (lengthDiff <= allowedErrors) {
+    const fullDistance = levenshteinDistance(
+      inputLower,
+      targetLower,
+      allowedErrors
+    );
+    if (fullDistance <= allowedErrors) {
+      return true;
+    }
+  }
 
-  for (const word of targetWords) {
-    // Skip very short words
-    if (word.length < 2) continue;
+  // Check if input matches the beginning of target
+  if (targetLower.length > inputLower.length) {
+    const targetPrefix = targetLower.substring(0, inputLower.length);
+    const prefixDistance = levenshteinDistance(
+      inputLower,
+      targetPrefix,
+      allowedErrors
+    );
+    if (prefixDistance <= allowedErrors) {
+      return true;
+    }
+  }
 
-    // Quick length difference check
-    const lengthDiff = Math.abs(inputLower.length - word.length);
-    if (lengthDiff <= allowedErrors) {
-      // Check full word match
-      const distance = levenshteinDistance(inputLower, word, allowedErrors);
-      if (distance <= allowedErrors) {
-        return true;
+  // Split both into words and compare word by word
+  // Filter out very short words from input for matching purposes
+  const inputWords = inputLower.split(/[\s\-_]+/).filter((w) => w.length >= 2);
+  const targetWords = targetLower.split(/[\s\-_]+/).filter((w) => w.length > 0);
+
+  // If input has multiple significant words, try matching each input word to target words
+  if (inputWords.length > 1 && targetWords.length > 0) {
+    let matchedWords = 0;
+    let totalErrors = 0;
+
+    for (const inputWord of inputWords) {
+      let bestMatch = false;
+      let bestDistance = Infinity;
+
+      for (const targetWord of targetWords) {
+        if (targetWord.includes(inputWord)) {
+          bestMatch = true;
+          bestDistance = 0;
+          break;
+        }
+
+        const wordAllowed = getAllowedErrors(inputWord.length, 2);
+        const wordLengthDiff = Math.abs(inputWord.length - targetWord.length);
+        if (wordLengthDiff <= wordAllowed) {
+          const dist = levenshteinDistance(inputWord, targetWord, wordAllowed);
+          if (dist <= wordAllowed && dist < bestDistance) {
+            bestMatch = true;
+            bestDistance = dist;
+          }
+        }
+      }
+
+      if (bestMatch) {
+        matchedWords++;
+        totalErrors += bestDistance;
       }
     }
 
-    // Check prefix match for longer words
-    if (word.length > inputLower.length) {
-      const wordPrefix = word.substring(0, inputLower.length);
-      const prefixDistance = levenshteinDistance(
-        inputLower,
-        wordPrefix,
-        allowedErrors
-      );
-      if (prefixDistance <= allowedErrors) {
-        return true;
+    // All significant words must match
+    if (matchedWords === inputWords.length && totalErrors <= allowedErrors) {
+      return true;
+    }
+  }
+
+  // Single word input - check against each target word
+  if (inputWords.length === 1) {
+    for (const word of targetWords) {
+      if (word.length < 2) continue;
+
+      // Quick length difference check
+      const wordLengthDiff = Math.abs(inputLower.length - word.length);
+      if (wordLengthDiff <= allowedErrors) {
+        const distance = levenshteinDistance(inputLower, word, allowedErrors);
+        if (distance <= allowedErrors) {
+          return true;
+        }
+      }
+
+      // Check prefix match for longer words
+      if (word.length > inputLower.length) {
+        const wordPrefix = word.substring(0, inputLower.length);
+        const prefixDistance = levenshteinDistance(
+          inputLower,
+          wordPrefix,
+          allowedErrors
+        );
+        if (prefixDistance <= allowedErrors) {
+          return true;
+        }
       }
     }
   }

@@ -1020,11 +1020,36 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       const alwaysStartFromBeginning =
         uiConfig?.alwaysStartFromBeginning ?? false;
-      const resumeTime = scene.resume_time ?? 0;
+      const rememberPlayPositionFor5Minutes =
+        uiConfig?.rememberPlayPositionFor5Minutes ?? false;
       const startTime = scene.start_time ?? 0;
+      const resumeTimeRaw = scene.resume_time ?? 0;
+
+      // Calculate effective resume time
+      // When alwaysStartFromBeginning is true but rememberPlayPositionFor5Minutes is also true,
+      // we allow resume if last played was within 5 minutes
+      let resumeTime = 0;
+      let effectiveAlwaysStartFromBeginning = alwaysStartFromBeginning;
+
+      if (alwaysStartFromBeginning && rememberPlayPositionFor5Minutes) {
+        // Check if we're within 5 minutes of last play
+        if (resumeTimeRaw > 0 && scene.last_played_at) {
+          const lastPlayedAt = new Date(scene.last_played_at).getTime();
+          const now = Date.now();
+          const fiveMinutesMs = 5 * 60 * 1000;
+          if (now - lastPlayedAt <= fiveMinutesMs) {
+            // Within 5 minutes, allow resume
+            resumeTime = resumeTimeRaw;
+            effectiveAlwaysStartFromBeginning = false;
+          }
+        }
+      } else if (!alwaysStartFromBeginning) {
+        // Normal behavior - always use resume time
+        resumeTime = resumeTimeRaw;
+      }
 
       let startPosition = _initialTimestamp;
-      if (!startPosition && !alwaysStartFromBeginning && resumeTime > 0) {
+      if (!startPosition && !effectiveAlwaysStartFromBeginning && resumeTime > 0) {
         // Check if resume position is in a trimmed segment
         const endTime = scene.end_time ?? 0;
         const inTrimmedStart = startTime > 0 && resumeTime < startTime;
@@ -1039,7 +1064,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         }
       } else if (
         !startPosition &&
-        !alwaysStartFromBeginning &&
+        !effectiveAlwaysStartFromBeginning &&
         !resumeTime &&
         startTime > 0
       ) {

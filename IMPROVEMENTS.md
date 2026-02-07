@@ -61,6 +61,8 @@
 - [x] GPU is now mandatory for video conversion, speeding up the process up to 10x!
 - [x] You can hide UI of player (fo make screen, for example)
 - [x] Copy/paste tags, o-counts, omg-counts
+- [x] You can enable saving timer of video on 5 minutes (even if you enable option "Always play video from beginning")
+- [x] Info about video play time can be saved now on reload page
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

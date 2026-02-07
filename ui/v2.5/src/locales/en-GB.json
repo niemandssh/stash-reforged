@@ -825,6 +825,10 @@
         "heading": "Scene Player",
         "options": {
           "always_start_from_beginning": "Always start video from beginning",
+          "remember_play_position_5min": {
+            "heading": "Remember play position for 5 minutes",
+            "description": "Allow resuming from last position if reopened within 5 minutes"
+          },
           "auto_start_video": "Auto-start video",
           "auto_start_video_on_play_selected": {
             "description": "Auto-start scene videos when playing from queue, or playing selected or random from Scenes page",

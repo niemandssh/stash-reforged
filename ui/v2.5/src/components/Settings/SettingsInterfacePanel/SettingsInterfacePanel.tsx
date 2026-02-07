@@ -371,6 +371,15 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
             checked={ui.alwaysStartFromBeginning ?? undefined}
             onChange={(v) => saveUI({ alwaysStartFromBeginning: v })}
           />
+          {ui.alwaysStartFromBeginning && (
+            <BooleanSetting
+              id="remember-play-position-5min"
+              headingID="config.ui.scene_player.options.remember_play_position_5min.heading"
+              subHeadingID="config.ui.scene_player.options.remember_play_position_5min.description"
+              checked={ui.rememberPlayPositionFor5Minutes ?? undefined}
+              onChange={(v) => saveUI({ rememberPlayPositionFor5Minutes: v })}
+            />
+          )}
           <BooleanSetting
             id="track-activity"
             headingID="config.ui.scene_player.options.track_activity"

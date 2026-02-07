@@ -75,6 +75,9 @@ export interface IUIConfig {
   showRangeMarkers?: boolean;
   // if true continue scene will always play from the beginning
   alwaysStartFromBeginning?: boolean;
+  // if true, resume position is only remembered for 5 minutes after last play
+  // only applies when alwaysStartFromBeginning is false
+  rememberPlayPositionFor5Minutes?: boolean;
   // if true enable activity tracking
   trackActivity?: boolean;
   // the minimum percentage of scene duration which a scene must be played

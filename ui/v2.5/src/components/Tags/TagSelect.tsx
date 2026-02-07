@@ -30,13 +30,13 @@ import {
 import { useCompare } from "src/hooks/state";
 import { TagPopover } from "./TagPopover";
 import { Placement } from "react-bootstrap/esm/Overlay";
-import { sortByRelevance } from "src/utils/query";
 import { PatchComponent, PatchFunction } from "src/patch";
 import {
   generateSearchVariants,
   translateRussianToEnglish,
   translateEnglishToRussian,
   isFuzzyMatch,
+  levenshteinDistance,
 } from "src/utils/keyboardLayout";
 
 const getContrastColor = (backgroundColor: string): string => {
@@ -86,12 +86,97 @@ type FindTagsResult = Awaited<
 >["data"]["findTags"]["tags"];
 
 function sortTagsByRelevance(input: string, tags: FindTagsResult) {
-  return sortByRelevance(
-    input,
-    tags,
-    (t) => t.name,
-    (t) => t.aliases
-  );
+  if (!input) {
+    return tags;
+  }
+
+  const inputLower = input.toLowerCase().trim();
+  const inputWords = inputLower.split(/[\s\-_]+/).filter((w) => w.length > 0);
+
+  // Calculate relevance score for each tag
+  // Lower score = higher priority
+  function getRelevanceScore(tag: (typeof tags)[0]): number {
+    const nameLower = tag.name.toLowerCase();
+    const nameWords = nameLower.split(/[\s\-_]+/).filter((w) => w.length > 0);
+
+    // Exact match
+    if (nameLower === inputLower) return 0;
+
+    // Name starts with input (exact)
+    if (nameLower.startsWith(inputLower)) return 10;
+
+    // First word starts with input (exact)
+    if (nameWords[0]?.startsWith(inputLower)) return 20;
+
+    // Name starts with input (fuzzy)
+    if (nameWords[0] && inputWords[0]) {
+      const firstWordDist = levenshteinDistance(
+        inputWords[0],
+        nameWords[0].substring(0, inputWords[0].length),
+        2
+      );
+      if (firstWordDist <= 2) {
+        return 30 + firstWordDist;
+      }
+    }
+
+    // Any word starts with input (exact)
+    const wordStartIndex = nameWords.findIndex((w) => w.startsWith(inputLower));
+    if (wordStartIndex !== -1) return 40 + wordStartIndex;
+
+    // Name contains input
+    const includeIndex = nameLower.indexOf(inputLower);
+    if (includeIndex !== -1) return 50 + includeIndex;
+
+    // Any word matches input (fuzzy)
+    for (let i = 0; i < nameWords.length; i++) {
+      const word = nameWords[i];
+      if (inputWords[0]) {
+        const dist = levenshteinDistance(inputWords[0], word, 2);
+        if (dist <= 2) {
+          return 60 + i * 10 + dist;
+        }
+        // Word starts with fuzzy input
+        if (word.length >= inputWords[0].length) {
+          const prefixDist = levenshteinDistance(
+            inputWords[0],
+            word.substring(0, inputWords[0].length),
+            2
+          );
+          if (prefixDist <= 2) {
+            return 70 + i * 10 + prefixDist;
+          }
+        }
+      }
+    }
+
+    // Check aliases
+    if (tag.aliases) {
+      for (const alias of tag.aliases) {
+        const aliasLower = alias.toLowerCase();
+        if (aliasLower === inputLower) return 5;
+        if (aliasLower.startsWith(inputLower)) return 15;
+        if (aliasLower.includes(inputLower)) return 55;
+      }
+    }
+
+    // Fuzzy match on full name
+    if (isFuzzyMatch(input, tag.name)) {
+      return 80;
+    }
+
+    // No match
+    return 100;
+  }
+
+  return tags.slice().sort((a, b) => {
+    const scoreA = getRelevanceScore(a);
+    const scoreB = getRelevanceScore(b);
+    if (scoreA !== scoreB) {
+      return scoreA - scoreB;
+    }
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  });
 }
 
 const tagSelectSort = PatchFunction("TagSelect.sort", sortTagsByRelevance);
@@ -255,19 +340,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
         return true;
       }
 
-      // Check aliases
-      if (
-        object.aliases?.some(
-          (a) =>
-            a.toLowerCase().includes(input) ||
-            a.toLowerCase().includes(englishTranslation.toLowerCase()) ||
-            a.toLowerCase().includes(russianTranslation.toLowerCase())
-        )
-      ) {
-        return true;
-      }
-
-      // Fuzzy matching with typo tolerance
+      // Fuzzy matching with typo tolerance (only tag name, not aliases)
       if (isFuzzyMatch(currentInputValue, object.name)) {
         return true;
       }
@@ -276,18 +349,6 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       if (
         isFuzzyMatch(englishTranslation, object.name) ||
         isFuzzyMatch(russianTranslation, object.name)
-      ) {
-        return true;
-      }
-
-      // Fuzzy match aliases
-      if (
-        object.aliases?.some(
-          (a) =>
-            isFuzzyMatch(currentInputValue, a) ||
-            isFuzzyMatch(englishTranslation, a) ||
-            isFuzzyMatch(russianTranslation, a)
-        )
       ) {
         return true;
       }
