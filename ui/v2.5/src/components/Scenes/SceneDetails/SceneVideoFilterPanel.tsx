@@ -173,6 +173,12 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const [aspectRatioValue, setAspectRatioValue] = useState(
     () => props.scene.video_transforms?.aspect_ratio ?? aspectRatioRange.default
   );
+  const [flipHorizontal, setFlipHorizontal] = useState(
+    () => (props.scene.video_transforms as GQL.VideoTransforms | null)?.flip_horizontal ?? false
+  );
+  const [flipVertical, setFlipVertical] = useState(
+    () => (props.scene.video_transforms as GQL.VideoTransforms | null)?.flip_vertical ?? false
+  );
   const [audioOffsetValue, setAudioOffsetValue] = useState(
     () => props.scene.audio_offset_ms ?? 0
   );
@@ -208,6 +214,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     rotateValue,
     scaleValue,
     aspectRatioValue,
+    flipHorizontal,
+    flipVertical,
   ]);
 
   // Apply filters on component mount
@@ -254,6 +262,14 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       setScaleValue(props.scene.video_transforms.scale ?? scaleRange.default);
       setAspectRatioValue(
         props.scene.video_transforms.aspect_ratio ?? aspectRatioRange.default
+      );
+      setFlipHorizontal(
+        (props.scene.video_transforms as GQL.VideoTransforms).flip_horizontal ??
+          false
+      );
+      setFlipVertical(
+        (props.scene.video_transforms as GQL.VideoTransforms).flip_vertical ??
+          false
       );
     }
 
@@ -368,6 +384,16 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         }
 
         transformString += ` scale(${xScale},${yScale})`;
+      }
+
+      if (flipHorizontal || flipVertical) {
+        if (flipHorizontal && flipVertical) {
+          transformString += " scale(-1,-1)";
+        } else if (flipHorizontal) {
+          transformString += " scale(-1,1)";
+        } else {
+          transformString += " scale(1,-1)";
+        }
       }
 
       if (transformString) {
@@ -563,6 +589,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       scale: newScaleValue !== scaleRange.default ? newScaleValue : null,
       aspect_ratio:
         aspectRatioValue !== aspectRatioRange.default ? aspectRatioValue : null,
+      flip_horizontal: flipHorizontal ? true : null,
+      flip_vertical: flipVertical ? true : null,
     };
 
     sceneUpdate({
@@ -649,11 +677,16 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     setRotateValue(rotateRange.default);
     setAspectRatioValue(aspectRatioRange.default);
 
+    setFlipHorizontal(false);
+    setFlipVertical(false);
+
     // Immediately save to database
     const videoTransforms: GQL.VideoTransforms = {
       rotate: null,
       scale: null,
       aspect_ratio: null,
+      flip_horizontal: null,
+      flip_vertical: null,
     };
 
     sceneUpdate({
@@ -694,6 +727,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         aspectRatioValue !== aspectRatioRange.default
           ? Math.round(aspectRatioValue)
           : null,
+      flip_horizontal: flipHorizontal ? true : null,
+      flip_vertical: flipVertical ? true : null,
     };
 
     sceneUpdate({
@@ -971,6 +1006,34 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
           aspectRatioRange.divider
         }`}
       />
+
+      <div className="row form-group">
+        <span className="col-sm-3">
+          {intl.formatMessage({ id: "effect_filters.flip" })}
+        </span>
+        <span className="col-sm-9">
+          <Form.Check
+            id="flip-horizontal"
+            type="checkbox"
+            label={intl.formatMessage({
+              id: "effect_filters.flip_horizontal",
+            })}
+            checked={flipHorizontal}
+            onChange={(e) => setFlipHorizontal(e.target.checked)}
+            className="d-inline-block mr-4"
+          />
+          <Form.Check
+            id="flip-vertical"
+            type="checkbox"
+            label={intl.formatMessage({
+              id: "effect_filters.flip_vertical",
+            })}
+            checked={flipVertical}
+            onChange={(e) => setFlipVertical(e.target.checked)}
+            className="d-inline-block"
+          />
+        </span>
+      </div>
 
       <div className="row form-group">
         <span className="col-12">

@@ -29,6 +29,8 @@ type TransformValues = {
   rotate: number;
   scale: number;
   aspectRatio: number;
+  flipHorizontal: boolean;
+  flipVertical: boolean;
 };
 
 export interface ICapturedSceneScreenshot {
@@ -77,6 +79,12 @@ export async function captureFilteredSceneScreenshot(
   }
   if (scaleX !== 1 || scaleY !== 1) {
     ctx.scale(scaleX, scaleY);
+  }
+  if (transforms.flipHorizontal || transforms.flipVertical) {
+    ctx.scale(
+      transforms.flipHorizontal ? -1 : 1,
+      transforms.flipVertical ? -1 : 1
+    );
   }
   const filterString = buildCanvasFilterString(filters);
   ctx.filter = filterString || "none";
@@ -164,6 +172,8 @@ function getTransformValues(scene: GQL.SceneDataFragment): TransformValues {
     rotate: transforms.rotate ?? ROTATE_DEFAULT,
     scale: transforms.scale ?? SCALE_DEFAULT,
     aspectRatio: transforms.aspect_ratio ?? ASPECT_RATIO_DEFAULT,
+    flipHorizontal: transforms.flip_horizontal ?? false,
+    flipVertical: transforms.flip_vertical ?? false,
   };
 }
 

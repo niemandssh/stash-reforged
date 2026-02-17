@@ -378,7 +378,9 @@ type VideoFilters struct {
 
 // VideoTransforms represents video transformation settings for a scene
 type VideoTransforms struct {
-	Rotate      *int `json:"rotate"`
-	Scale       *int `json:"scale"`
-	AspectRatio *int `json:"aspect_ratio"`
+	Rotate         *int  `json:"rotate"`
+	Scale          *int  `json:"scale"`
+	AspectRatio    *int  `json:"aspect_ratio"`
+	FlipHorizontal *bool `json:"flip_horizontal"`
+	FlipVertical   *bool `json:"flip_vertical"`
 }

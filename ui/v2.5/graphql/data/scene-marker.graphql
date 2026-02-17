@@ -41,6 +41,8 @@ fragment SceneMarkerSceneData on Scene {
     rotate
     scale
     aspect_ratio
+    flip_horizontal
+    flip_vertical
   }
   files {
     width

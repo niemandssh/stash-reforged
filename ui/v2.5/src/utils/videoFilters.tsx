@@ -219,6 +219,18 @@ export function buildTransformString(transforms?: MaybeTransforms) {
     parts.push(`scale(${xScale}, ${yScale})`);
   }
 
+  const flipH = transforms?.flip_horizontal ?? false;
+  const flipV = transforms?.flip_vertical ?? false;
+  if (flipH || flipV) {
+    if (flipH && flipV) {
+      parts.push("scale(-1, -1)");
+    } else if (flipH) {
+      parts.push("scale(-1, 1)");
+    } else {
+      parts.push("scale(1, -1)");
+    }
+  }
+
   if (!parts.length) {
     return undefined;
   }

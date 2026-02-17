@@ -37,9 +37,11 @@ func (r *sceneUpdateInputResolver) VideoTransforms(ctx context.Context, obj *mod
 	}
 
 	obj.VideoTransforms = &models.VideoTransforms{
-		Rotate:      data.Rotate,
-		Scale:       data.Scale,
-		AspectRatio: data.AspectRatio,
+		Rotate:         data.Rotate,
+		Scale:          data.Scale,
+		AspectRatio:    data.AspectRatio,
+		FlipHorizontal: data.FlipHorizontal,
+		FlipVertical:   data.FlipVertical,
 	}
 
 	return nil

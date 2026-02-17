@@ -59,6 +59,8 @@ type VideoTransforms {
   rotate: Int
   scale: Int
   aspect_ratio: Int
+  flip_horizontal: Boolean
+  flip_vertical: Boolean
 }
 
 input VideoFiltersInput {
@@ -78,6 +80,8 @@ input VideoTransformsInput {
   rotate: Int
   scale: Int
   aspect_ratio: Int
+  flip_horizontal: Boolean
+  flip_vertical: Boolean
 }
 
 type Scene {
