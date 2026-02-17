@@ -195,93 +195,12 @@ const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
 
-const getRandomUnratedScene = async (): Promise<string | null> => {
+/** Returns a random scene that is not organised (packed). */
+const getRandomUnorganisedScene = async (): Promise<string | null> => {
   try {
     const client = getClient();
 
-    const unratedCountResult = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 0,
-        },
-        scene_filter: {
-          rating100: {
-            modifier: GQL.CriterionModifier.IsNull,
-            value: 0,
-          },
-        },
-      },
-    });
-
-    const unratedCount = unratedCountResult.data?.findScenes?.count || 0;
-    if (unratedCount > 0) {
-      const randomPage = Math.floor(Math.random() * unratedCount) + 1;
-
-      const result = await client.query<GQL.FindScenesQuery>({
-        query: GQL.FindScenesDocument,
-        variables: {
-          filter: {
-            per_page: 1,
-            page: randomPage,
-          },
-          scene_filter: {
-            rating100: {
-              modifier: GQL.CriterionModifier.IsNull,
-              value: 0,
-            },
-          },
-        },
-      });
-
-      const scenes = result.data?.findScenes?.scenes || [];
-      if (scenes.length > 0) {
-        return scenes[0]?.id || null;
-      }
-    }
-
-    const untaggedCountResult = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 0,
-        },
-        scene_filter: {
-          tag_count: {
-            modifier: GQL.CriterionModifier.Equals,
-            value: 0,
-          },
-        },
-      },
-    });
-
-    const untaggedCount = untaggedCountResult.data?.findScenes?.count || 0;
-    if (untaggedCount > 0) {
-      const randomPage = Math.floor(Math.random() * untaggedCount) + 1;
-
-      const result = await client.query<GQL.FindScenesQuery>({
-        query: GQL.FindScenesDocument,
-        variables: {
-          filter: {
-            per_page: 1,
-            page: randomPage,
-          },
-          scene_filter: {
-            tag_count: {
-              modifier: GQL.CriterionModifier.Equals,
-              value: 0,
-            },
-          },
-        },
-      });
-
-      const scenes = result.data?.findScenes?.scenes || [];
-      if (scenes.length > 0) {
-        return scenes[0]?.id || null;
-      }
-    }
-
-    const unorganizedCountResult = await client.query<GQL.FindScenesQuery>({
+    const countResult = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
       variables: {
         filter: {
@@ -293,33 +212,35 @@ const getRandomUnratedScene = async (): Promise<string | null> => {
       },
     });
 
-    const unorganizedCount =
-      unorganizedCountResult.data?.findScenes?.count || 0;
-    if (unorganizedCount > 0) {
-      const randomPage = Math.floor(Math.random() * unorganizedCount) + 1;
-
-      const result = await client.query<GQL.FindScenesQuery>({
-        query: GQL.FindScenesDocument,
-        variables: {
-          filter: {
-            per_page: 1,
-            page: randomPage,
-          },
-          scene_filter: {
-            organized: false,
-          },
-        },
-      });
-
-      const scenes = result.data?.findScenes?.scenes || [];
-      if (scenes.length > 0) {
-        return scenes[0]?.id || null;
-      }
+    const totalCount = countResult.data?.findScenes?.count || 0;
+    if (totalCount === 0) {
+      return null;
     }
 
-    return null;
+    const randomPage = Math.floor(Math.random() * totalCount) + 1;
+
+    const result = await client.query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 1,
+          page: randomPage,
+          sort: "random",
+        },
+        scene_filter: {
+          organized: false,
+        },
+      },
+    });
+
+    const scenes = result.data?.findScenes?.scenes || [];
+    if (scenes.length === 0) {
+      return null;
+    }
+
+    return scenes[0]?.id || null;
   } catch (error) {
-    console.error("Error getting random scene:", error);
+    console.error("Error getting random unorganised scene:", error);
     return null;
   }
 };
@@ -470,15 +391,14 @@ export const MainNavbar: React.FC = () => {
   );
 
   const handleReviewClick = useCallback(async () => {
-    const sceneId = await getRandomUnratedScene();
+    const sceneId = await getRandomUnorganisedScene();
     if (sceneId) {
       history.push(`/scenes/${sceneId}`);
     } else {
       alert(
         intl.formatMessage({
           id: "no_scenes_to_review",
-          defaultMessage:
-            "No scenes without rating, without tags, or unorganized scenes to review",
+          defaultMessage: "No unorganised scenes to review",
         })
       );
     }
@@ -712,8 +632,7 @@ export const MainNavbar: React.FC = () => {
             onClick={handleReviewClick}
             title={intl.formatMessage({
               id: "review_unrated_video_title",
-              defaultMessage:
-                "Review unrated video, video without tags, or unorganized video",
+              defaultMessage: "Review random unorganised video",
             })}
           >
             <Icon icon={faStarHalfStroke} className="mr-1" />
