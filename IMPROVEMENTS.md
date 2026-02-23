@@ -64,6 +64,7 @@
 - [x] You can enable saving timer of video on 5 minutes (even if you enable option "Always play video from beginning")
 - [x] Info about video play time can be saved now on reload page
 - [x] You can save video volume separately for each scene in preferences (ex. filters tab) and it's autosync to preferences if you change volume in player - useful for videos with loud music (compilations, collections, etc.)
+- [x] You can add photo/image from clipboard (new mode "From clipboard..." for image loader component)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

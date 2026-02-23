@@ -9,9 +9,10 @@ import {
 } from "react-bootstrap";
 import { createPortal } from "react-dom";
 import { useIntl } from "react-intl";
+import { useToast } from "src/hooks/Toast";
 import { ModalComponent } from "./Modal";
 import { Icon } from "src/components/Shared/Icon";
-import { faFile, faLink } from "@fortawesome/free-solid-svg-icons";
+import { faFile, faLink, faPaste } from "@fortawesome/free-solid-svg-icons";
 import { PatchComponent } from "src/patch";
 
 interface IImageInput {
@@ -32,8 +33,10 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
     const [isShowDialog, setIsShowDialog] = useState(false);
     const [showPopover, setShowPopover] = useState(false);
     const [url, setURL] = useState("");
+    const [clipboardLoading, setClipboardLoading] = useState(false);
     const urlInputRef = useRef<HTMLInputElement>(null);
     const intl = useIntl();
+    const Toast = useToast();
 
     // Auto-focus URL input when dialog opens
     useEffect(() => {
@@ -83,6 +86,38 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
     function handleKeyPress(event: React.KeyboardEvent<HTMLInputElement>) {
       if (event.key === "Enter") {
         onConfirmURL();
+      }
+    }
+
+    async function handleFromClipboard() {
+      if (!onImageURL) return;
+      setClipboardLoading(true);
+      try {
+        const clipboardItems = await navigator.clipboard.read();
+        let found = false;
+        for (const item of clipboardItems) {
+          const imageType = item.types.find((t) => t.startsWith("image/"));
+          if (imageType) {
+            const blob = await item.getType(imageType);
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+            setShowPopover(false);
+            onImageURL(dataUrl);
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          Toast.error(intl.formatMessage({ id: "toast.no_image_in_clipboard" }));
+        }
+      } catch {
+        Toast.error(intl.formatMessage({ id: "toast.no_image_in_clipboard" }));
+      } finally {
+        setClipboardLoading(false);
       }
     }
 
@@ -160,6 +195,18 @@ export const ImageInput: React.FC<IImageInput> = PatchComponent(
               >
                 <Icon icon={faLink} className="fa-fw" />
                 <span>{intl.formatMessage({ id: "actions.from_url" })}</span>
+              </Button>
+            </div>
+            <div>
+              <Button
+                className="minimal"
+                disabled={clipboardLoading}
+                onClick={handleFromClipboard}
+              >
+                <Icon icon={faPaste} className="fa-fw" />
+                <span>
+                  {intl.formatMessage({ id: "actions.from_clipboard" })}
+                </span>
               </Button>
             </div>
           </>

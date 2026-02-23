@@ -64,6 +64,7 @@
         "export_all": "Export all…",
         "find": "Find",
         "finish": "Finish",
+        "from_clipboard": "From clipboard…",
         "from_file": "From file…",
         "from_url": "From URL…",
         "full_export": "Full Export",
