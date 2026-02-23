@@ -445,6 +445,9 @@ func (r *queryResolver) Latestversion(ctx context.Context) (*LatestVersion, erro
 		}
 		return nil, err
 	}
+	if latestRelease == nil {
+		return nil, nil // version check disabled
+	}
 	logger.Infof("Retrieved latest version: %s (%s)", latestRelease.Version, latestRelease.ShortHash)
 
 	return &LatestVersion{

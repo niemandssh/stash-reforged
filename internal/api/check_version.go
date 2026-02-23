@@ -18,11 +18,12 @@ import (
 )
 
 // we use the github REST V3 API as no login is required
-const apiReleases string = "https://api.github.com/repos/stashapp/stash/releases"
-const apiTags string = "https://api.github.com/repos/stashapp/stash/tags"
 const apiAcceptHeader string = "application/vnd.github.v3+json"
 const developmentTag string = "latest_develop"
 const defaultSHLength int = 8 // default length of SHA short hash returned by <git rev-parse --short HEAD>
+
+// errNoRelease is returned when the repo has no releases (API 404)
+var errNoRelease = errors.New("no release found")
 
 var stashReleases = func() map[string]string {
 	return map[string]string{
@@ -132,6 +133,9 @@ func makeGithubRequest(ctx context.Context, url string, output interface{}) erro
 		return fmt.Errorf("Github API request failed: %w", err)
 	}
 
+	if response.StatusCode == http.StatusNotFound {
+		return errNoRelease
+	}
 	if response.StatusCode != http.StatusOK {
 		//lint:ignore ST1005 Github is a proper capitalized noun
 		return fmt.Errorf("Github API request failed: %s", response.Status)
@@ -153,11 +157,19 @@ func makeGithubRequest(ctx context.Context, url string, output interface{}) erro
 	return nil
 }
 
-// GetLatestRelease gets latest release information from github API
-// If running a build from the "master" branch, then the latest full release
-// is used, otherwise it uses the release that is tagged with "latest_develop"
-// which is the latest pre-release build.
+// GetLatestRelease gets latest release information from github API for the repo
+// set at build time (build.VersionCheckRepo()). If that is empty, version check
+// is disabled and returns (nil, nil). If running a develop build, uses the release
+// tagged with "latest_develop"; otherwise the latest full release.
 func GetLatestRelease(ctx context.Context) (*LatestRelease, error) {
+	repo := build.VersionCheckRepo()
+	if repo == "" {
+		return nil, nil
+	}
+
+	apiReleases := "https://api.github.com/repos/" + repo + "/releases"
+	apiTags := "https://api.github.com/repos/" + repo + "/tags"
+
 	arch := runtime.GOARCH
 
 	// https://en.wikipedia.org/wiki/Comparison_of_ARM_cores
@@ -182,6 +194,9 @@ func GetLatestRelease(ctx context.Context) (*LatestRelease, error) {
 	var release githubReleasesResponse
 	err := makeGithubRequest(ctx, url, &release)
 	if err != nil {
+		if errors.Is(err, errNoRelease) {
+			return nil, nil // repo has no releases yet
+		}
 		return nil, err
 	}
 
@@ -194,7 +209,7 @@ func GetLatestRelease(ctx context.Context) (*LatestRelease, error) {
 		}
 	}
 
-	latestHash, err := getReleaseHash(ctx, release.Tag_name)
+	latestHash, err := getReleaseHash(ctx, apiTags, release.Tag_name)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +244,7 @@ func GetLatestRelease(ctx context.Context) (*LatestRelease, error) {
 	}, nil
 }
 
-func getReleaseHash(ctx context.Context, tagName string) (string, error) {
+func getReleaseHash(ctx context.Context, apiTagsURL, tagName string) (string, error) {
 	// Start with a small page size if not searching for latest_develop
 	perPage := 10
 	if tagName == developmentTag {
@@ -238,7 +253,7 @@ func getReleaseHash(ctx context.Context, tagName string) (string, error) {
 
 	// Limit to 5 pages, ie 500 tags - should be plenty
 	for page := 1; page <= 5; {
-		url := fmt.Sprintf("%s?per_page=%d&page=%d", apiTags, perPage, page)
+		url := fmt.Sprintf("%s?per_page=%d&page=%d", apiTagsURL, perPage, page)
 		tags := []githubTagResponse{}
 		err := makeGithubRequest(ctx, url, &tags)
 		if err != nil {
@@ -273,15 +288,18 @@ func printLatestVersion(ctx context.Context) {
 	latestRelease, err := GetLatestRelease(ctx)
 	if err != nil {
 		logger.Errorf("Couldn't retrieve latest version: %v", err)
-	} else {
-		_, githash, _ := build.Version()
-		switch {
-		case githash == "":
-			logger.Infof("Latest version: %s (%s)", latestRelease.Version, latestRelease.ShortHash)
-		case githash == latestRelease.ShortHash:
-			logger.Infof("Version %s (%s) is already the latest released", latestRelease.Version, latestRelease.ShortHash)
-		default:
-			logger.Infof("New version available: %s (%s)", latestRelease.Version, latestRelease.ShortHash)
-		}
+		return
+	}
+	if latestRelease == nil {
+		return // version check disabled or repo has no releases yet
+	}
+	_, githash, _ := build.Version()
+	switch {
+	case githash == "":
+		logger.Infof("Latest version: %s (%s)", latestRelease.Version, latestRelease.ShortHash)
+	case githash == latestRelease.ShortHash:
+		logger.Infof("Version %s (%s) is already the latest released", latestRelease.Version, latestRelease.ShortHash)
+	default:
+		logger.Infof("New version available: %s (%s)", latestRelease.Version, latestRelease.ShortHash)
 	}
 }

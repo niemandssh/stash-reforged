@@ -40,6 +40,11 @@ GO_BUILD_FLAGS := $(GO_BUILD_FLAGS)
 GO_BUILD_TAGS := $(GO_BUILD_TAGS)
 GO_BUILD_TAGS += sqlite_stat4 sqlite_math_functions
 
+# GitHub owner/repo for "new version" check (releases/tags from this repo)
+ifndef VERSION_CHECK_REPO
+  VERSION_CHECK_REPO := niemandssh/stash-reforged
+endif
+
 # set STASH_NOLEGACY environment variable or uncomment to disable legacy browser support
 # STASH_NOLEGACY := true
 
@@ -47,6 +52,8 @@ GO_BUILD_TAGS += sqlite_stat4 sqlite_math_functions
 # STASH_SOURCEMAPS := true
 
 export CGO_ENABLED := 1
+# Suppress -Wdiscarded-qualifiers in go-sqlite3's sqlite3-binding.c (cannot patch read-only module cache)
+export CGO_CFLAGS := $(CGO_CFLAGS) -Wno-discarded-qualifiers
 
 # define COMPILER_IMAGE for cross-compilation docker container
 ifndef COMPILER_IMAGE
@@ -104,7 +111,7 @@ ifndef GITHASH
 	$(eval GITHASH := $(shell git rev-parse --short HEAD))
 endif
 ifndef STASH_VERSION
-	$(eval STASH_VERSION := $(shell git describe --tags --exclude latest_develop))
+	$(eval STASH_VERSION := $(shell git describe --tags --exclude latest_develop --always))
 endif
 ifndef OFFICIAL_BUILD
 	$(eval OFFICIAL_BUILD := false)
@@ -117,6 +124,8 @@ build-flags: build-info
 	$(eval BUILD_LDFLAGS += -X 'github.com/stashapp/stash/internal/build.githash=$(GITHASH)')
 	$(eval BUILD_LDFLAGS += -X 'github.com/stashapp/stash/internal/build.version=$(STASH_VERSION)')
 	$(eval BUILD_LDFLAGS += -X 'github.com/stashapp/stash/internal/build.officialBuild=$(OFFICIAL_BUILD)')
+	# VERSION_CHECK_REPO: GitHub owner/repo at build time. Override at runtime with STASH_VERSION_CHECK_REPO env.
+	$(eval BUILD_LDFLAGS += -X 'github.com/stashapp/stash/internal/build.versionCheckRepo=$(VERSION_CHECK_REPO)')
 	$(eval BUILD_FLAGS := -v -tags "$(GO_BUILD_TAGS)" $(GO_BUILD_FLAGS) -ldflags "$(BUILD_LDFLAGS)")
 
 .PHONY: stash
