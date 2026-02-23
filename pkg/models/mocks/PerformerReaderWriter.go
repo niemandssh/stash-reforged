@@ -383,6 +383,29 @@ func (_m *PerformerReaderWriter) GetImage(ctx context.Context, performerID int) 
 	return r0, r1
 }
 
+// GetPerformerProfileImages provides a mock function with given fields: ctx, performerID
+func (_m *PerformerReaderWriter) GetPerformerProfileImages(ctx context.Context, performerID int) ([]models.PerformerProfileImage, error) {
+	ret := _m.Called(ctx, performerID)
+
+	var r0 []models.PerformerProfileImage
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.PerformerProfileImage); ok {
+		r0 = rf(ctx, performerID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.PerformerProfileImage)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, performerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetStashIDs provides a mock function with given fields: ctx, relatedID
 func (_m *PerformerReaderWriter) GetStashIDs(ctx context.Context, relatedID int) ([]models.StashID, error) {
 	ret := _m.Called(ctx, relatedID)
@@ -591,29 +614,6 @@ func (_m *PerformerReaderWriter) UpdatePartial(ctx context.Context, id int, upda
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int, models.PerformerPartial) error); ok {
 		r1 = rf(ctx, id, updatedPerformer)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetPerformerProfileImages provides a mock function with given fields: ctx, performerID
-func (_m *PerformerReaderWriter) GetPerformerProfileImages(ctx context.Context, performerID int) ([]models.PerformerProfileImage, error) {
-	ret := _m.Called(ctx, performerID)
-
-	var r0 []models.PerformerProfileImage
-	if rf, ok := ret.Get(0).(func(context.Context, int) []models.PerformerProfileImage); ok {
-		r0 = rf(ctx, performerID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.PerformerProfileImage)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
-		r1 = rf(ctx, performerID)
 	} else {
 		r1 = ret.Error(1)
 	}

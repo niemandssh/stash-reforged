@@ -583,6 +583,38 @@ func (r *sceneResolver) OmgHistory(ctx context.Context, obj *models.Scene) ([]*t
 	return ptrRet, nil
 }
 
+func (r *sceneResolver) OHistoryEntries(ctx context.Context, obj *models.Scene) ([]*models.OHistoryEntry, error) {
+	var entries []models.OHistoryEntry
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		entries, err = r.repository.Scene.GetOHistoryEntries(ctx, obj.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	ptrRet := make([]*models.OHistoryEntry, len(entries))
+	for i := range entries {
+		ptrRet[i] = &entries[i]
+	}
+	return ptrRet, nil
+}
+
+func (r *sceneResolver) OmgHistoryEntries(ctx context.Context, obj *models.Scene) ([]*models.OHistoryEntry, error) {
+	var entries []models.OHistoryEntry
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		var err error
+		entries, err = r.repository.Scene.GetOMGHistoryEntries(ctx, obj.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	ptrRet := make([]*models.OHistoryEntry, len(entries))
+	for i := range entries {
+		ptrRet[i] = &entries[i]
+	}
+	return ptrRet, nil
+}
+
 func (r *sceneResolver) SimilarScenes(ctx context.Context, obj *models.Scene, limit *int) ([]*models.SimilarScene, error) {
 	// Default limit to 10 if not specified
 	defaultLimit := 10

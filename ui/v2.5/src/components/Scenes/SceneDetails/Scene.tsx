@@ -25,6 +25,7 @@ import {
   useFindScene,
   useSceneIncrementO,
   useSceneIncrementOmg,
+  useSceneAddOmg,
   useSceneGenerateScreenshot,
   useSceneSaveFilteredScreenshot,
   useSceneUpdate,
@@ -95,6 +96,7 @@ import {
   OMGCounterButton,
   ViewCountButton,
 } from "src/components/Shared/CountButton";
+import { SceneCountAttributeModal } from "./SceneCountAttributeModal";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { lazyComponent } from "src/utils/lazyComponent";
 import cx from "classnames";
@@ -272,6 +274,18 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const [incrementO] = useSceneIncrementO(scene.id);
   const [incrementOmg] = useSceneIncrementOmg(scene.id);
+  const [addOmg] = useSceneAddOmg(scene.id);
+
+  const [showOAttributeModal, setShowOAttributeModal] = useState(false);
+  const [showOmgAttributeModal, setShowOmgAttributeModal] = useState(false);
+
+  const scenePerformers = useMemo(() => {
+    const fromScene = scene.performers ?? [];
+    const fromScenePerformers = (scene.scene_performers ?? []).map(
+      (sp) => sp.performer
+    );
+    return fromScene.length > 0 ? fromScene : fromScenePerformers;
+  }, [scene.performers, scene.scene_performers]);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
@@ -405,7 +419,11 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const onIncrementOMGClick = async () => {
     try {
-      await incrementOmg();
+      if (scenePerformers.length === 0) {
+        await incrementOmg();
+      } else {
+        setShowOmgAttributeModal(true);
+      }
     } catch (e) {
       Toast.error(e);
     }
@@ -413,11 +431,49 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
 
   const onIncrementOClick = async () => {
     try {
-      await incrementO();
+      if (scenePerformers.length === 0) {
+        await incrementO();
+      } else {
+        setShowOAttributeModal(true);
+      }
     } catch (e) {
       Toast.error(e);
     }
   };
+
+  const handleOAttributeConfirm = useCallback(
+    async (performerIds: string[] | null) => {
+      try {
+        await incrementO({
+          variables: {
+            id: scene.id,
+            performer_ids: performerIds ?? undefined,
+          } as GQL.SceneAddOMutationVariables,
+        });
+        setShowOAttributeModal(false);
+      } catch (e) {
+        Toast.error(e);
+      }
+    },
+    [incrementO, scene.id]
+  );
+
+  const handleOmgAttributeConfirm = useCallback(
+    async (performerIds: string[] | null) => {
+      try {
+        await addOmg({
+          variables: {
+            id: scene.id,
+            performer_ids: performerIds ?? undefined,
+          } as GQL.SceneAddOmgMutationVariables,
+        });
+        setShowOmgAttributeModal(false);
+      } catch (e) {
+        Toast.error(e);
+      }
+    },
+    [addOmg, scene.id]
+  );
 
   function setRating(v: number | null) {
     updateScene({
@@ -1428,6 +1484,20 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         entity={scene}
         show={showDraftModal}
         onHide={() => setShowDraftModal(false)}
+      />
+      <SceneCountAttributeModal
+        show={showOAttributeModal}
+        onHide={() => setShowOAttributeModal(false)}
+        type="o"
+        performers={scenePerformers}
+        onConfirm={handleOAttributeConfirm}
+      />
+      <SceneCountAttributeModal
+        show={showOmgAttributeModal}
+        onHide={() => setShowOmgAttributeModal(false)}
+        type="omg"
+        performers={scenePerformers}
+        onConfirm={handleOmgAttributeConfirm}
       />
     </>
   );

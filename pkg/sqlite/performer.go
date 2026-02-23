@@ -694,14 +694,12 @@ func (qb *PerformerStore) sortByPlayCount(direction string) string {
 	return " ORDER BY (" + selectPerformerPlayCountSQL + ") " + direction
 }
 
-// used for sorting on performer last o_date
+// used for sorting on performer last o_date (only attributed rows)
 var selectPerformerLastOAtSQL = utils.StrFormat(
-	"SELECT MAX(o_date) FROM ("+
-		"SELECT {o_date} FROM {performers_scenes} s "+
+	"SELECT MAX(sod.o_date) FROM {performers_scenes} s "+
 		"LEFT JOIN {scenes} ON {scenes}.id = s.{scene_id} "+
-		"LEFT JOIN {scenes_o_dates} ON {scenes_o_dates}.{scene_id} = {scenes}.id "+
-		"WHERE s.{performer_id} = {performers}.id"+
-		")",
+		"LEFT JOIN {scenes_o_dates} sod ON sod.{scene_id} = {scenes}.id AND (sod.performer_ids IS NULL OR EXISTS (SELECT 1 FROM json_each(sod.performer_ids) WHERE value = {performers}.id)) "+
+		"WHERE s.{performer_id} = {performers}.id",
 	map[string]interface{}{
 		"performer_id":      performerIDColumn,
 		"performers":        performerTable,

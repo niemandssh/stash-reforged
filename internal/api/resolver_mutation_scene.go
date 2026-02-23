@@ -25,6 +25,21 @@ import (
 	"github.com/stashapp/stash/pkg/utils"
 )
 
+func parsePerformerIDStrings(ids []string) []int {
+	if len(ids) == 0 {
+		return nil
+	}
+	out := make([]int, 0, len(ids))
+	for _, s := range ids {
+		id, err := strconv.Atoi(s)
+		if err != nil {
+			continue
+		}
+		out = append(out, id)
+	}
+	return out
+}
+
 // used to refetch scene after hooks run
 func (r *mutationResolver) getScene(ctx context.Context, id int) (ret *models.Scene, err error) {
 	if err := r.withTxn(ctx, func(ctx context.Context) error {
@@ -1256,7 +1271,7 @@ func (r *mutationResolver) SceneResetOmg(ctx context.Context, id string) (ret in
 	return ret, nil
 }
 
-func (r *mutationResolver) SceneAddOmg(ctx context.Context, id string, t []*time.Time) (*HistoryMutationResult, error) {
+func (r *mutationResolver) SceneAddOmg(ctx context.Context, id string, t []*time.Time, performerIDs []string) (*HistoryMutationResult, error) {
 	sceneID, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, fmt.Errorf("converting id: %w", err)
@@ -1269,12 +1284,18 @@ func (r *mutationResolver) SceneAddOmg(ctx context.Context, id string, t []*time
 		times = append(times, tt.Local())
 	}
 
+	performerIDsInt := parsePerformerIDStrings(performerIDs)
+
 	var updatedTimes []time.Time
 
 	if err := r.withTxn(ctx, func(ctx context.Context) error {
 		qb := r.repository.Scene
 
-		updatedTimes, err = qb.AddOMG(ctx, sceneID, times)
+		if len(performerIDsInt) > 0 {
+			updatedTimes, err = qb.AddOMGWithPerformers(ctx, sceneID, times, performerIDsInt)
+		} else {
+			updatedTimes, err = qb.AddOMG(ctx, sceneID, times)
+		}
 		return err
 	}); err != nil {
 		return nil, err
@@ -1315,7 +1336,7 @@ func (r *mutationResolver) SceneDeleteOmg(ctx context.Context, id string, t []*t
 	}, nil
 }
 
-func (r *mutationResolver) SceneAddO(ctx context.Context, id string, t []*time.Time) (*HistoryMutationResult, error) {
+func (r *mutationResolver) SceneAddO(ctx context.Context, id string, t []*time.Time, performerIDs []string) (*HistoryMutationResult, error) {
 	sceneID, err := strconv.Atoi(id)
 	if err != nil {
 		return nil, fmt.Errorf("converting id: %w", err)
@@ -1328,12 +1349,18 @@ func (r *mutationResolver) SceneAddO(ctx context.Context, id string, t []*time.T
 		times = append(times, tt.Local())
 	}
 
+	performerIDsInt := parsePerformerIDStrings(performerIDs)
+
 	var updatedTimes []time.Time
 
 	if err := r.withTxn(ctx, func(ctx context.Context) error {
 		qb := r.repository.Scene
 
-		updatedTimes, err = qb.AddO(ctx, sceneID, times)
+		if len(performerIDsInt) > 0 {
+			updatedTimes, err = qb.AddOWithPerformers(ctx, sceneID, times, performerIDsInt)
+		} else {
+			updatedTimes, err = qb.AddO(ctx, sceneID, times)
+		}
 		return err
 	}); err != nil {
 		return nil, err

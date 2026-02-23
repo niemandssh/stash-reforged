@@ -176,29 +176,6 @@ func (_m *FileReaderWriter) FindAllInPaths(ctx context.Context, p []string, limi
 	return r0, r1
 }
 
-// FindByFileInfo provides a mock function with given fields: ctx, info, size
-func (_m *FileReaderWriter) FindByFileInfo(ctx context.Context, info fs.FileInfo, size int64) ([]models.File, error) {
-	ret := _m.Called(ctx, info, size)
-
-	var r0 []models.File
-	if rf, ok := ret.Get(0).(func(context.Context, fs.FileInfo, int64) []models.File); ok {
-		r0 = rf(ctx, info, size)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]models.File)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, fs.FileInfo, int64) error); ok {
-		r1 = rf(ctx, info, size)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // FindByBasenameAndParentFolderID provides a mock function with given fields: ctx, basename, parentFolderID
 func (_m *FileReaderWriter) FindByBasenameAndParentFolderID(ctx context.Context, basename string, parentFolderID models.FolderID) (models.File, error) {
 	ret := _m.Called(ctx, basename, parentFolderID)
@@ -215,6 +192,29 @@ func (_m *FileReaderWriter) FindByBasenameAndParentFolderID(ctx context.Context,
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, models.FolderID) error); ok {
 		r1 = rf(ctx, basename, parentFolderID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FindByFileInfo provides a mock function with given fields: ctx, info, size
+func (_m *FileReaderWriter) FindByFileInfo(ctx context.Context, info fs.FileInfo, size int64) ([]models.File, error) {
+	ret := _m.Called(ctx, info, size)
+
+	var r0 []models.File
+	if rf, ok := ret.Get(0).(func(context.Context, fs.FileInfo, int64) []models.File); ok {
+		r0 = rf(ctx, info, size)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.File)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, fs.FileInfo, int64) error); ok {
+		r1 = rf(ctx, info, size)
 	} else {
 		r1 = ret.Error(1)
 	}

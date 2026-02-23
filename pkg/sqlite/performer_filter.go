@@ -344,9 +344,9 @@ var selectPerformerOCountSQL = utils.StrFormat(
 		"LEFT JOIN {images} ON {images}.id = s.{images_id} "+
 		"WHERE s.{performer_id} = {performers}.id "+
 		"UNION ALL "+
-		"SELECT COUNT({scenes_o_dates}.{o_date}) as o_counter from {performers_scenes} s "+
+		"SELECT COUNT(sod.{o_date}) as o_counter from {performers_scenes} s "+
 		"LEFT JOIN {scenes} ON {scenes}.id = s.{scene_id} "+
-		"LEFT JOIN {scenes_o_dates} ON {scenes_o_dates}.{scene_id} = {scenes}.id "+
+		"LEFT JOIN {scenes_o_dates} sod ON sod.{scene_id} = {scenes}.id AND (sod.performer_ids IS NULL OR EXISTS (SELECT 1 FROM json_each(sod.performer_ids) WHERE value = {performers}.id)) "+
 		"WHERE s.{performer_id} = {performers}.id "+
 		")",
 	map[string]interface{}{

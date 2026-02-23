@@ -25,6 +25,8 @@ interface IModal {
   dialogClassName?: string;
   footerButtons?: React.ReactNode;
   leftFooterButtons?: React.ReactNode;
+  /** When true, the footer is not rendered. */
+  hideFooter?: boolean;
 }
 
 const defaultOnHide = () => {};
@@ -43,6 +45,7 @@ export const ModalComponent: React.FC<IModal> = ({
   dialogClassName,
   footerButtons,
   leftFooterButtons,
+  hideFooter,
 }) => (
   <Modal
     className="ModalComponent"
@@ -57,47 +60,49 @@ export const ModalComponent: React.FC<IModal> = ({
       <span>{header ?? ""}</span>
     </Modal.Header>
     <Modal.Body>{children}</Modal.Body>
-    <Modal.Footer className="ModalFooter">
-      <div>{leftFooterButtons}</div>
-      <div>
-        {footerButtons}
-        {cancel ? (
-          <Button
-            disabled={isRunning}
-            variant={cancel.variant ?? "primary"}
-            onClick={cancel.onClick}
-            className="ml-2"
-          >
-            {cancel.text ?? (
-              <FormattedMessage
-                id="actions.cancel"
-                defaultMessage="Cancel"
-                description="Cancels the current action and dismisses the modal."
-              />
-            )}
-          </Button>
-        ) : (
-          ""
-        )}
-        <Button
-          disabled={isRunning || disabled || accept?.disabled}
-          variant={accept?.variant ?? "primary"}
-          onClick={accept?.onClick}
-          className="ml-2"
-        >
-          {isRunning ? (
-            <Spinner animation="border" role="status" size="sm" />
-          ) : (
-            accept?.text ?? (
-              <FormattedMessage
-                id="actions.close"
-                defaultMessage="Close"
-                description="Closes the current modal."
-              />
-            )
-          )}
-        </Button>
-      </div>
-    </Modal.Footer>
+    {!hideFooter && (
+      <Modal.Footer className="ModalFooter">
+        <div>{leftFooterButtons}</div>
+        <div>
+          {footerButtons}
+          {cancel ? (
+            <Button
+              disabled={isRunning}
+              variant={cancel.variant ?? "primary"}
+              onClick={cancel.onClick}
+              className="ml-2"
+            >
+              {cancel.text ?? (
+                <FormattedMessage
+                  id="actions.cancel"
+                  defaultMessage="Cancel"
+                  description="Cancels the current action and dismisses the modal."
+                />
+              )}
+            </Button>
+          ) : null}
+          {accept ? (
+            <Button
+              disabled={isRunning || disabled || accept.disabled}
+              variant={accept.variant ?? "primary"}
+              onClick={accept.onClick}
+              className="ml-2"
+            >
+              {isRunning ? (
+                <Spinner animation="border" role="status" size="sm" />
+              ) : (
+                accept.text ?? (
+                  <FormattedMessage
+                    id="actions.close"
+                    defaultMessage="Close"
+                    description="Closes the current modal."
+                  />
+                )
+              )}
+            </Button>
+          ) : null}
+        </div>
+      </Modal.Footer>
+    )}
   </Modal>
 );

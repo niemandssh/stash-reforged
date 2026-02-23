@@ -4,8 +4,10 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
+import { Link } from "react-router-dom";
 import { Button, Dropdown } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
+import { PerformerPopover } from "src/components/Performers/PerformerPopover";
 import { AlertModal } from "src/components/Shared/Alert";
 import { Counter } from "src/components/Shared/Counter";
 import { DateInput } from "src/components/Shared/DateInput";
@@ -25,6 +27,7 @@ import {
 } from "src/core/StashService";
 import * as GQL from "src/core/generated-graphql";
 import { useToast } from "src/hooks/Toast";
+import { SceneCountAttributeModal } from "./SceneCountAttributeModal";
 import { TextField } from "src/utils/field";
 import TextUtils from "src/utils/text";
 import { HistoryCopyPaste } from "./HistoryCopyPaste";
@@ -65,6 +68,100 @@ const History: React.FC<{
               size="sm"
               variant="minimal"
               onClick={() => onRemove(playdate)}
+              title={intl.formatMessage({ id: "actions.remove_date" })}
+            >
+              <Icon icon={faTrash} />
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+type HistoryEntry = {
+  timestamp: string;
+  performer_ids: (string | number)[];
+};
+
+const HistoryWithAttribution: React.FC<{
+  className?: string;
+  entries: HistoryEntry[];
+  performers: { id: string; name: string }[];
+  unknownDate?: string;
+  onRemove: (date: string) => void;
+  noneID: string;
+}> = ({ className, entries, performers, unknownDate, noneID, onRemove }) => {
+  const intl = useIntl();
+
+  if (entries.length === 0) {
+    return (
+      <div>
+        <FormattedMessage id={noneID} />
+      </div>
+    );
+  }
+
+  function renderDate(date: string) {
+    if (date === unknownDate) {
+      return intl.formatMessage({ id: "unknown_date" });
+    }
+    return TextUtils.formatDateTime(intl, date);
+  }
+
+  function renderAttribution(entry: HistoryEntry) {
+    if (!entry.performer_ids || entry.performer_ids.length === 0) {
+      return (
+        <span>
+          {intl.formatMessage({
+            id: "history.whole_scene",
+            defaultMessage: "Whole scene",
+          })}
+        </span>
+      );
+    }
+    const resolved = entry.performer_ids
+      .map((id) => {
+        const pid = String(id);
+        const p = performers.find((p) => p.id === pid);
+        return p ? { id: pid, name: p.name } : null;
+      })
+      .filter(Boolean) as { id: string; name: string }[];
+    return (
+      <>
+        {resolved.map((p, i) => (
+          <React.Fragment key={p.id}>
+            {i > 0 && ", "}
+            <PerformerPopover id={p.id} placement="top">
+              <Link
+                to={`/performers/${p.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted"
+              >
+                {p.name}
+              </Link>
+            </PerformerPopover>
+          </React.Fragment>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <div className="scene-history">
+      <ul className={className}>
+        {entries.map((entry, index) => (
+          <li key={index}>
+            <span>{renderDate(entry.timestamp)}</span>
+            <span className="ml-2 text-muted small">
+              {renderAttribution(entry)}
+            </span>
+            <Button
+              className="remove-date-button"
+              size="sm"
+              variant="minimal"
+              onClick={() => onRemove(entry.timestamp)}
               title={intl.formatMessage({ id: "actions.remove_date" })}
             >
               <Icon icon={faTrash} />
@@ -184,6 +281,8 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     addO: false,
     addOMG: false,
   });
+  const [showOAttributeModal, setShowOAttributeModal] = React.useState(false);
+  const [showOmgAttributeModal, setShowOmgAttributeModal] = React.useState(false);
 
   function setDialogPartial(partial: Partial<typeof dialogs>) {
     setDialogs({ ...dialogs, ...partial });
@@ -234,13 +333,18 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     });
   }
 
-  function handleAddODate(time?: string) {
+  function handleAddODate(time?: string, performerIds?: string[] | null) {
     incrementOCount({
       variables: {
         id: scene.id,
         times: time ? [time] : undefined,
-      },
+        performer_ids: performerIds ?? undefined,
+      } as GQL.SceneAddOMutationVariables,
     });
+  }
+
+  function openAddOOrModal() {
+    setShowOAttributeModal(true);
   }
 
   function handleAddODates(times: string[]) {
@@ -271,13 +375,44 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     });
   }
 
-  function handleAddOMGDate(time?: string) {
+  function handleAddOMGDate(time?: string, performerIds?: string[] | null) {
     addOmg({
       variables: {
         id: scene.id,
         times: time ? [time] : undefined,
-      },
+        performer_ids: performerIds ?? undefined,
+      } as GQL.SceneAddOmgMutationVariables,
     });
+  }
+
+  function openAddOmgOrModal() {
+    setShowOmgAttributeModal(true);
+  }
+
+  async function handleOAttributeConfirm(
+    performerIds: string[] | null,
+    date?: string
+  ) {
+    try {
+      const timeIso = date ? dateStringToISOString(date) : undefined;
+      handleAddODate(timeIso, performerIds);
+      setShowOAttributeModal(false);
+    } catch (e) {
+      Toast.error(e);
+    }
+  }
+
+  async function handleOmgAttributeConfirm(
+    performerIds: string[] | null,
+    date?: string
+  ) {
+    try {
+      const timeIso = date ? dateStringToISOString(date) : undefined;
+      handleAddOMGDate(timeIso, performerIds);
+      setShowOmgAttributeModal(false);
+    } catch (e) {
+      Toast.error(e);
+    }
   }
 
   function handleAddOMGDates(times: string[]) {
@@ -383,30 +518,6 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
             }}
           />
         )}
-        {dialogs.addO && (
-          <DatePickerModal
-            show
-            onClose={(t) => {
-              const tt = t ? dateStringToISOString(t) : null;
-              if (tt) {
-                handleAddODate(tt);
-              }
-              setDialogPartial({ addO: false });
-            }}
-          />
-        )}
-        {dialogs.addOMG && (
-          <DatePickerModal
-            show
-            onClose={(t) => {
-              const tt = t ? dateStringToISOString(t) : null;
-              if (tt) {
-                handleAddOMGDate(tt);
-              }
-              setDialogPartial({ addOMG: false });
-            }}
-          />
-        )}
       </>
     );
   }
@@ -419,9 +530,46 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
     (h) => h != null
   ) as string[];
 
+  const scenePerformers = scene.performers ?? [];
+  const performerNameMap = scenePerformers.map((p) => ({ id: p.id, name: p.name }));
+
+  const oHistoryEntries: HistoryEntry[] =
+    (scene as GQL.SceneDataFragment & {
+      o_history_entries?: { timestamp: string; performer_ids: string[] }[];
+    }).o_history_entries?.map((e) => ({
+      timestamp: e.timestamp,
+      performer_ids: e.performer_ids ?? [],
+    })) ??
+    oHistory.map((t) => ({ timestamp: t, performer_ids: [] as string[] }));
+
+  const omgHistoryEntries: HistoryEntry[] =
+    (scene as GQL.SceneDataFragment & {
+      omg_history_entries?: { timestamp: string; performer_ids: string[] }[];
+    }).omg_history_entries?.map((e) => ({
+      timestamp: e.timestamp,
+      performer_ids: e.performer_ids ?? [],
+    })) ??
+    omgHistory.map((t) => ({ timestamp: t, performer_ids: [] as string[] }));
+
   return (
     <div>
       {maybeRenderDialogs()}
+      <SceneCountAttributeModal
+        show={showOAttributeModal}
+        onHide={() => setShowOAttributeModal(false)}
+        type="o"
+        performers={scenePerformers}
+        includeDatePicker
+        onConfirm={handleOAttributeConfirm}
+      />
+      <SceneCountAttributeModal
+        show={showOmgAttributeModal}
+        onHide={() => setShowOmgAttributeModal(false)}
+        type="omg"
+        performers={scenePerformers}
+        includeDatePicker
+        onConfirm={handleOmgAttributeConfirm}
+      />
       <div className="play-history">
         <div className="history-header">
           <h5>
@@ -470,11 +618,11 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
           <h5>
             <span>
               <FormattedMessage id="o_history" />
-              <Counter count={oHistory.length} hideZero />
+              <Counter count={oHistoryEntries.length} hideZero />
             </span>
             <span>
               <HistoryCopyPaste
-                history={oHistory}
+                history={oHistoryEntries.map((e) => e.timestamp)}
                 onAddDates={handleAddODates}
                 historyType="o"
               />
@@ -483,14 +631,14 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
                 variant="minimal"
                 className="add-date-button"
                 title={intl.formatMessage({ id: "actions.add_o" })}
-                onClick={() => handleAddODate()}
+                onClick={() => openAddOOrModal()}
               >
                 <Icon icon={faPlus} />
               </Button>
               <HistoryMenu
-                hasHistory={oHistory.length > 0}
+                hasHistory={oHistoryEntries.length > 0}
                 showResetResumeDuration={false}
-                onAddDate={() => setDialogPartial({ addO: true })}
+                onAddDate={() => openAddOOrModal()}
                 onClearDates={() => setDialogPartial({ oHistory: true })}
                 resetResume={() => handleResetResume()}
                 resetDuration={() => handleResetDuration()}
@@ -498,8 +646,9 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
             </span>
           </h5>
         </div>
-        <History
-          history={oHistory}
+        <HistoryWithAttribution
+          entries={oHistoryEntries}
+          performers={performerNameMap}
           noneID="odate_recorded_no"
           unknownDate={scene.created_at}
           onRemove={(t) => handleDeleteODate(t)}
@@ -511,11 +660,11 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
           <h5>
             <span>
               <FormattedMessage id="omg_history" />
-              <Counter count={omgHistory.length} hideZero />
+              <Counter count={omgHistoryEntries.length} hideZero />
             </span>
             <span>
               <HistoryCopyPaste
-                history={omgHistory}
+                history={omgHistoryEntries.map((e) => e.timestamp)}
                 onAddDates={handleAddOMGDates}
                 historyType="omg"
               />
@@ -524,14 +673,14 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
                 variant="minimal"
                 className="add-date-button"
                 title={intl.formatMessage({ id: "actions.add_omg" })}
-                onClick={() => handleAddOMGDate()}
+                onClick={() => openAddOmgOrModal()}
               >
                 <Icon icon={faPlus} />
               </Button>
               <HistoryMenu
-                hasHistory={omgHistory.length > 0}
+                hasHistory={omgHistoryEntries.length > 0}
                 showResetResumeDuration={false}
-                onAddDate={() => setDialogPartial({ addOMG: true })}
+                onAddDate={() => openAddOmgOrModal()}
                 onClearDates={() => setDialogPartial({ omgHistory: true })}
                 resetResume={() => handleResetResume()}
                 resetDuration={() => handleResetDuration()}
@@ -539,8 +688,9 @@ export const SceneHistoryPanel: React.FC<ISceneHistoryProps> = ({ scene }) => {
             </span>
           </h5>
         </div>
-        <History
-          history={omgHistory}
+        <HistoryWithAttribution
+          entries={omgHistoryEntries}
+          performers={performerNameMap}
           noneID="omgdate_recorded_no"
           unknownDate={scene.created_at}
           onRemove={(t) => handleDeleteOMGDate(t)}

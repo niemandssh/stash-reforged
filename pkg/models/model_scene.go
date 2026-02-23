@@ -386,3 +386,10 @@ type VideoTransforms struct {
 	FlipHorizontal *bool `json:"flip_horizontal"`
 	FlipVertical   *bool `json:"flip_vertical"`
 }
+
+// OHistoryEntry is a single O or OMG history record with optional performer attribution.
+// PerformerIDs is nil or empty when attributed to the whole scene.
+type OHistoryEntry struct {
+	Timestamp    time.Time
+	PerformerIDs []int
+}

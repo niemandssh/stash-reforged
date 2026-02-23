@@ -444,6 +444,11 @@ func (qb *GameStore) AddO(ctx context.Context, id int, dates []time.Time) ([]tim
 	return qb.oDateManager.AddO(ctx, id, dates)
 }
 
+// AddOWithPerformers ignores performerIDs for games; games have no performer attribution.
+func (qb *GameStore) AddOWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
+	return qb.oDateManager.AddO(ctx, id, dates)
+}
+
 func (qb *GameStore) DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
 	return qb.oDateManager.DeleteO(ctx, id, dates)
 }
@@ -453,6 +458,11 @@ func (qb *GameStore) ResetO(ctx context.Context, id int) (int, error) {
 }
 
 func (qb *GameStore) AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
+	return qb.omgDateManager.AddOMG(ctx, id, dates)
+}
+
+// AddOMGWithPerformers ignores performerIDs for games; games have no performer attribution.
+func (qb *GameStore) AddOMGWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
 	return qb.omgDateManager.AddOMG(ctx, id, dates)
 }
 

@@ -239,6 +239,17 @@ func (r *performerResolver) OCounter(ctx context.Context, obj *models.Performer)
 	return &res, nil
 }
 
+func (r *performerResolver) OmgCounter(ctx context.Context, obj *models.Performer) (ret *int, err error) {
+	var res int
+	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
+		res, err = r.repository.Scene.OmgCountByPerformerID(ctx, obj.ID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (r *performerResolver) Scenes(ctx context.Context, obj *models.Performer) (ret []*models.Scene, err error) {
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
 		ret, err = r.repository.Scene.FindByPerformerID(ctx, obj.ID)

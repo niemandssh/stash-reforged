@@ -783,20 +783,38 @@ export const useSceneIncrementO = (id: string) =>
         fragmentName: "SceneData",
       });
 
+      const performerIds = variables.performer_ids;
       if (scene) {
-        // if we have the scene, update performer o_counters manually
-        for (const performer of scene.performers) {
-          cache.modify({
-            id: cache.identify(performer),
-            fields: {
-              o_counter(value) {
-                return value + countChange;
+        if (performerIds && performerIds.length > 0) {
+          // only update attributed performers
+          for (const pid of performerIds) {
+            try {
+              cache.modify({
+                id: cache.identify({ __typename: "Performer", id: pid }),
+                fields: {
+                  o_counter(value) {
+                    return (value ?? 0) + countChange;
+                  },
+                },
+              });
+            } catch {
+              // performer might not be in cache
+            }
+          }
+        } else {
+          // attribute to whole scene: update all scene performers
+          for (const performer of scene.performers) {
+            cache.modify({
+              id: cache.identify(performer),
+              fields: {
+                o_counter(value) {
+                  return (value ?? 0) + countChange;
+                },
               },
-            },
-          });
+            });
+          }
         }
       } else {
-        // else refresh all performer o_counters
         evictTypeFields(cache, {
           Performer: ["o_counter"],
         });
@@ -1059,12 +1077,31 @@ export const useSceneAddOmg = (id: string) =>
       if (!mutationResult || !variables) return;
 
       const { history, count } = mutationResult;
+      const countChange = !variables.times ? 1 : variables.times.length;
+      const performerIds = variables.performer_ids;
 
       const scene = cache.readFragment<GQL.SceneDataFragment>({
         id: cache.identify({ __typename: "Scene", id }),
         fragment: GQL.SceneDataFragmentDoc,
         fragmentName: "SceneData",
       });
+
+      if (scene && performerIds && performerIds.length > 0) {
+        for (const pid of performerIds) {
+          try {
+            cache.modify({
+              id: cache.identify({ __typename: "Performer", id: pid }),
+              fields: {
+                omg_counter(value) {
+                  return (value ?? 0) + countChange;
+                },
+              },
+            });
+          } catch {
+            // performer might not be in cache
+          }
+        }
+      }
 
       if (scene) {
         cache.writeFragment({

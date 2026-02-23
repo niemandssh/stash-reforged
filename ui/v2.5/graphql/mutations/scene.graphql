@@ -64,8 +64,8 @@ mutation SceneResetPlayCount($id: ID!) {
   sceneResetPlayCount(id: $id)
 }
 
-mutation SceneAddO($id: ID!, $times: [Timestamp!]) {
-  sceneAddO(id: $id, times: $times) {
+mutation SceneAddO($id: ID!, $times: [Timestamp!], $performer_ids: [ID!]) {
+  sceneAddO(id: $id, times: $times, performer_ids: $performer_ids) {
     count
     history
   }
@@ -94,8 +94,8 @@ mutation SceneResetOmg($id: ID!) {
   sceneResetOmg(id: $id)
 }
 
-mutation SceneAddOmg($id: ID!, $times: [Timestamp!]) {
-  sceneAddOmg(id: $id, times: $times) {
+mutation SceneAddOmg($id: ID!, $times: [Timestamp!], $performer_ids: [ID!]) {
+  sceneAddOmg(id: $id, times: $times, performer_ids: $performer_ids) {
     count
     history
   }

@@ -24,6 +24,15 @@ import (
 	"github.com/stashapp/stash/pkg/utils"
 )
 
+// performerIDsJSON returns a JSON array string for performer IDs, or nil for "attribute to scene".
+func performerIDsJSON(performerIDs []int) interface{} {
+	if len(performerIDs) == 0 {
+		return nil
+	}
+	b, _ := json.Marshal(performerIDs)
+	return string(b)
+}
+
 const (
 	sceneTable             = "scenes"
 	scenesFilesTable       = "scenes_files"
@@ -908,14 +917,50 @@ func (qb *SceneStore) OCountByPerformerID(ctx context.Context, performerID int) 
 	joinTable := scenesPerformersJoinTable
 	oHistoryTable := goqu.T(scenesODatesTable)
 
+	// Only count o_dates attributed to this performer or to whole scene (performer_ids IS NULL)
+	attributedCond := goqu.Or(
+		oHistoryTable.Col("performer_ids").IsNull(),
+		goqu.L("EXISTS (SELECT 1 FROM json_each("+scenesODatesTable+".performer_ids) WHERE value = ?)", performerID),
+	)
+
 	q := dialect.Select(goqu.COUNT("*")).From(table).InnerJoin(
 		oHistoryTable,
-		goqu.On(table.Col(idColumn).Eq(oHistoryTable.Col(sceneIDColumn))),
+		goqu.On(
+			table.Col(idColumn).Eq(oHistoryTable.Col(sceneIDColumn)),
+			attributedCond,
+		),
 	).InnerJoin(
 		joinTable,
+		goqu.On(table.Col(idColumn).Eq(joinTable.Col(sceneIDColumn))),
+	).Where(joinTable.Col(performerIDColumn).Eq(performerID))
+
+	var ret int
+	if err := querySimple(ctx, q, &ret); err != nil {
+		return 0, err
+	}
+
+	return ret, nil
+}
+
+func (qb *SceneStore) OmgCountByPerformerID(ctx context.Context, performerID int) (int, error) {
+	table := qb.table()
+	joinTable := scenesPerformersJoinTable
+	omgHistoryTable := goqu.T(scenesOMGDatesTable)
+
+	attributedCond := goqu.Or(
+		omgHistoryTable.Col("performer_ids").IsNull(),
+		goqu.L("EXISTS (SELECT 1 FROM json_each("+scenesOMGDatesTable+".performer_ids) WHERE value = ?)", performerID),
+	)
+
+	q := dialect.Select(goqu.COUNT("*")).From(table).InnerJoin(
+		omgHistoryTable,
 		goqu.On(
-			table.Col(idColumn).Eq(joinTable.Col(sceneIDColumn)),
+			table.Col(idColumn).Eq(omgHistoryTable.Col(sceneIDColumn)),
+			attributedCond,
 		),
+	).InnerJoin(
+		joinTable,
+		goqu.On(table.Col(idColumn).Eq(joinTable.Col(sceneIDColumn))),
 	).Where(joinTable.Col(performerIDColumn).Eq(performerID))
 
 	var ret int
@@ -1747,6 +1792,44 @@ func (qb *SceneStore) AddOMG(ctx context.Context, id int, dates []time.Time) ([]
 	return qb.omgDateManager.AddOMG(ctx, id, dates)
 }
 
+func (qb *SceneStore) addODatesWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
+	if len(dates) == 0 {
+		dates = []time.Time{time.Now()}
+	}
+	performerIDsVal := performerIDsJSON(performerIDs)
+	for _, d := range dates {
+		vals := goqu.Vals{id, UTCTimestamp{Timestamp{d}}, performerIDsVal}
+		q := dialect.Insert(goqu.T(scenesODatesTable)).Cols(sceneIDColumn, sceneODateColumn, "performer_ids").Vals(vals)
+		if _, err := exec(ctx, q); err != nil {
+			return nil, fmt.Errorf("inserting into %s: %w", scenesODatesTable, err)
+		}
+	}
+	return qb.oDateManager.GetODates(ctx, id)
+}
+
+func (qb *SceneStore) AddOWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
+	return qb.addODatesWithPerformers(ctx, id, dates, performerIDs)
+}
+
+func (qb *SceneStore) addOMGDatesWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
+	if len(dates) == 0 {
+		dates = []time.Time{time.Now()}
+	}
+	performerIDsVal := performerIDsJSON(performerIDs)
+	for _, d := range dates {
+		vals := goqu.Vals{id, UTCTimestamp{Timestamp{d}}, performerIDsVal}
+		q := dialect.Insert(goqu.T(scenesOMGDatesTable)).Cols(sceneIDColumn, sceneOMGDateColumn, "performer_ids").Vals(vals)
+		if _, err := exec(ctx, q); err != nil {
+			return nil, fmt.Errorf("inserting into %s: %w", scenesOMGDatesTable, err)
+		}
+	}
+	return qb.omgDateManager.GetOMGDates(ctx, id)
+}
+
+func (qb *SceneStore) AddOMGWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error) {
+	return qb.addOMGDatesWithPerformers(ctx, id, dates, performerIDs)
+}
+
 func (qb *SceneStore) DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error) {
 	return qb.omgDateManager.DeleteOMG(ctx, id, dates)
 }
@@ -1777,6 +1860,81 @@ func (qb *SceneStore) GetAllOMGCount(ctx context.Context) (int, error) {
 
 func (qb *SceneStore) GetOMGDatesInRange(ctx context.Context, start, end time.Time) ([]time.Time, error) {
 	return qb.omgDateManager.GetOMGDatesInRange(ctx, start, end)
+}
+
+func parsePerformerIDsJSON(s string) []int {
+	if s == "" {
+		return nil
+	}
+	var ids []int
+	if err := json.Unmarshal([]byte(s), &ids); err != nil {
+		return nil
+	}
+	return ids
+}
+
+func (qb *SceneStore) GetOHistoryEntries(ctx context.Context, sceneID int) ([]models.OHistoryEntry, error) {
+	table := goqu.T(scenesODatesTable)
+	q := dialect.Select(table.Col(sceneODateColumn), table.Col("performer_ids")).
+		From(table).
+		Where(table.Col(sceneIDColumn).Eq(sceneID)).
+		Order(table.Col(sceneODateColumn).Desc())
+
+	var entries []models.OHistoryEntry
+	if err := queryFunc(ctx, q, false, func(rows *sqlx.Rows) error {
+		var date Timestamp
+		var performerIDsNull sql.NullString
+		if err := rows.Scan(&date, &performerIDsNull); err != nil {
+			return err
+		}
+		var performerIDs []int
+		if performerIDsNull.Valid && performerIDsNull.String != "" {
+			performerIDs = parsePerformerIDsJSON(performerIDsNull.String)
+		}
+		if performerIDs == nil {
+			performerIDs = []int{}
+		}
+		entries = append(entries, models.OHistoryEntry{
+			Timestamp:    date.Timestamp,
+			PerformerIDs: performerIDs,
+		})
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return entries, nil
+}
+
+func (qb *SceneStore) GetOMGHistoryEntries(ctx context.Context, sceneID int) ([]models.OHistoryEntry, error) {
+	table := goqu.T(scenesOMGDatesTable)
+	q := dialect.Select(table.Col(sceneOMGDateColumn), table.Col("performer_ids")).
+		From(table).
+		Where(table.Col(sceneIDColumn).Eq(sceneID)).
+		Order(table.Col(sceneOMGDateColumn).Desc())
+
+	var entries []models.OHistoryEntry
+	if err := queryFunc(ctx, q, false, func(rows *sqlx.Rows) error {
+		var date Timestamp
+		var performerIDsNull sql.NullString
+		if err := rows.Scan(&date, &performerIDsNull); err != nil {
+			return err
+		}
+		var performerIDs []int
+		if performerIDsNull.Valid && performerIDsNull.String != "" {
+			performerIDs = parsePerformerIDsJSON(performerIDsNull.String)
+		}
+		if performerIDs == nil {
+			performerIDs = []int{}
+		}
+		entries = append(entries, models.OHistoryEntry{
+			Timestamp:    date.Timestamp,
+			PerformerIDs: performerIDs,
+		})
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return entries, nil
 }
 
 func (qb *SceneStore) GetAggregatedViewHistoryCount(ctx context.Context) (int, error) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import cx from "classnames";
@@ -21,7 +21,9 @@ import {
   useSceneUpdate,
   useSceneIncrementO,
   useSceneIncrementOmg,
+  useSceneAddOmg,
 } from "src/core/StashService";
+import { SceneCountAttributeModal } from "./SceneDetails/SceneCountAttributeModal";
 import { useToast } from "src/hooks/Toast";
 import {
   faBox,
@@ -192,6 +194,9 @@ const SceneCardPopovers = PatchComponent(
     const Toast = useToast();
     const [incrementO] = useSceneIncrementO(props.scene.id);
     const [incrementOmg] = useSceneIncrementOmg(props.scene.id);
+    const [addOmg] = useSceneAddOmg(props.scene.id);
+    const [showOAttributeModal, setShowOAttributeModal] = useState(false);
+    const [showOmgAttributeModal, setShowOmgAttributeModal] = useState(false);
 
     const file = useMemo(
       () => (props.scene.files.length > 0 ? props.scene.files[0] : undefined),
@@ -214,6 +219,10 @@ const SceneCardPopovers = PatchComponent(
     ) => {
       event.preventDefault();
       event.stopPropagation();
+      if (props.scene.performers.length > 0) {
+        setShowOAttributeModal(true);
+        return;
+      }
       try {
         await incrementO();
       } catch (e) {
@@ -226,8 +235,40 @@ const SceneCardPopovers = PatchComponent(
     ) => {
       event.preventDefault();
       event.stopPropagation();
+      if (props.scene.performers.length > 0) {
+        setShowOmgAttributeModal(true);
+        return;
+      }
       try {
         await incrementOmg();
+      } catch (e) {
+        Toast.error(e);
+      }
+    };
+
+    const handleOAttributeConfirm = async (performerIds: string[] | null) => {
+      try {
+        await incrementO({
+          variables: {
+            id: props.scene.id,
+            performer_ids: performerIds ?? undefined,
+          } as GQL.SceneAddOMutationVariables,
+        });
+        setShowOAttributeModal(false);
+      } catch (e) {
+        Toast.error(e);
+      }
+    };
+
+    const handleOmgAttributeConfirm = async (performerIds: string[] | null) => {
+      try {
+        await addOmg({
+          variables: {
+            id: props.scene.id,
+            performer_ids: performerIds ?? undefined,
+          } as GQL.SceneAddOmgMutationVariables,
+        });
+        setShowOmgAttributeModal(false);
       } catch (e) {
         Toast.error(e);
       }
@@ -416,7 +457,27 @@ const SceneCardPopovers = PatchComponent(
       }
     }
 
-    return <>{maybeRenderPopoverButtonGroup()}</>;
+    const performers = props.scene.performers as GQL.PerformerDataFragment[];
+
+    return (
+      <>
+        {maybeRenderPopoverButtonGroup()}
+        <SceneCountAttributeModal
+          show={showOAttributeModal}
+          onHide={() => setShowOAttributeModal(false)}
+          type="o"
+          performers={performers}
+          onConfirm={handleOAttributeConfirm}
+        />
+        <SceneCountAttributeModal
+          show={showOmgAttributeModal}
+          onHide={() => setShowOmgAttributeModal(false)}
+          type="omg"
+          performers={performers}
+          onConfirm={handleOmgAttributeConfirm}
+        />
+      </>
+    );
   }
 );
 

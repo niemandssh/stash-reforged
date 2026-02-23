@@ -1600,4 +1600,32 @@ input[type="range"].blue-slider {
     outline: none !important;
   }
 }
+
+/* Modal dialog width: larger than default (500px), smaller than lg (800px) */
+.scene-count-attribute-modal-dialog {
+  max-width: 600px;
+}
+
+.scene-count-attribute-modal {
+  .performer-row {
+    .performer-thumb {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+  }
+  .performer-attribution-btn {
+    min-height: 56px;
+  }
+  .performer-info {
+    min-width: 0;
+  }
+  .count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
 /* stylelint-enable declaration-no-important */

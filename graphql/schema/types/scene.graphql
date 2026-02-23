@@ -88,6 +88,12 @@ input VideoTransformsInput {
   flip_vertical: Boolean
 }
 
+"Single O or OMG history entry with optional performer attribution. Empty performer_ids means whole scene."
+type OHistoryEntry {
+  timestamp: Time!
+  performer_ids: [ID!]!
+}
+
 type Scene {
   id: ID!
   title: String
@@ -139,8 +145,12 @@ type Scene {
   play_history: [Time!]!
   "Times the o counter was incremented"
   o_history: [Time!]!
+  "O history with performer attribution per entry"
+  o_history_entries: [OHistoryEntry!]!
   "Times the omg counter was incremented"
   omg_history: [Time!]!
+  "OMG history with performer attribution per entry"
+  omg_history_entries: [OHistoryEntry!]!
 
   files: [VideoFile!]!
   paths: ScenePathsType! # Resolver

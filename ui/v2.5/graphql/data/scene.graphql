@@ -57,7 +57,15 @@ fragment SceneData on Scene {
 
   play_history
   o_history
+  o_history_entries {
+    timestamp
+    performer_ids
+  }
   omg_history
+  omg_history_entries {
+    timestamp
+    performer_ids
+  }
 
   files {
     ...VideoFileData

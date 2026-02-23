@@ -44,6 +44,7 @@ type SceneCounter interface {
 	CountMissingChecksum(ctx context.Context) (int, error)
 	CountMissingOSHash(ctx context.Context) (int, error)
 	OCountByPerformerID(ctx context.Context, performerID int) (int, error)
+	OmgCountByPerformerID(ctx context.Context, performerID int) (int, error)
 }
 
 // SceneCreator provides methods to create scenes.
@@ -156,6 +157,8 @@ type SceneReader interface {
 	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
 	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
 	GetOMGCounter(ctx context.Context, id int) (int, error)
+	GetOHistoryEntries(ctx context.Context, sceneID int) ([]OHistoryEntry, error)
+	GetOMGHistoryEntries(ctx context.Context, sceneID int) ([]OHistoryEntry, error)
 
 	All(ctx context.Context) ([]*Scene, error)
 	AllWithRelationships(ctx context.Context) ([]*Scene, error)
@@ -169,12 +172,14 @@ type SceneReader interface {
 
 type OHistoryWriter interface {
 	AddO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	AddOWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error)
 	DeleteO(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
 	ResetO(ctx context.Context, id int) (int, error)
 }
 
 type OMGHistoryWriter interface {
 	AddOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
+	AddOMGWithPerformers(ctx context.Context, id int, dates []time.Time, performerIDs []int) ([]time.Time, error)
 	DeleteOMG(ctx context.Context, id int, dates []time.Time) ([]time.Time, error)
 	ResetOMG(ctx context.Context, id int) (int, error)
 }

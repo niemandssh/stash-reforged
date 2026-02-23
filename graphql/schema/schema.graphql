@@ -319,8 +319,8 @@ type Mutation {
   "Decrements the o-counter for a scene. Returns the new value"
   sceneDecrementO(id: ID!): Int! @deprecated(reason: "Use sceneRemoveO instead")
 
-  "Increments the o-counter for a scene. Uses the current time if none provided."
-  sceneAddO(id: ID!, times: [Timestamp!]): HistoryMutationResult!
+  "Increments the o-counter for a scene. Uses the current time if none provided. performer_ids: attribute to these performers; omit or empty to attribute to whole scene."
+  sceneAddO(id: ID!, times: [Timestamp!], performer_ids: [ID!]): HistoryMutationResult!
   "Decrements the o-counter for a scene, removing the last recorded time if specific time not provided. Returns the new value"
   sceneDeleteO(id: ID!, times: [Timestamp!]): HistoryMutationResult!
 
@@ -333,7 +333,8 @@ type Mutation {
   sceneDecrementOmg(id: ID!): Int!
   "Resets the omg-counter for a scene to 0. Returns the new value"
   sceneResetOmg(id: ID!): Int!
-  sceneAddOmg(id: ID!, times: [Timestamp!]): HistoryMutationResult!
+  "performer_ids: attribute to these performers; omit or empty to attribute to whole scene."
+  sceneAddOmg(id: ID!, times: [Timestamp!], performer_ids: [ID!]): HistoryMutationResult!
   sceneDeleteOmg(id: ID!, times: [Timestamp!]): HistoryMutationResult!
 
   "Increments the o-counter for a gallery. Returns the new value"

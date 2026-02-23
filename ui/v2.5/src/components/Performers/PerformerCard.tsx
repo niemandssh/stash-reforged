@@ -7,6 +7,7 @@ import TextUtils from "src/utils/text";
 import { GridCard } from "../Shared/GridCard/GridCard";
 import { CountryFlag } from "../Shared/CountryFlag";
 import { SweatDrops } from "../Shared/SweatDrops";
+import { OMGIcon } from "../Shared/OMGIcon";
 import { HoverPopover } from "../Shared/HoverPopover";
 import { Icon } from "../Shared/Icon";
 import { TagLink } from "../Shared/TagLink";
@@ -114,6 +115,21 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
       );
     }
 
+    function maybeRenderOMGCounter() {
+      if (!performer.omg_counter) return;
+
+      return (
+        <div className="omg-counter">
+          <Button className="minimal">
+            <span className="fa-icon">
+              <OMGIcon />
+            </span>
+            <span>{performer.omg_counter}</span>
+          </Button>
+        </div>
+      );
+    }
+
     function maybeRenderTagPopoverButton() {
       if (performer.tags.length <= 0) return;
 
@@ -154,6 +170,7 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
       performer.gallery_count ||
       performer.tags.length > 0 ||
       performer.o_counter ||
+      performer.omg_counter ||
       performer.group_count
     ) {
       return (
@@ -166,6 +183,7 @@ const PerformerCardPopovers: React.FC<IPerformerCardProps> = PatchComponent(
             {maybeRenderGalleriesPopoverButton()}
             {maybeRenderTagPopoverButton()}
             {maybeRenderOCounter()}
+            {maybeRenderOMGCounter()}
           </ButtonGroup>
         </>
       );
