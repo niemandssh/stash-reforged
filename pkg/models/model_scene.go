@@ -374,6 +374,8 @@ type VideoFilters struct {
 	Green        *int `json:"green"`
 	Blue         *int `json:"blue"`
 	Blur         *int `json:"blur"`
+	VolumeLevel *float64 `json:"volume_level"`
+	VolumeMuted *bool    `json:"volume_muted"`
 }
 
 // VideoTransforms represents video transformation settings for a scene

@@ -1188,6 +1188,8 @@
     "name": "Preferences",
     "name_transforms": "Transforms",
     "red": "Red",
+    "volume": "Volume",
+    "volume_muted": "Muted",
     "reset_filters": "Reset Filters",
     "reset_transforms": "Reset Transforms",
     "rotate": "Rotate",

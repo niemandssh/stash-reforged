@@ -164,6 +164,19 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const [blurValue, setBlurValue] = useState(
     () => props.scene.video_filters?.blur ?? blurRange.default
   );
+  const volumeRange: SliderRange = {
+    min: 0,
+    default: 100,
+    max: 100,
+    divider: 1,
+  };
+  const [volumeValue, setVolumeValue] = useState(() => {
+    const v = props.scene.video_filters?.volume_level;
+    return v != null ? Math.round(v * 100) : 100;
+  });
+  const [volumeMuted, setVolumeMuted] = useState(
+    () => props.scene.video_filters?.volume_muted ?? false
+  );
   const [rotateValue, setRotateValue] = useState(
     () => props.scene.video_transforms?.rotate ?? rotateRange.default
   );
@@ -278,12 +291,17 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     setAudioPlaybackSpeedValue(props.scene.audio_playback_speed ?? 1.0);
     setAudioPlaybackSpeedText(String(props.scene.audio_playback_speed ?? 1.0));
     setForceHLSValue(props.scene.force_hls ?? false);
+    const vol = props.scene.video_filters?.volume_level;
+    setVolumeValue(vol != null ? Math.round(vol * 100) : 100);
+    setVolumeMuted(props.scene.video_filters?.volume_muted ?? false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.scene.id,
     props.scene.audio_offset_ms,
     props.scene.audio_playback_speed,
     props.scene.force_hls,
+    props.scene.video_filters?.volume_level,
+    props.scene.video_filters?.volume_muted,
   ]);
 
   // Sync text and numeric values
@@ -658,6 +676,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       green: null,
       blue: null,
       blur: null,
+      volume_level: null,
+      volume_muted: null,
     };
 
     sceneUpdate({
@@ -718,6 +738,9 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       green: greenValue !== colourRange.default ? greenValue : null,
       blue: blueValue !== colourRange.default ? blueValue : null,
       blur: blurValue !== blurRange.default ? blurValue : null,
+      volume_level:
+        volumeValue !== volumeRange.default ? volumeValue / 100 : null,
+      volume_muted: volumeMuted || null,
     };
 
     const videoTransforms: GQL.VideoTransforms = {
@@ -1038,6 +1061,30 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       <div className="row form-group">
         <span className="col-12">
           <h5>Audio</h5>
+        </span>
+      </div>
+      <Slider
+        title={intl.formatMessage({ id: "effect_filters.volume" })}
+        className="volume-slider"
+        range={volumeRange}
+        value={volumeValue}
+        setValue={setVolumeValue}
+        displayValue={
+          volumeMuted
+            ? intl.formatMessage({ id: "effect_filters.volume_muted" })
+            : `${volumeValue}%`
+        }
+      />
+      <div className="row form-group">
+        <span className="col-sm-3" />
+        <span className="col-sm-9">
+          <Form.Check
+            type="checkbox"
+            id="volume-muted"
+            label={intl.formatMessage({ id: "effect_filters.volume_muted" })}
+            checked={volumeMuted}
+            onChange={(e) => setVolumeMuted(e.target.checked)}
+          />
         </span>
       </div>
       <div className="row form-group">

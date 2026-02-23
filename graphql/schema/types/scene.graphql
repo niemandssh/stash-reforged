@@ -53,6 +53,8 @@ type VideoFilters {
   green: Int
   blue: Int
   blur: Int
+  volume_level: Float
+  volume_muted: Boolean
 }
 
 type VideoTransforms {
@@ -74,6 +76,8 @@ input VideoFiltersInput {
   green: Int
   blue: Int
   blur: Int
+  volume_level: Float
+  volume_muted: Boolean
 }
 
 input VideoTransformsInput {

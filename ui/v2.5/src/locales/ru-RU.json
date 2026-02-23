@@ -1113,6 +1113,8 @@
         "name": "Настройки",
         "name_transforms": "Трансформация",
         "red": "Красный",
+        "volume": "Громкость",
+        "volume_muted": "Без звука",
         "reset_filters": "Сбросить фильтры",
         "reset_transforms": "Сбросить трансформации",
         "rotate": "Поворот",

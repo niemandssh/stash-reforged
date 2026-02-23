@@ -43,6 +43,8 @@ fragment SceneData on Scene {
     green
     blue
     blur
+    volume_level
+    volume_muted
   }
 
   video_transforms {

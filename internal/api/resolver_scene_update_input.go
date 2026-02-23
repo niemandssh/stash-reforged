@@ -25,6 +25,8 @@ func (r *sceneUpdateInputResolver) VideoFilters(ctx context.Context, obj *models
 		Green:        data.Green,
 		Blue:         data.Blue,
 		Blur:         data.Blur,
+		VolumeLevel:  data.VolumeLevel,
+		VolumeMuted:  data.VolumeMuted,
 	}
 
 	return nil

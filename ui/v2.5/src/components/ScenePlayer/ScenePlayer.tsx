@@ -251,6 +251,9 @@ interface IScenePlayerProps {
   markerPlaylist?: GQL.SceneDataFragment["scene_markers"];
   initialPlaylistIndex?: number;
   onClearMarkerPlaylist: () => void;
+  initialVolume?: number;
+  initialMuted?: boolean;
+  onVolumeChange?: (level: number, muted: boolean) => void;
 }
 
 export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
@@ -271,6 +274,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     markerPlaylist,
     initialPlaylistIndex = 0,
     onClearMarkerPlaylist,
+    initialVolume,
+    initialMuted,
+    onVolumeChange,
   }) => {
     const { configuration } = useContext(ConfigurationContext);
     const interfaceConfig = configuration?.interface;
@@ -480,7 +486,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           },
           markers: {},
           sourceSelector: {},
-          persistVolume: {},
+          persistVolume: {
+            onVolumeChange: onVolumeChange ?? undefined,
+            useLocalForage: !onVolumeChange,
+          },
           bigButtons: {},
           seekButtons: {
             forward: 10,
@@ -511,6 +520,14 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       const vjs = videojs(videoEl, options);
 
+      vjs.ready(() => {
+        const v = initialVolume ?? 1;
+        const m = initialMuted ?? false;
+        vjs.volume(v);
+        vjs.muted(m);
+        vjs.trigger("volumechange");
+      });
+
       /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
       const settings = (vjs as any).textTrackSettings;
       settings.setValues({
@@ -522,18 +539,23 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       vjs.focus();
       setPlayer(vjs);
 
-      // Video player destructor
       return () => {
         vjs.dispose();
         videoEl.remove();
         setPlayer(undefined);
-
-        // reset sceneId to force reload sources
         sceneId.current = undefined;
       };
-      // empty deps - only init once
-      // showAbLoopControls is necessary to re-init the player when the config changes
     }, [uiConfig?.showAbLoopControls]);
+
+    useEffect(() => {
+      const player = getPlayer();
+      if (!player) return;
+      const vol = initialVolume ?? 1;
+      const mut = initialMuted ?? false;
+      if (player.volume() !== vol) player.volume(vol);
+      if (player.muted() !== mut) player.muted(mut);
+      player.trigger("volumechange");
+    }, [scene.id, initialVolume, initialMuted, getPlayer]);
 
     useEffect(() => {
       const player = getPlayer();
@@ -557,7 +579,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       scene.paths.funscript,
     ]);
 
-    // play the script if video started before script upload finished
     useEffect(() => {
       if (interactiveState !== ConnectionState.Ready) return;
       const player = getPlayer();
@@ -580,7 +601,6 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       vrMenu.setShowButton(showButton);
     }, [getPlayer, scene, vrTag]);
 
-    // Function to update Video.js progress bar trim styles
     const updateVideoJsProgressBarTrimStyles = useCallback(
       (player: VideoJsPlayer) => {
         const progressHolder = player

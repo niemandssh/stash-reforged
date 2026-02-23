@@ -1441,9 +1441,34 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const { id } = match.params;
   const { configuration } = useContext(ConfigurationContext);
   const { data, loading, error, refetch } = useFindScene(id);
+  const [updateScene] = useSceneUpdate();
+  const onVolumeChangeRef = useRef<
+    (level: number, muted: boolean) => void
+  >(() => {});
 
   // Use data directly from Apollo instead of useState
   const scene = data?.findScene;
+
+  useEffect(() => {
+    onVolumeChangeRef.current = (level: number, muted: boolean) => {
+      if (!scene) return;
+      updateScene({
+        variables: {
+          input: {
+            id: scene.id,
+            video_filters: {
+              ...(scene.video_filters ?? {}),
+              volume_level: level,
+              volume_muted: muted,
+            } as GQL.VideoFiltersInput,
+          },
+        },
+      });
+    };
+  }, [scene, updateScene]);
+  const onVolumeChangeStable = useCallback((level: number, muted: boolean) => {
+    onVolumeChangeRef.current(level, muted);
+  }, []);
 
   // Force refetch on mount
   React.useEffect(() => {
@@ -1891,6 +1916,9 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           markerPlaylist={markerPlaylist}
           initialPlaylistIndex={initialPlaylistIndex}
           onClearMarkerPlaylist={onStopMarkers}
+          initialVolume={scene.video_filters?.volume_level ?? 1}
+          initialMuted={scene.video_filters?.volume_muted ?? false}
+          onVolumeChange={onVolumeChangeStable}
         />
       </div>
       <div className="scene-right-edge-panel">
