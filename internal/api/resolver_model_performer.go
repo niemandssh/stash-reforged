@@ -118,6 +118,10 @@ func (r *performerResolver) Birthdate(ctx context.Context, obj *models.Performer
 	return nil, nil
 }
 
+func (r *performerResolver) BirthdateDisplay(ctx context.Context, obj *models.Performer) (*string, error) {
+	return obj.BirthdateDisplay, nil
+}
+
 func (r *performerResolver) ImagePath(ctx context.Context, obj *models.Performer) (*string, error) {
 	var hasImage bool
 	if err := r.withReadTxn(ctx, func(ctx context.Context) error {
@@ -281,6 +285,10 @@ func (r *performerResolver) DeathDate(ctx context.Context, obj *models.Performer
 		return &ret, nil
 	}
 	return nil, nil
+}
+
+func (r *performerResolver) DeathDateDisplay(ctx context.Context, obj *models.Performer) (*string, error) {
+	return obj.DeathDateDisplay, nil
 }
 
 func (r *performerResolver) Groups(ctx context.Context, obj *models.Performer) (ret []*models.Group, err error) {

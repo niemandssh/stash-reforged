@@ -66,6 +66,7 @@
 - [x] You can save video volume separately for each scene in preferences (ex. filters tab) and it's autosync to preferences if you change volume in player - useful for videos with loud music (compilations, collections, etc.)
 - [x] You can add photo/image from clipboard (new mode "From clipboard..." for image loader component)
 - [x] You can now add O-Count / OMG-Count to one or many performers separately or on the whole scene
+- [x] You can now write any dates in formats YYYY-MM-DDDD, DD-MM-YYYY, dd.mm.yyyy. Also you can write only year and month or only year (if you write date without day, any age will count from first day; if you wrate only year, any age will count from June, 1'st)
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

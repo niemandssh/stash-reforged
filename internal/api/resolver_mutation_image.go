@@ -114,7 +114,7 @@ func (r *mutationResolver) imageUpdate(ctx context.Context, input models.ImageUp
 	updatedImage.Rating = translator.optionalInt(input.Rating100, "rating100")
 	updatedImage.Organized = translator.optionalBool(input.Organized, "organized")
 
-	updatedImage.Date, err = translator.optionalDate(input.Date, "date")
+	updatedImage.Date, updatedImage.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
@@ -213,7 +213,7 @@ func (r *mutationResolver) BulkImageUpdate(ctx context.Context, input BulkImageU
 	updatedImage.Rating = translator.optionalInt(input.Rating100, "rating100")
 	updatedImage.Organized = translator.optionalBool(input.Organized, "organized")
 
-	updatedImage.Date, err = translator.optionalDate(input.Date, "date")
+	updatedImage.Date, updatedImage.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}

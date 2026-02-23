@@ -1397,11 +1397,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           <div className="scene-subheader">
             {!!scene.date && (
               <span className="date mr-3" data-value={scene.date}>
-                <FormattedDate
-                  value={scene.date}
-                  format="long"
-                  timeZone="utc"
-                />
+                {TextUtils.formatDate(intl, scene.date, true, scene.date_display)}
               </span>
             )}
             <VideoFrameRateResolution

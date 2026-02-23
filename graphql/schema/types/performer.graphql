@@ -22,6 +22,7 @@ type Performer {
   twitter: String @deprecated(reason: "Use urls")
   instagram: String @deprecated(reason: "Use urls")
   birthdate: String
+  birthdate_display: String
   ethnicity: String
   country: String
   eye_color: String
@@ -56,6 +57,7 @@ type Performer {
   rating100: Int
   details: String
   death_date: String
+  death_date_display: String
   hair_color: String
   weight: Int
   created_at: Time!

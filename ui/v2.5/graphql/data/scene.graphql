@@ -6,6 +6,9 @@ fragment SceneData on Scene {
   director
   urls
   date
+  date_display
+  shoot_date
+  shoot_date_display
   rating100
   o_counter
   omgCounter

@@ -8,6 +8,7 @@ import {
 import cx from "classnames";
 
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import {
   queryFindScenesForSelect,
   queryFindScenesByIDForSelect,
@@ -141,7 +142,7 @@ const _SceneSelect: React.FC<
               )}
 
               {object.date && (
-                <span className="scene-select-date">{object.date}</span>
+                <span className="scene-select-date">{TextUtils.getDateDisplayString(object.date, object.date_display)}</span>
               )}
 
               {object.code && (

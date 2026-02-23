@@ -3,6 +3,7 @@ import { Badge, Button, Col, Form, InputGroup, Row } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
@@ -77,7 +78,7 @@ const SceneSearchResultDetails: React.FC<ISceneSearchResultDetailsProps> = ({
           <h5>
             {scene.studio?.name}
             {scene.studio?.name && scene.date && ` • `}
-            {scene.date}
+            {TextUtils.getDateDisplayString(scene.date, scene.date_display)}
           </h5>
         </div>
       </Row>

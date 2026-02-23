@@ -100,11 +100,11 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 	newScene.IsBroken = translator.bool(input.IsBroken)
 	newScene.StashIDs = models.NewRelatedStashIDs(models.StashIDInputs(input.StashIds).ToStashIDs())
 
-	newScene.Date, err = translator.datePtr(input.Date)
+	newScene.Date, newScene.DateDisplay, err = translator.datePtrWithDisplay(input.Date)
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
-	newScene.ShootDate, err = translator.datePtr(input.ShootDate)
+	newScene.ShootDate, newScene.ShootDateDisplay, err = translator.datePtrWithDisplay(input.ShootDate)
 	if err != nil {
 		return nil, fmt.Errorf("converting shoot_date: %w", err)
 	}
@@ -274,11 +274,11 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 
 	var err error
 
-	updatedScene.Date, err = translator.optionalDate(input.Date, "date")
+	updatedScene.Date, updatedScene.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
-	updatedScene.ShootDate, err = translator.optionalDate(input.ShootDate, "shoot_date")
+	updatedScene.ShootDate, updatedScene.ShootDateDisplay, err = translator.optionalDateWithDisplay(input.ShootDate, "shoot_date")
 	if err != nil {
 		return nil, fmt.Errorf("converting shoot_date: %w", err)
 	}
@@ -482,11 +482,11 @@ func (r *mutationResolver) BulkSceneUpdate(ctx context.Context, input BulkSceneU
 		updatedScene.IsBroken = models.NewOptionalBool(false)
 	}
 
-	updatedScene.Date, err = translator.optionalDate(input.Date, "date")
+	updatedScene.Date, updatedScene.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
-	updatedScene.ShootDate, err = translator.optionalDate(input.ShootDate, "shoot_date")
+	updatedScene.ShootDate, updatedScene.ShootDateDisplay, err = translator.optionalDateWithDisplay(input.ShootDate, "shoot_date")
 	if err != nil {
 		return nil, fmt.Errorf("converting shoot_date: %w", err)
 	}

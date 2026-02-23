@@ -16,6 +16,7 @@ import {
   faTag,
 } from "@fortawesome/free-solid-svg-icons";
 import { imageTitle } from "src/core/files";
+import TextUtils from "src/utils/text";
 import { TruncatedText } from "../Shared/TruncatedText";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 
@@ -186,7 +187,7 @@ export const ImageCard: React.FC<IImageCardProps> = (
       }
       details={
         <div className="image-card__details">
-          <span className="image-card__date">{props.image.date}</span>
+          <span className="image-card__date">{TextUtils.getDateDisplayString(props.image.date, props.image.date_display)}</span>
           <TruncatedText
             className="image-card__description"
             text={props.image.details}

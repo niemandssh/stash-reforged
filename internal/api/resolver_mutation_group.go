@@ -30,7 +30,7 @@ func groupFromGroupCreateInput(ctx context.Context, input GroupCreateInput) (*mo
 
 	var err error
 
-	newGroup.Date, err = translator.datePtr(input.Date)
+	newGroup.Date, newGroup.DateDisplay, err = translator.datePtrWithDisplay(input.Date)
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
@@ -119,7 +119,7 @@ func groupPartialFromGroupUpdateInput(translator changesetTranslator, input Grou
 	updatedGroup.Director = translator.optionalString(input.Director, "director")
 	updatedGroup.Synopsis = translator.optionalString(input.Synopsis, "synopsis")
 
-	updatedGroup.Date, err = translator.optionalDate(input.Date, "date")
+	updatedGroup.Date, updatedGroup.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		err = fmt.Errorf("converting date: %w", err)
 		return

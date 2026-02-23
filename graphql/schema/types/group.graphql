@@ -11,6 +11,7 @@ type Group {
   "Duration in seconds"
   duration: Int
   date: String
+  date_display: String
   # rating expressed as 1-100
   rating100: Int
   studio: Studio

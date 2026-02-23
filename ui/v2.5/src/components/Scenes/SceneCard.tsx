@@ -493,7 +493,7 @@ const SceneCardDetails = PatchComponent(
 
     return (
       <div className="scene-card__details">
-        <span className="scene-card__date">{props.scene.date}</span>
+        <span className="scene-card__date">{TextUtils.getDateDisplayString(props.scene.date, props.scene.date_display)}</span>
         {file?.size !== undefined ? (
           <span
             className={cx("scene-card__file-size", {

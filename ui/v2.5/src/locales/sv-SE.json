@@ -1422,7 +1422,7 @@
     "url": "URL",
     "urls": "URL:er",
     "validation": {
-        "date_invalid_form": "${path} måste vara i formatet ÅÅÅÅ-MM-DD",
+        "date_invalid_form": "${path} måste vara ett giltigt datum: fullt datum (t.ex. ÅÅÅÅ-MM-DD, DD.MM.ÅÅÅÅ), år och månad (ÅÅÅÅ-MM) eller endast år",
         "required": "${path} är ett obligatoriskt fält",
         "unique": "${path} måste vara unik",
         "blank": "${path} får inte lämnas tom",

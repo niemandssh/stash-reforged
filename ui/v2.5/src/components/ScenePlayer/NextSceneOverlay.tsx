@@ -7,6 +7,7 @@ import { Icon } from "../Shared/Icon";
 import { TruncatedText } from "../Shared/TruncatedText";
 import { ConfigurationContext } from "../../hooks/Config";
 import GenderIcon from "../Performers/GenderIcon";
+import TextUtils from "src/utils/text";
 import { faPlay, faTimes, faClock } from "@fortawesome/free-solid-svg-icons";
 import "./NextSceneOverlay.scss";
 
@@ -163,7 +164,7 @@ export const NextSceneOverlay: React.FC<INextSceneOverlayProps> = ({
             <div className="next-scene-overlay-meta">
               {nextScene.date && (
                 <span className="next-scene-overlay-date">
-                  {nextScene.date}
+                  {TextUtils.getDateDisplayString(nextScene.date, nextScene.date_display)}
                 </span>
               )}
 

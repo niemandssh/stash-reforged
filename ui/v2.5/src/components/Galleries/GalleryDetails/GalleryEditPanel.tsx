@@ -28,6 +28,7 @@ import {
   yupUniqueStringList,
 } from "src/utils/yup";
 import { formikUtils } from "src/utils/form";
+import TextUtils from "src/utils/text";
 import { Studio, StudioSelect } from "src/components/Studios/StudioSelect";
 import { Scene, SceneSelect } from "src/components/Scenes/SceneSelect";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -88,7 +89,7 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     title: gallery?.title ?? "",
     code: gallery?.code ?? "",
     urls: gallery?.urls ?? [],
-    date: gallery?.date ?? "",
+    date: TextUtils.getDateEditString(gallery?.date, gallery?.date_display) ?? "",
     photographer: gallery?.photographer ?? "",
     studio_id: gallery?.studio?.id ?? null,
     performer_ids: (gallery?.performers ?? []).map((p) => p.id),

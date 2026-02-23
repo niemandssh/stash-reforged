@@ -1423,7 +1423,7 @@
     "url": "URL",
     "urls": "URLs",
     "validation": {
-        "date_invalid_form": "${path} doit être au format AAAA-MM-JJ",
+        "date_invalid_form": "${path} doit être une date valide : date complète (ex. AAAA-MM-JJ, JJ.MM.AAAA), année et mois (AAAA-MM) ou année seule",
         "required": "${path} est un champ requis",
         "blank": "${path} ne doit pas être vide",
         "unique": "${path} doit être unique",

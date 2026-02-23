@@ -1485,7 +1485,7 @@
     "tag_parent_tooltip": "有父母標籤",
     "validation": {
         "required": "${path}是必填欄位",
-        "date_invalid_form": "${path}必須是YYYY-MM-DD形式",
+        "date_invalid_form": "${path} 必須是有效日期：完整日期（如 YYYY-MM-DD、DD.MM.YYYY）、年月（YYYY-MM）或僅年份",
         "unique": "${path}必須是唯一的",
         "blank": "${path}不能為空",
         "end_time_before_start_time": "結束時間必須大於或等於開始時間"

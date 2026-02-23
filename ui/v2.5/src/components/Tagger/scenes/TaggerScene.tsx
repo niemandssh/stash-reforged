@@ -20,6 +20,7 @@ import {
   faImage,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
+import TextUtils from "src/utils/text";
 import { ConfigurationContext } from "src/hooks/Config";
 import { SceneQueue } from "src/models/sceneQueue";
 
@@ -40,7 +41,7 @@ const TaggerSceneDetails: React.FC<ITaggerSceneDetails> = ({ scene }) => {
             <h5>
               {scene.studio?.name}
               {scene.studio?.name && scene.date && ` • `}
-              {scene.date}
+              {TextUtils.getDateDisplayString(scene.date, scene.date_display)}
             </h5>
             <TruncatedText text={scene.details ?? ""} lineCount={3} />
           </div>

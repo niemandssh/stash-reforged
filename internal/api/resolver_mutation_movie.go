@@ -41,7 +41,7 @@ func (r *mutationResolver) MovieCreate(ctx context.Context, input MovieCreateInp
 
 	var err error
 
-	newGroup.Date, err = translator.datePtr(input.Date)
+	newGroup.Date, newGroup.DateDisplay, err = translator.datePtrWithDisplay(input.Date)
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
@@ -138,7 +138,7 @@ func (r *mutationResolver) MovieUpdate(ctx context.Context, input MovieUpdateInp
 	updatedGroup.Director = translator.optionalString(input.Director, "director")
 	updatedGroup.Synopsis = translator.optionalString(input.Synopsis, "synopsis")
 
-	updatedGroup.Date, err = translator.optionalDate(input.Date, "date")
+	updatedGroup.Date, updatedGroup.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}

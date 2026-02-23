@@ -4,6 +4,7 @@ fragment GameData on Game {
   details
   urls
   date
+  date_display
   rating100
   organized
   folder_path
@@ -27,6 +28,7 @@ fragment SlimGameData on Game {
   title
   organized
   date
+  date_display
   rating100
   image_path
   o_counter

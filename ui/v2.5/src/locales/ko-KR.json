@@ -1369,7 +1369,7 @@
     "updated_at": "수정 날짜",
     "url": "URL",
     "validation": {
-        "date_invalid_form": "${path}는 YYYY-MM-DD 형태여야 합니다",
+        "date_invalid_form": "${path} 유효한 날짜여야 합니다: 전체 날짜(예: YYYY-MM-DD, DD.MM.YYYY), 연월(YYYY-MM) 또는 연도만",
         "required": "${path}는 필수 항목입니다",
         "unique": "${path}은(는) 유일해야 합니다",
         "blank": "${path}를 빈 칸으로 둘 수 없습니다",

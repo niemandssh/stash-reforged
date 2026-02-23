@@ -395,7 +395,7 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
       }
       details={
         <div className="scene-card__details">
-          <span className="scene-card__date">{scene.date}</span>
+          <span className="scene-card__date">{TextUtils.getDateDisplayString(scene.date, scene.date_display)}</span>
           <span className="file-path extra-scene-info">
             {scene.paths.screenshot}
           </span>

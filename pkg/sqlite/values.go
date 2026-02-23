@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"gopkg.in/guregu/null.v4"
+	"gopkg.in/guregu/null.v4/zero"
 
 	"github.com/stashapp/stash/pkg/models"
 )
@@ -87,4 +88,12 @@ func nullStringPtr(i null.String) *string {
 	}
 
 	return &i.String
+}
+
+func zeroStringPtr(z zero.String) *string {
+	if z.String == "" {
+		return nil
+	}
+	s := z.String
+	return &s
 }

@@ -43,6 +43,10 @@ func (r *imageResolver) Date(ctx context.Context, obj *models.Image) (*string, e
 	return nil, nil
 }
 
+func (r *imageResolver) DateDisplay(ctx context.Context, obj *models.Image) (*string, error) {
+	return obj.DateDisplay, nil
+}
+
 func (r *imageResolver) Files(ctx context.Context, obj *models.Image) ([]*ImageFile, error) {
 	files, err := r.getFiles(ctx, obj)
 	if err != nil {

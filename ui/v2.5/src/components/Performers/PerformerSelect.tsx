@@ -133,19 +133,31 @@ const _PerformerSelect: React.FC<
         ? TextUtils.age(object.birthdate, object.death_date)
         : sceneAge;
 
-    const ageL10nId =
-      !props.ageFromDate || sceneAge < 18
-        ? "media_info.performer_card.age"
-        : "age_on_date";
-
-    const ageL10String = intl.formatMessage({
-      id: "years_old",
-      defaultMessage: "years old",
-    });
-    const ageString = intl.formatMessage(
-      { id: ageL10nId },
-      { age, years_old: ageL10String }
-    );
+    let ageString: string;
+    if (object.death_date) {
+      const deadAtString = intl.formatMessage({
+        id: "dead_at",
+        defaultMessage: "Dead at",
+      });
+      const ageShortString = intl.formatMessage({
+        id: "years_old_short",
+        defaultMessage: "yo",
+      });
+      ageString = `${deadAtString} ${age} ${ageShortString}`;
+    } else {
+      const ageL10nId =
+        !props.ageFromDate || sceneAge < 18
+          ? "media_info.performer_card.age"
+          : "age_on_date";
+      const ageL10String = intl.formatMessage({
+        id: "years_old",
+        defaultMessage: "years old",
+      });
+      ageString = intl.formatMessage(
+        { id: ageL10nId },
+        { age, years_old: ageL10String }
+      );
+    }
 
     thisOptionProps = {
       ...optionProps,
@@ -190,7 +202,7 @@ const _PerformerSelect: React.FC<
 
               {object.birthdate && (
                 <span className="performer-select-birthdate">
-                  {object.birthdate}
+                  {TextUtils.getDateDisplayString(object.birthdate, object.birthdate_display)}
                   <span className="performer-select-age">{` (${ageString})`}</span>
                 </span>
               )}

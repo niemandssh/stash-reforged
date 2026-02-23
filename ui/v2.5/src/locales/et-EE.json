@@ -1371,7 +1371,7 @@
     "updated_at": "Viimati Uuendatud",
     "url": "URL",
     "validation": {
-        "date_invalid_form": "${path} peab olema AAAA-KK-PP vormis",
+        "date_invalid_form": "${path} peab olema kehtiv kuupäev: täiskuupäev (nt AAAA-KK-PP, PP.KK.AAAA), aasta ja kuu (AAAA-KK) või ainult aasta",
         "required": "${path} on nõutud väli",
         "blank": "${path} ei tohi olla tühi",
         "unique": "${path} peab olema kordumatu",

@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet";
 import { Button, Dropdown, Nav, Tab } from "react-bootstrap";
 import { FormattedDate, FormattedMessage, useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import { useTitleProps } from "src/hooks/title";
 import {
   useFindGame,
@@ -271,7 +272,7 @@ const GamePage: React.FC<IGamePageProps> = ({ game, initialTab }) => {
           <div className="gallery-subheader">
             {!!game.date && (
               <span className="date" data-value={game.date}>
-                <FormattedDate value={game.date} format="long" timeZone="utc" />
+                {TextUtils.formatDate(intl, game.date, true, game.date_display)}
               </span>
             )}
           </div>

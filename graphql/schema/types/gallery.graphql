@@ -11,6 +11,7 @@ type Gallery {
   url: String @deprecated(reason: "Use urls")
   urls: [String!]!
   date: String
+  date_display: String
   details: String
   photographer: String
   # rating expressed as 1-100

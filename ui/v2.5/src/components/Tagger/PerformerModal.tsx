@@ -11,6 +11,7 @@ import { TruncatedText } from "../Shared/TruncatedText";
 import * as GQL from "src/core/generated-graphql";
 import { stringToGender } from "src/utils/gender";
 import { getCountryByISO } from "src/utils/country";
+import TextUtils from "src/utils/text";
 import {
   faArrowLeft,
   faArrowRight,
@@ -315,8 +316,8 @@ const PerformerModal: React.FC<IPerformerModalProps> = ({
               ? intl.formatMessage({ id: "gender_types." + performer.gender })
               : ""
           )}
-          {maybeRenderField("birthdate", performer.birthdate)}
-          {maybeRenderField("death_date", performer.death_date)}
+          {maybeRenderField("birthdate", performer.birthdate ? TextUtils.getDateDisplayString(performer.birthdate, performer.birthdate_display) : "")}
+          {maybeRenderField("death_date", performer.death_date ? TextUtils.getDateDisplayString(performer.death_date, performer.death_date_display) : "")}
           {maybeRenderField("ethnicity", performer.ethnicity)}
           {maybeRenderField("country", getCountryByISO(performer.country))}
           {maybeRenderField("hair_color", performer.hair_color)}

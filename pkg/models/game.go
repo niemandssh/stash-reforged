@@ -10,8 +10,9 @@ type Game struct {
 
 	Title     string `json:"title"`
 	Details   string `json:"details"`
-	Date      *Date  `json:"date"`
-	Rating    *int   `json:"rating100"`
+	Date         *Date   `json:"date"`
+	DateDisplay *string `json:"date_display"`
+	Rating      *int    `json:"rating100"`
 	Organized bool   `json:"organized"`
 
 	OCounter    int `json:"o_counter"`
@@ -41,6 +42,7 @@ type GamePartial struct {
 	Title          OptionalString
 	Details        OptionalString
 	Date           OptionalDate
+	DateDisplay    OptionalString
 	Rating         OptionalInt
 	Organized      OptionalBool
 	OCounter       OptionalInt

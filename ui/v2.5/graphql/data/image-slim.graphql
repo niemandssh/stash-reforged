@@ -3,6 +3,7 @@ fragment SlimImageData on Image {
   title
   code
   date
+  date_display
   urls
   details
   photographer

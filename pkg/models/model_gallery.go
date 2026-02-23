@@ -12,8 +12,9 @@ type Gallery struct {
 
 	Title        string `json:"title"`
 	Code         string `json:"code"`
-	Date         *Date  `json:"date"`
-	Details      string `json:"details"`
+	Date         *Date   `json:"date"`
+	DateDisplay *string `json:"date_display"`
+	Details     string  `json:"details"`
 	Photographer string `json:"photographer"`
 	// Rating expressed in 1-100 scale
 	Rating      *int `json:"rating"`
@@ -60,6 +61,7 @@ type GalleryPartial struct {
 	Code         OptionalString
 	URLs         *UpdateStrings
 	Date         OptionalDate
+	DateDisplay  OptionalString
 	Details      OptionalString
 	Photographer OptionalString
 	// Rating expressed in 1-100 scale

@@ -85,18 +85,18 @@ export const PerformerDetailsPanel: React.FC<IPerformerDetails> =
           value={
             !fullWidth
               ? TextUtils.age(performer.birthdate, performer.death_date)
-              : FormatAge(performer.birthdate, performer.death_date)
+              : FormatAge(performer.birthdate, performer.death_date, performer.birthdate_display)
           }
           title={
             !fullWidth
-              ? TextUtils.formatDate(intl, performer.birthdate ?? undefined)
+              ? TextUtils.formatDate(intl, performer.birthdate ?? undefined, true, performer.birthdate_display ?? undefined)
               : ""
           }
           fullWidth={fullWidth}
         />
         <DetailItem
           id="death_date"
-          value={performer.death_date}
+          value={TextUtils.formatDate(intl, performer.death_date ?? undefined, true, performer.death_date_display ?? undefined)}
           fullWidth={fullWidth}
         />
         {performer.country ? (
@@ -220,7 +220,9 @@ export const CompressedPerformerDetailsPanel: React.FC<IPerformerDetails> =
                 className="performer-age"
                 title={TextUtils.formatDate(
                   intl,
-                  performer.birthdate ?? undefined
+                  performer.birthdate ?? undefined,
+                  true,
+                  performer.birthdate_display ?? undefined
                 )}
               >
                 {TextUtils.age(performer.birthdate, performer.death_date)}

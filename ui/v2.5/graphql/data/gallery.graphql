@@ -5,6 +5,7 @@ fragment GalleryData on Gallery {
   title
   code
   date
+  date_display
   urls
   details
   photographer

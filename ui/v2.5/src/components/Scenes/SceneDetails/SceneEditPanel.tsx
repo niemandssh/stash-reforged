@@ -46,6 +46,7 @@ import {
 import { Performer } from "src/components/Performers/PerformerSelect";
 import { PerformerPopover } from "src/components/Performers/PerformerPopover";
 import { formikUtils } from "src/utils/form";
+import TextUtils from "src/utils/text";
 import { Studio, StudioSelect } from "src/components/Studios/StudioSelect";
 import { Gallery, GallerySelect } from "src/components/Galleries/GallerySelect";
 import { Group } from "src/components/Groups/GroupSelect";
@@ -316,8 +317,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
       title: scene.title ?? "",
       code: scene.code ?? "",
       urls: scene.urls ?? [],
-      date: scene.date ?? "",
-      shoot_date: (scene as { shoot_date?: string }).shoot_date ?? "",
+      date: TextUtils.getDateEditString(scene.date, scene.date_display) ?? "",
+      shoot_date: TextUtils.getDateEditString(
+        (scene as { shoot_date?: string }).shoot_date,
+        (scene as { shoot_date_display?: string }).shoot_date_display
+      ) ?? "",
       director: scene.director ?? "",
       gallery_ids: (scene.galleries ?? []).map((g) => g.id),
       studio_id: scene.studio?.id ?? null,

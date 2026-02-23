@@ -4,6 +4,7 @@ fragment GroupData on Group {
   aliases
   duration
   date
+  date_display
   rating100
   director
 

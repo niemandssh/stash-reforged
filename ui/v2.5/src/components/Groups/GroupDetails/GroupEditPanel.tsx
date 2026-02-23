@@ -90,7 +90,7 @@ export const GroupEditPanel: React.FC<IGroupEditPanel> = ({
     name: group?.name ?? "",
     aliases: group?.aliases ?? "",
     duration: group?.duration ?? null,
-    date: group?.date ?? "",
+    date: TextUtils.getDateEditString(group?.date, group?.date_display) ?? "",
     studio_id: group?.studio?.id ?? null,
     tag_ids: (group?.tags ?? []).map((t) => t.id),
     containing_groups: (group?.containing_groups ?? []).map((m) => {

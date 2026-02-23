@@ -60,7 +60,7 @@ export const GameEditPanel: React.FC<IProps> = ({
   const initialValues = {
     title: game?.title ?? "",
     details: game?.details ?? "",
-    date: game?.date ?? "",
+    date: TextUtils.getDateEditString(game?.date, game?.date_display) ?? "",
     folder_path: game?.folder_path ?? "",
     executable_path: game?.executable_path ?? "",
     urls: game?.urls ?? [],

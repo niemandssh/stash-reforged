@@ -36,7 +36,8 @@ type groupRow struct {
 	Name     zero.String `db:"name"`
 	Aliases  zero.String `db:"aliases"`
 	Duration null.Int    `db:"duration"`
-	Date     NullDate    `db:"date"`
+	Date         NullDate    `db:"date"`
+	DateDisplay  zero.String `db:"date_display"`
 	// expressed as 1-100
 	Rating      null.Int    `db:"rating"`
 	StudioID    null.Int    `db:"studio_id,omitempty"`
@@ -56,6 +57,7 @@ func (r *groupRow) fromGroup(o models.Group) {
 	r.Aliases = zero.StringFrom(o.Aliases)
 	r.Duration = intFromPtr(o.Duration)
 	r.Date = NullDateFromDatePtr(o.Date)
+	r.DateDisplay = zero.StringFromPtr(o.DateDisplay)
 	r.Rating = intFromPtr(o.Rating)
 	r.StudioID = intFromPtr(o.StudioID)
 	r.Director = zero.StringFrom(o.Director)
@@ -70,8 +72,9 @@ func (r *groupRow) resolve() *models.Group {
 		Name:      r.Name.String,
 		Aliases:   r.Aliases.String,
 		Duration:  nullIntPtr(r.Duration),
-		Date:      r.Date.DatePtr(),
-		Rating:    nullIntPtr(r.Rating),
+		Date:         r.Date.DatePtr(),
+		DateDisplay: zeroStringPtr(r.DateDisplay),
+		Rating:      nullIntPtr(r.Rating),
 		StudioID:  nullIntPtr(r.StudioID),
 		Director:  r.Director.String,
 		Synopsis:  r.Description.String,
@@ -91,6 +94,7 @@ func (r *groupRowRecord) fromPartial(o models.GroupPartial) {
 	r.setNullString("aliases", o.Aliases)
 	r.setNullInt("duration", o.Duration)
 	r.setNullDate("date", o.Date)
+	r.setNullString("date_display", o.DateDisplay)
 	r.setNullInt("rating", o.Rating)
 	r.setNullInt("studio_id", o.StudioID)
 	r.setNullString("director", o.Director)

@@ -1,6 +1,7 @@
 import { FormikErrors, yupToFormErrors } from "formik";
 import { IntlShape } from "react-intl";
 import * as yup from "yup";
+import TextUtils from "src/utils/text";
 
 // equivalent to yup.array(yup.string().required())
 // except that error messages will be e.g.
@@ -138,10 +139,8 @@ export function yupDateString(intl: IntlShape) {
     .test({
       name: "date",
       test(value) {
-        if (!value) return true;
-        if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) return false;
-        if (Number.isNaN(Date.parse(value))) return false;
-        return true;
+        if (!value || typeof value !== "string") return true;
+        return TextUtils.isValidDateString(value);
       },
       message: intl.formatMessage({ id: "validation.date_invalid_form" }),
     });

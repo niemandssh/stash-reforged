@@ -154,7 +154,7 @@ const _GallerySelect: React.FC<
               )}
 
               {object.date && (
-                <span className="gallery-select-date">{object.date}</span>
+                <span className="gallery-select-date">{TextUtils.getDateDisplayString(object.date, object.date_display)}</span>
               )}
 
               {object.code && (

@@ -9,6 +9,7 @@ import {
 import { FormattedDate, FormattedMessage, useIntl } from "react-intl";
 import { Helmet } from "react-helmet";
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import {
   mutateMetadataScan,
   mutateResetGalleryCover,
@@ -443,11 +444,7 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
           <div className="gallery-subheader">
             {!!gallery.date && (
               <span className="date" data-value={gallery.date}>
-                <FormattedDate
-                  value={gallery.date}
-                  format="long"
-                  timeZone="utc"
-                />
+                {TextUtils.formatDate(intl, gallery.date, true, gallery.date_display)}
               </span>
             )}
           </div>

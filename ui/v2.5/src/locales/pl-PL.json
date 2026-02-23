@@ -1267,7 +1267,7 @@
     "updated_at": "Zaktualizowano",
     "url": "URL",
     "validation": {
-        "date_invalid_form": "${path} musi być w formacie RRRR-MM-DD",
+        "date_invalid_form": "${path} musi być poprawną datą: pełna data (np. RRRR-MM-DD, DD.MM.RRRR), rok i miesiąc (RRRR-MM) lub sam rok",
         "required": "${path} jest wymagana",
         "unique": "${path} musi być unikalny",
         "blank": "${path} nie może być puste"

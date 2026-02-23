@@ -303,13 +303,7 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
 
           <div className="image-subheader">
             <span className="date" data-value={image.date}>
-              {!!image.date && (
-                <FormattedDate
-                  value={image.date}
-                  format="long"
-                  timeZone="utc"
-                />
-              )}
+              {!!image.date && TextUtils.formatDate(intl, image.date, true, image.date_display)}
             </span>
             {resolution ? (
               <span className="resolution" data-value={resolution}>

@@ -5,6 +5,7 @@ fragment PerformerData on Performer {
   urls
   gender
   birthdate
+  birthdate_display
   ethnicity
   country
   eye_color
@@ -49,6 +50,7 @@ fragment PerformerData on Performer {
   rating100
   details
   death_date
+  death_date_display
   hair_color
   weight
 

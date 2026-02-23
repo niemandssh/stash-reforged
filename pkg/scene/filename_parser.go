@@ -232,31 +232,12 @@ func validateRating100(rating100 int) bool {
 	return rating100 >= 1 && rating100 <= 100
 }
 
-// returns nil if invalid
+// returns nil if invalid. Accepts full date (YYYY-MM-DD), partial (YYYY-MM, YYYY),
+// and alternative formats (DD-MM-YYYY, DD.MM.YYYY).
 func parseDate(dateStr string) *models.Date {
-	splits := strings.Split(dateStr, "-")
-	if len(splits) != 3 {
+	if dateStr == "" {
 		return nil
 	}
-
-	year, _ := strconv.Atoi(splits[0])
-	month, _ := strconv.Atoi(splits[1])
-	d, _ := strconv.Atoi(splits[2])
-
-	// assume year must be between 1900 and 2100
-	if year < 1900 || year > 2100 {
-		return nil
-	}
-
-	if month < 1 || month > 12 {
-		return nil
-	}
-
-	// not checking individual months to ensure date is in the correct range
-	if d < 1 || d > 31 {
-		return nil
-	}
-
 	ret, err := models.ParseDate(dateStr)
 	if err != nil {
 		return nil

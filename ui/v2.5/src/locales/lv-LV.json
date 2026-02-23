@@ -16,7 +16,7 @@
         "unique": "${path} jābūt unikālai",
         "required": "${path} ir nepieciešams laiks",
         "blank": "${path} nedrīkst būt tukša",
-        "date_invalid_form": "${path} jābūt GGGG-MM-DD formā"
+        "date_invalid_form": "${path} jābūt derīgam datumam: pilns datums (piem. GGGG-MM-DD, DD.MM.GGGG), gads un mēnesis (GGGG-MM) vai tikai gads"
     },
     "urls": "Saites",
     "url": "Saite",

@@ -175,6 +175,8 @@ function sortTagsByRelevance(input: string, tags: FindTagsResult) {
     if (scoreA !== scoreB) {
       return scoreA - scoreB;
     }
+    const lenDiff = a.name.length - b.name.length;
+    if (lenDiff !== 0) return lenDiff;
     return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
   });
 }
@@ -268,6 +270,28 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
           tags.forEach((tag) => {
             allResults.set(tag.id, tag);
           });
+        }
+      }
+
+      if (allResults.size === 0 && input.length >= 4) {
+        const prefix = input.slice(0, -1);
+        const prefixVariants = generateSearchVariants(prefix);
+        const inputLower = input.toLowerCase();
+
+        for (const searchTerm of prefixVariants) {
+          const filter = new ListFilterModel(GQL.FilterMode.Tags);
+          filter.searchTerm = searchTerm;
+          filter.currentPage = 1;
+          filter.itemsPerPage = maxOptionsShown;
+          filter.sortBy = "name";
+          filter.sortDirection = GQL.SortDirectionEnum.Asc;
+          const query = await queryFindTagsForSelect(filter);
+          const tags = query.data.findTags.tags.filter((tag) => {
+            if (exclude.includes(tag.id.toString())) return false;
+            const nameLower = tag.name.toLowerCase();
+            return nameLower.includes(inputLower) || nameLower.startsWith(inputLower);
+          });
+          tags.forEach((tag) => allResults.set(tag.id, tag));
         }
       }
 
@@ -513,26 +537,6 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
       // If no input, return results as is
       if (!input) {
         return results;
-      }
-
-      // Check if input exactly matches any selected tag
-      const exactMatchWithSelected = props.values?.some((selectedTag) => {
-        const selectedName = selectedTag.name.toLowerCase();
-        const inputLower = input.toLowerCase();
-        const normalizedInput = inputLower.replace(/-/g, " ");
-        const normalizedSelected = selectedName.replace(/-/g, " ");
-
-        return (
-          selectedName === inputLower ||
-          selectedName === normalizedInput ||
-          normalizedSelected === inputLower ||
-          normalizedSelected === normalizedInput
-        );
-      });
-
-      // If input exactly matches a selected tag, don't show anything
-      if (exactMatchWithSelected) {
-        return [];
       }
 
       // If there are search results, return them without dummy

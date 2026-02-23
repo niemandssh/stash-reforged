@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stashapp/stash/pkg/models"
+	"github.com/stashapp/stash/pkg/utils"
 )
 
 func selectAll(tableName string) string {
@@ -310,14 +311,29 @@ func getDateCriterionWhereClause(column string, input models.DateCriterionInput)
 	return getDateWhereClause(column, input.Modifier, input.Value, input.Value2)
 }
 
+// normalizeDateForSQL parses date string (any supported format) and returns YYYY-MM-DD for SQL comparison.
+func normalizeDateForSQL(s string) string {
+	if s == "" {
+		return s
+	}
+	t, err := utils.ParseDateStringAsTime(s)
+	if err != nil {
+		return s
+	}
+	return t.Format("2006-01-02")
+}
+
 func getDateWhereClause(column string, modifier models.CriterionModifier, value string, upper *string) (string, []interface{}) {
 	if upper == nil {
-		u := time.Now().AddDate(0, 0, 1).Format(time.RFC3339)
+		u := time.Now().AddDate(0, 0, 1).Format("2006-01-02")
 		upper = &u
 	}
 
-	args := []interface{}{value}
-	betweenArgs := []interface{}{value, *upper}
+	normValue := normalizeDateForSQL(value)
+	normUpper := normalizeDateForSQL(*upper)
+
+	args := []interface{}{normValue}
+	betweenArgs := []interface{}{normValue, normUpper}
 
 	switch modifier {
 	case models.CriterionModifierIsNull:

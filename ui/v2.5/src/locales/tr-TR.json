@@ -1336,7 +1336,7 @@
     "validation": {
         "end_time_before_start_time": "Bitiş zamanı, başlangıç zamanından büyük veya ona eşit olmalıdır",
         "blank": "${path} boş olmamalıdır",
-        "date_invalid_form": "${path} YYYY-AA-GG biçiminde olmalıdır",
+        "date_invalid_form": "${path} geçerli bir tarih olmalıdır: tam tarih (örn. YYYY-AA-GG, GG.AA.YYYY), yıl ve ay (YYYY-AA) veya sadece yıl",
         "required": "${path} zorunlu bir alandır",
         "unique": "${path} benzersiz olmalıdır"
     },

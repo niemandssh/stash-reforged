@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
 import NavUtils from "src/utils/navigation";
+import TextUtils from "src/utils/text";
 import { useIntl } from "react-intl";
 import { objectTitle } from "src/core/files";
 import { galleryTitle } from "src/core/galleries";
@@ -104,7 +105,7 @@ export const GalleryListTable: React.FC<IGalleryListTableProps> = (
   };
 
   const DateCell = (gallery: GQL.SlimGalleryDataFragment) => (
-    <>{gallery.date}</>
+    <>{TextUtils.getDateDisplayString(gallery.date, gallery.date_display)}</>
   );
 
   const RatingCell = (gallery: GQL.SlimGalleryDataFragment) => (

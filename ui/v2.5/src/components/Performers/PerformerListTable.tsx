@@ -118,7 +118,7 @@ export const PerformerListTable: React.FC<IPerformerListTableProps> = (
     <span
       title={
         performer.birthdate
-          ? TextUtils.formatDate(intl, performer.birthdate ?? undefined)
+          ? TextUtils.formatDate(intl, performer.birthdate ?? undefined, true, performer.birthdate_display ?? undefined)
           : ""
       }
     >
@@ -129,7 +129,7 @@ export const PerformerListTable: React.FC<IPerformerListTableProps> = (
   );
 
   const DeathdateCell = (performer: GQL.PerformerDataFragment) => (
-    <>{performer.death_date}</>
+    <>{TextUtils.getDateDisplayString(performer.death_date, performer.death_date_display)}</>
   );
 
   const FavoriteCell = (performer: GQL.PerformerDataFragment) => (

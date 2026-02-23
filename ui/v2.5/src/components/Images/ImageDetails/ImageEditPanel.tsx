@@ -19,6 +19,7 @@ import {
   PerformerSelect,
 } from "src/components/Performers/PerformerSelect";
 import { formikUtils } from "src/utils/form";
+import TextUtils from "src/utils/text";
 import {
   queryScrapeImage,
   queryScrapeImageURL,
@@ -95,7 +96,7 @@ export const ImageEditPanel: React.FC<IProps> = ({
     title: image.title ?? "",
     code: image.code ?? "",
     urls: image?.urls ?? [],
-    date: image?.date ?? "",
+    date: TextUtils.getDateEditString(image?.date, image?.date_display) ?? "",
     details: image.details ?? "",
     photographer: image.photographer ?? "",
     gallery_ids: (image.galleries ?? []).map((g) => g.id),

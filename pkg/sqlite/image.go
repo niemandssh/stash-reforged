@@ -39,6 +39,7 @@ type imageRow struct {
 	// expressed as 1-100
 	Rating       null.Int    `db:"rating"`
 	Date         NullDate    `db:"date"`
+	DateDisplay  zero.String `db:"date_display"`
 	Details      zero.String `db:"details"`
 	Photographer zero.String `db:"photographer"`
 	Organized    bool        `db:"organized"`
@@ -55,6 +56,7 @@ func (r *imageRow) fromImage(i models.Image) {
 	r.Code = zero.StringFrom(i.Code)
 	r.Rating = intFromPtr(i.Rating)
 	r.Date = NullDateFromDatePtr(i.Date)
+	r.DateDisplay = zero.StringFromPtr(i.DateDisplay)
 	r.Details = zero.StringFrom(i.Details)
 	r.Photographer = zero.StringFrom(i.Photographer)
 	r.Organized = i.Organized
@@ -80,6 +82,7 @@ func (r *imageQueryRow) resolve() *models.Image {
 		Code:         r.Code.String,
 		Rating:       nullIntPtr(r.Rating),
 		Date:         r.Date.DatePtr(),
+		DateDisplay:  zeroStringPtr(r.DateDisplay),
 		Details:      r.Details.String,
 		Photographer: r.Photographer.String,
 		Organized:    r.Organized,
@@ -110,6 +113,7 @@ func (r *imageRowRecord) fromPartial(i models.ImagePartial) {
 	r.setNullString("code", i.Code)
 	r.setNullInt("rating", i.Rating)
 	r.setNullDate("date", i.Date)
+	r.setNullString("date_display", i.DateDisplay)
 	r.setNullString("details", i.Details)
 	r.setNullString("photographer", i.Photographer)
 	r.setBool("organized", i.Organized)

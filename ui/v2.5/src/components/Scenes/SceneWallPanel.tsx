@@ -104,7 +104,7 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
               />
             )}
             <TruncatedText text={performers.join(", ")} />
-            <div>{scene.date && TextUtils.formatDate(intl, scene.date)}</div>
+            <div>{scene.date && TextUtils.formatDate(intl, scene.date, true, scene.date_display)}</div>
           </Link>
         </footer>
       </div>

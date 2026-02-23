@@ -85,6 +85,10 @@ func (r *gameResolver) Date(ctx context.Context, obj *models.Game) (*string, err
 	return &result, nil
 }
 
+func (r *gameResolver) DateDisplay(ctx context.Context, obj *models.Game) (*string, error) {
+	return obj.DateDisplay, nil
+}
+
 func (r *gameResolver) Rating100(ctx context.Context, obj *models.Game) (*int, error) {
 	return obj.Rating, nil
 }

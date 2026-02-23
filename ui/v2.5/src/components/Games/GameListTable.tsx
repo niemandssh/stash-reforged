@@ -41,7 +41,7 @@ export const GameListTable: React.FC<IProps> = ({
         </td>
         <td className="align-middle">
           {game.date
-            ? TextUtils.formatDate(intl, game.date)
+            ? TextUtils.formatDate(intl, game.date, true, game.date_display)
             : TextUtils.formatDate(intl, game.created_at ?? undefined)}
         </td>
         <td className="align-middle">{game.rating100 ?? "-"}</td>

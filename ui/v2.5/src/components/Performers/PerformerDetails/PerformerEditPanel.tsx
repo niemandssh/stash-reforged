@@ -38,6 +38,7 @@ import cx from "classnames";
 import { faSyncAlt } from "@fortawesome/free-solid-svg-icons";
 import isEqual from "lodash-es/isEqual";
 import { formikUtils } from "src/utils/form";
+import TextUtils from "src/utils/text";
 import {
   yupFormikValidate,
   yupInputNumber,
@@ -145,8 +146,8 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
       disambiguation: performer.disambiguation ?? "",
       alias_list: performer.alias_list ?? [],
       gender: performer.gender ?? null,
-      birthdate: performer.birthdate ?? "",
-      death_date: performer.death_date ?? "",
+      birthdate: TextUtils.getDateEditString(performer.birthdate, performer.birthdate_display) ?? "",
+      death_date: TextUtils.getDateEditString(performer.death_date, performer.death_date_display) ?? "",
       country: performer.country ?? "",
       ethnicity: performer.ethnicity ?? "",
       hair_color: performer.hair_color ?? "",
@@ -175,7 +176,9 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
       performer.alias_list,
       performer.gender,
       performer.birthdate,
+      performer.birthdate_display,
       performer.death_date,
+      performer.death_date_display,
       performer.country,
       performer.ethnicity,
       performer.hair_color,

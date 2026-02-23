@@ -10,8 +10,9 @@ type Performer struct {
 	Name           string          `json:"name"`
 	Disambiguation string          `json:"disambiguation"`
 	Gender         *GenderEnum     `json:"gender"`
-	Birthdate      *Date           `json:"birthdate"`
-	Ethnicity      string          `json:"ethnicity"`
+	Birthdate         *Date   `json:"birthdate"`
+	BirthdateDisplay  *string `json:"birthdate_display"` // "YYYY" or "YYYY-MM" when partial; nil = full date
+	Ethnicity         string  `json:"ethnicity"`
 	Country        string          `json:"country"`
 	EyeColor       string          `json:"eye_color"`
 	Height         *int            `json:"height"`
@@ -28,8 +29,9 @@ type Performer struct {
 	// Rating expressed in 1-100 scale
 	Rating        *int   `json:"rating"`
 	Details       string `json:"details"`
-	DeathDate     *Date  `json:"death_date"`
-	HairColor     string `json:"hair_color"`
+	DeathDate        *Date   `json:"death_date"`
+	DeathDateDisplay *string `json:"death_date_display"` // "YYYY" or "YYYY-MM" when partial; nil = full date
+	HairColor        string  `json:"hair_color"`
 	Weight        *int   `json:"weight"`
 	IgnoreAutoTag bool   `json:"ignore_auto_tag"`
 	SmallRole     bool   `json:"small_role"`
@@ -69,8 +71,9 @@ type PerformerPartial struct {
 	Disambiguation OptionalString
 	Gender         OptionalString
 	URLs           *UpdateStrings
-	Birthdate      OptionalDate
-	Ethnicity      OptionalString
+	Birthdate         OptionalDate
+	BirthdateDisplay  OptionalString
+	Ethnicity         OptionalString
 	Country        OptionalString
 	EyeColor       OptionalString
 	Height         OptionalInt
@@ -87,8 +90,9 @@ type PerformerPartial struct {
 	// Rating expressed in 1-100 scale
 	Rating        OptionalInt
 	Details       OptionalString
-	DeathDate     OptionalDate
-	HairColor     OptionalString
+	DeathDate        OptionalDate
+	DeathDateDisplay OptionalString
+	HairColor        OptionalString
 	Weight        OptionalInt
 	IgnoreAutoTag OptionalBool
 	SmallRole     OptionalBool

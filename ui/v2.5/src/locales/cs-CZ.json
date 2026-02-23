@@ -991,7 +991,7 @@
         "required": "${path} je vyžadované pole",
         "unique": "${path} musí být jedinečná",
         "blank": "${path} nesmí být prázdná",
-        "date_invalid_form": "${path} musí být ve formátu YYYY-MM-DD (Rok-Měsíc-Den)",
+        "date_invalid_form": "${path} musí být platné datum: celé datum (např. YYYY-MM-DD, DD.MM.YYYY), rok a měsíc (YYYY-MM) nebo pouze rok",
         "end_time_before_start_time": "Čas ukončení musí být větší nebo roven času zahájení"
     },
     "type": "Typ",

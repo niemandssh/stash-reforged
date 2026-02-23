@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Button, ButtonGroup } from "react-bootstrap";
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import { GridCard } from "../Shared/GridCard/GridCard";
 import { HoverPopover } from "../Shared/HoverPopover";
 import { Icon } from "../Shared/Icon";
@@ -158,7 +159,7 @@ export const GroupCard: React.FC<IProps> = ({
       }
       details={
         <div className="group-card__details">
-          <span className="group-card__date">{group.date}</span>
+          <span className="group-card__date">{TextUtils.getDateDisplayString(group.date, group.date_display)}</span>
           <TruncatedText
             className="group-card__description"
             text={group.synopsis}

@@ -36,7 +36,7 @@ export const GameDetailPanel: React.FC<IProps> = ({ game }) => {
           <strong className="mr-1">
             <FormattedMessage id="date" />:
           </strong>
-          {TextUtils.formatDate(intl, game.date)}
+          {TextUtils.formatDate(intl, game.date, true, game.date_display)}
         </div>
       )}
       {createdAt && (

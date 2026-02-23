@@ -51,7 +51,7 @@ const GameCardDetails: React.FC<{
   intl: ReturnType<typeof useIntl>;
 }> = ({ game, intl }) => {
   const date = game.date
-    ? TextUtils.formatDate(intl, game.date)
+    ? TextUtils.formatDate(intl, game.date, true, game.date_display)
     : TextUtils.formatDate(
         intl,
         game.updated_at ?? game.created_at ?? undefined

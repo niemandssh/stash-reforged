@@ -1377,7 +1377,7 @@
     "updated_at": "更新于",
     "url": "链接",
     "validation": {
-        "date_invalid_form": "${path} 的格式必须为 YYYY-MM-DD",
+        "date_invalid_form": "${path} 必须是有效日期：完整日期（如 YYYY-MM-DD、DD.MM.YYYY）、年月（YYYY-MM）或仅年份",
         "required": "${path} 是必填字段",
         "blank": "${path}不能为空",
         "unique": "${path}不能相同",

@@ -1463,7 +1463,7 @@
     "second": "Segundo",
     "validation": {
         "blank": "${path} no puede estar vacío",
-        "date_invalid_form": "${path} tiene que tener el formato YYYY-MM-DD",
+        "date_invalid_form": "${path} debe ser una fecha válida: fecha completa (ej. YYYY-MM-DD, DD.MM.YYYY), año y mes (YYYY-MM) o solo año",
         "required": "${path} es un campo requerido",
         "unique": "${path} tiene que ser único"
     },

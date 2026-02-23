@@ -53,7 +53,7 @@ func (r *mutationResolver) GalleryCreate(ctx context.Context, input GalleryCreat
 
 	var err error
 
-	newGallery.Date, err = translator.datePtr(input.Date)
+	newGallery.Date, newGallery.DateDisplay, err = translator.datePtrWithDisplay(input.Date)
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
@@ -195,7 +195,7 @@ func (r *mutationResolver) galleryUpdate(ctx context.Context, input models.Galle
 	updatedGallery.Pinned = translator.optionalBool(input.Pinned, "pinned")
 	updatedGallery.DisplayMode = translator.optionalInt(input.DisplayMode, "display_mode")
 
-	updatedGallery.Date, err = translator.optionalDate(input.Date, "date")
+	updatedGallery.Date, updatedGallery.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}
@@ -273,7 +273,7 @@ func (r *mutationResolver) BulkGalleryUpdate(ctx context.Context, input BulkGall
 	updatedGallery.Organized = translator.optionalBool(input.Organized, "organized")
 	updatedGallery.URLs = translator.optionalURLsBulk(input.Urls, input.URL)
 
-	updatedGallery.Date, err = translator.optionalDate(input.Date, "date")
+	updatedGallery.Date, updatedGallery.DateDisplay, err = translator.optionalDateWithDisplay(input.Date, "date")
 	if err != nil {
 		return nil, fmt.Errorf("converting date: %w", err)
 	}

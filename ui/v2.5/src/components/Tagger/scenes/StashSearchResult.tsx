@@ -21,6 +21,7 @@ import { TagSelect } from "src/components/Shared/Select";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { OperationButton } from "src/components/Shared/OperationButton";
 import * as FormUtils from "src/utils/form";
+import TextUtils from "src/utils/text";
 import { stringToGender } from "src/utils/gender";
 import { IScrapedScene, TaggerStateContext } from "../context";
 import { OptionalField } from "../IncludeButton";
@@ -539,8 +540,8 @@ const StashSearchResult: React.FC<IStashSearchResultProps> = ({
   function renderStudioDate() {
     const text =
       scene.studio && scene.date
-        ? `${scene.studio.name} • ${scene.date}`
-        : `${scene.studio?.name ?? scene.date ?? ""}`;
+        ? `${scene.studio.name} • ${TextUtils.getDateDisplayString(scene.date, scene.date_display)}`
+        : `${scene.studio?.name ?? TextUtils.getDateDisplayString(scene.date, scene.date_display) ?? ""}`;
 
     if (text) {
       return <h5>{text}</h5>;
@@ -584,7 +585,7 @@ const StashSearchResult: React.FC<IStashSearchResultProps> = ({
             exclude={excludedFields[fields.date]}
             setExclude={(v) => setExcludedField(fields.date, v)}
           >
-            {scene.date}
+            {TextUtils.getDateDisplayString(scene.date, scene.date_display)}
           </OptionalField>
         </h5>
       );

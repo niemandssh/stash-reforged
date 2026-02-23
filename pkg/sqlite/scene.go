@@ -95,8 +95,10 @@ type sceneRow struct {
 	Code      zero.String `db:"code"`
 	Details   zero.String `db:"details"`
 	Director  zero.String `db:"director"`
-	Date      NullDate    `db:"date"`
-	ShootDate NullDate    `db:"shoot_date"`
+	Date            NullDate    `db:"date"`
+	DateDisplay     zero.String `db:"date_display"`
+	ShootDate       NullDate    `db:"shoot_date"`
+	ShootDateDisplay zero.String `db:"shoot_date_display"`
 	// expressed as 1-100
 	Rating                  null.Int    `db:"rating"`
 	Organized               bool        `db:"organized"`
@@ -129,7 +131,9 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.Details = zero.StringFrom(o.Details)
 	r.Director = zero.StringFrom(o.Director)
 	r.Date = NullDateFromDatePtr(o.Date)
+	r.DateDisplay = zero.StringFromPtr(o.DateDisplay)
 	r.ShootDate = NullDateFromDatePtr(o.ShootDate)
+	r.ShootDateDisplay = zero.StringFromPtr(o.ShootDateDisplay)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
 	r.Pinned = o.Pinned
@@ -176,9 +180,11 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		Code:                    r.Code.String,
 		Details:                 r.Details.String,
 		Director:                r.Director.String,
-		Date:                    r.Date.DatePtr(),
-		ShootDate:               r.ShootDate.DatePtr(),
-		Rating:                  nullIntPtr(r.Rating),
+		Date:               r.Date.DatePtr(),
+		DateDisplay:     zeroStringPtr(r.DateDisplay),
+		ShootDate:       r.ShootDate.DatePtr(),
+		ShootDateDisplay: zeroStringPtr(r.ShootDateDisplay),
+		Rating:          nullIntPtr(r.Rating),
 		Organized:               r.Organized,
 		Pinned:                  r.Pinned,
 		IsBroken:                r.IsBroken,
@@ -233,6 +239,9 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setNullString("details", o.Details)
 	r.setNullString("director", o.Director)
 	r.setNullDate("date", o.Date)
+	r.setNullString("date_display", o.DateDisplay)
+	r.setNullDate("shoot_date", o.ShootDate)
+	r.setNullString("shoot_date_display", o.ShootDateDisplay)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
 	r.setBool("pinned", o.Pinned)

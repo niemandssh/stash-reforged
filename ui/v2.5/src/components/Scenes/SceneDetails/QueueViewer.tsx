@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { objectTitle } from "src/core/files";
 import { QueuedScene } from "src/models/sceneQueue";
+import TextUtils from "src/utils/text";
 
 export interface IPlaylistViewer {
   scenes: QueuedScene[];
@@ -104,7 +105,7 @@ export const QueueViewer: React.FC<IPlaylistViewer> = ({
                   })
                   .join(", ")}
               </span>
-              <span className="queue-scene-date">{scene?.date}</span>
+              <span className="queue-scene-date">{TextUtils.getDateDisplayString(scene?.date, scene?.date_display)}</span>
             </div>
           </div>
         </Link>

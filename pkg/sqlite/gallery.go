@@ -41,6 +41,7 @@ type galleryRow struct {
 	Title        zero.String `db:"title"`
 	Code         zero.String `db:"code"`
 	Date         NullDate    `db:"date"`
+	DateDisplay  zero.String `db:"date_display"`
 	Details      zero.String `db:"details"`
 	Photographer zero.String `db:"photographer"`
 	// expressed as 1-100
@@ -61,6 +62,7 @@ func (r *galleryRow) fromGallery(o models.Gallery) {
 	r.Title = zero.StringFrom(o.Title)
 	r.Code = zero.StringFrom(o.Code)
 	r.Date = NullDateFromDatePtr(o.Date)
+	r.DateDisplay = zero.StringFromPtr(o.DateDisplay)
 	r.Details = zero.StringFrom(o.Details)
 	r.Photographer = zero.StringFrom(o.Photographer)
 	r.Rating = intFromPtr(o.Rating)
@@ -90,6 +92,7 @@ func (r *galleryQueryRow) resolve() *models.Gallery {
 		Title:         r.Title.String,
 		Code:          r.Code.String,
 		Date:          r.Date.DatePtr(),
+		DateDisplay:   zeroStringPtr(r.DateDisplay),
 		Details:       r.Details.String,
 		Photographer:  r.Photographer.String,
 		Rating:        nullIntPtr(r.Rating),
@@ -122,6 +125,7 @@ func (r *galleryRowRecord) fromPartial(o models.GalleryPartial) {
 	r.setNullString("title", o.Title)
 	r.setNullString("code", o.Code)
 	r.setNullDate("date", o.Date)
+	r.setNullString("date_display", o.DateDisplay)
 	r.setNullString("details", o.Details)
 	r.setNullString("photographer", o.Photographer)
 	r.setNullInt("rating", o.Rating)

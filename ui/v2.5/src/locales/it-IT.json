@@ -1167,7 +1167,7 @@
     "urls": "URL",
     "validation": {
         "blank": "${path} non può essere vuoto",
-        "date_invalid_form": "${path} deve essere nel formato AAAA-MM-GG"
+        "date_invalid_form": "${path} deve essere una data valida: data completa (es. AAAA-MM-GG, GG.MM.AAAA), anno e mese (AAAA-MM) o solo anno"
     },
     "datetime_format": "AAAA-MM-GG OO:MM",
     "date_format": "AAAA-MM-GG",

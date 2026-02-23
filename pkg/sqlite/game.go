@@ -35,6 +35,7 @@ type gameRow struct {
 	Title          zero.String `db:"title"`
 	Details        zero.String `db:"details"`
 	Date           NullDate    `db:"date"`
+	DateDisplay    zero.String `db:"date_display"`
 	Rating         null.Int    `db:"rating"`
 	Organized      bool        `db:"organized"`
 	OCounter       int         `db:"o_counter"`
@@ -51,6 +52,7 @@ func (r *gameRow) fromGame(g models.Game) {
 	r.Title = zero.StringFrom(g.Title)
 	r.Details = zero.StringFrom(g.Details)
 	r.Date = NullDateFromDatePtr(g.Date)
+	r.DateDisplay = zero.StringFromPtr(g.DateDisplay)
 	r.Rating = intFromPtr(g.Rating)
 	r.Organized = g.Organized
 	r.OCounter = g.OCounter
@@ -68,6 +70,7 @@ func (r *gameRow) resolve() *models.Game {
 		Title:          r.Title.String,
 		Details:        r.Details.String,
 		Date:           r.Date.DatePtr(),
+		DateDisplay:    zeroStringPtr(r.DateDisplay),
 		Rating:         nullIntPtr(r.Rating),
 		Organized:      r.Organized,
 		OCounter:       r.OCounter,
@@ -88,6 +91,7 @@ func (r *gameRowRecord) fromPartial(p models.GamePartial) {
 	r.setString("title", p.Title)
 	r.setNullString("details", p.Details)
 	r.setNullDate("date", p.Date)
+	r.setNullString("date_display", p.DateDisplay)
 	r.setNullInt("rating", p.Rating)
 	r.setBool("organized", p.Organized)
 	r.setInt("o_counter", p.OCounter)

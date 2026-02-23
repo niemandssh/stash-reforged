@@ -219,7 +219,7 @@
     "unknown_date": "Ukjend dato",
     "updated_at": "Oppdatert den",
     "validation": {
-        "date_invalid_form": "${path} må vera i formatet ÅÅÅÅ-MM-DD"
+        "date_invalid_form": "${path} må vera ein gyldig dato: full dato (t.d. ÅÅÅÅ-MM-DD, DD.MM.ÅÅÅÅ), år og månad (ÅÅÅÅ-MM) eller berre år"
     },
     "zip_file_count": "Tal på zippa filer",
     "image_count": "Tal på bilete",

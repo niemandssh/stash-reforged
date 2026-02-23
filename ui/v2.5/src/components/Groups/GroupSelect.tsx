@@ -8,6 +8,7 @@ import {
 import cx from "classnames";
 
 import * as GQL from "src/core/generated-graphql";
+import TextUtils from "src/utils/text";
 import {
   queryFindGroupsForSelect,
   queryFindGroupsByIDForSelect,
@@ -148,7 +149,7 @@ export const GroupSelect: React.FC<
               )}
 
               {object.date && (
-                <span className="group-select-date">{object.date}</span>
+                <span className="group-select-date">{TextUtils.getDateDisplayString(object.date, object.date_display)}</span>
               )}
             </span>
           </span>

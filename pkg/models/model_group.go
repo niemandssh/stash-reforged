@@ -10,7 +10,8 @@ type Group struct {
 	Name     string `json:"name"`
 	Aliases  string `json:"aliases"`
 	Duration *int   `json:"duration"`
-	Date     *Date  `json:"date"`
+	Date         *Date   `json:"date"`
+	DateDisplay *string `json:"date_display"`
 	// Rating expressed in 1-100 scale
 	Rating    *int      `json:"rating"`
 	StudioID  *int      `json:"studio_id"`
@@ -62,9 +63,10 @@ type GroupPartial struct {
 	Name     OptionalString
 	Aliases  OptionalString
 	Duration OptionalInt
-	Date     OptionalDate
+	Date         OptionalDate
+	DateDisplay OptionalString
 	// Rating expressed in 1-100 scale
-	Rating           OptionalInt
+	Rating      OptionalInt
 	StudioID         OptionalInt
 	Director         OptionalString
 	Synopsis         OptionalString

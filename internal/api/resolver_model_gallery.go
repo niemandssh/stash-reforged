@@ -87,6 +87,10 @@ func (r *galleryResolver) Date(ctx context.Context, obj *models.Gallery) (*strin
 	return nil, nil
 }
 
+func (r *galleryResolver) DateDisplay(ctx context.Context, obj *models.Gallery) (*string, error) {
+	return obj.DateDisplay, nil
+}
+
 func (r *galleryResolver) Rating100(ctx context.Context, obj *models.Gallery) (*int, error) {
 	return obj.Rating, nil
 }

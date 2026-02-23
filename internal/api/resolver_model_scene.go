@@ -76,12 +76,20 @@ func (r *sceneResolver) Date(ctx context.Context, obj *models.Scene) (*string, e
 	return nil, nil
 }
 
+func (r *sceneResolver) DateDisplay(ctx context.Context, obj *models.Scene) (*string, error) {
+	return obj.DateDisplay, nil
+}
+
 func (r *sceneResolver) ShootDate(ctx context.Context, obj *models.Scene) (*string, error) {
 	if obj.ShootDate != nil {
 		result := obj.ShootDate.String()
 		return &result, nil
 	}
 	return nil, nil
+}
+
+func (r *sceneResolver) ShootDateDisplay(ctx context.Context, obj *models.Scene) (*string, error) {
+	return obj.ShootDateDisplay, nil
 }
 
 func (r *sceneResolver) Files(ctx context.Context, obj *models.Scene) ([]*VideoFile, error) {

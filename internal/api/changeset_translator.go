@@ -10,6 +10,7 @@ import (
 
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/sliceutil/stringslice"
+	"github.com/stashapp/stash/pkg/utils"
 )
 
 const updateInputField = "input"
@@ -139,6 +140,41 @@ func (t changesetTranslator) datePtr(value *string) (*models.Date, error) {
 		return nil, err
 	}
 	return &date, nil
+}
+
+// datePtrWithDisplay returns parsed date and display string ("YYYY" or "YYYY-MM" for partial; nil = full date).
+func (t changesetTranslator) datePtrWithDisplay(value *string) (*models.Date, *string, error) {
+	if value == nil || *value == "" {
+		return nil, nil, nil
+	}
+	date, err := models.ParseDate(*value)
+	if err != nil {
+		return nil, nil, err
+	}
+	display := utils.DateDisplayString(*value)
+	if display == "" {
+		return &date, nil, nil
+	}
+	return &date, &display, nil
+}
+
+func (t changesetTranslator) optionalDateWithDisplay(value *string, field string) (models.OptionalDate, models.OptionalString, error) {
+	if !t.hasField(field) {
+		return models.OptionalDate{}, models.OptionalString{}, nil
+	}
+	if value == nil || *value == "" {
+		return models.OptionalDate{Set: true, Null: true}, models.OptionalString{Set: true, Null: true}, nil
+	}
+	date, err := models.ParseDate(*value)
+	if err != nil {
+		return models.OptionalDate{}, models.OptionalString{}, err
+	}
+	display := utils.DateDisplayString(*value)
+	if display == "" {
+		// Full date: clear *_display in DB so UI shows full date
+		return models.NewOptionalDate(date), models.OptionalString{Set: true, Null: true}, nil
+	}
+	return models.NewOptionalDate(date), models.NewOptionalString(display), nil
 }
 
 func (t changesetTranslator) intPtrFromString(value *string) (*int, error) {

@@ -9,6 +9,7 @@ import { TruncatedText } from "../Shared/TruncatedText";
 import { PerformerPopoverButton } from "../Shared/PerformerPopoverButton";
 import { PopoverCountButton } from "../Shared/PopoverCountButton";
 import NavUtils from "src/utils/navigation";
+import TextUtils from "src/utils/text";
 import { RatingBanner } from "../Shared/RatingBanner";
 import { faBox, faPlayCircle, faTag } from "@fortawesome/free-solid-svg-icons";
 import { PinIcon } from "../Shared/PinIcon";
@@ -201,7 +202,7 @@ const GalleryCardDetails = PatchComponent(
   (props: IGalleryCardProps) => {
     return (
       <div className="gallery-card__details">
-        <span className="gallery-card__date">{props.gallery.date}</span>
+        <span className="gallery-card__date">{TextUtils.getDateDisplayString(props.gallery.date, props.gallery.date_display)}</span>
         <TruncatedText
           className="gallery-card__description"
           text={props.gallery.details}

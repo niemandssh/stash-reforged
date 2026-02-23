@@ -22,7 +22,8 @@ type Image struct {
 	OmegCounter int           `json:"omg_counter"`
 	StudioID   *int           `json:"studio_id"`
 	URLs      RelatedStrings `json:"urls"`
-	Date      *Date          `json:"date"`
+	Date         *Date   `json:"date"`
+	DateDisplay *string `json:"date_display"` // "YYYY" or "YYYY-MM" when partial; nil = full date
 
 	// transient - not persisted
 	Files         RelatedFiles
@@ -55,6 +56,7 @@ type ImagePartial struct {
 	Rating       OptionalInt
 	URLs         *UpdateStrings
 	Date         OptionalDate
+	DateDisplay  OptionalString
 	Details      OptionalString
 	Photographer OptionalString
 	Organized    OptionalBool

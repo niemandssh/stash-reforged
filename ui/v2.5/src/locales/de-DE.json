@@ -1379,7 +1379,7 @@
     "updated_at": "Aktualisiert am",
     "url": "URL",
     "validation": {
-        "date_invalid_form": "${path} muss die Form YYYY-MM-DD haben",
+        "date_invalid_form": "${path} muss ein gültiges Datum sein: volles Datum (z. B. YYYY-MM-DD, DD.MM.YYYY), Jahr und Monat (YYYY-MM) oder nur Jahr",
         "required": "${path} ist ein notwendiges Feld",
         "end_time_before_start_time": "Der Endzeitpunkt muss nach oder am Startzeitpunkt sein",
         "unique": "${path} muss einzigartig sein",

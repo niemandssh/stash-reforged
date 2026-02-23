@@ -5,6 +5,7 @@ type Game {
   details: String
   urls: [String!]!
   date: String
+  date_display: String
   rating100: Int
   organized: Boolean!
   folder_path: String

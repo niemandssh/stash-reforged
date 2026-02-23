@@ -103,7 +103,9 @@ type Scene {
   url: String @deprecated(reason: "Use urls")
   urls: [String!]!
   date: String # Release date
+  date_display: String
   shoot_date: String # Filming/shooting date
+  shoot_date_display: String
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!

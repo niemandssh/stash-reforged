@@ -1436,7 +1436,7 @@
     "url": "URL",
     "urls": "URLs",
     "validation": {
-        "date_invalid_form": "${path} ต้องอยู่ในรูปแบบ YYYY-MM-DD",
+        "date_invalid_form": "${path} ต้องเป็นวันที่ที่ถูกต้อง: วันที่เต็ม (เช่น YYYY-MM-DD, DD.MM.YYYY) ปีและเดือน (YYYY-MM) หรือเฉพาะปี",
         "required": "จำเป็นต้องระบุ ${path}",
         "blank": "${path} ต้องไม่เว้นว่างไว้",
         "unique": "${path} ต้องไม่ซ้ำ"

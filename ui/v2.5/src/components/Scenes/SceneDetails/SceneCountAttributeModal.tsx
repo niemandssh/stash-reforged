@@ -95,6 +95,17 @@ export const SceneCountAttributeModal: React.FC<IProps> = ({
   const ageStr = (p: GQL.PerformerDataFragment) => {
     const age = TextUtils.age(p.birthdate, p.death_date ?? undefined);
     if (!p.birthdate && age === 0) return null;
+    if (p.death_date) {
+      const deadAtString = intl.formatMessage({
+        id: "dead_at",
+        defaultMessage: "Dead at",
+      });
+      const ageShortString = intl.formatMessage({
+        id: "years_old_short",
+        defaultMessage: "yo",
+      });
+      return `${deadAtString} ${age} ${ageShortString}`;
+    }
     return intl.formatMessage(
       {
         id: "media_info.performer_card.age",
@@ -141,7 +152,7 @@ export const SceneCountAttributeModal: React.FC<IProps> = ({
         <p className="text-muted mb-3">
           <FormattedMessage
             id="dialogs.attribute_count_choose"
-            defaultMessage="Choose who to attribute {count} to, or confirm selection below."
+            defaultMessage="Click a performer to add {count} immediately, or select several with checkboxes and confirm below."
             values={{ count: countLabel }}
           />
         </p>

@@ -66,7 +66,8 @@ export const FormatHeight = (height?: number | null) => {
 
 export const FormatAge = (
   birthdate?: string | null,
-  deathdate?: string | null
+  deathdate?: string | null,
+  birthdateDisplay?: string | null
 ) => {
   if (!birthdate) {
     return "";
@@ -76,7 +77,7 @@ export const FormatAge = (
   return (
     <span className="performer-age">
       <span className="age">{age}</span>
-      <span className="birthdate"> ({birthdate})</span>
+      <span className="birthdate"> ({TextUtils.getDateDisplayString(birthdate, birthdateDisplay)})</span>
     </span>
   );
 };

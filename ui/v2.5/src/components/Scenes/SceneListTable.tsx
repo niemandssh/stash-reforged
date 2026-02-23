@@ -121,7 +121,7 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
     );
   };
 
-  const DateCell = (scene: GQL.SlimSceneDataFragment) => <>{scene.date}</>;
+  const DateCell = (scene: GQL.SlimSceneDataFragment) => <>{TextUtils.getDateDisplayString(scene.date, scene.date_display)}</>;
 
   const RatingCell = (scene: GQL.SlimSceneDataFragment) => (
     <RatingSystem

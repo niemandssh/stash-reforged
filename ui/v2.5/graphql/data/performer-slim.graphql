@@ -10,6 +10,7 @@ fragment SlimPerformerData on Performer {
   small_role
   country
   birthdate
+  birthdate_display
   ethnicity
   hair_color
   eye_color
@@ -32,6 +33,7 @@ fragment SlimPerformerData on Performer {
   }
   rating100
   death_date
+  death_date_display
   weight
 }
 
@@ -43,6 +45,8 @@ fragment SelectPerformerData on Performer {
   image_path
   primary_image_path
   birthdate
+  birthdate_display
   death_date
+  death_date_display
   small_role
 }

@@ -44,6 +44,9 @@ func (r *mutationResolver) GameCreate(ctx context.Context, input models.GameCrea
 			return nil, fmt.Errorf("parsing date: %w", err)
 		}
 		newGame.Date = &date
+		if d := utils.DateDisplayString(*input.Date); d != "" {
+			newGame.DateDisplay = &d
+		}
 	}
 	if input.Rating100 != nil {
 		newGame.Rating = input.Rating100
@@ -100,12 +103,18 @@ func (r *mutationResolver) GameUpdate(ctx context.Context, input models.GameUpda
 	if input.Date != nil {
 		if *input.Date == "" {
 			partial.Date = models.OptionalDate{Set: true, Null: true}
+			partial.DateDisplay = models.OptionalString{Set: true, Null: true}
 		} else {
 			date, err := models.ParseDate(*input.Date)
 			if err != nil {
 				return nil, fmt.Errorf("parsing date: %w", err)
 			}
 			partial.Date = models.NewOptionalDate(date)
+			if d := utils.DateDisplayString(*input.Date); d != "" {
+				partial.DateDisplay = models.NewOptionalString(d)
+			} else {
+				partial.DateDisplay = models.OptionalString{Set: true, Null: true}
+			}
 		}
 	}
 	if input.Rating100 != nil {

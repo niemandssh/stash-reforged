@@ -283,7 +283,7 @@
     "years_old": "বছর পুরান",
     "weight_kg": "ওজন (কেজি)",
     "validation": {
-        "date_invalid_form": "${path} অবশ্যই YYYY-MM-DD এ হতে হবে",
+        "date_invalid_form": "${path} একটি বৈধ তারিখ হতে হবে: পূর্ণ তারিখ (যেমন YYYY-MM-DD, DD.MM.YYYY), বছর এবং মাস (YYYY-MM), বা শুধুমাত্র বছর",
         "blank": "${path} শুন্য হওয়া যাবে না",
         "required": "${path} অবশ্য পুরনীয়",
         "unique": "${path} অনন্য হতে হবে"

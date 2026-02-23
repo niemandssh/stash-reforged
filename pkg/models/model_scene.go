@@ -15,8 +15,10 @@ type Scene struct {
 	Code      string `json:"code"`
 	Details   string `json:"details"`
 	Director  string `json:"director"`
-	Date      *Date  `json:"date"`       // Date of release
-	ShootDate *Date  `json:"shoot_date"` // Date of filming/shooting
+	Date         *Date   `json:"date"`        // Date of release
+	DateDisplay  *string `json:"date_display"`  // "YYYY" or "YYYY-MM" when partial; nil = full date
+	ShootDate    *Date   `json:"shoot_date"`   // Date of filming/shooting
+	ShootDateDisplay *string `json:"shoot_date_display"`
 	// Rating expressed in 1-100 scale
 	Rating                  *int    `json:"rating"`
 	Organized               bool    `json:"organized"`
@@ -78,8 +80,10 @@ type ScenePartial struct {
 	Code      OptionalString
 	Details   OptionalString
 	Director  OptionalString
-	Date      OptionalDate
-	ShootDate OptionalDate
+	Date            OptionalDate
+	DateDisplay     OptionalString
+	ShootDate       OptionalDate
+	ShootDateDisplay OptionalString
 	// Rating expressed in 1-100 scale
 	Rating                  OptionalInt
 	Organized               OptionalBool

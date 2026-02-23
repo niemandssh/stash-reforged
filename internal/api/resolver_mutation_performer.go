@@ -78,11 +78,11 @@ func (r *mutationResolver) PerformerCreate(ctx context.Context, input models.Per
 
 	var err error
 
-	newPerformer.Birthdate, err = translator.datePtr(input.Birthdate)
+	newPerformer.Birthdate, newPerformer.BirthdateDisplay, err = translator.datePtrWithDisplay(input.Birthdate)
 	if err != nil {
 		return nil, fmt.Errorf("converting birthdate: %w", err)
 	}
-	newPerformer.DeathDate, err = translator.datePtr(input.DeathDate)
+	newPerformer.DeathDate, newPerformer.DeathDateDisplay, err = translator.datePtrWithDisplay(input.DeathDate)
 	if err != nil {
 		return nil, fmt.Errorf("converting death date: %w", err)
 	}
@@ -280,11 +280,11 @@ func (r *mutationResolver) PerformerUpdate(ctx context.Context, input models.Per
 	legacyTwitter := translator.optionalString(input.Twitter, "twitter")
 	legacyInstagram := translator.optionalString(input.Instagram, "instagram")
 
-	updatedPerformer.Birthdate, err = translator.optionalDate(input.Birthdate, "birthdate")
+	updatedPerformer.Birthdate, updatedPerformer.BirthdateDisplay, err = translator.optionalDateWithDisplay(input.Birthdate, "birthdate")
 	if err != nil {
 		return nil, fmt.Errorf("converting birthdate: %w", err)
 	}
-	updatedPerformer.DeathDate, err = translator.optionalDate(input.DeathDate, "death_date")
+	updatedPerformer.DeathDate, updatedPerformer.DeathDateDisplay, err = translator.optionalDateWithDisplay(input.DeathDate, "death_date")
 	if err != nil {
 		return nil, fmt.Errorf("converting death date: %w", err)
 	}
@@ -408,11 +408,11 @@ func (r *mutationResolver) BulkPerformerUpdate(ctx context.Context, input BulkPe
 	legacyTwitter := translator.optionalString(input.Twitter, "twitter")
 	legacyInstagram := translator.optionalString(input.Instagram, "instagram")
 
-	updatedPerformer.Birthdate, err = translator.optionalDate(input.Birthdate, "birthdate")
+	updatedPerformer.Birthdate, updatedPerformer.BirthdateDisplay, err = translator.optionalDateWithDisplay(input.Birthdate, "birthdate")
 	if err != nil {
 		return nil, fmt.Errorf("converting birthdate: %w", err)
 	}
-	updatedPerformer.DeathDate, err = translator.optionalDate(input.DeathDate, "death_date")
+	updatedPerformer.DeathDate, updatedPerformer.DeathDateDisplay, err = translator.optionalDateWithDisplay(input.DeathDate, "death_date")
 	if err != nil {
 		return nil, fmt.Errorf("converting death date: %w", err)
 	}

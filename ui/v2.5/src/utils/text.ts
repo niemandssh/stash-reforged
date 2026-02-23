@@ -255,39 +255,131 @@ const fileNameFromPath = (path: string) => {
   return path.replace(/^.*[\\/]/, "");
 };
 
+/** Parses a date string in multiple formats. Returns { year, month (1-12), day (1-31) } or null. */
+const parseFlexibleDateString = (
+  dateString: string
+): { year: number; month: number; day: number } | null => {
+  const s = dateString.trim();
+  if (!s) return null;
+
+  // YYYY (only year — use mid-year 1 June for calculations)
+  if (/^\d{4}$/.test(s)) {
+    const year = Number(s);
+    if (year >= 1900 && year <= 2100) return { year, month: 6, day: 1 };
+    return null;
+  }
+
+  // YYYY-MM or YYYY-MM-DD (with -)
+  const dashParts = s.split("-");
+  if (dashParts.length >= 2 && dashParts.length <= 3) {
+    const a = Number(dashParts[0]);
+    const b = Number(dashParts[1]);
+    const c = dashParts[2] !== undefined ? Number(dashParts[2]) : 1;
+    // YYYY-MM-DD or YYYY-MM
+    if (dashParts[0].length === 4 && a >= 1900 && a <= 2100) {
+      const month = dashParts.length >= 2 ? Math.max(1, Math.min(12, b)) : 1;
+      const day = dashParts.length === 3 ? Math.max(1, Math.min(31, c)) : 1;
+      return { year: a, month, day };
+    }
+    // DD-MM-YYYY
+    if (
+      dashParts[2] !== undefined &&
+      dashParts[2].length === 4 &&
+      a >= 1 && a <= 31 &&
+      b >= 1 && b <= 12
+    ) {
+      const year = Number(dashParts[2]);
+      if (year >= 1900 && year <= 2100) return { year, month: b, day: a };
+    }
+  }
+
+  // DD.MM.YYYY or DD/MM/YYYY
+  const dotParts = s.split(".");
+  const slashParts = s.split("/");
+  const parts = dotParts.length === 3 ? dotParts : slashParts.length === 3 ? slashParts : null;
+  if (parts && parts[2].length === 4) {
+    const day = Number(parts[0]);
+    const month = Number(parts[1]);
+    const year = Number(parts[2]);
+    if (
+      day >= 1 && day <= 31 &&
+      month >= 1 && month <= 12 &&
+      year >= 1900 && year <= 2100
+    ) {
+      return { year, month, day };
+    }
+  }
+
+  // MM.YYYY or M.YYYY (month and year)
+  if (dotParts.length === 2 && dotParts[1].length === 4) {
+    const month = Number(dotParts[0]);
+    const year = Number(dotParts[1]);
+    if (month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
+      return { year, month, day: 1 };
+    }
+  }
+
+  // MM-YYYY or M-YYYY (month and year; 2 hyphen parts, second is 4 digits)
+  if (dashParts.length === 2 && dashParts[1].length === 4) {
+    const month = Number(dashParts[0]);
+    const year = Number(dashParts[1]);
+    if (month >= 1 && month <= 12 && year >= 1900 && year <= 2100) {
+      return { year, month, day: 1 };
+    }
+  }
+
+  return null;
+};
+
+/** Returns true if the string is empty or a valid date in any supported format (optional + multiple formats). */
+const isValidDateString = (value: string | null | undefined): boolean => {
+  if (value == null || value.trim() === "") return true;
+  return parseFlexibleDateString(value.trim()) !== null;
+};
+
 const stringToDate = (dateString: string) => {
   if (!dateString) return null;
 
-  const parts = dateString.split("-");
-  // Invalid date string
-  if (parts.length !== 3) return null;
+  const parsed = parseFlexibleDateString(dateString);
+  if (!parsed) return null;
+  if (parsed.month === 0 || parsed.day === 0) return null;
 
-  const year = Number(parts[0]);
-  const monthIndex = Math.max(0, Number(parts[1]) - 1);
-  const day = Number(parts[2]);
-
-  return new Date(year, monthIndex, day, 0, 0, 0, 0);
+  return new Date(
+    parsed.year,
+    parsed.month - 1,
+    parsed.day,
+    0,
+    0,
+    0,
+    0
+  );
 };
 
 const stringToFuzzyDate = (dateString: string) => {
   if (!dateString) return null;
 
-  const parts = dateString.split("-");
-  // Invalid date string
-  let year = Number(parts[0]);
-  if (isNaN(year)) year = new Date().getFullYear();
-  let monthIndex = 0;
-  if (parts.length > 1) {
-    monthIndex = Math.max(0, Number(parts[1]) - 1);
-    if (monthIndex > 11 || isNaN(monthIndex)) monthIndex = 0;
-  }
-  let day = 1;
-  if (parts.length > 2) {
-    day = Number(parts[2]);
-    if (day > 31 || isNaN(day)) day = 1;
+  const parsed = parseFlexibleDateString(dateString);
+  if (!parsed) {
+    // Fallback: try legacy hyphen-only parsing for partial YYYY / YYYY-MM
+    const parts = dateString.trim().split("-");
+    let year = Number(parts[0]);
+    if (isNaN(year) || year < 1900 || year > 2100)
+      year = new Date().getFullYear();
+    // Only year -> mid-year (1 June); YYYY-MM -> 1st of month
+    let month = parts.length > 1 ? Math.max(1, Math.min(12, Number(parts[1]) || 1)) : 6;
+    const day = parts.length > 2 ? Math.max(1, Math.min(31, Number(parts[2]) || 1)) : 1;
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
   }
 
-  return new Date(year, monthIndex, day, 0, 0, 0, 0);
+  return new Date(
+    parsed.year,
+    parsed.month - 1,
+    parsed.day,
+    0,
+    0,
+    0,
+    0
+  );
 };
 
 const stringToFuzzyDateTime = (dateString: string) => {
@@ -448,11 +540,65 @@ const domainFromURL = (urlString?: string, url?: URL) => {
   }
 };
 
-const formatDate = (intl: IntlShape, date?: string, utc = true) => {
-  if (!date) {
-    return "";
+/**
+ * Returns display string for a date when API provides explicit date_display
+ * (e.g. "YYYY" or "YYYY-MM" for partial dates). When dateDisplay is set, use it;
+ * otherwise format the full date string.
+ */
+const getDateDisplayString = (
+  dateStr: string | null | undefined,
+  dateDisplay?: string | null
+): string => {
+  if (dateDisplay != null && dateDisplay !== "") {
+    return dateDisplay;
   }
+  if (!dateStr) return "";
+  return dateStr.trim();
+};
 
+/**
+ * Returns the string to use in date edit inputs. When date_display is set (partial date),
+ * use it so the form shows "2001-06" or "2001" instead of "2001-06-01"; otherwise use the full date.
+ * This avoids re-submitting a full date when the user only had a partial date and didn't change it.
+ */
+const getDateEditString = (
+  dateStr: string | null | undefined,
+  dateDisplay?: string | null
+): string => {
+  if (dateDisplay != null && dateDisplay !== "") {
+    return dateDisplay;
+  }
+  if (!dateStr) return "";
+  return dateStr.trim();
+};
+
+/**
+ * Formats a date for display. When dateDisplay is provided (from API), shows
+ * only year or month+year; otherwise formats the full date.
+ */
+const formatDate = (
+  intl: IntlShape,
+  date?: string,
+  utc = true,
+  dateDisplay?: string | null
+) => {
+  if (!date && !dateDisplay) return "";
+  if (dateDisplay != null && dateDisplay !== "") {
+    if (dateDisplay.length === 4) return dateDisplay;
+    if (dateDisplay.length === 7) {
+      const year = Number(dateDisplay.slice(0, 4));
+      const monthIndex = Number(dateDisplay.slice(5, 7)) - 1;
+      const d = utc
+        ? new Date(Date.UTC(year, monthIndex, 1))
+        : new Date(year, monthIndex, 1);
+      return intl.formatDate(d, {
+        year: "numeric",
+        month: "long",
+        timeZone: utc ? "utc" : undefined,
+      });
+    }
+  }
+  if (!date) return "";
   return intl.formatDate(date, {
     format: "long",
     timeZone: utc ? "utc" : undefined,
@@ -513,6 +659,9 @@ const TextUtils = {
   stringToFuzzyDateTime,
   dateToString,
   dateTimeToString,
+  isValidDateString,
+  getDateDisplayString,
+  getDateEditString,
   age: getAge,
   bitRate,
   resolution,

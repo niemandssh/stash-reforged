@@ -19,6 +19,10 @@ func (r *groupResolver) Date(ctx context.Context, obj *models.Group) (*string, e
 	return nil, nil
 }
 
+func (r *groupResolver) DateDisplay(ctx context.Context, obj *models.Group) (*string, error) {
+	return obj.DateDisplay, nil
+}
+
 func (r *groupResolver) Rating100(ctx context.Context, obj *models.Group) (*int, error) {
 	return obj.Rating, nil
 }
