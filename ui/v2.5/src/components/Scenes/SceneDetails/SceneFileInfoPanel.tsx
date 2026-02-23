@@ -98,31 +98,8 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
           id="path"
           url={`file://${file.path}`}
           value={`file://${file.path}`}
+          ddStyle={{ wordBreak: "break-all" }}
         />
-        <>
-          <dt>
-            <FormattedMessage id="actions_name" defaultMessage="Actions" />:
-          </dt>
-          <dd>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={onOpenExternalPlayer}
-              title="Open in external player"
-            >
-              <FormattedMessage id="actions.open_in_external_player" />
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => onScanThreats?.(file.id)}
-              disabled={scanningThreats}
-              title="Scan for security threats"
-            >
-              <FormattedMessage id="actions.scan_for_threats" defaultMessage="Scan for threats" />
-            </Button>
-          </dd>
-        </>
         <TextField id="filesize">
           <span className="text-truncate">
             <FileSize size={file.size} />
@@ -194,6 +171,33 @@ const FileInfoPanel: React.FC<IFileInfoPanelProps> = ({
             </span>
           </TextField>
         )}
+
+        <>
+          <dt>
+            <FormattedMessage id="actions_name" defaultMessage="Actions" />:
+          </dt>
+          <dd>
+            <div className="d-flex flex-wrap" style={{ gap: "0.5rem" }}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={onOpenExternalPlayer}
+                title="Open in external player"
+              >
+                <FormattedMessage id="actions.open_in_external_player" />
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => onScanThreats?.(file.id)}
+                disabled={scanningThreats}
+                title="Scan for security threats"
+              >
+                <FormattedMessage id="actions.scan_for_threats" defaultMessage="Scan for threats" />
+              </Button>
+            </div>
+          </dd>
+        </>
       </dl>
       {ofMany && onSetPrimaryFile && !primary && (
         <div>

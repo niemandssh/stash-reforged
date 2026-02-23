@@ -62,6 +62,8 @@ import {
   faSync,
   faSearch,
   faCog,
+  faPlay,
+  faWrench,
   faCamera,
   faImage,
   faCompressAlt,
@@ -74,6 +76,15 @@ import {
   faExchangeAlt,
   faTrash,
   faShieldAlt,
+  faInfoCircle,
+  faListUl,
+  faMapMarkerAlt,
+  faLayerGroup,
+  faSlidersH,
+  faFileAlt,
+  faHistory,
+  faEdit,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
@@ -198,6 +209,9 @@ interface IProps {
   onStopMarkers: () => void;
   playingTagId?: string;
   onPlayAllMarkers: (markers: GQL.SceneMarkerDataFragment[]) => void;
+  setRightSidebarPanel?: React.Dispatch<
+    React.SetStateAction<"queue" | "markers" | "fileinfo" | null>
+  >;
 }
 
 interface ISceneParams {
@@ -232,6 +246,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     onStopMarkers,
     playingTagId,
     onPlayAllMarkers,
+    setRightSidebarPanel: setRightSidebarPanelFromProps,
   } = props;
 
   const Toast = useToast();
@@ -423,10 +438,26 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   // set up hotkeys
   useEffect(() => {
     Mousetrap.bind("a", () => setActiveTabKey("scene-details-panel"));
-    Mousetrap.bind("q", () => setActiveTabKey("scene-queue-panel"));
+    if (queueScenes.length > 0 && setRightSidebarPanelFromProps) {
+      Mousetrap.bind("q", () =>
+        setRightSidebarPanelFromProps((p) => (p === "queue" ? null : "queue"))
+      );
+    }
     Mousetrap.bind("e", () => setActiveTabKey("scene-edit-panel"));
-    Mousetrap.bind("k", () => setActiveTabKey("scene-markers-panel"));
-    Mousetrap.bind("i", () => setActiveTabKey("scene-file-info-panel"));
+    if (setRightSidebarPanelFromProps) {
+      Mousetrap.bind("k", () =>
+        setRightSidebarPanelFromProps((p) =>
+          p === "markers" ? null : "markers"
+        )
+      );
+    }
+    if (setRightSidebarPanelFromProps) {
+      Mousetrap.bind("i", () =>
+        setRightSidebarPanelFromProps((p) =>
+          p === "fileinfo" ? null : "fileinfo"
+        )
+      );
+    }
     Mousetrap.bind("h", () => setActiveTabKey("scene-history-panel"));
     Mousetrap.bind("o", () => {
       onIncrementOClick();
@@ -1151,26 +1182,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           <ScenePageTabs {...props}>
             <Nav.Item>
               <Nav.Link eventKey="scene-details-panel">
+                <Icon icon={faInfoCircle} className="mr-1" />
                 <FormattedMessage id="details" />
-              </Nav.Link>
-            </Nav.Item>
-            {queueScenes.length > 0 ? (
-              <Nav.Item>
-                <Nav.Link eventKey="scene-queue-panel">
-                  <FormattedMessage id="queue" />
-                </Nav.Link>
-              </Nav.Item>
-            ) : (
-              ""
-            )}
-            <Nav.Item>
-              <Nav.Link eventKey="scene-markers-panel">
-                <FormattedMessage id="markers" />
               </Nav.Link>
             </Nav.Item>
             {scene.groups.length > 0 ? (
               <Nav.Item>
                 <Nav.Link eventKey="scene-group-panel">
+                  <Icon icon={faLayerGroup} className="mr-1" />
                   <FormattedMessage
                     id="countables.groups"
                     values={{ count: scene.groups.length }}
@@ -1183,6 +1202,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             {scene.galleries.length >= 1 ? (
               <Nav.Item>
                 <Nav.Link eventKey="scene-galleries-panel">
+                  <Icon icon={faImages} className="mr-1" />
                   <FormattedMessage
                     id="countables.galleries"
                     values={{ count: scene.galleries.length }}
@@ -1192,22 +1212,24 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             ) : undefined}
             <Nav.Item>
               <Nav.Link eventKey="scene-video-filter-panel">
+                <span className="fa-layers fa-fw mr-1 preferences-tab-icon position-relative">
+                  <Icon icon={faPlay} />
+                  <span className="preferences-tab-wrench-bg">
+                    <Icon icon={faWrench} transform="shrink-6" />
+                  </span>
+                </span>
                 <FormattedMessage id="effect_filters.name" />
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link eventKey="scene-file-info-panel">
-                <FormattedMessage id="file_info" />
-                <Counter count={scene.files.length} hideZero hideOne />
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
               <Nav.Link eventKey="scene-history-panel">
+                <Icon icon={faHistory} className="mr-1" />
                 <FormattedMessage id="history" />
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
               <Nav.Link eventKey="scene-edit-panel">
+                <Icon icon={faEdit} className="mr-1" />
                 <FormattedMessage id="actions.edit" />
               </Nav.Link>
             </Nav.Item>
@@ -1219,33 +1241,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         <ScenePageTabContent {...props}>
           <Tab.Pane eventKey="scene-details-panel">
             <SceneDetailPanel scene={scene} />
-          </Tab.Pane>
-          <Tab.Pane eventKey="scene-queue-panel">
-            <QueueViewer
-              scenes={queueScenes}
-              currentID={scene.id}
-              continue={continuePlaylist}
-              setContinue={setContinuePlaylist}
-              onSceneClicked={onQueueSceneClicked}
-              onNext={onQueueNext}
-              onPrevious={onQueuePrevious}
-              onRandom={onQueueRandom}
-              start={queueStart}
-              hasMoreScenes={queueHasMoreScenes}
-              onLessScenes={onQueueLessScenes}
-              onMoreScenes={onQueueMoreScenes}
-            />
-          </Tab.Pane>
-          <Tab.Pane eventKey="scene-markers-panel">
-            <SceneMarkersPanel
-              sceneId={scene.id}
-              onClickMarker={onClickMarker}
-              onPlayMarkers={onPlayMarkers}
-              onStopMarkers={onStopMarkers}
-              playingTagId={playingTagId}
-              onPlayAllMarkers={onPlayAllMarkers}
-              isVisible={activeTabKey === "scene-markers-panel"}
-            />
           </Tab.Pane>
           <Tab.Pane eventKey="scene-group-panel">
             <SceneGroupPanel scene={scene} />
@@ -1260,12 +1255,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           )}
           <Tab.Pane eventKey="scene-video-filter-panel">
             <SceneVideoFilterPanel scene={scene} />
-          </Tab.Pane>
-          <Tab.Pane
-            className="file-info-panel"
-            eventKey="scene-file-info-panel"
-          >
-            <SceneFileInfoPanel scene={scene} onRefetch={props.onSaved} />
           </Tab.Pane>
           <Tab.Pane eventKey="scene-edit-panel" mountOnEnter>
             <SceneEditPanel
@@ -1478,6 +1467,9 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   }, [configuration?.interface.continuePlaylistDefault, queryParams]);
 
   const [queueScenes, setQueueScenes] = useState<QueuedScene[]>([]);
+  const [rightSidebarPanel, setRightSidebarPanel] = useState<
+    "queue" | "markers" | "fileinfo" | null
+  >(null);
 
   const [collapsed, setCollapsed] = useState(false);
   const [viewedScenes, setViewedScenes] = useState<Set<string>>(new Set());
@@ -1832,6 +1824,12 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     loadScene(sceneID, autoPlayOnSelected, getScenePage(sceneID));
   }
 
+  function onClickMarker(marker: GQL.SceneMarkerDataFragment) {
+    setTimestamp(marker.seconds, true);
+  }
+
+  const intl = useIntl();
+
   if (!scene) {
     if (loading) return <LoadingIndicator />;
     if (error) return <ErrorMessage error={error.message} />;
@@ -1861,6 +1859,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
         onStopMarkers={onStopMarkers}
         playingTagId={playingTagId}
         onPlayAllMarkers={onPlayAllMarkers}
+        setRightSidebarPanel={setRightSidebarPanel}
         onSaved={async () => {
           // force refetch immediately after save to provide latest data to form
           await refetch();
@@ -1885,6 +1884,105 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           initialPlaylistIndex={initialPlaylistIndex}
           onClearMarkerPlaylist={onStopMarkers}
         />
+      </div>
+      <div className="scene-right-edge-panel">
+        <div className="scene-right-ears">
+          {queueScenes.length > 0 && (
+            <button
+              type="button"
+              className={`scene-ear ${rightSidebarPanel === "queue" ? "active" : ""}`}
+              title={intl.formatMessage({ id: "queue" })}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setRightSidebarPanel((p) => (p === "queue" ? null : "queue"));
+              }}
+            >
+              <Icon icon={faListUl} />
+            </button>
+          )}
+          <button
+            type="button"
+            className={`scene-ear ${rightSidebarPanel === "markers" ? "active" : ""}`}
+            title={intl.formatMessage({ id: "markers" })}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setRightSidebarPanel((p) =>
+                p === "markers" ? null : "markers"
+              );
+            }}
+          >
+            <Icon icon={faMapMarkerAlt} />
+          </button>
+          <button
+            type="button"
+            className={`scene-ear ${rightSidebarPanel === "fileinfo" ? "active" : ""}`}
+            title={intl.formatMessage({ id: "file_info" })}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setRightSidebarPanel((p) =>
+                p === "fileinfo" ? null : "fileinfo"
+              );
+            }}
+          >
+            <Icon icon={faFileAlt} />
+          </button>
+        </div>
+        <div
+          className={`scene-right-sidebar ${rightSidebarPanel ? "open" : ""}`}
+        >
+          {rightSidebarPanel && (
+            <>
+              <Button
+                variant="link"
+                className="scene-right-sidebar-close"
+                onClick={() => setRightSidebarPanel(null)}
+                title={intl.formatMessage({ id: "actions.close" })}
+              >
+                <Icon icon={faTimes} />
+              </Button>
+              <div className="scene-right-sidebar-content">
+                {rightSidebarPanel === "queue" && (
+                  <QueueViewer
+                    scenes={queueScenes}
+                    currentID={scene.id}
+                    continue={continuePlaylist}
+                    setContinue={setContinuePlaylist}
+                    onSceneClicked={onQueueSceneClicked}
+                    onNext={() => queueNext(autoPlayOnSelected)}
+                    onPrevious={() => queuePrevious(autoPlayOnSelected)}
+                    onRandom={() => queueRandom(autoPlayOnSelected)}
+                    start={queueStart}
+                    hasMoreScenes={queueHasMoreScenes}
+                    onLessScenes={onQueueLessScenes}
+                    onMoreScenes={onQueueMoreScenes}
+                  />
+                )}
+                {rightSidebarPanel === "markers" && (
+                  <SceneMarkersPanel
+                    sceneId={scene.id}
+                    onClickMarker={onClickMarker}
+                    onPlayMarkers={onPlayMarkers}
+                    onStopMarkers={onStopMarkers}
+                    playingTagId={playingTagId}
+                    onPlayAllMarkers={onPlayAllMarkers}
+                    isVisible
+                  />
+                )}
+                {rightSidebarPanel === "fileinfo" && (
+                  <SceneFileInfoPanel
+                    scene={scene}
+                    onRefetch={async () => {
+                      await refetch();
+                    }}
+                  />
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

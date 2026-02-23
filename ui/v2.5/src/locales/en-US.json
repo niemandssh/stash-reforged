@@ -392,7 +392,7 @@
     "role_description": "Role Description",
     "role_description_placeholder": "Role description",
     "threats": "Threats",
-    "threats_checked": "Threats checked",
+    "threats_checked": "Threats",
     "threats_not_checked": "Not scanned",
     "threats_found": "Threats found",
     "threats_none": "No threats found",

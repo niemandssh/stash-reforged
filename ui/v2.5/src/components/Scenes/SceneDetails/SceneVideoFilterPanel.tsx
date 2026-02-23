@@ -778,7 +778,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
 
   function renderSaveButton() {
     return (
-      <div className="row form-group mt-5">
+      <div className="row form-group">
         <div className="col-12">
           <Button
             id="saveFilters"
@@ -803,7 +803,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   updateVideoStyle();
 
   return (
-    <div className="container scene-video-filter">
+    <div className="container scene-video-filter position-relative">
       <div className="row form-group">
         <span className="col-12">
           <h5>
@@ -1130,8 +1130,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         </span>
       </div>
       {renderRotateAndScale()}
-      {renderSaveButton()}
-      {renderResetButton()}
+      <div className="position-sticky" style={{ bottom: -32, backgroundColor: "#202b33", padding: "12px 0px 8px" }}>
+        {renderSaveButton()}
+        {renderResetButton()}
+      </div>
       {renderFilterContainer()}
     </div>
   );

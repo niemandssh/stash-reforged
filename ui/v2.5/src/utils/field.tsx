@@ -48,6 +48,8 @@ interface IURLField {
   target?: string;
   // an internal link (uses <Link to={url}>)
   internal?: boolean;
+  /** Стили для элемента dd (например wordBreak для переноса по символам) */
+  ddStyle?: React.CSSProperties;
 }
 
 export const URLField: React.FC<IURLField> = ({
@@ -59,6 +61,7 @@ export const URLField: React.FC<IURLField> = ({
   truncate,
   target = "_blank",
   internal,
+  ddStyle,
 }) => {
   if (!value) {
     return null;
@@ -91,7 +94,7 @@ export const URLField: React.FC<IURLField> = ({
   return (
     <>
       <dt>{abbr ? <abbr title={abbr}>{message}</abbr> : message}</dt>
-      <dd>{maybeRenderUrl()}</dd>
+      <dd style={ddStyle}>{maybeRenderUrl()}</dd>
     </>
   );
 };
