@@ -8,6 +8,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import React, {
+  Suspense,
   useEffect,
   useState,
   useMemo,
@@ -1471,6 +1472,13 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     "queue" | "markers" | "fileinfo" | null
   >(null);
 
+  // Preload right-sidebar panels so first open doesn't suspend and flicker the page
+  useEffect(() => {
+    void import("./QueueViewer");
+    void import("./SceneMarkersPanel");
+    void import("./SceneFileInfoPanel");
+  }, []);
+
   const [collapsed, setCollapsed] = useState(false);
   const [viewedScenes, setViewedScenes] = useState<Set<string>>(new Set());
 
@@ -1944,41 +1952,43 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
                 <Icon icon={faTimes} />
               </Button>
               <div className="scene-right-sidebar-content">
-                {rightSidebarPanel === "queue" && (
-                  <QueueViewer
-                    scenes={queueScenes}
-                    currentID={scene.id}
-                    continue={continuePlaylist}
-                    setContinue={setContinuePlaylist}
-                    onSceneClicked={onQueueSceneClicked}
-                    onNext={() => queueNext(autoPlayOnSelected)}
-                    onPrevious={() => queuePrevious(autoPlayOnSelected)}
-                    onRandom={() => queueRandom(autoPlayOnSelected)}
-                    start={queueStart}
-                    hasMoreScenes={queueHasMoreScenes}
-                    onLessScenes={onQueueLessScenes}
-                    onMoreScenes={onQueueMoreScenes}
-                  />
-                )}
-                {rightSidebarPanel === "markers" && (
-                  <SceneMarkersPanel
-                    sceneId={scene.id}
-                    onClickMarker={onClickMarker}
-                    onPlayMarkers={onPlayMarkers}
-                    onStopMarkers={onStopMarkers}
-                    playingTagId={playingTagId}
-                    onPlayAllMarkers={onPlayAllMarkers}
-                    isVisible
-                  />
-                )}
-                {rightSidebarPanel === "fileinfo" && (
-                  <SceneFileInfoPanel
-                    scene={scene}
-                    onRefetch={async () => {
-                      await refetch();
-                    }}
-                  />
-                )}
+                <Suspense fallback={<LoadingIndicator />}>
+                  {rightSidebarPanel === "queue" && (
+                    <QueueViewer
+                      scenes={queueScenes}
+                      currentID={scene.id}
+                      continue={continuePlaylist}
+                      setContinue={setContinuePlaylist}
+                      onSceneClicked={onQueueSceneClicked}
+                      onNext={() => queueNext(autoPlayOnSelected)}
+                      onPrevious={() => queuePrevious(autoPlayOnSelected)}
+                      onRandom={() => queueRandom(autoPlayOnSelected)}
+                      start={queueStart}
+                      hasMoreScenes={queueHasMoreScenes}
+                      onLessScenes={onQueueLessScenes}
+                      onMoreScenes={onQueueMoreScenes}
+                    />
+                  )}
+                  {rightSidebarPanel === "markers" && (
+                    <SceneMarkersPanel
+                      sceneId={scene.id}
+                      onClickMarker={onClickMarker}
+                      onPlayMarkers={onPlayMarkers}
+                      onStopMarkers={onStopMarkers}
+                      playingTagId={playingTagId}
+                      onPlayAllMarkers={onPlayAllMarkers}
+                      isVisible
+                    />
+                  )}
+                  {rightSidebarPanel === "fileinfo" && (
+                    <SceneFileInfoPanel
+                      scene={scene}
+                      onRefetch={async () => {
+                        await refetch();
+                      }}
+                    />
+                  )}
+                </Suspense>
               </div>
             </>
           )}
