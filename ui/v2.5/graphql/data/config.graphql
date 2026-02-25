@@ -75,6 +75,8 @@ fragment ConfigInterfaceData on ConfigInterfaceResult {
   soundOnPreview
   wallShowTitle
   wallPlayback
+  wallAnimatePreviews
+  wallShowAdditionalInfo
   showScrubber
   maximumLoopDuration
   noBrowser

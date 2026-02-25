@@ -198,8 +198,12 @@ const (
 	AutoplayNextVideoTimer        = "autoplay_next_video_timer"
 	autoplayNextVideoTimerDefault = 10
 
-	WallPlayback        = "wall_playback"
-	defaultWallPlayback = "video"
+	WallPlayback             = "wall_playback"
+	defaultWallPlayback      = "video"
+	WallAnimatePreviews        = "wall_animate_previews"
+	defaultWallAnimatePreviews  = true
+	WallShowAdditionalInfo     = "wall_show_additional_info"
+	defaultWallShowAdditionalInfo = true
 
 	// Image lightbox options
 	legacyImageLightboxSlideshowDelay       = "slideshow_delay"
@@ -1258,6 +1262,14 @@ func (i *Config) GetWallPlayback() string {
 	}
 
 	return ret
+}
+
+func (i *Config) GetWallAnimatePreviews() bool {
+	return i.getBoolDefault(WallAnimatePreviews, defaultWallAnimatePreviews)
+}
+
+func (i *Config) GetWallShowAdditionalInfo() bool {
+	return i.getBoolDefault(WallShowAdditionalInfo, defaultWallShowAdditionalInfo)
 }
 
 func (i *Config) GetShowScrubber() bool {

@@ -351,6 +351,10 @@ input ConfigInterfaceInput {
   wallShowTitle: Boolean
   "Wall playback type"
   wallPlayback: String
+  "If true, all wall previews animate; if false, show static image and animate on hover only"
+  wallAnimatePreviews: Boolean
+  "Show additional info on scene wall cards (rating, tags/o/omg counts); layout hides after 3s hover on preview"
+  wallShowAdditionalInfo: Boolean
 
   "Show scene scrubber by default"
   showScrubber: Boolean
@@ -433,6 +437,10 @@ type ConfigInterfaceResult {
   wallShowTitle: Boolean
   "Wall playback type"
   wallPlayback: String
+  "If true, all wall previews animate; if false, show static image and animate on hover only"
+  wallAnimatePreviews: Boolean
+  "Show additional info on scene wall cards (rating, tags/o/omg counts); layout hides after 3s hover on preview"
+  wallShowAdditionalInfo: Boolean
 
   "Show scene scrubber by default"
   showScrubber: Boolean

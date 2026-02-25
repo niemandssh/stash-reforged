@@ -460,6 +460,8 @@ func (r *mutationResolver) ConfigureInterface(ctx context.Context, input ConfigI
 	r.setConfigBool(config.ShowScrubber, input.ShowScrubber)
 
 	r.setConfigString(config.WallPlayback, input.WallPlayback)
+	r.setConfigBool(config.WallAnimatePreviews, input.WallAnimatePreviews)
+	r.setConfigBool(config.WallShowAdditionalInfo, input.WallShowAdditionalInfo)
 	r.setConfigInt(config.MaximumLoopDuration, input.MaximumLoopDuration)
 	r.setConfigBool(config.AutostartVideo, input.AutostartVideo)
 	r.setConfigBool(config.ShowStudioAsText, input.ShowStudioAsText)

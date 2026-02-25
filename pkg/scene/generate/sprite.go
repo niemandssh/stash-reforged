@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	spriteScreenshotWidth = 160
+	spriteScreenshotWidth = 460
 
 	spriteRows   = 9
 	spriteCols   = 9

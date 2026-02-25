@@ -266,6 +266,8 @@ const SceneList: React.FC<{
         scenes={scenes}
         sceneQueue={queue}
         zoomIndex={filter.zoomIndex}
+        selectedIds={selectedIds}
+        onSelectChange={onSelectChange}
       />
     );
   }

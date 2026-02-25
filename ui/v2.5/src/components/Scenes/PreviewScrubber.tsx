@@ -22,6 +22,10 @@ interface IScenePreviewProps {
   sceneId?: string;
   filters?: GQL.Maybe<GQL.VideoFilters>;
   transforms?: GQL.Maybe<GQL.VideoTransforms>;
+  /** Called when pointer enters the scrubber area (e.g. to cancel layout hide) */
+  onProtectedHover?: () => void;
+  /** Called when pointer leaves the scrubber area (e.g. to start layout hide timer) */
+  onProtectedLeave?: () => void;
 }
 
 function scaleToFit(dimensions: { w: number; h: number }, bounds: DOMRect) {
@@ -44,6 +48,8 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
   sceneId,
   filters,
   transforms,
+  onProtectedHover,
+  onProtectedLeave,
 }) => {
   const imageParentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState({});
@@ -135,12 +141,14 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
           <div className="scrubber-image" style={style}></div>
         </div>
       )}
-      <HoverScrubber
-        totalSprites={spriteInfo?.length ?? defaultSprites}
-        activeIndex={activeIndex}
-        setActiveIndex={(i) => debounceSetActiveIndex(i)}
-        onClick={onScrubberClick}
-      />
+      <div onMouseEnter={onProtectedHover} onMouseLeave={onProtectedLeave}>
+        <HoverScrubber
+          totalSprites={spriteInfo?.length ?? defaultSprites}
+          activeIndex={activeIndex}
+          setActiveIndex={(i) => debounceSetActiveIndex(i)}
+          onClick={onScrubberClick}
+        />
+      </div>
       {svgFilter}
     </div>
   );

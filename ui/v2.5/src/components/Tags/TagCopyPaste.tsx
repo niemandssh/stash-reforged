@@ -17,9 +17,12 @@ import * as GQL from "src/core/generated-graphql";
 // Blonde::#ffcc00
 // Blue Eyes::#0099ff
 // No Color Tag
+// Paste accepts comma, semicolon, pipe or newline as separators.
 
 const TAG_SEPARATOR = "\n";
 const TAG_COLOR_SEPARATOR = "::";
+/** Splits pasted text into tag parts: comma, semicolon, pipe, newline */
+export const TAG_PASTE_DELIMITERS = /[,;\n|]+/;
 
 export function serializeTags(tags: Tag[]): string {
   return tags
@@ -42,15 +45,22 @@ export function deserializeTags(text: string): ParsedTag[] {
     return [];
   }
 
-  return text
-    .split(TAG_SEPARATOR)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+  const trimmed = text.trim();
+  const withoutLeadingTrailingDelimiters = trimmed
+    .replace(/^[,;\n|]+/, "")
+    .replace(/[,;\n|]+$/, "");
+
+  return withoutLeadingTrailingDelimiters
+    .split(TAG_PASTE_DELIMITERS)
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
     .map((line) => {
       const separatorIndex = line.lastIndexOf(TAG_COLOR_SEPARATOR);
       if (separatorIndex > 0) {
-        const name = line.substring(0, separatorIndex);
-        const color = line.substring(separatorIndex + TAG_COLOR_SEPARATOR.length);
+        const name = line.substring(0, separatorIndex).trim();
+        const color = line
+          .substring(separatorIndex + TAG_COLOR_SEPARATOR.length)
+          .trim();
         // Validate color format (hex color)
         if (/^#[0-9A-Fa-f]{3,6}$/.test(color)) {
           return { name, color };

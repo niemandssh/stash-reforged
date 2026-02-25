@@ -1,74 +1,78 @@
 # Improvements of "Stash: Reforged" version
 
-- [x] **Scenes threats scanner** - a simple scanner that try to find threats in your videos
+- [x] **Scenes threats scanner** - a simple scanner that tries to find threats in your videos
 - [x] **Scenes recommendations** (by weights of tags, performers, studio and groups) - shows you suggested content to watch!
-- [x] **New slideshow and web show modes for galleries** - for comfortable read comics!
+- [x] **New slideshow and web show modes for galleries** - for reading comics comfortably
 - [x] **Galleries views** - count views like in scenes! View counts automatically only for "Web mode" when you scroll after 3rd image (once per gallery open)
-- [x] **Trimmed segments** - allows you to skip start and end of the video with intro or/and advertise (without trim original video)
-- [x] **Scene views history page** - you can view list of scene views like in YouTube! Grouping of views in a row and o-count marker shows in a history card
+- [x] **Trimmed segments** - allows you to skip the start and end of the video with intro and/or advertising (without trimming the original video)
+- [x] **Scene views history page** - you can view a list of scene views like on YouTube! Grouping of views in a row and o-count marker are shown on a history card
 - [x] **Play markers mode in scene** - allows you to play only segments by one marker (for example, if a marker has 3 segments, they will be played one after another with automatic jumps to the next segment) sequentially or play all marker segments at once. This mode is useful for large movies with overlapping scenes where you want to watch only one scene, or for viewing only interesting content
-- [x] **HLS correction** - special checkbox in Scene filters tab that correct sound in HLS MP4 direct stream (these videos is broken but this mode can fix it, buffering delay only on start of play. Original transcodes was very laggy for me)
-- [x] Setting for show/hide percent of similarity in suggested scenes
-- [x] Status for ignore tag for suggested scenes (these tags will not change percent of similarity)
-- [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag), these tags is sorting by popularity (using in scenes)
+- [x] **HLS correction** - special checkbox in Scene filters tab that corrects sound in HLS MP4 direct stream (these videos are broken but this mode can fix it; buffering delay only at start of play. Original transcodes were very laggy for me)
+- [x] Setting to show/hide percent of similarity in suggested scenes
+- [x] Option to ignore tags for suggested scenes (these tags will not change percent of similarity)
+- [x] **Pose tags block** - shows more informative tags to select (for tags with pose flag); these tags are sorted by popularity (used in scenes)
 - [x] **"Random" button, "Random best" button** - shows random scene by rating
-- [x] **"Review" button** - fore review unorganised scenes without tags or rating
-- [x] **Converter broken formats to mp4 and HLS to mp4** - for real converting original video to valid format (like transcode but replaces original video). Convertable video will copy to temp folder (.stash/temp) before file will convert and save correctly (for safe)
+- [x] **"Review" button** - for reviewing unorganised scenes without tags or rating
+- [x] **Convert broken formats to mp4 and HLS to mp4** - to actually convert the original video to a valid format (like transcode but replaces the original). The video is copied to a temp folder (.stash/temp) before conversion and saving (for safety)
 - [x] **Trim original video** - re-encode video with trimming based on trimmed segments (start time and end time)
 - [x] **Convert - Reduce resolution** - you can reduce resolution for big videos (for example, 4k to 2k or fullhd) if you don't want to store big files
 - [x] **Tag colors** - mark important tags (color presets and palette of already used colors make color edit more comfortable)
-- [x] **O-Count for galleries!** - now you can add count of times for your comics ;)
+- [x] **O-Count for galleries!** - now you can add a count of times for your comics ;)
 - [x] **O-Count stats and graphics**
-- [x] **Multiple images for performers** (gallery carousel with set some image as primary) - you can now add 2-3 the best photos!
+- [x] **Multiple images for performers** (gallery carousel with an option to set one image as primary) - you can now add 2–3 of the best photos
 - [x] **Primary tag for performer** (will show after name)
-- [x] **Small roles** - show performer in small badge in "Also starred" block after Performers in scene (for example, for hiding mens from main performers list, you anyway don't even try to fill men's photos or something else)
+- [x] **Small roles** - show performer in a small badge in the "Also starred" block after Performers in a scene (for example, for hiding men from the main performers list when you don't bother to fill their photos)
 - [x] **Pins for scenes and galleries** - you can pin important scenes or galleries in the list
-- [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
+- [x] **Next scene with timer** - after the end of the video like on YouTube (selects one of the top-5 suggested scenes). You can change the delay or turn it off in Settings - Custom
 - [x] **Scene tags requirements helper** - if you fill descriptions and requirement status in color presets, you can see tag helper with checklist of fillable tags
 - [x] **New selective scan** - now you can select not only folders, but also individual files for scanning. New convenient Grid mode, selected files and folders are now displayed on the right side 
-- [x] **Separate tags for performers in scene** - useful for add tags by each performer if there is 3 or more performers in scene and you need to describe each of them
-- [x] **Non-strict tags search** - you can make mistakes on tag search now!
-- [x] URLs for bulk edit scene
-- [x] Fake item was added to away enter misclick on scene tags editing, now you can't create tag by do something like "crea"+Enter, now you can create it by "crea"+Key down+Enter (or by click on create element by left click of course)
-- [x] Show current or dead age for performer in the Scene's performer cards
+- [x] **Separate tags for performers in scene** - useful for adding tags per performer when there are 3 or more performers in a scene and you need to describe each of them
+- [x] **Non-strict tags search** - you can make mistakes in tag search now
+- [x] URLs for bulk editing scenes
+- [x] Fake item was added to prevent accidental Enter misclicks when editing scene tags; you can't create a tag by typing something like "crea"+Enter; create it by "crea"+Arrow down+Enter (or by clicking the create element)
+- [x] Show current or age at death for performers in the scene's performer cards
 - [x] Auto-detect potentially broken videos (non-mp4 formats and HLS mp4)
-- [x] Tag weights - some tags matter than other (for recommendations)
-- [x] Performer's, Studio's and tag's photo cropper
-- [x] Broken video status for scene (you can add it manually)
+- [x] Tag weights - some tags matter more than others (for recommendations)
+- [x] Performer, Studio and tag photo cropper
+- [x] Broken video status for a scene (you can set it manually)
 - [x] 10-stars rating by half star (for numeric rating setting)
-- [x] RIP ribbon for death performers
+- [x] RIP ribbon for deceased performers
 - [x] Reorder fields of scene edit (for more comfortable filling)
-- [x] "Merge from/into other scene..." was added in scene page (it's exists in the scenes list page now, but now it's easier to use in scene page)
-- [x] Notes block with saving text to file (.stash/notes.txt) - for saving links to scrape videos in future, for example
-- [x] Action for open media file in external player
-- [x] In scene edit: highlight already set tags if search of tag contains searchable phrase
-- [x] Check file in task before make action (for example, if you will start scan folder and at this moment delete one of video any video in this folder; it has crush before)
-- [x] Open tag page instead of filter by tag when click on tag from scene page (because tag page have scenes by this tag already, anf it's more comfortable to edit tag by click on it)
-- [x] Video Filters saves for each scene now and keeps after reload page
+- [x] "Merge from/into other scene..." was added on the scene page (it already exists on the scenes list page, but is now easier to use on the scene page)
+- [x] Notes block that saves text to a file (.stash/notes.txt) - e.g. for saving links to scrape videos later
+- [x] Action to open the media file in an external player
+- [x] In scene edit: highlight already set tags when the tag search contains the search phrase
+- [x] Check that the file exists before running a task (e.g. if you start scanning a folder and delete a video from it at the same time, it would crash before)
+- [x] Open the tag page instead of filtering by tag when you click a tag on the scene page (the tag page already has scenes for this tag, and it's more convenient to edit the tag by clicking on it)
+- [x] Video Filters are saved for each scene and kept after reloading the page
 - [x] Separate release date and filming date for scenes
 - [x] Show mode saves in DB table for each gallery
-- [x] Search translated tags from wrong keyboard for russian and english langs (зщкт -> porn, heccrfz -> русская)
+- [x] Search with translated tags from the wrong keyboard layout for Russian and English (зщкт → porn, heccrfz → русская)
 - [x] Settings page opens in the new tab
-- [x] Tag links and performer card links now opens in the new tab in scene
+- [x] Tag links and performer card links now open in a new tab on the scene page
 - [x] Setting for redirect to /scenes from main page if it is turned on
-- [x] Undo/redo for tags field (you can type Ctrl+Z for return accidentally deleted tag)
+- [x] Undo/redo for the tags field (Ctrl+Z to restore an accidentally deleted tag)
 - [x] Collapse for scene description in Scene Details tab
-- [x] Normalize tag names on scrapping ("e-girl" becomes "e girl") - resolves scrape problems with XVideos tags (a lot of tags with hyphens)
+- [x] Normalize tag names when scraping ("e-girl" becomes "e girl") - resolves scrape problems with XVideos tags (many tags with hyphens)
 - [x] Random button in scenes list now always displayed, no need to select a special filter!
 - [x] Fixes for parallel tasks
-- [x] You can force regenerate sprites for scene now
+- [x] You can force regenerate sprites for a scene now
 - [x] Icons for operations menu in scene
 - [x] GPU is now mandatory for video conversion, speeding up the process up to 10x!
-- [x] You can hide UI of player (fo make screen, for example)
+- [x] You can hide the player UI (e.g. to take a screenshot)
 - [x] Copy/paste tags, o-counts, omg-counts
 - [x] You can enable saving timer of video on 5 minutes (even if you enable option "Always play video from beginning")
 - [x] Info about video play time can be saved now on reload page
 - [x] You can save video volume separately for each scene in preferences (ex. filters tab) and it's autosync to preferences if you change volume in player - useful for videos with loud music (compilations, collections, etc.)
 - [x] You can add photo/image from clipboard (new mode "From clipboard..." for image loader component)
 - [x] You can now add O-Count / OMG-Count to one or many performers separately or on the whole scene
-- [x] You can now write any dates in formats YYYY-MM-DDDD, DD-MM-YYYY, dd.mm.yyyy. Also you can write only year and month or only year (if you write date without day, any age will count from first day; if you wrate only year, any age will count from June, 1'st)
+- [x] You can now enter dates in formats YYYY-MM-DD, DD-MM-YYYY, dd.mm.yyyy. You can also enter only year and month or only year (if you omit the day, age is counted from the first day of the month; if you enter only the year, age is counted from 1 June)
+- [x] Scene Wall and Marker Wall mode improved (setting to enable/disable autoplay of previews; optional extra info on cards, overlay hides on preview hover, scene selection with checkboxes)
+- [x] Scrubber sprite generated at higher width for better hover preview
+- [x] Pasted text is split into tags by commas, semicolons or line breaks, so you can paste a whole list at once; new tags are created if they don't exist yet
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task
-- [ ] Fix scene sprites after convert video (don't run generate manually)
-- [ ] Handle encrypted archives (safe scanning and using info - previews and meta must be encrypted too; open scene/gallery by typing password)
+- [x] Fix scene sprites after convert video (don't run generate manually) - _fixed_
+- [NO] Handle encrypted archives (safe scanning and using info - previews and meta must be encrypted too; open scene/gallery by typing password) - __use encrypted disks__
+- [ ] Fix scene preview after convert video

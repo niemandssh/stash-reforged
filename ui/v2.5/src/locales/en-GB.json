@@ -855,7 +855,11 @@
         "heading": "Scene / Marker Wall",
         "options": {
           "display_title": "Display title and tags",
-          "toggle_sound": "Enable sound"
+          "toggle_sound": "Enable sound",
+          "animate_previews": "Animate previews",
+          "animate_previews_description": "When enabled, all wall items animate. When disabled, items show a static image and only animate on hover.",
+          "show_additional_info": "Show additional info",
+          "show_additional_info_description": "Show rating (top left) and tags/O/OMG counts (right) on scene wall cards. Layout hides after 3 seconds when hovering only on the preview."
         }
       },
       "scroll_attempts_before_change": {

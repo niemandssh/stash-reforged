@@ -329,6 +329,20 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
               })}
             </option>
           </SelectSetting>
+          <BooleanSetting
+            id="wall-animate-previews"
+            headingID="config.ui.scene_wall.options.animate_previews"
+            subHeadingID="config.ui.scene_wall.options.animate_previews_description"
+            checked={iface.wallAnimatePreviews ?? undefined}
+            onChange={(v) => saveInterface({ wallAnimatePreviews: v })}
+          />
+          <BooleanSetting
+            id="wall-show-additional-info"
+            headingID="config.ui.scene_wall.options.show_additional_info"
+            subHeadingID="config.ui.scene_wall.options.show_additional_info_description"
+            checked={iface.wallShowAdditionalInfo ?? undefined}
+            onChange={(v) => saveInterface({ wallShowAdditionalInfo: v })}
+          />
         </SettingSection>
 
         <SettingSection headingID="config.ui.scene_list.heading">

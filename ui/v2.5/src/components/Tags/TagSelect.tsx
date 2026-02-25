@@ -29,6 +29,7 @@ import {
 } from "../Shared/FilterSelect";
 import { useCompare } from "src/hooks/state";
 import { TagPopover } from "./TagPopover";
+import { TAG_PASTE_DELIMITERS } from "./TagCopyPaste";
 import { Placement } from "react-bootstrap/esm/Overlay";
 import { PatchComponent, PatchFunction } from "src/patch";
 import {
@@ -191,6 +192,10 @@ export type TagSelectProps = IFilterProps &
     instanceId?: string;
   };
 
+type TagSelectPropsWithPaste = TagSelectProps & {
+  onPasteTags?: (names: string[]) => void;
+};
+
 const TagCustomInput = (
   inputProps: InputProps<
     { value: string; object: Tag },
@@ -205,7 +210,33 @@ const TagCustomInput = (
     inputProps.onKeyDown?.(e);
   };
 
-  return <components.Input {...inputProps} onKeyDown={handleKeyDown} />;
+  const onPasteTags = (inputProps.selectProps as TagSelectPropsWithPaste)
+    .onPasteTags;
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    if (!onPasteTags) return;
+    const raw = e.clipboardData.getData("text");
+    const trimmed = raw.trim();
+    const withoutLeadingTrailingDelimiters = trimmed
+      .replace(/^[,;\n|]+/, "")
+      .replace(/[,;\n|]+$/, "");
+    const names = withoutLeadingTrailingDelimiters
+      .split(TAG_PASTE_DELIMITERS)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (names.length > 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      onPasteTags(names);
+    }
+  };
+
+  return (
+    <components.Input
+      {...inputProps}
+      onKeyDown={handleKeyDown}
+      onPaste={handlePaste}
+    />
+  );
 };
 
 const _TagSelect: React.FC<TagSelectProps> = (props) => {
@@ -466,6 +497,51 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
     };
   };
 
+  const handlePasteTags = React.useCallback(
+    async (names: string[]) => {
+      if (!names.length || !props.onSelect) return;
+      const creatable = props.creatable ?? defaultCreatable;
+      const current = props.values ?? [];
+      const toAdd: Tag[] = [];
+      for (const name of names) {
+        const trimmed = name.trim();
+        if (!trimmed) continue;
+        const nameLower = trimmed.toLowerCase();
+        const already =
+          current.some((t) => t.name.toLowerCase() === nameLower) ||
+          toAdd.some((t) => t.name.toLowerCase() === nameLower);
+        if (already) continue;
+        const options = await loadTags(trimmed);
+        const found = options.find(
+          (o) => o.object.name.toLowerCase() === nameLower
+        );
+        if (found) {
+          toAdd.push(found.object);
+          continue;
+        }
+        if (creatable) {
+          try {
+            const created = await onCreate(trimmed);
+            toAdd.push(created.item);
+          } catch {
+            // skip failed create
+          }
+        }
+      }
+      if (toAdd.length > 0) {
+        props.onSelect([...current, ...toAdd]);
+      }
+    },
+    [
+      props.values,
+      props.onSelect,
+      props.creatable,
+      defaultCreatable,
+      loadTags,
+      onCreate,
+    ]
+  );
+
   const getNamedObject = (id: string, name: string) => {
     return {
       id,
@@ -629,6 +705,7 @@ const _TagSelect: React.FC<TagSelectProps> = (props) => {
   const selectProps = {
     ...props,
     onSelect: handleSelect,
+    onPasteTags: handlePasteTags,
     isOptionDisabled: isOptionDisabled,
     className: cx(
       "tag-select",
