@@ -1536,11 +1536,6 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     onVolumeChangeRef.current(level, muted);
   }, []);
 
-  // Force refetch on mount
-  React.useEffect(() => {
-    refetch();
-  }, [id, refetch]);
-
   const queryParams = useMemo(
     () => new URLSearchParams(location.search),
     [location.search]

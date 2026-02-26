@@ -281,6 +281,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const { configuration } = useContext(ConfigurationContext);
     const interfaceConfig = configuration?.interface;
     const uiConfig = configuration?.ui;
+    const showAbLoopControls = uiConfig?.showAbLoopControls ?? false;
     const videoRef = useRef<HTMLDivElement>(null);
     const [_player, setPlayer] = useState<VideoJsPlayer>();
     const sceneId = useRef<string>();
@@ -306,11 +307,94 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     const [fullscreen, setFullscreen] = useState(false);
     const [showScrubber, setShowScrubber] = useState(false);
+    const [showInitialCover, setShowInitialCover] = useState(true);
+    const showInitialCoverRef = useRef(true);
+    const [showInitialCoverImage, setShowInitialCoverImage] = useState(false);
+    const [fadeInitialCover, setFadeInitialCover] = useState(false);
     const [showNextSceneOverlay, setShowNextSceneOverlay] = useState(false);
     const [currentPlaylistIndex, setCurrentPlaylistIndex] = useState(0);
     const activePlaylist = useRef<GQL.SceneDataFragment["scene_markers"]>();
     const programmaticSeek = useRef(false);
     const [tagColors, setTagColors] = useState<{ [tag: string]: string }>({});
+    const initialCoverFadeTimer = useRef<number>();
+    const initialCoverShowRaf = useRef<number>();
+    const initialCoverShowRaf2 = useRef<number>();
+    const initialCoverImageShowRaf = useRef<number>();
+    const initialCoverImageFallbackTimer = useRef<number>();
+    const initialCoverImageLoadToken = useRef(0);
+
+    const animateInitialCoverIn = useCallback(() => {
+      cancelAnimationFrame(initialCoverShowRaf.current ?? 0);
+      cancelAnimationFrame(initialCoverShowRaf2.current ?? 0);
+      cancelAnimationFrame(initialCoverImageShowRaf.current ?? 0);
+      clearTimeout(initialCoverFadeTimer.current);
+      setShowInitialCoverImage(false);
+      setFadeInitialCover(false);
+      showInitialCoverRef.current = true;
+      setShowInitialCover(false);
+      initialCoverShowRaf.current = requestAnimationFrame(() => {
+        initialCoverShowRaf2.current = requestAnimationFrame(() => {
+          setShowInitialCover(true);
+        });
+      });
+    }, []);
+
+    const hideInitialCoverSmoothly = useCallback(() => {
+      if (!showInitialCoverRef.current) return;
+      showInitialCoverRef.current = false;
+      clearTimeout(initialCoverFadeTimer.current);
+      initialCoverFadeTimer.current = window.setTimeout(() => {
+        setShowInitialCover(false);
+        setShowInitialCoverImage(false);
+        setFadeInitialCover(false);
+      }, 150);
+    }, []);
+
+    const loadInitialCoverImage = useCallback(
+      (url?: string) => {
+        if (!_player || _player.isDisposed()) return;
+
+        const playerEl = _player.el() as HTMLElement | null;
+        if (!playerEl) return;
+
+        const token = ++initialCoverImageLoadToken.current;
+        cancelAnimationFrame(initialCoverImageShowRaf.current ?? 0);
+        clearTimeout(initialCoverImageFallbackTimer.current);
+        setShowInitialCoverImage(false);
+        playerEl.style.setProperty("--scene-cover-image", "none");
+
+        if (!url) return;
+
+        // Set URL immediately so CSS pseudo-element can use it.
+        playerEl.style.setProperty("--scene-cover-image", `url("${url}")`);
+
+        const img = new Image();
+        img.decoding = "async";
+
+        const revealLoadedImage = () => {
+          if (token !== initialCoverImageLoadToken.current) return;
+          initialCoverImageShowRaf.current = requestAnimationFrame(() => {
+            if (token !== initialCoverImageLoadToken.current) return;
+            setShowInitialCoverImage(true);
+          });
+        };
+
+        img.onload = revealLoadedImage;
+        img.onerror = revealLoadedImage;
+        img.src = url;
+
+        if (img.complete && img.naturalWidth > 0) {
+          revealLoadedImage();
+        }
+
+        // Fallback: ensure preview is not stuck hidden if image events are flaky.
+        initialCoverImageFallbackTimer.current = window.setTimeout(() => {
+          if (token !== initialCoverImageLoadToken.current) return;
+          setShowInitialCoverImage(true);
+        }, 250);
+      },
+      [_player]
+    );
 
     const getMarkerEndTime = (
       marker: GQL.SceneMarkerDataFragment,
@@ -506,7 +590,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
             loopIfAfterEnd: true,
             pauseAfterLooping: false,
             pauseBeforeLooping: false,
-            createButtons: uiConfig?.showAbLoopControls ?? false,
+            createButtons: showAbLoopControls,
           },
           controlBarToggle: {},
         },
@@ -545,7 +629,22 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         setPlayer(undefined);
         sceneId.current = undefined;
       };
-    }, [uiConfig?.showAbLoopControls]);
+    }, []);
+
+    useEffect(() => {
+      const player = getPlayer();
+      if (!player || !player.abLoopPlugin) return;
+
+      const opts = player.abLoopPlugin.getOptions() as unknown as {
+        createButtons?: boolean;
+      };
+      if (opts.createButtons === showAbLoopControls) return;
+
+      player.abLoopPlugin.setOptions({
+        ...(opts as unknown as object),
+        createButtons: showAbLoopControls,
+      } as never);
+    }, [getPlayer, showAbLoopControls]);
 
     useEffect(() => {
       const player = getPlayer();
@@ -680,6 +779,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         }
       }
 
+      function onPlayHideInitialCover(this: VideoJsPlayer) {
+        hideInitialCoverSmoothly();
+      }
+
       function loadstart(this: VideoJsPlayer) {
         setReady(true);
       }
@@ -689,12 +792,20 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       }
 
       player.on("canplay", canplay);
+      player.on("play", onPlayHideInitialCover);
       player.on("playing", playing);
       player.on("loadstart", loadstart);
       player.on("fullscreenchange", fullscreenchange);
 
       return () => {
+        clearTimeout(initialCoverFadeTimer.current);
+        clearTimeout(initialCoverImageFallbackTimer.current);
+        cancelAnimationFrame(initialCoverShowRaf.current ?? 0);
+        cancelAnimationFrame(initialCoverShowRaf2.current ?? 0);
+        cancelAnimationFrame(initialCoverImageShowRaf.current ?? 0);
+        initialCoverImageLoadToken.current += 1;
         player.off("canplay", canplay);
+        player.off("play", onPlayHideInitialCover);
         player.off("playing", playing);
         player.off("loadstart", loadstart);
         player.off("fullscreenchange", fullscreenchange);
@@ -933,12 +1044,24 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       sceneId.current = scene.id;
 
       setReady(false);
+      clearTimeout(initialCoverFadeTimer.current);
+      animateInitialCoverIn();
+      setShowNextSceneOverlay(false);
 
       // reset on new scene
       player.trackActivity().reset();
 
       // always stop the interactive client on initialisation
       interactiveClient.pause();
+
+      // Set poster before loading new sources to avoid a brief flash
+      // of video content while the new scene is initializing.
+      if (scene.paths.screenshot) {
+        player.poster(scene.paths.screenshot);
+      } else {
+        player.poster("");
+      }
+      loadInitialCoverImage(scene.paths.screenshot ?? undefined);
 
       const isSafari = UAParser().browser.name?.includes("Safari");
       const isLandscape = file.height && file.width && file.width > file.height;
@@ -1140,6 +1263,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       uiConfig?.disableMobileMediaAutoRotateEnabled,
       _initialTimestamp,
       updateVideoJsProgressBarTrimStyles,
+      animateInitialCoverIn,
+      loadInitialCoverImage,
     ]);
 
     useEffect(() => {
@@ -1584,6 +1709,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         className={cx("VideoPlayer", {
           portrait: isPortrait,
           "no-file": !file,
+          "show-initial-cover": showInitialCover,
+          "show-initial-cover-image": showInitialCoverImage,
+          "fade-initial-cover": fadeInitialCover,
         })}
         onKeyDownCapture={onKeyDown}
         onClick={handleVideoPlayerClick}
