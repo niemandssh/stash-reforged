@@ -13,6 +13,7 @@
         "allow_temporarily": "Allow temporarily",
         "anonymise": "Anonymize",
         "apply": "Apply",
+        "archive_scene": "Archive scene",
         "assign_stashid_to_parent_studio": "Assign Stash ID to existing parent studio and update metadata",
         "auto_tag": "Auto Tag",
         "backup": "Backup",
@@ -28,6 +29,8 @@
         "convert_hls_to_mp4_started": "HLS to MP4 conversion started (job {jobId})",
         "reduce_resolution": "Convert - Reduce resolution...",
         "reduce_resolution_started": "Resolution reduction started (job {jobId})",
+        "compress_video": "Compress video (H.265)...",
+        "compress_video_started": "Video compression started (job {jobId})",
         "clear_back_image": "Clear back image",
         "clear_date_data": "Clear date data",
         "clear_front_image": "Clear front image",
@@ -37,6 +40,9 @@
         "confirm": "Confirm",
         "continue": "Continue",
         "copy_to_clipboard": "Copy to clipboard",
+        "copy_scene_data": "Copy scene data",
+        "paste_scene_data": "Paste scene data",
+        "pasting_scene_data": "Pasting scene data…",
         "create": "Create",
         "create_chapters": "Create Chapter",
         "create_entity": "Create {entityType}",
@@ -219,6 +225,11 @@
     "performer_favorite": "Performer Favorited",
     "is_broken": "Broken",
     "is_not_broken": "Not Broken",
+    "is_trimmed": "Trimmed",
+    "is_archived": "Archived",
+    "is_ai_filled": "Scene data filled with AI",
+    "archive_reason": "Archive reason",
+    "has_trim_times": "Needs Trimming",
     "disable_next_scene_overlay": "Disable next scene overlay",
     "tag_weight": "Tag Weight",
     "tag_weight_help": "Weight for similarity calculation (0.0 = least important, 1.0 = most important, default: 0.5)",
@@ -303,9 +314,15 @@
         "similarity_recalculation_completed": "Similarity recalculation completed for scene {sceneId}",
         "similarity_recalculation_failed": "Similarity recalculation failed for scene {sceneId}",
         "scene_set_broken": "Scene marked as broken",
+        "scene_archived": "Scene archived",
         "scene_set_not_broken": "Scene marked as not broken",
         "filters_reset": "Filters have been reset",
-        "transforms_reset": "Transforms have been reset"
+        "transforms_reset": "Transforms have been reset",
+        "scene_data_copied": "Scene data copied to clipboard",
+        "scene_data_pasted": "Scene data pasted",
+        "no_scene_data_in_clipboard": "No scene data in clipboard",
+        "invalid_scene_data_in_clipboard": "Invalid scene data in clipboard",
+        "clipboard_error": "Clipboard access error"
     },
     "no_scenes_to_review": "No scenes without rating, without tags, or unorganized scenes to review",
     "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
@@ -321,6 +338,7 @@
     "o_history": "O History",
     "o_counter": "O-Counter",
     "omg_counter": "OMG Count",
+    "o_omg_count": "O+OMG Count",
     "omg_history": "OMG History",
     "odate_recorded_no": "No O Date Recorded",
     "omgdate_recorded_no": "No OMG Date Recorded",
@@ -349,6 +367,12 @@
         "clear_o_history_confirm": "Are you sure you want to clear the O history?",
         "clear_omg_history_confirm": "Are you sure you want to clear the OMG history?",
         "clear_play_history_confirm": "Are you sure you want to clear the play history?",
+        "archive_scene": {
+            "title": "Archive scene?",
+            "description": "This scene will be marked as archived.",
+            "reason": "Archive reason",
+            "reason_placeholder": "Optional reason for archiving…"
+        },
         "reduce_resolution": {
             "title": "Reduce Video Resolution",
             "confirm_title": "Confirm Resolution Reduction",
@@ -370,6 +394,11 @@
             "warning": "This operation will permanently replace the original HLS video with an MP4 version. A backup will be created in the temp folder in case of errors.",
             "warning_text": "This operation will permanently replace the original HLS video with an MP4 version. A backup will be created in the temp folder in case of errors.",
             "info": "This will convert the HLS video to MP4 format and replace the original file. The conversion process may take some time depending on the file size. If an error occurs, check the temp folder for the backup file.",
+            "temp_path_label": "Backup will be stored in this folder during the operation. If something goes wrong, look for the backup there:"
+        },
+        "compress_video": {
+            "warning_text": "This operation will re-encode the video to H.265 and replace the original file if the result is smaller. A backup will be created in the temp folder in case of errors.",
+            "info": "The video will be re-encoded to H.265 (HEVC) at visually lossless quality (CQ/CRF 18). Hardware HEVC encoding is used when available; otherwise libx265 on CPU. Resolution stays {width}×{height}. Current codec: {codec}. The original file is only replaced if the compressed file is smaller.",
             "temp_path_label": "Backup will be stored in this folder during the operation. If something goes wrong, look for the backup there:"
         },
         "trim_video": {

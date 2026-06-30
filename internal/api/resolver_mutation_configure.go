@@ -598,6 +598,25 @@ func (r *mutationResolver) ConfigureScraping(ctx context.Context, input ConfigSc
 	return makeConfigScrapingResult(), nil
 }
 
+func (r *mutationResolver) ConfigureAi(ctx context.Context, input ConfigAIInput) (*ConfigAIResult, error) {
+	c := config.GetInstance()
+
+	r.setConfigString(config.AIDeepseekAPIKey, input.DeepseekAPIKey)
+	r.setConfigString(config.AIDeepseekModel, input.DeepseekModel)
+	r.setConfigBool(config.AISceneFillEnabled, input.SceneFillEnabled)
+	r.setConfigBool(config.AIVisionEnabled, input.VisionEnabled)
+	r.setConfigString(config.AIVisionProvider, input.VisionProvider)
+	r.setConfigString(config.AIVisionAPIKey, input.VisionAPIKey)
+	r.setConfigString(config.AIVisionAPIURL, input.VisionAPIURL)
+	r.setConfigString(config.AIVisionModel, input.VisionModel)
+
+	if err := c.Write(); err != nil {
+		return makeConfigAIResult(), err
+	}
+
+	return makeConfigAIResult(), nil
+}
+
 func (r *mutationResolver) ConfigureDefaults(ctx context.Context, input ConfigDefaultSettingsInput) (*ConfigDefaultSettingsResult, error) {
 	c := config.GetInstance()
 

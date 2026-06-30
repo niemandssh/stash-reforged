@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -600,6 +601,197 @@ func (t *TrimVideoTask) monitorFileSizeWithQueue(tempFile string, originalSize i
 	}
 }
 
+func (t *TrimVideoTask) getHardwareCodecForTrim() *ffmpeg.VideoCodec {
+	codecs := []ffmpeg.VideoCodec{
+		ffmpeg.VideoCodecN264,
+		ffmpeg.VideoCodecI264,
+		ffmpeg.VideoCodecV264,
+		ffmpeg.VideoCodecA264,
+	}
+
+	for _, codec := range codecs {
+		logger.Infof("[trim-video] testing hardware codec: %s (%s)", codec.Name, codec.CodeName)
+		if t.testHardwareCodec(codec) {
+			logger.Infof("[trim-video] hardware codec %s is available", codec.Name)
+			return &codec
+		}
+	}
+
+	logger.Infof("[trim-video] no hardware codec available")
+	return nil
+}
+
+func (t *TrimVideoTask) testHardwareCodec(codec ffmpeg.VideoCodec) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var args ffmpeg.Args
+	args = append(args, "-hide_banner", "-loglevel", "error")
+	args = args.Format("lavfi")
+	args = args.Input("color=c=black:s=320x240")
+	args = append(args, "-t", "0.1")
+	args = args.VideoCodec(codec)
+
+	switch codec {
+	case ffmpeg.VideoCodecN264:
+		args = append(args, "-preset", "fast", "-b:v", "1M")
+	case ffmpeg.VideoCodecI264:
+		args = append(args, "-preset", "fast", "-global_quality", "20")
+	case ffmpeg.VideoCodecV264:
+		args = append(args, "-qp", "20")
+	case ffmpeg.VideoCodecA264:
+		args = append(args, "-quality", "balanced")
+	}
+
+	args = args.Format("null")
+	args = args.Output("-")
+
+	cmd := t.FFMpeg.Command(ctx, args)
+	return cmd.Run() == nil
+}
+
+const (
+	minTrimVideoBitrate     = 500_000
+	defaultTrimVideoBitrate = 2_000_000
+)
+
+func (t *TrimVideoTask) estimateTrimTargetVideoBitrate(vf *ffmpeg.VideoFile) int64 {
+	if vf.VideoBitrate > 0 {
+		return vf.VideoBitrate
+	}
+
+	totalBitrate := vf.Bitrate
+	if totalBitrate <= 0 && vf.FileDuration > 0 && vf.Size > 0 {
+		totalBitrate = int64(float64(vf.Size*8) / vf.FileDuration)
+	}
+
+	audioBitrate := int64(128000)
+	if vf.AudioStream != nil && vf.AudioStream.BitRate != "" {
+		if ab, err := strconv.ParseInt(vf.AudioStream.BitRate, 10, 64); err == nil && ab > 0 {
+			audioBitrate = ab
+		}
+	}
+
+	videoBitrate := totalBitrate - audioBitrate
+	if videoBitrate < minTrimVideoBitrate {
+		if totalBitrate > minTrimVideoBitrate {
+			videoBitrate = totalBitrate * 85 / 100
+		} else {
+			videoBitrate = defaultTrimVideoBitrate
+		}
+	}
+
+	logger.Infof("[trim-video] target video bitrate: %d bps (%.0f kbps)", videoBitrate, float64(videoBitrate)/1000)
+	return videoBitrate
+}
+
+func trimVideoBitrateArgs(targetBitrate int64) ffmpeg.Args {
+	maxrate := targetBitrate * 12 / 10
+	bufsize := targetBitrate * 2
+	return ffmpeg.Args{
+		"-b:v", fmt.Sprintf("%dk", (targetBitrate+500)/1000),
+		"-maxrate", fmt.Sprintf("%dk", (maxrate+500)/1000),
+		"-bufsize", fmt.Sprintf("%dk", (bufsize+500)/1000),
+	}
+}
+
+func (t *TrimVideoTask) getTrimVideoArgsForCodec(codec ffmpeg.VideoCodec, targetBitrate int64) ffmpeg.Args {
+	bitrateArgs := trimVideoBitrateArgs(targetBitrate)
+
+	switch codec {
+	case ffmpeg.VideoCodecN264, ffmpeg.VideoCodecN264H:
+		return append(bitrateArgs,
+			"-rc", "vbr",
+			"-preset", "p4",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecI264, ffmpeg.VideoCodecI264C:
+		return append(bitrateArgs,
+			"-preset", "medium",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecV264:
+		return append(bitrateArgs,
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	case ffmpeg.VideoCodecA264:
+		return append(bitrateArgs,
+			"-quality", "speed",
+			"-profile:v", "high",
+			"-level", "4.2",
+		)
+	default:
+		return append(bitrateArgs,
+			"-pix_fmt", "yuv420p",
+			"-profile:v", "high",
+			"-level", "4.2",
+			"-preset", "faster",
+		)
+	}
+}
+
+func (t *TrimVideoTask) buildTrimReencodeArgs(inputPath, outputPath string, startTime float64, trimDuration *float64, videoFile *ffmpeg.VideoFile, hwCodec *ffmpeg.VideoCodec) ffmpeg.Args {
+	var args ffmpeg.Args
+
+	if startTime > 0 {
+		args = args.Seek(startTime)
+	}
+	args = args.Input(inputPath)
+
+	if trimDuration != nil {
+		args = args.Duration(*trimDuration)
+	}
+
+	args = append(args, "-map", "0:v:0", "-map", "0:a:0?")
+
+	targetBitrate := t.estimateTrimTargetVideoBitrate(videoFile)
+
+	if hwCodec != nil {
+		args = args.VideoCodec(*hwCodec)
+		args = args.AppendArgs(t.getTrimVideoArgsForCodec(*hwCodec, targetBitrate))
+	} else {
+		args = append(args, "-c:v", "libx264")
+		args = args.AppendArgs(t.getTrimVideoArgsForCodec(ffmpeg.VideoCodecLibX264, targetBitrate))
+	}
+
+	args = append(args,
+		"-c:a", "copy",
+		"-avoid_negative_ts", "make_zero",
+		"-movflags", "+faststart",
+	)
+	return args.Output(outputPath)
+}
+
+func (t *TrimVideoTask) performTrimReencode(ctx context.Context, inputPath, outputPath string, startTime float64, trimDuration *float64, videoFile *ffmpeg.VideoFile, progressDuration float64, progress *job.Progress) error {
+	hwCodec := t.getHardwareCodecForTrim()
+
+	if hwCodec != nil {
+		logger.Infof("[trim-video] attempting hardware encoder: %s", hwCodec.Name)
+		args := t.buildTrimReencodeArgs(inputPath, outputPath, startTime, trimDuration, videoFile, hwCodec)
+		logger.Infof("[trim-video] running ffmpeg command: %v", args)
+
+		err := t.FFMpeg.GenerateWithProgress(ctx, args, progress, progressDuration)
+		if err == nil {
+			logger.Infof("[trim-video] hardware encoding successful")
+			return nil
+		}
+
+		logger.Warnf("[trim-video] hardware encoding failed: %v, falling back to libx264", err)
+		if _, removeErr := os.Stat(outputPath); removeErr == nil {
+			os.Remove(outputPath)
+		}
+	} else {
+		logger.Infof("[trim-video] no hardware encoder available, using libx264 (CPU)")
+	}
+
+	args := t.buildTrimReencodeArgs(inputPath, outputPath, startTime, trimDuration, videoFile, nil)
+	logger.Infof("[trim-video] running ffmpeg command: %v", args)
+	return t.FFMpeg.GenerateWithProgress(ctx, args, progress, progressDuration)
+}
+
 func (t *TrimVideoTask) performTrimWithProgress(ctx context.Context, inputPath, outputPath string, progress *job.Progress) error {
 	ffprobe := t.FFProbe
 	videoFile, err := ffprobe.NewVideoFile(inputPath)
@@ -607,37 +799,71 @@ func (t *TrimVideoTask) performTrimWithProgress(ctx context.Context, inputPath, 
 		return fmt.Errorf("error reading video file: %w", err)
 	}
 
-	// Build FFmpeg arguments based on what parameters are set
-	args := ffmpeg.Args{"-i", inputPath}
+	hasStart := t.StartTime != nil && *t.StartTime > 0
+	hasEnd := t.EndTime != nil && *t.EndTime > 0
 
-	// Add start time if set
-	if t.StartTime != nil {
-		args = append(args, "-ss", fmt.Sprintf("%.2f", *t.StartTime))
+	startTime := 0.0
+	if hasStart {
+		startTime = *t.StartTime
 	}
 
-	// Add end time or duration if set
-	if t.EndTime != nil {
-		// If both start and end are set, use -to for end time
-		if t.StartTime != nil {
-			args = append(args, "-to", fmt.Sprintf("%.2f", *t.EndTime))
-			logger.Infof("[trim-video] trimming from %.2fs to %.2fs", *t.StartTime, *t.EndTime)
+	var trimDuration *float64
+	if hasEnd {
+		if hasStart {
+			d := *t.EndTime - startTime
+			if d <= 0 {
+				return fmt.Errorf("end time %.2f must be greater than start time %.2f", *t.EndTime, startTime)
+			}
+			trimDuration = &d
 		} else {
-			// Only end time is set, trim from beginning to end time
-			args = append(args, "-to", fmt.Sprintf("%.2f", *t.EndTime))
-			logger.Infof("[trim-video] trimming from beginning to %.2fs", *t.EndTime)
+			d := *t.EndTime
+			trimDuration = &d
 		}
-	} else if t.StartTime != nil {
-		// Only start time is set, trim from start time to end
-		logger.Infof("[trim-video] trimming from %.2fs to end", *t.StartTime)
 	}
 
-	// Add stream copy and other options
-	args = append(args, "-c", "copy", "-avoid_negative_ts", "make_zero", outputPath)
+	var args ffmpeg.Args
+
+	// Seek before input for accurate cut point (unlike -ss after -i with stream copy).
+	if hasStart {
+		args = args.Seek(startTime)
+	}
+	args = args.Input(inputPath)
+
+	if trimDuration != nil {
+		args = args.Duration(*trimDuration)
+	}
+
+	// Stream copy cannot start at an arbitrary frame: the first packets are often
+	// non-keyframes referencing frames that were trimmed away, causing frozen/black
+	// video at the start. Re-encode video when trimming from a non-zero start.
+	if hasStart {
+		progressDuration := videoFile.FileDuration - startTime
+		if trimDuration != nil {
+			progressDuration = *trimDuration
+		}
+		if trimDuration != nil {
+			logger.Infof("[trim-video] re-encoding from %.2fs for %.2fs", startTime, *trimDuration)
+		} else {
+			logger.Infof("[trim-video] re-encoding from %.2fs to end", startTime)
+		}
+		logger.Infof("[trim-video] source duration: %.2f seconds", videoFile.FileDuration)
+		return t.performTrimReencode(ctx, inputPath, outputPath, startTime, trimDuration, videoFile, progressDuration, progress)
+	}
+
+	args = append(args, "-c", "copy")
+	if trimDuration != nil {
+		logger.Infof("[trim-video] stream copy from beginning to %.2fs", *trimDuration)
+	}
+
+	args = append(args,
+		"-avoid_negative_ts", "make_zero",
+		"-movflags", "+faststart",
+	)
+	args = args.Output(outputPath)
 
 	logger.Infof("[trim-video] running ffmpeg command: %v", args)
-	logger.Infof("[trim-video] video duration: %.2f seconds", videoFile.FileDuration)
+	logger.Infof("[trim-video] source duration: %.2f seconds", videoFile.FileDuration)
 
-	// For stream copy, we can't track progress accurately, so we'll use a simple progress simulation
 	progress.SetPercent(0)
 
 	cmd := t.FFMpeg.Command(ctx, args)
@@ -857,6 +1083,7 @@ func (t *TrimVideoTask) updateSceneWithNewFile(ctx context.Context, newFile *mod
 		scenePartial.EndTime = models.OptionalFloat64{Null: true, Set: true}
 		// Ensure scene is not marked as broken
 		scenePartial.IsBroken = models.NewOptionalBool(false)
+		scenePartial.IsTrimmed = models.NewOptionalBool(true)
 
 		// Update scene in database
 		_, err := t.Repository.Scene.UpdatePartial(ctx, t.Scene.ID, scenePartial)

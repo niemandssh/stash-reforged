@@ -10,14 +10,14 @@ import (
 
 // Scene stores the metadata for a single video scene.
 type Scene struct {
-	ID        int    `json:"id"`
-	Title     string `json:"title"`
-	Code      string `json:"code"`
-	Details   string `json:"details"`
-	Director  string `json:"director"`
-	Date         *Date   `json:"date"`        // Date of release
-	DateDisplay  *string `json:"date_display"`  // "YYYY" or "YYYY-MM" when partial; nil = full date
-	ShootDate    *Date   `json:"shoot_date"`   // Date of filming/shooting
+	ID               int     `json:"id"`
+	Title            string  `json:"title"`
+	Code             string  `json:"code"`
+	Details          string  `json:"details"`
+	Director         string  `json:"director"`
+	Date             *Date   `json:"date"`         // Date of release
+	DateDisplay      *string `json:"date_display"` // "YYYY" or "YYYY-MM" when partial; nil = full date
+	ShootDate        *Date   `json:"shoot_date"`   // Date of filming/shooting
 	ShootDateDisplay *string `json:"shoot_date_display"`
 	// Rating expressed in 1-100 scale
 	Rating                  *int    `json:"rating"`
@@ -25,6 +25,10 @@ type Scene struct {
 	Pinned                  bool    `json:"pinned"`
 	IsBroken                bool    `json:"is_broken"`
 	IsNotBroken             bool    `json:"is_not_broken"`
+	IsTrimmed               bool    `json:"is_trimmed"`
+	IsArchived              bool    `json:"is_archived"`
+	ArchiveReason           *string `json:"archive_reason"`
+	IsAIFilled              bool    `json:"is_ai_filled"`
 	AudioOffsetMs           int     `json:"audio_offset_ms"`
 	AudioPlaybackSpeed      float64 `json:"audio_playback_speed"`
 	ForceHLS                bool    `json:"force_hls"`
@@ -76,13 +80,13 @@ func NewScene() Scene {
 // ScenePartial represents part of a Scene object. It is used to update
 // the database entry.
 type ScenePartial struct {
-	Title     OptionalString
-	Code      OptionalString
-	Details   OptionalString
-	Director  OptionalString
-	Date            OptionalDate
-	DateDisplay     OptionalString
-	ShootDate       OptionalDate
+	Title            OptionalString
+	Code             OptionalString
+	Details          OptionalString
+	Director         OptionalString
+	Date             OptionalDate
+	DateDisplay      OptionalString
+	ShootDate        OptionalDate
 	ShootDateDisplay OptionalString
 	// Rating expressed in 1-100 scale
 	Rating                  OptionalInt
@@ -90,6 +94,10 @@ type ScenePartial struct {
 	Pinned                  OptionalBool
 	IsBroken                OptionalBool
 	IsNotBroken             OptionalBool
+	IsTrimmed               OptionalBool
+	IsArchived              OptionalBool
+	ArchiveReason           OptionalString
+	IsAIFilled              OptionalBool
 	AudioOffsetMs           OptionalInt
 	AudioPlaybackSpeed      OptionalFloat64
 	ForceHLS                OptionalBool
@@ -368,18 +376,19 @@ type SimilarScene struct {
 
 // VideoFilters represents video filter settings for a scene
 type VideoFilters struct {
-	Contrast     *int `json:"contrast"`
-	Brightness   *int `json:"brightness"`
-	Gamma        *int `json:"gamma"`
-	Saturate     *int `json:"saturate"`
-	HueRotate    *int `json:"hue_rotate"`
-	WhiteBalance *int `json:"white_balance"`
-	Red          *int `json:"red"`
-	Green        *int `json:"green"`
-	Blue         *int `json:"blue"`
-	Blur         *int `json:"blur"`
-	VolumeLevel *float64 `json:"volume_level"`
-	VolumeMuted *bool    `json:"volume_muted"`
+	Contrast     *int               `json:"contrast"`
+	Brightness   *int               `json:"brightness"`
+	Gamma        *int               `json:"gamma"`
+	Saturate     *int               `json:"saturate"`
+	HueRotate    *int               `json:"hue_rotate"`
+	WhiteBalance *int               `json:"white_balance"`
+	Red          *int               `json:"red"`
+	Green        *int               `json:"green"`
+	Blue         *int               `json:"blue"`
+	Blur         *int               `json:"blur"`
+	VolumeLevel  *float64           `json:"volume_level"`
+	VolumeMuted  *bool              `json:"volume_muted"`
+	VRProjection *SceneVRProjection `json:"vr_projection,omitempty"`
 }
 
 // VideoTransforms represents video transformation settings for a scene

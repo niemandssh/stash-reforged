@@ -133,6 +133,17 @@ fragment ConfigScrapingData on ConfigScrapingResult {
   excludeTagPatterns
 }
 
+fragment ConfigAIData on ConfigAIResult {
+  deepseekApiKey
+  deepseekModel
+  sceneFillEnabled
+  visionEnabled
+  visionProvider
+  visionApiKey
+  visionApiUrl
+  visionModel
+}
+
 fragment IdentifyFieldOptionsData on IdentifyFieldOptions {
   field
   strategy
@@ -165,6 +176,7 @@ fragment ConfigDefaultSettingsData on ConfigDefaultSettingsResult {
     scanGeneratePreviews
     scanGenerateImagePreviews
     scanGenerateSprites
+    scanGenerateAIVisionPanels
     scanGeneratePhashes
     scanGenerateThumbnails
     scanGenerateClipPreviews
@@ -228,6 +240,9 @@ fragment ConfigData on ConfigResult {
   }
   scraping {
     ...ConfigScrapingData
+  }
+  ai {
+    ...ConfigAIData
   }
   defaults {
     ...ConfigDefaultSettingsData

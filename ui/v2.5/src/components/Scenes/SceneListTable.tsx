@@ -15,6 +15,8 @@ import { useTableColumns } from "src/hooks/useTableColumns";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
+import { TrimmedBadge } from "../Shared/TrimmedBadge";
+import { ArchivedBadge } from "../Shared/ArchivedBadge";
 import { PinIcon } from "../Shared/PinIcon";
 
 interface ISceneListTableProps {
@@ -89,6 +91,8 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
             title={intl.formatMessage({ id: "actions.pinned" })}
           />
         )}
+        {scene.is_archived && <ArchivedBadge className="me-2" />}
+        {scene.is_trimmed && <TrimmedBadge className="me-2" />}
         {scene.is_broken && !scene.is_not_broken && (
           <BrokenBadge className="me-2" />
         )}

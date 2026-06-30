@@ -1,0 +1,12 @@
+query FillSceneWithAI($scene_id: ID!) {
+  fillSceneWithAI(scene_id: $scene_id) {
+    shoot_date
+    performer_tags {
+      performer_name
+      tag_names
+    }
+    scene {
+      ...ScrapedSceneData
+    }
+  }
+}

@@ -22,7 +22,12 @@ import {
   useSceneIncrementO,
   useSceneIncrementOmg,
   useSceneAddOmg,
+  useFindColorPresets,
 } from "src/core/StashService";
+import {
+  filterSceneGeneralTags,
+  sortTagsByColorPreset,
+} from "src/utils/tagSorting";
 import { SceneCountAttributeModal } from "./SceneDetails/SceneCountAttributeModal";
 import { useToast } from "src/hooks/Toast";
 import {
@@ -43,6 +48,8 @@ import { GroupTag } from "../Groups/GroupTag";
 import { FileSize } from "../Shared/FileSize";
 import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
+import { TrimmedBadge } from "../Shared/TrimmedBadge";
+import { ArchivedBadge } from "../Shared/ArchivedBadge";
 import { HLSBadge } from "../Shared/HLSBadge";
 import {
   buildSvgFilter,
@@ -192,6 +199,19 @@ const SceneCardPopovers = PatchComponent(
   "SceneCard.Popovers",
   (props: ISceneCardProps) => {
     const Toast = useToast();
+    const { data: presetsData } = useFindColorPresets();
+    const colorPresets = presetsData?.findColorPresets?.color_presets || [];
+    const generalTags = useMemo(
+      () =>
+        sortTagsByColorPreset(
+          filterSceneGeneralTags(
+            props.scene.tags,
+            props.scene.performer_tag_ids
+          ),
+          colorPresets
+        ),
+      [props.scene.tags, props.scene.performer_tag_ids, colorPresets]
+    );
     const [incrementO] = useSceneIncrementO(props.scene.id);
     const [incrementOmg] = useSceneIncrementOmg(props.scene.id);
     const [addOmg] = useSceneAddOmg(props.scene.id);
@@ -275,9 +295,9 @@ const SceneCardPopovers = PatchComponent(
     };
 
     function maybeRenderTagPopoverButton() {
-      if (props.scene.tags.length <= 0) return;
+      if (generalTags.length <= 0) return;
 
-      const popoverContent = props.scene.tags.map((tag) => (
+      const popoverContent = generalTags.map((tag) => (
         <TagLink key={tag.id} tag={tag} linkType="details" />
       ));
 
@@ -289,7 +309,7 @@ const SceneCardPopovers = PatchComponent(
         >
           <Button className="minimal">
             <Icon icon={faTag} />
-            <span>{props.scene.tags.length}</span>
+            <span>{generalTags.length}</span>
           </Button>
         </HoverPopover>
       );
@@ -526,6 +546,14 @@ const SceneCardOverlays = PatchComponent(
         {"force_hls" in props.scene && (props.scene as any).force_hls ? (
           <div className="hls-badge-overlay">
             <HLSBadge />
+          </div>
+        ) : props.scene.is_archived ? (
+          <div className="archived-badge-overlay">
+            <ArchivedBadge />
+          </div>
+        ) : props.scene.is_trimmed ? (
+          <div className="trimmed-badge-overlay">
+            <TrimmedBadge />
           </div>
         ) : props.scene.is_broken && !props.scene.is_not_broken ? (
           <div className="broken-badge-overlay">

@@ -19,7 +19,14 @@ const sortByOptions = [
   "o_counter",
   "omg_counter",
   "play_count",
-].map(ListFilterOptions.createSortBy);
+]
+  .map(ListFilterOptions.createSortBy)
+  .concat([
+    {
+      messageID: "o_omg_count",
+      value: "o_omg_counter",
+    },
+  ]);
 
 const displayModeOptions = [DisplayMode.Grid, DisplayMode.List];
 

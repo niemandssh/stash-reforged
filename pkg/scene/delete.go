@@ -22,6 +22,13 @@ type FileDeleter struct {
 
 // MarkGeneratedFiles marks for deletion the generated files for the provided scene.
 func (d *FileDeleter) MarkGeneratedFiles(scene *models.Scene) error {
+	return d.MarkVideoCacheFiles(scene)
+}
+
+// MarkVideoCacheFiles deletes generated video caches (preview segments, transcodes,
+// scrubber sprites, AI vision panels, marker previews, etc.) but preserves the
+// static scene screenshot and all database metadata.
+func (d *FileDeleter) MarkVideoCacheFiles(scene *models.Scene) error {
 	sceneHash := scene.GetHash(d.FileNamingAlgo)
 
 	if sceneHash == "" {
@@ -67,6 +74,13 @@ func (d *FileDeleter) MarkGeneratedFiles(scene *models.Scene) error {
 	exists, _ = fsutil.FileExists(vttPath)
 	if exists {
 		files = append(files, vttPath)
+	}
+
+	for _, panelPath := range d.Paths.Scene.GetAIVisionPanelFilePaths(sceneHash) {
+		exists, _ = fsutil.FileExists(panelPath)
+		if exists {
+			files = append(files, panelPath)
+		}
 	}
 
 	heatmapPath := d.Paths.Scene.GetInteractiveHeatmapPath(sceneHash)
@@ -169,6 +183,42 @@ func (s *Service) deleteFiles(ctx context.Context, scene *models.Scene, fileDele
 		}
 
 		// don't delete files in zip archives
+		if f.ZipFileID == nil {
+			funscriptPath := video.GetFunscriptPath(f.Path)
+			funscriptExists, _ := fsutil.FileExists(funscriptPath)
+			if funscriptExists {
+				if err := fileDeleter.Files([]string{funscriptPath}); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+// deleteSceneFilesFromDisk deletes scene video files from the filesystem only.
+// File records, fingerprints, and the static screenshot preview are preserved.
+func (s *Service) deleteSceneFilesFromDisk(ctx context.Context, scene *models.Scene, fileDeleter *FileDeleter) error {
+	if err := scene.LoadFiles(ctx, s.Repository); err != nil {
+		return err
+	}
+
+	for _, f := range scene.Files.List() {
+		otherScenes, err := s.Repository.FindByFileID(ctx, f.ID)
+		if err != nil {
+			return err
+		}
+
+		if len(otherScenes) > 1 {
+			continue
+		}
+
+		logger.Info("Deleting scene file from disk: ", f.Path)
+		if err := fileDeleter.Files([]string{f.Path}); err != nil {
+			return err
+		}
+
 		if f.ZipFileID == nil {
 			funscriptPath := video.GetFunscriptPath(f.Path)
 			funscriptExists, _ := fsutil.FileExists(funscriptPath)

@@ -26,17 +26,28 @@ const (
 	spriteChunks = spriteRows * spriteCols
 )
 
-func (g Generator) SpriteScreenshot(ctx context.Context, input string, seconds float64) (image.Image, error) {
-	lockCtx := g.LockManager.ReadLock(ctx, input)
-	defer lockCtx.Cancel()
-
-	ssOptions := transcoder.ScreenshotOptions{
+func (g Generator) spriteScreenshotOptions() transcoder.ScreenshotOptions {
+	return transcoder.ScreenshotOptions{
 		OutputPath: "-",
 		OutputType: transcoder.ScreenshotOutputTypeBMP,
 		Width:      spriteScreenshotWidth,
 	}
+}
 
-	args := transcoder.ScreenshotTime(input, seconds, ssOptions)
+func (g Generator) SpriteScreenshot(ctx context.Context, input string, seconds float64) (image.Image, error) {
+	lockCtx := g.LockManager.ReadLock(ctx, input)
+	defer lockCtx.Cancel()
+
+	args := transcoder.ScreenshotTime(input, seconds, g.spriteScreenshotOptions())
+
+	return g.generateImage(lockCtx, args)
+}
+
+func (g Generator) SpriteScreenshotHybrid(ctx context.Context, input string, seconds float64) (image.Image, error) {
+	lockCtx := g.LockManager.ReadLock(ctx, input)
+	defer lockCtx.Cancel()
+
+	args := transcoder.ScreenshotTimeHybrid(input, seconds, g.spriteScreenshotOptions())
 
 	return g.generateImage(lockCtx, args)
 }

@@ -44,60 +44,42 @@ const Preview: React.FC<{
   config?: GQL.ConfigDataFragment;
   active: boolean;
 }> = ({ previews, config, active }) => {
-  const videoEl = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isMissing, setIsMissing] = useState(false);
 
   const previewType = config?.interface?.wallPlayback;
   const soundOnPreview = config?.interface?.soundOnPreview ?? false;
+  const showVideo = active && !!previews.video && previewType !== "image";
 
   useEffect(() => {
-    const video = videoEl.current;
-    if (!video) return;
+    const video = videoRef.current;
+    if (!showVideo || !video) return;
 
     video.muted = !(soundOnPreview && active);
     if (previewType !== "video") {
-      if (active) {
-        video.play();
-      } else {
-        video.pause();
-      }
+      video.play().catch(() => {});
     }
-  }, [previewType, soundOnPreview, active]);
 
-  const image = (
-    <img
-      loading="lazy"
-      alt=""
-      className="wall-item-media"
-      src={
-        (previewType === "animation" && previews.animation) || previews.image
-      }
-    />
-  );
-  const video = (
-    <video
-      disableRemotePlayback
-      playsInline
-      src={previews.video}
-      poster={previews.image}
-      autoPlay={previewType === "video"}
-      loop
-      muted
-      className={cx("wall-item-media", {
-        "wall-item-preview": previewType !== "video",
-      })}
-      onError={(error: React.SyntheticEvent<HTMLVideoElement>) => {
-        // Error code 4 indicates media not found or unsupported
-        setIsMissing(error.currentTarget.error?.code === 4);
-      }}
-      ref={videoEl}
-    />
-  );
+    return () => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+    };
+  }, [previewType, soundOnPreview, active, showVideo]);
+
+  const idleSrc =
+    (previewType === "animation" && previews.animation) || previews.image;
 
   if (isMissing) {
-    // show the image if the video preview is unavailable
     if (previews.image) {
-      return image;
+      return (
+        <img
+          loading="lazy"
+          alt=""
+          className="wall-item-media"
+          src={previews.image}
+        />
+      );
     }
 
     return (
@@ -107,13 +89,44 @@ const Preview: React.FC<{
     );
   }
 
-  if (previewType === "video") {
-    return video;
+  if (previewType === "image" || !previews.video) {
+    return (
+      <img
+        loading="lazy"
+        alt=""
+        className="wall-item-media"
+        src={idleSrc}
+      />
+    );
   }
+
   return (
     <>
-      {image}
-      {video}
+      <img
+        loading="lazy"
+        alt=""
+        className="wall-item-media"
+        src={idleSrc}
+        style={{ display: showVideo ? "none" : "block" }}
+      />
+      {showVideo && (
+        <video
+          disableRemotePlayback
+          playsInline
+          src={previews.video}
+          poster={previews.image}
+          loop
+          muted
+          preload="auto"
+          className={cx("wall-item-media", {
+            "wall-item-preview": previewType !== "video",
+          })}
+          onError={(error: React.SyntheticEvent<HTMLVideoElement>) => {
+            setIsMissing(error.currentTarget.error?.code === 4);
+          }}
+          ref={videoRef}
+        />
+      )}
     </>
   );
 };

@@ -146,4 +146,6 @@ models:
     fields:
       plugins:
         resolver: true
-  
+  SceneVrProjection:
+    model: github.com/stashapp/stash/pkg/models.SceneVRProjection
+

@@ -85,6 +85,8 @@ input ScanMetadataInput {
   scanGenerateImagePreviews: Boolean
   "Generate sprites during scan"
   scanGenerateSprites: Boolean
+  "Generate AI vision panels during scan"
+  scanGenerateAIVisionPanels: Boolean
   "Generate phashes during scan"
   scanGeneratePhashes: Boolean
   "Generate image thumbnails during scan"
@@ -107,6 +109,8 @@ type ScanMetadataOptions {
   scanGenerateImagePreviews: Boolean!
   "Generate sprites during scan"
   scanGenerateSprites: Boolean!
+  "Generate AI vision panels during scan"
+  scanGenerateAIVisionPanels: Boolean!
   "Generate phashes during scan"
   scanGeneratePhashes: Boolean!
   "Generate image thumbnails during scan"

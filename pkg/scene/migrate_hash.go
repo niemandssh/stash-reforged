@@ -37,6 +37,12 @@ func MigrateHash(p *paths.Paths, oldHash string, newHash string) {
 	migrateSceneFiles(oldPath, newPath)
 	migrateVttFile(newVttPath, oldPath, newPath)
 
+	for i := 0; i < paths.AIVisionPanelCount; i++ {
+		oldPath = scenePaths.GetAIVisionPanelFilePath(oldHash, i)
+		newPath = scenePaths.GetAIVisionPanelFilePath(newHash, i)
+		migrateSceneFiles(oldPath, newPath)
+	}
+
 	oldPath = scenePaths.GetInteractiveHeatmapPath(oldHash)
 	newPath = scenePaths.GetInteractiveHeatmapPath(newHash)
 	migrateSceneFiles(oldPath, newPath)

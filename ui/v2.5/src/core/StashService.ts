@@ -1205,6 +1205,15 @@ export const useSceneConvertHLSToMP4 = () => {
   return useMutation(mutation);
 };
 
+export const useSceneCompressVideo = () => {
+  const mutation = gql`
+    mutation SceneCompressVideo($id: ID!) {
+      sceneCompressVideo(id: $id)
+    }
+  `;
+  return useMutation(mutation);
+};
+
 export const useSceneReduceResolution = () => {
   const mutation = gql`
     mutation SceneReduceResolution($input: ReduceResolutionInput!) {
@@ -1232,6 +1241,15 @@ export const useSceneRegenerateSprites = () => {
   return useMutation(mutation);
 };
 
+export const useSceneRegenerateAIVision = () => {
+  const mutation = gql`
+    mutation SceneRegenerateAIVision($id: ID!) {
+      sceneRegenerateAIVision(id: $id)
+    }
+  `;
+  return useMutation(mutation);
+};
+
 export const useSceneSetBroken = () => {
   const mutation = gql`
     mutation SceneSetBroken($id: ID!) {
@@ -1247,6 +1265,17 @@ export const useSceneSetNotBroken = () => {
   const mutation = gql`
     mutation SceneSetNotBroken($id: ID!) {
       sceneSetNotBroken(id: $id)
+    }
+  `;
+  return useMutation(mutation, {
+    refetchQueries: [GQL.FindSceneDocument],
+  });
+};
+
+export const useSceneArchive = () => {
+  const mutation = gql`
+    mutation SceneArchive($id: ID!, $delete_file: Boolean!, $archive_reason: String) {
+      sceneArchive(id: $id, delete_file: $delete_file, archive_reason: $archive_reason)
     }
   `;
   return useMutation(mutation, {
@@ -3228,6 +3257,26 @@ export const mutateDeleteFiles = (ids: string[]) =>
 
 export const useListSceneScrapers = () => GQL.useListSceneScrapersQuery();
 
+export const queryFillSceneWithAI = (sceneId: string) =>
+  client.query<GQL.FillSceneWithAiQuery>({
+    query: GQL.FillSceneWithAiDocument,
+    variables: {
+      scene_id: sceneId,
+    },
+    fetchPolicy: "network-only",
+  });
+
+export const ensureSceneAIVisionPanels = async (sceneId: string) => {
+  const result = await client.mutate<GQL.SceneEnsureAiVisionPanelsMutation>({
+    mutation: GQL.SceneEnsureAiVisionPanelsDocument,
+    variables: {
+      id: sceneId,
+    },
+  });
+
+  return result.data?.sceneEnsureAIVisionPanels ?? "0";
+};
+
 export const queryScrapeScene = (
   source: GQL.ScraperSourceInput,
   sceneId: string
@@ -3645,6 +3694,11 @@ export const useConfigureUISetting = () =>
 
 export const useConfigureScraping = () =>
   GQL.useConfigureScrapingMutation({
+    update: updateConfiguration,
+  });
+
+export const useConfigureAI = () =>
+  GQL.useConfigureAiMutation({
     update: updateConfiguration,
   });
 

@@ -1,0 +1,13 @@
+"AI-generated performer-specific tags"
+type AIPerformerTags {
+  performer_name: String!
+  tag_names: [String!]!
+}
+
+"Result of AI scene data fill"
+type AIFilledSceneResult {
+  scene: ScrapedScene!
+  "Filming/shooting date (YYYY-MM-DD)"
+  shoot_date: String
+  performer_tags: [AIPerformerTags!]!
+}

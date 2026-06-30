@@ -11,6 +11,8 @@ type ScanMetadataOptions struct {
 	ScanGenerateImagePreviews bool `json:"scanGenerateImagePreviews"`
 	// Generate sprites during scan
 	ScanGenerateSprites bool `json:"scanGenerateSprites"`
+	// Generate AI vision panels during scan
+	ScanGenerateAIVisionPanels bool `json:"scanGenerateAIVisionPanels"`
 	// Generate phashes during scan
 	ScanGeneratePhashes bool `json:"scanGeneratePhashes"`
 	// Generate image thumbnails during scan

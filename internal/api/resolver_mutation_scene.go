@@ -98,6 +98,7 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 	newScene.Rating = input.Rating100
 	newScene.Organized = translator.bool(input.Organized)
 	newScene.IsBroken = translator.bool(input.IsBroken)
+	newScene.IsTrimmed = translator.bool(input.IsTrimmed)
 	newScene.StashIDs = models.NewRelatedStashIDs(models.StashIDInputs(input.StashIds).ToStashIDs())
 
 	newScene.Date, newScene.DateDisplay, err = translator.datePtrWithDisplay(input.Date)
@@ -260,6 +261,10 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.VideoTransforms = input.VideoTransforms
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
 	updatedScene.IsNotBroken = translator.optionalBool(input.IsNotBroken, "is_not_broken")
+	updatedScene.IsTrimmed = translator.optionalBool(input.IsTrimmed, "is_trimmed")
+	updatedScene.IsArchived = translator.optionalBool(input.IsArchived, "is_archived")
+	updatedScene.ArchiveReason = translator.optionalString(input.ArchiveReason, "archive_reason")
+	updatedScene.IsAIFilled = translator.optionalBool(input.IsAIFilled, "is_ai_filled")
 	updatedScene.AudioOffsetMs = translator.optionalInt(input.AudioOffsetMs, "audio_offset_ms")
 	updatedScene.AudioPlaybackSpeed = translator.optionalFloat64(input.AudioPlaybackSpeed, "audio_playback_speed")
 	updatedScene.ForceHLS = translator.optionalBool(input.ForceHLS, "force_hls")
@@ -1676,6 +1681,61 @@ func (r *mutationResolver) SceneReduceResolution(ctx context.Context, input mode
 	return strconv.Itoa(jobID), nil
 }
 
+func (r *mutationResolver) SceneCompressVideo(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	g := &generate.Generator{
+		Encoder:      manager.GetInstance().FFMpeg,
+		FFMpegConfig: manager.GetInstance().Config,
+		LockManager:  manager.GetInstance().ReadLockManager,
+		MarkerPaths:  manager.GetInstance().Paths.SceneMarkers,
+		ScenePaths:   manager.GetInstance().Paths.Scene,
+		Overwrite:    true,
+	}
+
+	fingerprintCalc := &manager.FingerprintCalculator{Config: manager.GetInstance().Config}
+
+	task := &manager.CompressVideoTask{
+		Scene:                 *scene,
+		FileNamingAlgorithm:   fileNamingAlgorithm,
+		G:                     g,
+		FFMpeg:                manager.GetInstance().FFMpeg,
+		FFProbe:               manager.GetInstance().FFProbe,
+		Config:                manager.GetInstance().Config,
+		Paths:                 manager.GetInstance().Paths,
+		Repository:            r.repository,
+		FingerprintCalculator: fingerprintCalc,
+	}
+
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
+
+	return strconv.Itoa(jobID), nil
+}
+
 func (r *mutationResolver) SceneTrimVideo(ctx context.Context, input models.TrimVideoInput) (string, error) {
 	sceneID, err := strconv.Atoi(input.SceneID)
 	if err != nil {
@@ -1821,7 +1881,6 @@ func (r *mutationResolver) SceneRegenerateSprites(ctx context.Context, id string
 		return "", fmt.Errorf("loading scene and files: %w", err)
 	}
 
-	// Create sprite regeneration task
 	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
 
 	task := &manager.RegenerateSpritesTask{
@@ -1832,6 +1891,72 @@ func (r *mutationResolver) SceneRegenerateSprites(ctx context.Context, id string
 	}
 
 	// Start the task in separate thread via JobManager
+	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
+		return task.Execute(ctx, progress)
+	})
+	jobID := manager.GetInstance().JobManager.Start(ctx, task.GetDescription(), jobExec)
+
+	return strconv.Itoa(jobID), nil
+}
+
+func (r *mutationResolver) SceneEnsureAIVisionPanels(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	return manager.StartSceneAIVisionPanelsJob(ctx, scene)
+}
+
+func (r *mutationResolver) SceneRegenerateAIVision(ctx context.Context, id string) (string, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return "", fmt.Errorf("converting scene id: %w", err)
+	}
+
+	var scene *models.Scene
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		var err error
+		scene, err = r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return err
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		return scene.LoadFiles(ctx, r.repository.Scene)
+	}); err != nil {
+		return "", fmt.Errorf("loading scene and files: %w", err)
+	}
+
+	fileNamingAlgorithm := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+
+	task := &manager.RegenerateAIVisionTask{
+		Scene:               *scene,
+		FileNamingAlgorithm: fileNamingAlgorithm,
+		Repository:          r.repository,
+		Paths:               manager.GetInstance().Paths,
+	}
+
 	jobExec := job.MakeJobExec(func(ctx context.Context, progress *job.Progress) error {
 		return task.Execute(ctx, progress)
 	})
@@ -2001,5 +2126,46 @@ func (r *mutationResolver) SceneSetNotBroken(ctx context.Context, id string) (bo
 	}
 
 	logger.Infof("Set scene %d as not broken (cleared broken status)", sceneID)
+	return true, nil
+}
+
+func (r *mutationResolver) SceneArchive(ctx context.Context, id string, deleteFile bool, archiveReason *string) (bool, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid scene ID: %w", err)
+	}
+
+	fileNamingAlgo := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	fileDeleter := &scene.FileDeleter{
+		Deleter:        file.NewDeleter(),
+		FileNamingAlgo: fileNamingAlgo,
+		Paths:          manager.GetInstance().Paths,
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		scene, err := r.repository.Scene.Find(ctx, sceneID)
+		if err != nil {
+			return fmt.Errorf("loading scene: %w", err)
+		}
+
+		if scene == nil {
+			return fmt.Errorf("scene with id %d not found", sceneID)
+		}
+
+		if scene.IsArchived {
+			return fmt.Errorf("scene with id %d is already archived", sceneID)
+		}
+
+		manager.KillRunningStreams(scene, fileNamingAlgo)
+
+		return r.sceneService.Archive(ctx, scene, deleteFile, archiveReason, fileDeleter)
+	}); err != nil {
+		fileDeleter.Rollback()
+		return false, err
+	}
+
+	fileDeleter.Commit()
+
+	logger.Infof("Archived scene %d (delete_file=%v)", sceneID, deleteFile)
 	return true, nil
 }

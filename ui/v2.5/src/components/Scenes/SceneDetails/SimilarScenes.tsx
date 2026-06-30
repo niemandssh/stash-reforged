@@ -17,6 +17,11 @@ import TextUtils from "src/utils/text";
 import { Icon } from "src/components/Shared/Icon";
 import { HoverPopover } from "src/components/Shared/HoverPopover";
 import { TagLink } from "src/components/Shared/TagLink";
+import { useFindColorPresets } from "src/core/StashService";
+import {
+  filterSceneGeneralTags,
+  sortTagsByColorPreset,
+} from "src/utils/tagSorting";
 import { PerformerPopoverButton } from "src/components/Shared/PerformerPopoverButton";
 import { GroupTag } from "src/components/Groups/GroupTag";
 import {
@@ -51,6 +56,16 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
 }) => {
   const { configuration } = React.useContext(ConfigurationContext);
   const chipRef = useRef<HTMLDivElement>(null);
+  const { data: presetsData } = useFindColorPresets();
+  const colorPresets = presetsData?.findColorPresets?.color_presets || [];
+  const generalTags = useMemo(
+    () =>
+      sortTagsByColorPreset(
+        filterSceneGeneralTags(scene.tags, scene.performer_tag_ids),
+        colorPresets
+      ),
+    [scene.tags, scene.performer_tag_ids, colorPresets]
+  );
 
   const sceneLink = `/scenes/${scene.id}`;
 
@@ -114,9 +129,9 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
   }
 
   function maybeRenderTagPopoverButton() {
-    if (scene.tags.length <= 0) return;
+    if (generalTags.length <= 0) return;
 
-    const popoverContent = scene.tags.map((tag) => (
+    const popoverContent = generalTags.map((tag) => (
       <TagLink key={tag.id} tag={tag} linkType="details" />
     ));
 
@@ -128,7 +143,7 @@ const SimilarSceneCard: React.FC<ISimilarSceneCardProps> = ({
       >
         <Button className="minimal">
           <Icon icon={faTag} />
-          <span>{scene.tags.length}</span>
+          <span>{generalTags.length}</span>
         </Button>
       </HoverPopover>
     );

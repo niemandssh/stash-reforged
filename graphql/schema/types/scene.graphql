@@ -42,6 +42,14 @@ type VideoCaption {
   caption_type: String!
 }
 
+"Desktop VR-style panorama playback (equirectangular / stereo), similar to YouTube VR on a flat screen."
+enum SceneVrProjection {
+  NONE
+  STEREO_180_LR
+  STEREO_360_TB
+  MONO_360
+}
+
 type VideoFilters {
   contrast: Int
   brightness: Int
@@ -55,6 +63,8 @@ type VideoFilters {
   blur: Int
   volume_level: Float
   volume_muted: Boolean
+  "When not NONE, opens 360/VR view on load and shows the VR projection control in the player."
+  vr_projection: SceneVrProjection
 }
 
 type VideoTransforms {
@@ -78,6 +88,7 @@ input VideoFiltersInput {
   blur: Int
   volume_level: Float
   volume_muted: Boolean
+  vr_projection: SceneVrProjection
 }
 
 input VideoTransformsInput {
@@ -117,6 +128,12 @@ type Scene {
   captions: [VideoCaption!]
   is_broken: Boolean!
   is_not_broken: Boolean!
+  is_trimmed: Boolean!
+  is_archived: Boolean!
+  "Reason the scene was archived"
+  archive_reason: String
+  "Scene metadata was filled using AI"
+  is_ai_filled: Boolean!
   audio_offset_ms: Int!
   audio_playback_speed: Float!
   force_hls: Boolean!
@@ -230,6 +247,7 @@ input SceneCreateInput {
   rating100: Int
   organized: Boolean
   is_broken: Boolean
+  is_trimmed: Boolean
   studio_id: ID
   gallery_ids: [ID!]
   performer_ids: [ID!] @deprecated(reason: "Use scene_performers")
@@ -268,6 +286,10 @@ input SceneUpdateInput {
   pinned: Boolean
   is_broken: Boolean
   is_not_broken: Boolean
+  is_trimmed: Boolean
+  is_archived: Boolean
+  archive_reason: String
+  is_ai_filled: Boolean
   audio_offset_ms: Int
   audio_playback_speed: Float
   force_hls: Boolean

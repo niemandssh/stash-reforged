@@ -177,6 +177,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const [volumeMuted, setVolumeMuted] = useState(
     () => props.scene.video_filters?.volume_muted ?? false
   );
+  const [vrProjectionValue, setVrProjectionValue] = useState<GQL.SceneVrProjection>(
+    () =>
+      props.scene.video_filters?.vr_projection ?? GQL.SceneVrProjection.None
+  );
   const [rotateValue, setRotateValue] = useState(
     () => props.scene.video_transforms?.rotate ?? rotateRange.default
   );
@@ -294,6 +298,9 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     const vol = props.scene.video_filters?.volume_level;
     setVolumeValue(vol != null ? Math.round(vol * 100) : 100);
     setVolumeMuted(props.scene.video_filters?.volume_muted ?? false);
+    setVrProjectionValue(
+      props.scene.video_filters?.vr_projection ?? GQL.SceneVrProjection.None
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.scene.id,
@@ -302,6 +309,7 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     props.scene.force_hls,
     props.scene.video_filters?.volume_level,
     props.scene.video_filters?.volume_muted,
+    props.scene.video_filters?.vr_projection,
   ]);
 
   // Sync text and numeric values
@@ -678,7 +686,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       blur: null,
       volume_level: null,
       volume_muted: null,
+      vr_projection: null,
     };
+
+    setVrProjectionValue(GQL.SceneVrProjection.None);
 
     sceneUpdate({
       variables: {
@@ -741,6 +752,10 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       volume_level:
         volumeValue !== volumeRange.default ? volumeValue / 100 : null,
       volume_muted: volumeMuted || null,
+      vr_projection:
+        vrProjectionValue !== GQL.SceneVrProjection.None
+          ? vrProjectionValue
+          : null,
     };
 
     const videoTransforms: GQL.VideoTransforms = {
@@ -832,6 +847,41 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
           <h5>
             <FormattedMessage id="effect_filters.name" />
           </h5>
+        </span>
+      </div>
+      <div className="row form-group">
+        <span className="col-sm-3">
+          <FormattedMessage id="effect_filters.vr_projection" />
+        </span>
+        <span className="col-sm-9">
+          <Form.Control
+            as="select"
+            value={vrProjectionValue}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              setVrProjectionValue(e.target.value as GQL.SceneVrProjection)
+            }
+            className="input-control"
+          >
+            <option value={GQL.SceneVrProjection.None}>
+              {intl.formatMessage({ id: "effect_filters.vr_projection_none" })}
+            </option>
+            <option value={GQL.SceneVrProjection.Stereo_180Lr}>
+              {intl.formatMessage({
+                id: "effect_filters.vr_projection_stereo_180_lr",
+              })}
+            </option>
+            <option value={GQL.SceneVrProjection.Stereo_360Tb}>
+              {intl.formatMessage({
+                id: "effect_filters.vr_projection_stereo_360_tb",
+              })}
+            </option>
+            <option value={GQL.SceneVrProjection.Mono_360}>
+              {intl.formatMessage({ id: "effect_filters.vr_projection_mono_360" })}
+            </option>
+          </Form.Control>
+          <small className="text-muted d-block mt-1">
+            <FormattedMessage id="effect_filters.vr_projection_hint" />
+          </small>
         </span>
       </div>
       <Slider

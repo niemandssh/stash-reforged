@@ -163,3 +163,7 @@ mutation RecalculateSceneSimilarities($scene_id: ID) {
 mutation OpenInExternalPlayer($id: ID!) {
   openInExternalPlayer(id: $id)
 }
+
+mutation SceneArchive($id: ID!, $delete_file: Boolean!, $archive_reason: String) {
+  sceneArchive(id: $id, delete_file: $delete_file, archive_reason: $archive_reason)
+}

@@ -17,6 +17,10 @@ fragment SlimSceneData on Scene {
   is_broken
   is_not_broken
   is_probably_broken
+  is_trimmed
+  is_archived
+  archive_reason
+  is_ai_filled
   resume_time
   play_duration
   play_count
@@ -95,8 +99,12 @@ fragment SlimSceneData on Scene {
   }
 
   tags {
-    id
-    name
+    ...SlimTagData
+  }
+
+  performer_tag_ids {
+    performer_id
+    tag_ids
   }
 
   performers {

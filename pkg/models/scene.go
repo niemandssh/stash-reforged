@@ -35,6 +35,12 @@ type SceneFilterType struct {
 	Pinned *bool `json:"pinned"`
 	// Filter by is_broken
 	IsBroken *bool `json:"is_broken"`
+	// Filter scenes that have start_time and/or end_time set (need trimming)
+	HasTrimTimes *bool `json:"has_trim_times"`
+	// Filter by is_trimmed
+	IsTrimmed *bool `json:"is_trimmed"`
+	// Filter by is_archived
+	IsArchived *bool `json:"is_archived"`
 	// Filter by o-counter
 	OCounter *IntCriterionInput `json:"o_counter"`
 	// Filter by omg-counter
@@ -164,6 +170,8 @@ type SceneCreateInput struct {
 	Rating100       *int              `json:"rating100"`
 	Organized       *bool             `json:"organized"`
 	IsBroken        *bool             `json:"is_broken"`
+	IsTrimmed       *bool             `json:"is_trimmed"`
+	IsArchived      *bool             `json:"is_archived"`
 	StudioID        *string           `json:"studio_id"`
 	GalleryIds      []string          `json:"gallery_ids"`
 	PerformerIds    []string          `json:"performer_ids"`
@@ -207,6 +215,10 @@ type SceneUpdateInput struct {
 	Pinned                  *bool                `json:"pinned"`
 	IsBroken                *bool                `json:"is_broken"`
 	IsNotBroken             *bool                `json:"is_not_broken"`
+	IsTrimmed               *bool                `json:"is_trimmed"`
+	IsArchived              *bool                `json:"is_archived"`
+	ArchiveReason           *string              `json:"archive_reason"`
+	IsAIFilled              *bool                `json:"is_ai_filled"`
 	AudioOffsetMs           *int                 `json:"audio_offset_ms"`
 	AudioPlaybackSpeed      *float64             `json:"audio_playback_speed"`
 	ForceHLS                *bool                `json:"force_hls"`

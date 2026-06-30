@@ -135,6 +135,16 @@ const (
 	ScraperCDPPath            = "scraper_cdp_path"
 	ScraperExcludeTagPatterns = "scraper_exclude_tag_patterns"
 
+	// AI options
+	AIDeepseekAPIKey   = "ai.deepseek_api_key"
+	AIDeepseekModel    = "ai.deepseek_model"
+	AISceneFillEnabled = "ai.scene_fill_enabled"
+	AIVisionEnabled    = "ai.vision_enabled"
+	AIVisionProvider   = "ai.vision_provider"
+	AIVisionAPIKey     = "ai.vision_api_key"
+	AIVisionAPIURL     = "ai.vision_api_url"
+	AIVisionModel      = "ai.vision_model"
+
 	// stash-box options
 	StashBoxes = "stash_boxes"
 
@@ -198,11 +208,11 @@ const (
 	AutoplayNextVideoTimer        = "autoplay_next_video_timer"
 	autoplayNextVideoTimerDefault = 10
 
-	WallPlayback             = "wall_playback"
-	defaultWallPlayback      = "video"
-	WallAnimatePreviews        = "wall_animate_previews"
-	defaultWallAnimatePreviews  = true
-	WallShowAdditionalInfo     = "wall_show_additional_info"
+	WallPlayback                  = "wall_playback"
+	defaultWallPlayback           = "video"
+	WallAnimatePreviews           = "wall_animate_previews"
+	defaultWallAnimatePreviews    = true
+	WallShowAdditionalInfo        = "wall_show_additional_info"
 	defaultWallShowAdditionalInfo = true
 
 	// Image lightbox options
@@ -895,6 +905,54 @@ func (i *Config) GetScraperCertCheck() bool {
 
 func (i *Config) GetScraperExcludeTagPatterns() []string {
 	return i.getStringSlice(ScraperExcludeTagPatterns)
+}
+
+func (i *Config) GetAIDeepseekAPIKey() string {
+	return i.getString(AIDeepseekAPIKey)
+}
+
+func (i *Config) GetAISceneFillEnabled() bool {
+	return i.getBoolDefault(AISceneFillEnabled, false)
+}
+
+func (i *Config) GetAIVisionEnabled() bool {
+	return i.getBoolDefault(AIVisionEnabled, false)
+}
+
+func (i *Config) GetAIVisionProvider() string {
+	if v := i.getString(AIVisionProvider); v != "" {
+		return v
+	}
+	return VisionProviderGroq
+}
+
+func (i *Config) GetAIDeepseekModel() string {
+	if v := i.getString(AIDeepseekModel); v != "" {
+		return v
+	}
+	return "deepseek-v4-flash"
+}
+
+func (i *Config) GetAIVisionAPIKey() string {
+	return i.getString(AIVisionAPIKey)
+}
+
+func (i *Config) GetAIVisionAPIURL() string {
+	url, _ := resolveVisionEndpoint(
+		i.GetAIVisionProvider(),
+		i.getString(AIVisionAPIURL),
+		i.getString(AIVisionModel),
+	)
+	return url
+}
+
+func (i *Config) GetAIVisionModel() string {
+	_, model := resolveVisionEndpoint(
+		i.GetAIVisionProvider(),
+		i.getString(AIVisionAPIURL),
+		i.getString(AIVisionModel),
+	)
+	return model
 }
 
 func (i *Config) GetStashBoxes() []*models.StashBox {

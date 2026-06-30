@@ -307,6 +307,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     cover_image: yup.string().nullable().optional(),
     is_broken: yup.boolean().defined(),
     is_not_broken: yup.boolean().defined(),
+    is_trimmed: yup.boolean().defined(),
     disable_next_scene_overlay: yup.boolean().defined(),
     start_time: yup.number().nullable().optional(),
     end_time: yup.number().nullable().optional(),
@@ -395,6 +396,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       cover_image: initialCoverImage,
       is_broken: scene.is_broken ?? false,
       is_not_broken: scene.is_not_broken ?? false,
+      is_trimmed: scene.is_trimmed ?? false,
       disable_next_scene_overlay:
         (scene as { disable_next_scene_overlay?: boolean })
           .disable_next_scene_overlay ?? false,
@@ -1590,6 +1592,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
     return renderField("is_not_broken", title, control);
   }
 
+  function renderIsTrimmedField() {
+    const title = intl.formatMessage({ id: "is_trimmed" });
+    const control = (
+      <Form.Check
+        type="checkbox"
+        id="is_trimmed"
+        checked={formik.values.is_trimmed}
+        onChange={(e) => formik.setFieldValue("is_trimmed", e.target.checked)}
+        isInvalid={!!formik.errors.is_trimmed}
+      />
+    );
+
+    return renderField("is_trimmed", title, control);
+  }
+
   function renderDisableNextSceneOverlayField() {
     const title = intl.formatMessage({ id: "disable_next_scene_overlay" });
     const control = (
@@ -1735,6 +1752,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
           <Col lg={5} xl={12}>
             {renderIsBrokenField()}
             {renderIsNotBrokenField()}
+            {renderIsTrimmedField()}
             {renderDisableNextSceneOverlayField()}
 
             {renderDetailsField()}

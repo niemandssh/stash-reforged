@@ -27,6 +27,7 @@ import "./vtt-thumbnails";
 import "./big-buttons";
 import "./track-activity";
 import "./vrmode";
+import { sceneVrProjectionToVRType, VRType } from "./vrmode";
 import "./control-bar-toggle";
 import cx from "classnames";
 import {
@@ -691,14 +692,28 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       const vrMenu = player.vrMenu();
 
-      let showButton = false;
+      const saved = scene.video_filters?.vr_projection;
+      const activeSaved =
+        saved != null && saved !== GQL.SceneVrProjection.None;
+      const tagMatch = Boolean(
+        vrTag && scene.tags.some((tag) => vrTag === tag.name)
+      );
+      const showVrButton = activeSaved || tagMatch;
 
-      if (vrTag) {
-        showButton = scene.tags.some((tag) => vrTag === tag.name);
+      vrMenu.setShowButton(showVrButton);
+
+      if (activeSaved && saved) {
+        vrMenu.applySavedProjection(sceneVrProjectionToVRType(saved));
+      } else {
+        vrMenu.applySavedProjection(VRType.Off);
       }
-
-      vrMenu.setShowButton(showButton);
-    }, [getPlayer, scene, vrTag]);
+    }, [
+      getPlayer,
+      scene.id,
+      scene.video_filters?.vr_projection,
+      scene.tags,
+      vrTag,
+    ]);
 
     const updateVideoJsProgressBarTrimStyles = useCallback(
       (player: VideoJsPlayer) => {

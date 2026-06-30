@@ -14,6 +14,7 @@ type SceneService interface {
 	AssignFile(ctx context.Context, sceneID int, fileID models.FileID) error
 	Merge(ctx context.Context, sourceIDs []int, destinationID int, fileDeleter *scene.FileDeleter, options scene.MergeOptions) error
 	Destroy(ctx context.Context, scene *models.Scene, fileDeleter *scene.FileDeleter, deleteGenerated, deleteFile bool) error
+	Archive(ctx context.Context, scene *models.Scene, deleteFile bool, archiveReason *string, fileDeleter *scene.FileDeleter) error
 
 	FindByIDs(ctx context.Context, ids []int, load ...scene.LoadRelationshipOption) ([]*models.Scene, error)
 	sceneFingerprintGetter

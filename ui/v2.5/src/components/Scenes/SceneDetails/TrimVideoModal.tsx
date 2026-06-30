@@ -158,10 +158,10 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
   };
 
   if (showConfirm) {
-    if (startTime === null || endTime === null) return null;
-
-    const trimDuration = endTime - startTime;
-    const removedFromEnd = originalDuration - endTime;
+    const effectiveStart = startTime ?? 0;
+    const effectiveEnd = endTime ?? originalDuration;
+    const trimDuration = effectiveEnd - effectiveStart;
+    const removedFromEnd = originalDuration - effectiveEnd;
 
     return (
       <ModalComponent
@@ -187,8 +187,8 @@ export const TrimVideoModal: React.FC<ITrimVideoModalProps> = ({
           <FormattedMessage
             id="dialogs.trim_video.confirm_message"
             values={{
-              startTime: formatTime(startTime),
-              endTime: formatTime(endTime),
+              startTime: formatTime(effectiveStart),
+              endTime: formatTime(effectiveEnd),
               trimDuration: formatTime(trimDuration),
               remainingDuration: formatTime(removedFromEnd),
             }}

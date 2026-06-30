@@ -269,6 +269,58 @@ var countryNameMapping = map[string]string{
 	"sint maarten (dutch part)":            "SX",
 	"south sudan":                          "SS",
 	"kosovo":                               "XK",
+	"german":                               "DE",
+	"california":                           "US",
+	"alabama":                              "US",
+	"alaska":                               "US",
+	"arizona":                              "US",
+	"arkansas":                             "US",
+	"colorado":                             "US",
+	"connecticut":                          "US",
+	"delaware":                             "US",
+	"district of columbia":                 "US",
+	"florida":                              "US",
+	"georgia usa":                          "US",
+	"hawaii":                               "US",
+	"idaho":                                "US",
+	"illinois":                             "US",
+	"indiana":                              "US",
+	"iowa":                                 "US",
+	"kansas":                               "US",
+	"kentucky":                             "US",
+	"louisiana":                            "US",
+	"maine":                                "US",
+	"maryland":                             "US",
+	"massachusetts":                        "US",
+	"michigan":                             "US",
+	"minnesota":                            "US",
+	"mississippi":                          "US",
+	"missouri":                             "US",
+	"montana":                              "US",
+	"nebraska":                             "US",
+	"nevada":                               "US",
+	"new hampshire":                        "US",
+	"new jersey":                           "US",
+	"new mexico":                           "US",
+	"new york":                             "US",
+	"north carolina":                       "US",
+	"north dakota":                         "US",
+	"ohio":                                 "US",
+	"oklahoma":                             "US",
+	"oregon":                               "US",
+	"pennsylvania":                         "US",
+	"rhode island":                         "US",
+	"south carolina":                       "US",
+	"south dakota":                         "US",
+	"tennessee":                            "US",
+	"texas":                                "US",
+	"utah":                                 "US",
+	"vermont":                              "US",
+	"virginia":                             "US",
+	"washington":                           "US",
+	"west virginia":                        "US",
+	"wisconsin":                            "US",
+	"wyoming":                              "US",
 }
 
 func resolveCountryName(name *string) *string {
@@ -284,9 +336,23 @@ func resolveCountryName(name *string) *string {
 		return nil
 	}
 
-	v, exists := countryNameMapping[strings.ToLower(trimmedName)]
+	lowerName := strings.ToLower(trimmedName)
+	v, exists := countryNameMapping[lowerName]
 	if exists {
 		return &v
+	}
+
+	// Scrapers frequently return locality strings such as
+	// "City, State, Country". Try the right-most token first.
+	parts := strings.Split(lowerName, ",")
+	for i := len(parts) - 1; i >= 0; i-- {
+		part := strings.TrimSpace(parts[i])
+		if part == "" {
+			continue
+		}
+		if v, exists = countryNameMapping[part]; exists {
+			return &v
+		}
 	}
 
 	logger.Debugf("Scraped country was not recognized: %s", trimmedName)

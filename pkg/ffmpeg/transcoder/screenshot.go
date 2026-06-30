@@ -50,15 +50,49 @@ var (
 	}
 )
 
+const screenshotHybridSlowSeek = 20.0
+
+func screenshotSeekTimes(t float64, hybrid bool) (fastSeek, slowSeek float64) {
+	if !hybrid {
+		return t, 0
+	}
+
+	if t > screenshotHybridSlowSeek {
+		return t - screenshotHybridSlowSeek, screenshotHybridSlowSeek
+	}
+
+	return 0, t
+}
+
 func ScreenshotTime(input string, t float64, options ScreenshotOptions) ffmpeg.Args {
+	return screenshotAtTime(input, t, false, options)
+}
+
+// ScreenshotTimeHybrid uses fast seek before input and a short slow seek after input.
+// More reliable than ScreenshotTime alone for long videos and imprecise keyframes.
+func ScreenshotTimeHybrid(input string, t float64, options ScreenshotOptions) ffmpeg.Args {
+	return screenshotAtTime(input, t, true, options)
+}
+
+func screenshotAtTime(input string, t float64, hybrid bool, options ScreenshotOptions) ffmpeg.Args {
 	options.setDefaults()
+
+	fastSeek, slowSeek := screenshotSeekTimes(t, hybrid)
 
 	var args ffmpeg.Args
 	args = args.LogLevel(options.Verbosity)
 	args = args.Overwrite()
-	args = args.Seek(t)
+
+	if fastSeek > 0 {
+		args = args.Seek(fastSeek)
+	}
 
 	args = args.Input(input)
+
+	if slowSeek > 0 {
+		args = args.Seek(slowSeek)
+	}
+
 	args = args.VideoFrames(1)
 
 	if options.Quality > 0 {

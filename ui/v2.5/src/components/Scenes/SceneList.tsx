@@ -379,6 +379,7 @@ const ListToolbarContent: React.FC<{
   criteria: Criterion[];
   items: GQL.SlimSceneDataFragment[];
   selectedIds: Set<string>;
+  filter: ListFilterModel;
   operations: IOperations[];
   onToggleSidebar: () => void;
   onEditCriterion: (c: Criterion) => void;
@@ -390,10 +391,12 @@ const ListToolbarContent: React.FC<{
   onDelete: () => void;
   onPlay: () => void;
   onCreateNew: () => void;
+  onChangeFilter: (filter: ListFilterModel) => void;
 }> = ({
   criteria,
   items,
   selectedIds,
+  filter,
   operations,
   onToggleSidebar,
   onEditCriterion,
@@ -405,6 +408,7 @@ const ListToolbarContent: React.FC<{
   onDelete,
   onPlay,
   onCreateNew,
+  onChangeFilter,
 }) => {
   const intl = useIntl();
 
@@ -446,6 +450,22 @@ const ListToolbarContent: React.FC<{
       )}
       <div>
         <ButtonGroup>
+          {!hasSelection && (
+            <Button
+              className="sort-random-button"
+              variant="secondary"
+              onClick={() => {
+                if (filter.sortBy === "random") {
+                  onChangeFilter(filter.reshuffleRandomSort());
+                } else {
+                  onChangeFilter(filter.setSortBy("random"));
+                }
+              }}
+              title={intl.formatMessage({ id: "actions.sort_by_random" })}
+            >
+              <Icon icon={faRandom} />
+            </Button>
+          )}
           {!!items.length && (
             <Button
               className="play-button"
@@ -527,19 +547,6 @@ const ListResultsHeader: React.FC<{
         />
       </div>
       <div>
-        <Button
-          variant="secondary"
-          onClick={() => {
-            if (filter.sortBy === "random") {
-              onChangeFilter(filter.reshuffleRandomSort());
-            } else {
-              onChangeFilter(filter.setSortBy("random"));
-            }
-          }}
-          title={intl.formatMessage({ id: "actions.sort_by_random" })}
-        >
-          <Icon icon={faRandom} />
-        </Button>
         <SortBySelect
           options={filter.options.sortByOptions}
           sortBy={filter.sortBy}
@@ -900,6 +907,7 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
                 criteria={filter.criteria}
                 items={items}
                 selectedIds={selectedIds}
+                filter={filter}
                 operations={otherOperations}
                 onToggleSidebar={() => setShowSidebar(!showSidebar)}
                 onEditCriterion={(c) => showEditFilter(c.criterionOption.type)}
@@ -911,6 +919,7 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
                 onDelete={onDelete}
                 onCreateNew={onCreateNew}
                 onPlay={onPlay}
+                onChangeFilter={(newFilter) => setFilter(newFilter)}
               />
             </ButtonToolbar>
 

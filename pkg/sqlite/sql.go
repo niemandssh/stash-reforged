@@ -142,6 +142,27 @@ func getCountSortWithoutOrderBy(primaryTable, joinTable, primaryFK, direction st
 	return fmt.Sprintf(", (SELECT COUNT(*) FROM %s AS sort WHERE sort.%s = %s.id) %s", joinTable, primaryFK, primaryTable, getSortDirection(direction))
 }
 
+func getOAndOMGCounterSort(primaryTable, oDatesTable, primaryFK, direction string) string {
+	return fmt.Sprintf(
+		" ORDER BY ((SELECT COUNT(*) FROM %s AS sort WHERE sort.%s = %s.id) + COALESCE(%s.omg_counter, 0)) %s",
+		oDatesTable, primaryFK, primaryTable, primaryTable, getSortDirection(direction),
+	)
+}
+
+func getOAndOMGCounterSortWithoutOrderBy(primaryTable, oDatesTable, primaryFK, direction string) string {
+	return fmt.Sprintf(
+		", ((SELECT COUNT(*) FROM %s AS sort WHERE sort.%s = %s.id) + COALESCE(%s.omg_counter, 0)) %s",
+		oDatesTable, primaryFK, primaryTable, primaryTable, getSortDirection(direction),
+	)
+}
+
+func getOAndOMGColumnSort(tableName, direction string) string {
+	return fmt.Sprintf(
+		" ORDER BY (COALESCE(%s.o_counter, 0) + COALESCE(%s.omg_counter, 0)) %s",
+		tableName, tableName, getSortDirection(direction),
+	)
+}
+
 func getSortWithoutOrderBy(sort string, direction string, tableName string) string {
 	direction = getSortDirection(direction)
 

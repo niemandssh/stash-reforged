@@ -220,14 +220,14 @@ type GalleryStore struct {
 
 func NewGalleryStore(fileStore *FileStore, folderStore *FolderStore) *GalleryStore {
 	return &GalleryStore{
-		tableMgr:         galleryTableMgr,
-		oDateManager:     oDateManager{galleriesOTableMgr},
-		omgDateManager:   omgDateManager{galleriesOMGTableMgr},
-		oCounterManager:  oCounterManager{galleryTableMgr},
+		tableMgr:          galleryTableMgr,
+		oDateManager:      oDateManager{galleriesOTableMgr},
+		omgDateManager:    omgDateManager{galleriesOMGTableMgr},
+		oCounterManager:   oCounterManager{galleryTableMgr},
 		omgCounterManager: omgCounterManager{galleryTableMgr},
-		viewDateManager:  viewDateManager{tableMgr: galleriesViewTableMgr},
-		fileStore:        fileStore,
-		folderStore:      folderStore,
+		viewDateManager:   viewDateManager{tableMgr: galleriesViewTableMgr},
+		fileStore:         fileStore,
+		folderStore:       folderStore,
 	}
 }
 
@@ -813,6 +813,7 @@ var gallerySortOptions = sortOptions{
 	"images_count",
 	"last_played_at",
 	"o_counter",
+	"o_omg_counter",
 	"omg_counter",
 	"path",
 	"performer_count",
@@ -878,6 +879,8 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 			query.sortAndPagination += fmt.Sprintf(", (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
 		} else if sort == "o_counter" {
 			query.sortAndPagination += getCountSortWithoutOrderBy(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+		} else if sort == "o_omg_counter" {
+			query.sortAndPagination += getOAndOMGCounterSortWithoutOrderBy(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
 		} else if sort == "file_mod_time" {
 			sortCol := "mod_time"
 			addFileTable()
@@ -913,6 +916,8 @@ func (qb *GalleryStore) setGallerySort(query *queryBuilder, findFilter *models.F
 		query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(view_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", galleriesViewDatesTable, galleryIDColumn, galleryTable, getSortDirection(direction))
 	case "o_counter":
 		query.sortAndPagination += getCountSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
+	case "o_omg_counter":
+		query.sortAndPagination += getOAndOMGCounterSort(galleryTable, galleriesODatesTable, galleryIDColumn, direction)
 	case "omg_counter":
 		query.sortAndPagination += getSort(sort, direction, "galleries")
 	case "path":

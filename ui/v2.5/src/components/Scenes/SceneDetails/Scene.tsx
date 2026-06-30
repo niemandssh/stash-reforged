@@ -34,21 +34,35 @@ import {
   useSceneIncrementPlayCount,
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
+  useSceneCompressVideo,
   useSceneSetBroken,
   useSceneSetNotBroken,
   useScanVideoFileThreats,
   useFindColorPresets,
+  usePerformerCreate,
+  useTagCreate,
+  useStudioCreate,
+  useGroupCreate,
 } from "src/core/StashService";
 
 import { SceneEditPanel } from "./SceneEditPanel";
+import {
+  serializeSceneCopyPayload,
+  deserializeSceneCopyPayload,
+  isSceneCopyPayload,
+  applySceneCopyPayload,
+} from "./SceneCopyPaste";
 import { ErrorMessage } from "src/components/Shared/ErrorMessage";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import { BrokenBadge } from "src/components/Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "src/components/Shared/ProbablyBrokenBadge";
+import { TrimmedBadge } from "src/components/Shared/TrimmedBadge";
+import { ArchivedBadge } from "src/components/Shared/ArchivedBadge";
 import { HLSBadge } from "src/components/Shared/HLSBadge";
 import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
+import { AIFilledIndicator } from "src/components/Shared/AIFilledIndicator";
 import { useToast } from "src/hooks/Toast";
 import SceneQueue, { QueuedScene } from "src/models/sceneQueue";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -69,14 +83,17 @@ import {
   faCamera,
   faImage,
   faCompressAlt,
+  faFileArchive,
   faCut,
   faImages,
+  faEye,
   faPhotoVideo,
   faExclamationTriangle,
   faCheckCircle,
   faUpload,
   faExchangeAlt,
   faTrash,
+  faBoxArchive,
   faShieldAlt,
   faInfoCircle,
   faListUl,
@@ -87,6 +104,9 @@ import {
   faHistory,
   faEdit,
   faTimes,
+  faCopy,
+  faPaste,
+  faRobot,
 } from "@fortawesome/free-solid-svg-icons";
 import { objectPath, objectTitle } from "src/core/files";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
@@ -128,6 +148,7 @@ const SceneGalleriesPanel = lazyComponent(
   () => import("./SceneGalleriesPanel")
 );
 const DeleteScenesDialog = lazyComponent(() => import("../DeleteScenesDialog"));
+const ArchiveSceneDialog = lazyComponent(() => import("../ArchiveSceneDialog"));
 const GenerateDialog = lazyComponent(
   () => import("../../Dialogs/GenerateDialog")
 );
@@ -138,6 +159,8 @@ import { SceneMergeModal } from "../SceneMergeDialog";
 import { ReduceResolutionModal } from "./ReduceResolutionModal";
 import { TrimVideoModal } from "./TrimVideoModal";
 import { RegenerateSpritesModal } from "./RegenerateSpritesModal";
+import { RegenerateAIVisionModal } from "./RegenerateAIVisionModal";
+import { FillSceneAIDialog } from "./FillSceneAIDialog";
 import { ModalComponent } from "src/components/Shared/Modal";
 import { SceneDataUpdateNotification } from "./SceneDataUpdateNotification";
 import { captureFilteredSceneScreenshot } from "./captureFilteredScreenshot";
@@ -265,19 +288,32 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [showTrimVideoModal, setShowTrimVideoModal] = useState(false);
   const [showRegenerateSpritesModal, setShowRegenerateSpritesModal] =
     useState(false);
+  const [showRegenerateAIVisionModal, setShowRegenerateAIVisionModal] =
+    useState(false);
+  const [showFillSceneAIModal, setShowFillSceneAIModal] = useState(false);
   const [showConvertToMP4Confirm, setShowConvertToMP4Confirm] = useState(false);
   const [showConvertHLSToMP4Confirm, setShowConvertHLSToMP4Confirm] =
+    useState(false);
+  const [showCompressVideoConfirm, setShowCompressVideoConfirm] =
     useState(false);
   const [isSavingFilteredScreenshot, setIsSavingFilteredScreenshot] =
     useState(false);
   const boxes = configuration?.general?.stashBoxes ?? [];
+  const aiSceneFillEnabled = configuration?.ai?.sceneFillEnabled ?? false;
 
   const [incrementO] = useSceneIncrementO(scene.id);
   const [incrementOmg] = useSceneIncrementOmg(scene.id);
   const [addOmg] = useSceneAddOmg(scene.id);
+  const [createPerformer] = usePerformerCreate();
+  const [createTag] = useTagCreate();
+  const [createStudio] = useStudioCreate();
+  const [createGroup] = useGroupCreate();
 
   const [showOAttributeModal, setShowOAttributeModal] = useState(false);
   const [showOmgAttributeModal, setShowOmgAttributeModal] = useState(false);
+  const [isPasteInProgress, setIsPasteInProgress] = useState(false);
+  const [showPasteLoader, setShowPasteLoader] = useState(false);
+  const pasteLoaderTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scenePerformers = useMemo(() => {
     const fromScene = scene.performers ?? [];
@@ -290,6 +326,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const [incrementPlay] = useSceneIncrementPlayCount();
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
+  const [compressVideo] = useSceneCompressVideo();
   const [setBroken] = useSceneSetBroken();
   const [setNotBroken] = useSceneSetNotBroken();
   const [scanVideoFileThreats] = useScanVideoFileThreats();
@@ -347,6 +384,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   }
 
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState<boolean>(false);
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [isMergeIntoDialogOpen, setIsMergeIntoDialogOpen] = useState(false);
   const [isMergeFromDialogOpen, setIsMergeFromDialogOpen] = useState(false);
@@ -575,6 +613,79 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   };
 
+  const handleCopySceneData = useCallback(async () => {
+    try {
+      const serialized = serializeSceneCopyPayload(scene);
+      await navigator.clipboard.writeText(serialized);
+      Toast.success(
+        intl.formatMessage({ id: "toast.scene_data_copied" })
+      );
+    } catch (e) {
+      Toast.error(intl.formatMessage({ id: "toast.clipboard_error" }));
+    }
+  }, [scene, intl, Toast]);
+
+  const handlePasteSceneData = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!isSceneCopyPayload(text)) {
+        Toast.error(
+          intl.formatMessage({ id: "toast.no_scene_data_in_clipboard" })
+        );
+        return;
+      }
+      const payload = deserializeSceneCopyPayload(text);
+      if (!payload) {
+        Toast.error(
+          intl.formatMessage({ id: "toast.invalid_scene_data_in_clipboard" })
+        );
+        return;
+      }
+      setIsPasteInProgress(true);
+      pasteLoaderTimeoutRef.current = setTimeout(() => {
+        setShowPasteLoader(true);
+      }, 1000);
+      await applySceneCopyPayload(scene.id, payload, {
+        updateScene,
+        createPerformer,
+        createTag,
+        createStudio,
+        createGroup,
+        addPlay: incrementPlayCount,
+        addO: incrementO,
+        addOmg,
+      });
+      if (onSaved) {
+        await onSaved();
+      }
+      Toast.success(
+        intl.formatMessage({ id: "toast.scene_data_pasted" })
+      );
+    } catch (e) {
+      Toast.error(e);
+    } finally {
+      if (pasteLoaderTimeoutRef.current) {
+        clearTimeout(pasteLoaderTimeoutRef.current);
+        pasteLoaderTimeoutRef.current = null;
+      }
+      setShowPasteLoader(false);
+      setIsPasteInProgress(false);
+    }
+  }, [
+    scene.id,
+    updateScene,
+    createPerformer,
+    createTag,
+    createStudio,
+    createGroup,
+    incrementPlayCount,
+    incrementO,
+    addOmg,
+    onSaved,
+    intl,
+    Toast,
+  ]);
+
   function onClickMarker(marker: GQL.SceneMarkerDataFragment) {
     setTimestamp(marker.seconds, true);
   }
@@ -718,10 +829,109 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     }
   }
 
+  function onCompressVideo() {
+    setShowCompressVideoConfirm(true);
+  }
+
+  async function confirmCompressVideo() {
+    try {
+      const result = await compressVideo({
+        variables: {
+          id: scene.id,
+        },
+      });
+
+      if (result.data?.sceneCompressVideo) {
+        Toast.success(
+          intl.formatMessage(
+            { id: "actions.compress_video_started" },
+            { jobId: result.data.sceneCompressVideo }
+          )
+        );
+      }
+      setShowCompressVideoConfirm(false);
+    } catch (e) {
+      Toast.error(e);
+      setShowCompressVideoConfirm(false);
+    }
+  }
+
+  function maybeRenderCompressVideoConfirmDialog() {
+    if (showCompressVideoConfirm) {
+      const generatedPath = configuration?.general?.generatedPath || "";
+      const tempPath = generatedPath
+        ? generatedPath.substring(0, generatedPath.lastIndexOf("/")) + "/temp"
+        : "./temp";
+      const file = scene.files.length > 0 ? scene.files[0] : undefined;
+
+      return (
+        <ModalComponent
+          show
+          icon={faFileArchive}
+          header={intl.formatMessage({ id: "actions.compress_video" })}
+          accept={{
+            variant: "danger",
+            onClick: confirmCompressVideo,
+            text: intl.formatMessage({ id: "actions.confirm" }),
+          }}
+          cancel={{
+            onClick: () => setShowCompressVideoConfirm(false),
+            text: intl.formatMessage({ id: "actions.cancel" }),
+            variant: "secondary",
+          }}
+        >
+          <Alert variant="warning">
+            <strong>Warning:</strong>{" "}
+            <FormattedMessage id="dialogs.compress_video.warning_text" />
+          </Alert>
+          <p>
+            <FormattedMessage
+              id="dialogs.compress_video.info"
+              values={{
+                codec: file?.video_codec?.toUpperCase() ?? "UNKNOWN",
+                width: file?.width ?? 0,
+                height: file?.height ?? 0,
+              }}
+            />
+          </p>
+          <p>
+            <strong>
+              <FormattedMessage id="dialogs.compress_video.temp_path_label" />
+            </strong>
+            <br />
+            <a
+              href={`file://${tempPath}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontWeight: "bold", textDecoration: "underline" }}
+            >
+              {tempPath}
+            </a>
+          </p>
+        </ModalComponent>
+      );
+    }
+  }
+
   function onDeleteDialogClosed(deleted: boolean) {
     setIsDeleteAlertOpen(false);
     if (deleted) {
       onDelete();
+    }
+  }
+
+  function onArchiveDialogClosed(archived: boolean) {
+    setIsArchiveDialogOpen(false);
+    if (archived && onSaved) {
+      onSaved();
+    }
+  }
+
+  function maybeRenderArchiveDialog() {
+    if (isArchiveDialogOpen) {
+      return (
+        <ArchiveSceneDialog scene={scene} onClose={onArchiveDialogClosed} />
+      );
     }
   }
 
@@ -863,6 +1073,33 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             // Refresh scene data after successful regeneration
             forceRefreshSceneData();
           }}
+        />
+      );
+    }
+  }
+
+  function maybeRenderRegenerateAIVisionDialog() {
+    if (showRegenerateAIVisionModal) {
+      return (
+        <RegenerateAIVisionModal
+          sceneId={scene.id}
+          show={showRegenerateAIVisionModal}
+          onClose={() => setShowRegenerateAIVisionModal(false)}
+          onSuccess={() => {
+            forceRefreshSceneData();
+          }}
+        />
+      );
+    }
+  }
+
+  function maybeRenderFillSceneAIDialog() {
+    if (showFillSceneAIModal) {
+      return (
+        <FillSceneAIDialog
+          scene={scene}
+          onClose={() => setShowFillSceneAIModal(false)}
+          onApplied={() => forceRefreshSceneData()}
         />
       );
     }
@@ -1046,6 +1283,34 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           </Dropdown.Item>
           <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           <Dropdown.Item
+            key="copy-scene-data"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => handleCopySceneData()}
+          >
+            <Icon icon={faCopy} className="mr-2" />
+            <FormattedMessage id="actions.copy_scene_data" />
+          </Dropdown.Item>
+          <Dropdown.Item
+            key="paste-scene-data"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => handlePasteSceneData()}
+            disabled={isPasteInProgress}
+          >
+            <Icon icon={faPaste} className="mr-2" />
+            <FormattedMessage id="actions.paste_scene_data" />
+          </Dropdown.Item>
+          {aiSceneFillEnabled && (
+            <Dropdown.Item
+              key="fill-scene-ai"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setShowFillSceneAIModal(true)}
+            >
+              <Icon icon={faRobot} className="mr-2" />
+              <FormattedMessage id="actions.fill_scene_data_with_ai" />
+            </Dropdown.Item>
+          )}
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
+          <Dropdown.Item
             key="generate"
             className="bg-secondary text-white d-flex align-items-center"
             onClick={() => setIsGenerateDialogOpen(true)}
@@ -1090,6 +1355,16 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               <FormattedMessage id="actions.regenerate_sprites" />
             </Dropdown.Item>
           )}
+          {scene.files.length > 0 && (
+            <Dropdown.Item
+              key="regenerate-ai-vision"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setShowRegenerateAIVisionModal(true)}
+            >
+              <Icon icon={faEye} className="mr-2" />
+              <FormattedMessage id="actions.regenerate_ai_vision" />
+            </Dropdown.Item>
+          )}
           {hasConversionOptions && (
             <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           )}
@@ -1126,6 +1401,18 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               <FormattedMessage id="actions.reduce_resolution" />
             </Dropdown.Item>
           )}
+          {scene.files.length > 0 &&
+            scene.files[0]?.video_codec !== "hevc" &&
+            scene.files[0]?.video_codec !== "h265" && (
+              <Dropdown.Item
+                key="compress-video"
+                className="bg-secondary text-white d-flex align-items-center"
+                onClick={() => onCompressVideo()}
+              >
+                <Icon icon={faFileArchive} className="mr-2" />
+                <FormattedMessage id="actions.compress_video" />
+              </Dropdown.Item>
+            )}
           {scene.files.length > 0 &&
             (scene.start_time !== null || scene.end_time !== null) && (
               <Dropdown.Item
@@ -1213,6 +1500,16 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.merge_from_other_scene" />
           </Dropdown.Item>
           <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
+          {!scene.is_archived && (
+            <Dropdown.Item
+              key="archive-scene"
+              className="bg-secondary text-white d-flex align-items-center"
+              onClick={() => setIsArchiveDialogOpen(true)}
+            >
+              <Icon icon={faBoxArchive} className="mr-2" />
+              <FormattedMessage id="actions.archive_scene" />
+            </Dropdown.Item>
+          )}
           <Dropdown.Item
             key="delete-scene"
             className="bg-secondary text-white d-flex align-items-center"
@@ -1351,13 +1648,17 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       </Helmet>
       {maybeRenderSceneGenerateDialog()}
       {maybeRenderDeleteDialog()}
+      {maybeRenderArchiveDialog()}
       {maybeRenderMergeIntoDialog()}
       {maybeRenderMergeFromDialog()}
       {maybeRenderReduceResolutionDialog()}
       {maybeRenderTrimVideoDialog()}
       {maybeRenderRegenerateSpritesDialog()}
+      {maybeRenderRegenerateAIVisionDialog()}
+      {maybeRenderFillSceneAIDialog()}
       {maybeRenderConvertToMP4ConfirmDialog()}
       {maybeRenderConvertHLSToMP4ConfirmDialog()}
+      {maybeRenderCompressVideoConfirmDialog()}
       <div
         className={`scene-tabs order-xl-first order-last ${
           collapsed ? "collapsed" : ""
@@ -1381,8 +1682,12 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               </h1>
             )}
             <div className="scene-header">
-              {scene.force_hls ? (
+              {scene.is_archived ? (
+                <ArchivedBadge />
+              ) : scene.force_hls ? (
                 <HLSBadge />
+              ) : scene.is_trimmed ? (
+                <TrimmedBadge />
               ) : scene.is_broken && !scene.is_not_broken ? (
                 <BrokenBadge />
               ) : (
@@ -1405,7 +1710,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               height={file?.height}
               frameRate={file?.frame_rate}
             />
-            <div className="ml-auto">
+            <div className="ml-auto d-flex align-items-center">
+              {scene.is_ai_filled && (
+                <AIFilledIndicator className="mr-2" />
+              )}
               <TagRequirementsIndicator
                 tags={allSceneTags}
                 colorPresets={colorPresets}
@@ -1495,6 +1803,27 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         performers={scenePerformers}
         onConfirm={handleOmgAttributeConfirm}
       />
+      {showPasteLoader && (
+        <div
+          className="scene-paste-loader-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(0,0,0,0.6)",
+            zIndex: 9999,
+          }}
+        >
+          <LoadingIndicator
+            message={intl.formatMessage({ id: "actions.pasting_scene_data" })}
+          />
+        </div>
+      )}
     </>
   );
 });

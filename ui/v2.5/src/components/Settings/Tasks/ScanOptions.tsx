@@ -16,6 +16,7 @@ export const ScanOptions: React.FC<IScanOptions> = ({
     scanGeneratePreviews,
     scanGenerateImagePreviews,
     scanGenerateSprites,
+    scanGenerateAIVisionPanels,
     scanGeneratePhashes,
     scanGenerateThumbnails,
     scanGenerateClipPreviews,
@@ -58,6 +59,13 @@ export const ScanOptions: React.FC<IScanOptions> = ({
         tooltipID="config.tasks.generate_sprites_during_scan_tooltip"
         checked={scanGenerateSprites ?? false}
         onChange={(v) => setOptions({ scanGenerateSprites: v })}
+      />
+      <BooleanSetting
+        id="scan-generate-ai-vision"
+        headingID="config.tasks.generate_ai_vision_during_scan"
+        tooltipID="config.tasks.generate_ai_vision_during_scan_tooltip"
+        checked={scanGenerateAIVisionPanels ?? true}
+        onChange={(v) => setOptions({ scanGenerateAIVisionPanels: v })}
       />
       <BooleanSetting
         id="scan-generate-phashes"

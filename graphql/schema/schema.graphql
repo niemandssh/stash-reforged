@@ -166,6 +166,9 @@ type Query {
   "List available scrapers"
   listScrapers(types: [ScrapeContentType!]!): [Scraper!]!
 
+  "Fill scene metadata using AI (DeepSeek)"
+  fillSceneWithAI(scene_id: ID!): AIFilledSceneResult!
+
   "Scrape for a single scene"
   scrapeSingleScene(
     source: ScraperSourceInput!
@@ -424,14 +427,21 @@ type Mutation {
   sceneConvertHLSToMP4(id: ID!): ID!
   "Reduces video resolution. Returns the job ID."
   sceneReduceResolution(input: ReduceResolutionInput!): ID!
+  "Compresses video to H.265 without changing resolution. Returns the job ID."
+  sceneCompressVideo(id: ID!): ID!
   "Trims video by start_time and end_time. Returns the job ID."
   sceneTrimVideo(input: TrimVideoInput!): ID!
   "Regenerates sprites for a scene. Returns the job ID."
   sceneRegenerateSprites(id: ID!): ID!
+  "Ensures AI vision panels exist for scene analysis. Returns job ID, or 0 if already present."
+  sceneEnsureAIVisionPanels(id: ID!): ID!
+  sceneRegenerateAIVision(id: ID!): ID!
   "Sets scene status as broken."
   sceneSetBroken(id: ID!): Boolean!
   "Sets scene status as not broken."
   sceneSetNotBroken(id: ID!): Boolean!
+  "Archives a scene. Optionally deletes the video file from disk."
+  sceneArchive(id: ID!, delete_file: Boolean!, archive_reason: String): Boolean!
   "Decrements the play count for the scene, removing the specific times or the last recorded time if not provided."
   sceneDeletePlay(id: ID!, times: [Timestamp!]): HistoryMutationResult!
   "Resets the play count for a scene to 0. Returns the new play count value."
@@ -577,6 +587,7 @@ type Mutation {
   configureInterface(input: ConfigInterfaceInput!): ConfigInterfaceResult!
   configureDLNA(input: ConfigDLNAInput!): ConfigDLNAResult!
   configureScraping(input: ConfigScrapingInput!): ConfigScrapingResult!
+  configureAI(input: ConfigAIInput!): ConfigAIResult!
   configureDefaults(
     input: ConfigDefaultSettingsInput!
   ): ConfigDefaultSettingsResult!

@@ -48,6 +48,14 @@ import {
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
 import { getClient } from "src/core/StashService";
+import {
+  addToRandomSceneBuffer,
+  clearRandomSceneBuffer,
+  getRandomSceneBuffer,
+  randomSceneBufferKeyForRating,
+  RANDOM_SCENE_BUFFER_KEY_UNORGANISED,
+  shouldClearRandomSceneBuffer,
+} from "src/utils/randomSceneBuffer";
 
 interface IMenuItem {
   name: string;
@@ -195,29 +203,17 @@ const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
 
-/** Returns a random scene that is not organised (packed). */
-const getRandomUnorganisedScene = async (): Promise<string | null> => {
-  try {
-    const client = getClient();
+const MAX_RANDOM_SCENE_ATTEMPTS = 25;
 
-    const countResult = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 0,
-        },
-        scene_filter: {
-          organized: false,
-        },
-      },
-    });
+const fetchRandomSceneId = async (
+  baseFilter: GQL.SceneFilterType,
+  poolCount: number,
+  excludeIds: Set<string>
+): Promise<string | null> => {
+  const client = getClient();
 
-    const totalCount = countResult.data?.findScenes?.count || 0;
-    if (totalCount === 0) {
-      return null;
-    }
-
-    const randomPage = Math.floor(Math.random() * totalCount) + 1;
+  for (let attempt = 0; attempt < MAX_RANDOM_SCENE_ATTEMPTS; attempt++) {
+    const randomPage = Math.floor(Math.random() * poolCount) + 1;
 
     const result = await client.query<GQL.FindScenesQuery>({
       query: GQL.FindScenesDocument,
@@ -227,9 +223,7 @@ const getRandomUnorganisedScene = async (): Promise<string | null> => {
           page: randomPage,
           sort: "random",
         },
-        scene_filter: {
-          organized: false,
-        },
+        scene_filter: baseFilter,
       },
     });
 
@@ -238,68 +232,84 @@ const getRandomUnorganisedScene = async (): Promise<string | null> => {
       return null;
     }
 
-    return scenes[0]?.id || null;
+    const sceneId = scenes[0]?.id || null;
+    if (sceneId && !excludeIds.has(sceneId)) {
+      return sceneId;
+    }
+  }
+
+  return null;
+};
+
+const getRandomSceneWithFilter = async (
+  bufferKey: string,
+  baseFilter: GQL.SceneFilterType
+): Promise<string | null> => {
+  try {
+    const countResult = await getClient().query<GQL.FindScenesQuery>({
+      query: GQL.FindScenesDocument,
+      variables: {
+        filter: {
+          per_page: 0,
+        },
+        scene_filter: baseFilter,
+      },
+    });
+
+    const totalCount = countResult.data?.findScenes?.count || 0;
+    if (totalCount === 0) {
+      return null;
+    }
+
+    let buffer = getRandomSceneBuffer(bufferKey);
+    if (shouldClearRandomSceneBuffer(buffer, totalCount)) {
+      clearRandomSceneBuffer(bufferKey);
+      buffer = [];
+    }
+
+    let excludeIds = new Set(buffer);
+    let sceneId = await fetchRandomSceneId(
+      baseFilter,
+      totalCount,
+      excludeIds
+    );
+
+    if (!sceneId && excludeIds.size > 0) {
+      clearRandomSceneBuffer(bufferKey);
+      excludeIds = new Set();
+      sceneId = await fetchRandomSceneId(baseFilter, totalCount, excludeIds);
+    }
+
+    if (sceneId) {
+      addToRandomSceneBuffer(bufferKey, sceneId);
+    }
+
+    return sceneId;
   } catch (error) {
-    console.error("Error getting random unorganised scene:", error);
+    console.error("Error getting random scene:", error);
     return null;
   }
+};
+
+/** Returns a random scene that is not organised (packed). */
+const getRandomUnorganisedScene = async (): Promise<string | null> => {
+  return getRandomSceneWithFilter(RANDOM_SCENE_BUFFER_KEY_UNORGANISED, {
+    organized: false,
+  });
 };
 
 const getRandomScene = async (
   ratingThreshold: number = 55
 ): Promise<string | null> => {
-  try {
-    const client = getClient();
-
-    const countResult = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 0,
-        },
-        scene_filter: {
-          rating100: {
-            modifier: GQL.CriterionModifier.GreaterThan,
-            value: ratingThreshold - 1, // > (threshold-1) means >= threshold
-          },
-        },
+  return getRandomSceneWithFilter(
+    randomSceneBufferKeyForRating(ratingThreshold),
+    {
+      rating100: {
+        modifier: GQL.CriterionModifier.GreaterThan,
+        value: ratingThreshold - 1, // > (threshold-1) means >= threshold
       },
-    });
-
-    const totalCount = countResult.data?.findScenes?.count || 0;
-    if (totalCount === 0) {
-      return null;
     }
-
-    const randomPage = Math.floor(Math.random() * totalCount) + 1;
-
-    const result = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 1,
-          page: randomPage,
-          sort: "random",
-        },
-        scene_filter: {
-          rating100: {
-            modifier: GQL.CriterionModifier.GreaterThan,
-            value: ratingThreshold - 1, // > (threshold-1) means >= threshold
-          },
-        },
-      },
-    });
-
-    const scenes = result.data?.findScenes?.scenes || [];
-    if (scenes.length === 0) {
-      return null;
-    }
-
-    return scenes[0]?.id || null;
-  } catch (error) {
-    console.error("Error getting random scene:", error);
-    return null;
-  }
+  );
 };
 
 const getRandomBestScene = async (
@@ -435,6 +445,35 @@ export const MainNavbar: React.FC = () => {
       );
     }
   }, [history, intl, configuration]);
+
+  useEffect(() => {
+    const handleAltShortcuts = (event: globalThis.KeyboardEvent) => {
+      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+        return;
+      }
+
+      switch (event.code) {
+        case "KeyR":
+          event.preventDefault();
+          handleReviewClick();
+          break;
+        case "KeyW":
+          event.preventDefault();
+          handleRandomClick();
+          break;
+        case "KeyQ":
+          event.preventDefault();
+          handleRandomBestClick();
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleAltShortcuts);
+
+    return () => {
+      window.removeEventListener("keydown", handleAltShortcuts);
+    };
+  }, [handleReviewClick, handleRandomClick, handleRandomBestClick]);
 
   const pathname = location.pathname.replace(/\/$/, "");
   let newPath = newPathsList.includes(pathname) ? `${pathname}/new` : null;

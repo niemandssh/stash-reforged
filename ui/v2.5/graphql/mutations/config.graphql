@@ -34,6 +34,12 @@ mutation ConfigureScraping($input: ConfigScrapingInput!) {
   }
 }
 
+mutation ConfigureAI($input: ConfigAIInput!) {
+  configureAI(input: $input) {
+    ...ConfigAIData
+  }
+}
+
 mutation ConfigureDefaults($input: ConfigDefaultSettingsInput!) {
   configureDefaults(input: $input) {
     ...ConfigDefaultSettingsData

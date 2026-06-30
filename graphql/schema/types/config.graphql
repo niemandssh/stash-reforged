@@ -579,12 +579,43 @@ input ConfigDefaultSettingsInput {
   deleteGenerated: Boolean
 }
 
+input ConfigAIInput {
+  "DeepSeek API key"
+  deepseekApiKey: String
+  "DeepSeek model (e.g. deepseek-v4-flash, deepseek-v4-pro)"
+  deepseekModel: String
+  "Enable AI scene data fill feature"
+  sceneFillEnabled: Boolean
+  "Enable optional vision analysis of sprite preview grid (requires separate OpenAI-compatible API)"
+  visionEnabled: Boolean
+  "Vision provider preset (groq, deepinfra, together, openai, custom)"
+  visionProvider: String
+  "OpenAI-compatible API key for vision analysis of preview grid"
+  visionApiKey: String
+  "OpenAI-compatible API base URL for vision"
+  visionApiUrl: String
+  "Vision model name (e.g. gpt-4o-mini)"
+  visionModel: String
+}
+
+type ConfigAIResult {
+  deepseekApiKey: String
+  deepseekModel: String
+  sceneFillEnabled: Boolean!
+  visionEnabled: Boolean!
+  visionProvider: String
+  visionApiKey: String
+  visionApiUrl: String
+  visionModel: String
+}
+
 "All configuration settings"
 type ConfigResult {
   general: ConfigGeneralResult!
   interface: ConfigInterfaceResult!
   dlna: ConfigDLNAResult!
   scraping: ConfigScrapingResult!
+  ai: ConfigAIResult!
   defaults: ConfigDefaultSettingsResult!
   ui: Map!
   plugins(include: [ID!]): PluginConfigMap!

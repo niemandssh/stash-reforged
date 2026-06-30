@@ -14,6 +14,10 @@ import { URLsField } from "src/utils/field";
 import { PoseTagsDisplay } from "./PoseTagsDisplay";
 import GenderIcon from "src/components/Performers/GenderIcon";
 import { useFindColorPresets } from "src/core/StashService";
+import {
+  filterSceneGeneralTags,
+  sortTagsByColorPreset,
+} from "src/utils/tagSorting";
 
 interface ISceneDetailProps {
   scene: GQL.SceneDataFragment;
@@ -116,6 +120,19 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
     );
   }
 
+  function renderArchiveReason() {
+    if (!props.scene.is_archived || !props.scene.archive_reason) return;
+
+    return (
+      <>
+        <h6 className="font-weight-bold mt-3">
+          <FormattedMessage id="archive_reason" />:{" "}
+        </h6>
+        <p className="pre scene-description-text">{props.scene.archive_reason}</p>
+      </>
+    );
+  }
+
   function renderDetails() {
     if (!props.scene.details || props.scene.details === "") return;
 
@@ -155,58 +172,14 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
   }
 
   function renderGeneralTags() {
-    // Get all tags from performer_tag_ids to determine which are performer-specific
-    const performerSpecificTagIds = new Set<string>();
-    if (props.scene.performer_tag_ids) {
-      props.scene.performer_tag_ids.forEach((pt: GQL.PerformerTag) => {
-        // Only exclude tags that have a specific performer_id (not null)
-        if (pt.performer_id && pt.tag_ids) {
-          pt.tag_ids.forEach((tagId: string) =>
-            performerSpecificTagIds.add(tagId)
-          );
-        }
-      });
-    }
-
-    // Filter out performer-specific tags, keep only general tags
-    const generalTags = props.scene.tags.filter(
-      (tag) => !tag.is_pose_tag && !performerSpecificTagIds.has(tag.id)
+    const generalTags = filterSceneGeneralTags(
+      props.scene.tags,
+      props.scene.performer_tag_ids
     );
 
     if (generalTags.length === 0) return null;
 
-    // Create a map of colors to presets for quick lookup
-    const colorToPreset = new Map<string, GQL.ColorPreset>();
-    colorPresets.forEach((preset) => {
-      colorToPreset.set(preset.color.toLowerCase(), preset);
-    });
-
-    // Sort tags according to requirements:
-    // 1. By preset sort order (ascending)
-    // 2. If same sort, by preset color (ascending)
-    // 3. Tags without color go to the end, sorted alphabetically
-    const sortedTags = [...generalTags].sort((a, b) => {
-      const aColor = a.color?.toLowerCase();
-      const bColor = b.color?.toLowerCase();
-
-      const aPreset = aColor ? colorToPreset.get(aColor) : null;
-      const bPreset = bColor ? colorToPreset.get(bColor) : null;
-
-      // Tags without color go to the end
-      if (!aPreset && !bPreset) {
-        return a.name.localeCompare(b.name);
-      }
-      if (!aPreset) return 1;
-      if (!bPreset) return -1;
-
-      // Compare by sort order
-      if (aPreset.sort !== bPreset.sort) {
-        return aPreset.sort - bPreset.sort;
-      }
-
-      // If sort is same, compare by color
-      return aPreset.color.localeCompare(bPreset.color);
-    });
+    const sortedTags = sortTagsByColorPreset(generalTags, colorPresets);
 
     const tags = sortedTags.map((tag) => (
       <TagLink key={tag.id} tag={tag} linkType="details" />
@@ -505,6 +478,7 @@ export const SceneDetailPanel: React.FC<ISceneDetailProps> = (props) => {
       </div>
       <div className="row">
         <div className="col-12">
+          {renderArchiveReason()}
           {renderDetails()}
           {renderThreatScanInfo()}
           <PoseTagsDisplay scene={props.scene} />

@@ -21,6 +21,10 @@ fragment SceneData on Scene {
   }
   is_broken
   is_not_broken
+  is_trimmed
+  is_archived
+  archive_reason
+  is_ai_filled
   audio_offset_ms
   audio_playback_speed
   force_hls
@@ -48,6 +52,7 @@ fragment SceneData on Scene {
     blur
     volume_level
     volume_muted
+    vr_projection
   }
 
   video_transforms {

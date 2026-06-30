@@ -426,7 +426,36 @@ func (u *updater) updateProgress(progress float64, details []string) {
 	}
 }
 
-// HasQueuedOrRunningSimilarityJob checks if there is already a queued or running similarity job for the given scene ID
+// Wait blocks until the job with the given id finishes, fails, or is cancelled.
+func (m *Manager) Wait(ctx context.Context, id int) error {
+	ticker := time.NewTicker(200 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			j := m.GetJob(id)
+			if j == nil {
+				return fmt.Errorf("job %d not found", id)
+			}
+
+			switch j.Status {
+			case StatusFinished:
+				return nil
+			case StatusFailed:
+				if j.Error != nil {
+					return fmt.Errorf("%s", *j.Error)
+				}
+				return fmt.Errorf("job %d failed", id)
+			case StatusCancelled:
+				return fmt.Errorf("job %d was cancelled", id)
+			}
+		}
+	}
+}
+
 func (m *Manager) HasQueuedOrRunningSimilarityJob(sceneID int) bool {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()

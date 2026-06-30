@@ -97,6 +97,9 @@ func (qb *sceneFilterHandler) criterionHandler() criterionHandler {
 		intCriterionHandler(sceneFilter.OmegCounter, "scenes.omg_counter", nil),
 		boolCriterionHandler(sceneFilter.Organized, "scenes.organized", nil),
 		boolCriterionHandler(sceneFilter.Pinned, "scenes.pinned", nil),
+		qb.hasTrimTimesCriterionHandler(sceneFilter.HasTrimTimes),
+		boolCriterionHandler(sceneFilter.IsTrimmed, "scenes.is_trimmed", nil),
+		boolCriterionHandler(sceneFilter.IsArchived, "scenes.is_archived", nil),
 
 		floatIntCriterionHandler(sceneFilter.Duration, "video_files.duration", qb.addVideoFilesTable),
 		resolutionCriterionHandler(sceneFilter.Resolution, "video_files.height", "video_files.width", qb.addVideoFilesTable),
@@ -305,6 +308,21 @@ func (qb *sceneFilterHandler) hasMarkersCriterionHandler(hasMarkers *string) cri
 			} else {
 				f.addWhere("scene_markers.id IS NULL")
 			}
+		}
+	}
+}
+
+func (qb *sceneFilterHandler) hasTrimTimesCriterionHandler(hasTrimTimes *bool) criterionHandlerFunc {
+	return func(ctx context.Context, f *filterBuilder) {
+		if hasTrimTimes == nil {
+			return
+		}
+
+		hasTimesClause := "((scenes.start_time IS NOT NULL AND scenes.start_time > 0) OR (scenes.end_time IS NOT NULL AND scenes.end_time > 0))"
+		if *hasTrimTimes {
+			f.addWhere(hasTimesClause)
+		} else {
+			f.addWhere("NOT " + hasTimesClause)
 		}
 	}
 }

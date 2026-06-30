@@ -32,6 +32,14 @@ const sortByOptions = ["filesize", "file_count", "date", ...MediaSortByOptions]
       messageID: "o_count",
       value: "o_counter",
     },
+    {
+      messageID: "omg_counter",
+      value: "omg_counter",
+    },
+    {
+      messageID: "o_omg_count",
+      value: "o_omg_counter",
+    },
   ]);
 const displayModeOptions = [
   DisplayMode.Grid,

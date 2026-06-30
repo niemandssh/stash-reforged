@@ -31,7 +31,9 @@
     "trim_video": "Convert - Trim video...",
     "trim_video_started": "Video trimming started (job {jobId})",
     "regenerate_sprites": "Regenerate Sprites",
+    "regenerate_ai_vision": "Regenerate AI Vision Panels",
     "regenerate_sprites_started": "Sprite regeneration started (job {jobId})",
+    "fill_scene_data_with_ai": "Fill scene data with AI",
     "set_broken": "Set status as broken",
     "set_not_broken": "Set status as NOT broken",
     "clear_back_image": "Clear back image",
@@ -306,6 +308,7 @@
       "interface": "Interface",
       "logs": "Logs",
       "metadata_providers": "Metadata Providers",
+      "ai": "AI",
       "plugins": "Plugins",
       "scraping": "Scraping",
       "security": "Security",
@@ -523,6 +526,29 @@
       "supported_types": "Supported types",
       "supported_urls": "URLs"
     },
+    "ai": {
+      "heading": "AI Settings",
+      "scene_fill_enabled": "Enable AI scene data fill",
+      "deepseek_api_key": "DeepSeek API Key",
+      "deepseek_api_key_desc": "API key for DeepSeek text model used to extract and structure scene metadata",
+      "deepseek_model": "DeepSeek Model",
+      "deepseek_model_desc": "Model name for metadata extraction (default: deepseek-v4-flash)",
+      "vision_enabled": "Enable preview grid analysis",
+      "vision_enabled_desc": "Optional. DeepSeek does not support images; use a separate OpenAI-compatible vision API to analyze sprite previews. Without this, metadata is filled via web search and existing scene data only.",
+      "vision_provider": "Vision provider",
+      "vision_provider_desc": "Preset OpenAI-compatible vision APIs. Choose Custom to enter URL and model manually.",
+      "vision_provider_groq": "Groq (Llama 4 Scout, free tier available)",
+      "vision_provider_deepinfra": "DeepInfra (Gemini 2.5 Flash)",
+      "vision_provider_together": "Together AI (Llama 4 Scout)",
+      "vision_provider_openai": "OpenAI (gpt-4o-mini)",
+      "vision_provider_custom": "Custom",
+      "vision_api_key": "Vision API Key",
+      "vision_api_key_desc": "API key for the selected vision provider",
+      "vision_api_url": "Vision API URL",
+      "vision_api_url_desc": "Base URL for the vision API (default: https://api.openai.com)",
+      "vision_model": "Vision Model",
+      "vision_model_desc": "Model name for preview grid analysis (default: gpt-4o-mini)"
+    },
     "stashbox": {
       "add_instance": "Add stash-box instance",
       "api_key": "API key",
@@ -580,6 +606,8 @@
       "generate_previews_during_scan_tooltip": "Also generate animated (webp) previews, only required when Scene/Marker Wall Preview Type is set to Animated Image. When browsing they use less CPU than the video previews, but are generated in addition to them and are larger files.",
       "generate_sprites_during_scan": "Generate scrubber sprites",
       "generate_sprites_during_scan_tooltip": "The set of images displayed below the video player for easy navigation.",
+      "generate_ai_vision_during_scan": "Generate AI vision panels",
+      "generate_ai_vision_during_scan_tooltip": "Extracts 180 frames from each video as montage panels for AI scene fill vision analysis.",
       "generate_thumbnails_during_scan": "Generate thumbnails for images",
       "generate_video_covers_during_scan": "Generate scene covers",
       "generate_video_previews_during_scan": "Generate previews",
@@ -857,7 +885,7 @@
           "display_title": "Display title and tags",
           "toggle_sound": "Enable sound",
           "animate_previews": "Animate previews",
-          "animate_previews_description": "When enabled, all wall items animate. When disabled, items show a static image and only animate on hover.",
+          "animate_previews_description": "When enabled, wall items show animated WebP previews when available. When disabled, items show a static image. Video previews load and play on hover only.",
           "show_additional_info": "Show additional info",
           "show_additional_info_description": "Show rating (top left) and tags/O/OMG counts (right) on scene wall cards. Layout hides after 3 seconds when hovering only on the preview."
         }
@@ -1120,6 +1148,15 @@
       "warning": "This will delete existing sprites and generate new ones for this scene.",
       "confirm_message": "Are you sure you want to regenerate sprites for this scene? This will delete existing sprite files and create new ones."
     },
+    "regenerate_ai_vision": {
+      "title": "Regenerate AI vision panels",
+      "warning": "This will delete existing AI vision panels and extract 180 new frames from the video.",
+      "confirm_message": "Are you sure you want to regenerate AI vision panels for this scene? This may take a while for long videos."
+    },
+    "fill_scene_ai": {
+      "generating_sprites": "Waiting for generating AI sprites for analysis",
+      "thinking": "AI is thinking about scene"
+    },
     "convert_to_mp4": {
       "warning": "This operation will permanently replace the original video file with an MP4 version. A backup will be created in the temp folder in case of errors.",
       "warning_text": "This operation will permanently replace the original video file with an MP4 version. A backup will be created in the temp folder in case of errors.",
@@ -1202,7 +1239,13 @@
     "rotate_right_and_scale": "Rotate Right & Scale",
     "saturation": "Saturation",
     "scale": "Scale",
-    "warmth": "Warmth"
+    "warmth": "Warmth",
+    "vr_projection": "VR / 360° playback",
+    "vr_projection_hint": "Uses the same panorama viewer as the VR menu in the player (mouse to look around). Save to apply. A global tag can still show the VR control when this is off.",
+    "vr_projection_mono_360": "360° monoscopic (equirectangular)",
+    "vr_projection_none": "Normal (flat)",
+    "vr_projection_stereo_180_lr": "180° side-by-side stereo",
+    "vr_projection_stereo_360_tb": "360° top-bottom stereo"
   },
   "empty_server": "Add some scenes to your server to view recommendations on this page.",
   "errors": {
@@ -1345,6 +1388,7 @@
   "o_counter": "O-Counter",
   "o_history": "O History",
   "omg_counter": "OMG Count",
+  "o_omg_count": "O+OMG Count",
   "odate_recorded_no": "No O Date Recorded",
   "omg_history": "OMG History",
   "omgdate_recorded_no": "No OMG Date Recorded",
@@ -1682,6 +1726,7 @@
     "image_index_too_large": "Error: Image index is larger than the number of images in the Gallery",
     "merged_scenes": "Merged scenes",
     "merged_tags": "Merged tags",
+    "scene_ai_fill_applied": "AI scene data applied",
     "reassign_past_tense": "File reassigned",
     "removed_entity": "Removed {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
     "rescanning_entity": "Rescanning {count, plural, one {{singularEntity}} other {{pluralEntity}}}…",

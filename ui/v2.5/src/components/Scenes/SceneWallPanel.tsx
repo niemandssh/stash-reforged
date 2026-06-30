@@ -30,16 +30,16 @@ import { PreviewScrubber } from "./PreviewScrubber";
 import { PerformerPopover } from "../Performers/PerformerPopover";
 import { SweatDrops } from "../Shared/SweatDrops";
 import { OMGIcon } from "../Shared/OMGIcon";
+import { WallHoverPreview } from "../Shared/WallHoverPreview";
 import { Form } from "react-bootstrap";
 
 interface IScenePhoto {
   scene: GQL.SlimSceneDataFragment;
   link: string;
-  onError?: (photo: PhotoProps<IScenePhoto>) => void;
-  /** When animate previews disabled: static image URL (screenshot) */
+  onError?: (failedSrc: string) => void;
   imageSrc?: string;
-  /** When animate previews disabled: video/animation URL (preview) for hover */
   videoSrc?: string;
+  animationSrc?: string;
   /** Selection state and handler for wall selection */
   selected?: boolean;
   onSelectChange?: (selected: boolean, shiftKey: boolean) => void;
@@ -58,9 +58,7 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
   const ratingSystemOptions =
     configuration?.ui.ratingSystemOptions ?? defaultRatingSystemOptions;
 
-  const [active, setActive] = useState(false);
   const [layoutHidden, setLayoutHidden] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const hideLayoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelHideLayout = useCallback(() => {
@@ -84,12 +82,6 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
     }
     setLayoutHidden(false);
   }, []);
-
-  useEffect(() => {
-    if (active && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [active]);
 
   useEffect(() => {
     return () => {
@@ -118,17 +110,8 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
     [props.photo.link]
   );
 
-  const { scene, imageSrc, videoSrc, selected, onSelectChange } = props.photo;
-  const useHoverOnly =
-    !animatePreviews && imageSrc && videoSrc;
-  const video =
-    useHoverOnly ? active : props.photo.src.includes("preview");
-  const ImagePreview = video ? "video" : "img";
-  const mediaSrc = useHoverOnly
-    ? active
-      ? videoSrc
-      : imageSrc
-    : props.photo.src;
+  const { scene, imageSrc, videoSrc, animationSrc, selected, onSelectChange } =
+    props.photo;
 
   const title = objectTitle(scene);
 
@@ -170,53 +153,18 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
           />
         </div>
       )}
-      {useHoverOnly ? (
-        <>
-          <img
-            loading="lazy"
-            key={`${props.photo.key}-img`}
-            src={imageSrc}
-            width={props.photo.width}
-            height={props.photo.height}
-            alt={props.photo.alt}
-            onMouseEnter={() => setActive(true)}
-            onMouseLeave={() => setActive(false)}
-            onError={() => props.photo.onError?.(props.photo)}
-            style={{ display: active ? "none" : "block" }}
-          />
-          <video
-            ref={videoRef}
-            loop
-            playsInline
-            preload="auto"
-            muted={!playSound || !active}
-            key={`${props.photo.key}-video`}
-            src={videoSrc}
-            width={props.photo.width}
-            height={props.photo.height}
-            onMouseEnter={() => setActive(true)}
-            onMouseLeave={() => setActive(false)}
-            onError={() => props.photo.onError?.(props.photo)}
-            style={{ display: active ? "block" : "none" }}
-          />
-        </>
-      ) : (
-        <ImagePreview
-          loading="lazy"
-          loop={video}
-          muted={!video || !playSound || !active}
-          autoPlay={video}
-          preload={video ? "auto" : undefined}
-          key={props.photo.key}
-          src={mediaSrc}
+      {imageSrc && (
+        <WallHoverPreview
+          imageSrc={imageSrc}
+          videoSrc={videoSrc}
+          animationSrc={animationSrc}
+          animatePreviews={animatePreviews}
+          playSound={playSound}
           width={props.photo.width}
           height={props.photo.height}
           alt={props.photo.alt}
-          onMouseEnter={() => setActive(true)}
-          onMouseLeave={() => setActive(false)}
-          onError={() => {
-            props.photo.onError?.(props.photo);
-          }}
+          onImageError={() => imageSrc && props.photo.onError?.(imageSrc)}
+          onVideoError={() => videoSrc && props.photo.onError?.(videoSrc)}
         />
       )}
       {showAdditionalInfo && hasRating && (
@@ -359,8 +307,8 @@ const SceneWall: React.FC<ISceneWallProps> = ({
 
   const [erroredImgs, setErroredImgs] = useState<string[]>([]);
 
-  const handleError = useCallback((photo: PhotoProps<IScenePhoto>) => {
-    setErroredImgs((prev) => [...prev, photo.src]);
+  const handleError = useCallback((failedSrc: string) => {
+    setErroredImgs((prev) => [...prev, failedSrc]);
   }, []);
 
   useEffect(() => {
@@ -370,15 +318,16 @@ const SceneWall: React.FC<ISceneWallProps> = ({
   const photos: PhotoProps<IScenePhoto>[] = useMemo(() => {
     return scenes.map((s, index) => {
       const { width, height } = getDimensions(s);
+      const screenshot = s.paths.screenshot ?? "";
       const previewOk =
         s.paths.preview && !erroredImgs.includes(s.paths.preview);
-      const src = previewOk ? s.paths.preview! : s.paths.screenshot!;
 
       return {
         scene: s,
-        src,
-        imageSrc: s.paths.screenshot ?? undefined,
+        src: screenshot,
+        imageSrc: screenshot || undefined,
         videoSrc: previewOk ? s.paths.preview ?? undefined : undefined,
+        animationSrc: s.paths.webp ?? undefined,
         link: sceneQueue
           ? sceneQueue.makeLink(s.id, { sceneIndex: index })
           : `/scenes/${s.id}`,

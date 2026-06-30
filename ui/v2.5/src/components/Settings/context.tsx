@@ -15,6 +15,7 @@ import {
   useConfigureInterface,
   useConfigurePlugin,
   useConfigureScraping,
+  useConfigureAI,
   useConfigureUI,
 } from "src/core/StashService";
 import { useDebounce } from "src/hooks/debounce";
@@ -31,6 +32,7 @@ export interface ISettingsContextState {
   interface: GQL.ConfigInterfaceInput;
   defaults: GQL.ConfigDefaultSettingsInput;
   scraping: GQL.ConfigScrapingInput;
+  ai: GQL.ConfigAiInput;
   dlna: GQL.ConfigDlnaInput;
   ui: IUIConfig;
   plugins: PluginConfigs;
@@ -44,6 +46,7 @@ export interface ISettingsContextState {
   saveInterface: (input: Partial<GQL.ConfigInterfaceInput>) => void;
   saveDefaults: (input: Partial<GQL.ConfigDefaultSettingsInput>) => void;
   saveScraping: (input: Partial<GQL.ConfigScrapingInput>) => void;
+  saveAI: (input: Partial<GQL.ConfigAiInput>) => void;
   saveDLNA: (input: Partial<GQL.ConfigDlnaInput>) => void;
   saveUI: (input: Partial<IUIConfig>) => void;
   savePluginSettings: (pluginID: string, input: {}) => void;
@@ -61,6 +64,7 @@ const emptyState: ISettingsContextState = {
   interface: {},
   defaults: {},
   scraping: {},
+  ai: {},
   dlna: {},
   ui: {},
   plugins: {},
@@ -73,6 +77,7 @@ const emptyState: ISettingsContextState = {
   saveInterface: noop,
   saveDefaults: noop,
   saveScraping: noop,
+  saveAI: noop,
   saveDLNA: noop,
   saveUI: noop,
   savePluginSettings: noop,
@@ -130,6 +135,10 @@ export const SettingsContext: React.FC = ({ children }) => {
     useState<GQL.ConfigScrapingInput>();
   const [updateScrapingConfig] = useConfigureScraping();
 
+  const [ai, setAI] = useState<GQL.ConfigAiInput>({});
+  const [pendingAI, setPendingAI] = useState<GQL.ConfigAiInput>();
+  const [updateAIConfig] = useConfigureAI();
+
   const [dlna, setDLNA] = useState<GQL.ConfigDlnaInput>({});
   const [pendingDLNA, setPendingDLNA] = useState<GQL.ConfigDlnaInput>();
   const [updateDLNAConfig] = useConfigureDLNA();
@@ -161,6 +170,7 @@ export const SettingsContext: React.FC = ({ children }) => {
     setIface({ ...withoutTypename(data.configuration.interface) });
     setDefaults({ ...withoutTypename(data.configuration.defaults) });
     setScraping({ ...withoutTypename(data.configuration.scraping) });
+    setAI({ ...withoutTypename(data.configuration.ai) });
     setDLNA({ ...withoutTypename(data.configuration.dlna) });
     setUI(data.configuration.ui);
     setPlugins(data.configuration.plugins);
@@ -377,6 +387,47 @@ export const SettingsContext: React.FC = ({ children }) => {
     });
   }
 
+  const saveAIConfig = useDebounce(async (input: GQL.ConfigAiInput) => {
+    try {
+      setUpdateSuccess(undefined);
+      await updateAIConfig({
+        variables: {
+          input,
+        },
+      });
+
+      setPendingAI(undefined);
+      onSuccess();
+    } catch (e) {
+      onError(e);
+    }
+  }, 500);
+
+  useEffect(() => {
+    if (!pendingAI) {
+      return;
+    }
+
+    saveAIConfig(pendingAI);
+  }, [pendingAI, saveAIConfig]);
+
+  function saveAI(input: Partial<GQL.ConfigAiInput>) {
+    setAI({
+      ...ai,
+      ...input,
+    });
+
+    setPendingAI((current) => {
+      if (!current) {
+        return input;
+      }
+      return {
+        ...current,
+        ...input,
+      };
+    });
+  }
+
   // saves the configuration if no further changes are made after a half second
   const saveDLNAConfig = useDebounce(async (input: GQL.ConfigDlnaInput) => {
     try {
@@ -545,6 +596,7 @@ export const SettingsContext: React.FC = ({ children }) => {
       pendingInterface ||
       pendingDefaults ||
       pendingScraping ||
+      pendingAI ||
       pendingDLNA ||
       pendingUI ||
       pendingPlugins
@@ -577,6 +629,7 @@ export const SettingsContext: React.FC = ({ children }) => {
         interface: iface,
         defaults,
         scraping,
+        ai,
         dlna,
         ui,
         plugins,
@@ -585,6 +638,7 @@ export const SettingsContext: React.FC = ({ children }) => {
         saveInterface,
         saveDefaults,
         saveScraping,
+        saveAI,
         saveDLNA,
         saveUI,
         refetch,

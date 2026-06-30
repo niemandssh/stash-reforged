@@ -1,16 +1,47 @@
 import * as GQL from "src/core/generated-graphql";
 
+export type TagWithColor = Pick<
+  GQL.SlimTagDataFragment,
+  "id" | "name" | "color" | "is_pose_tag"
+>;
+
+export function getPerformerSpecificTagIds(
+  performerTagIds?: Array<
+    Pick<GQL.PerformerTag, "performer_id" | "tag_ids"> | null
+  > | null
+): Set<string> {
+  const ids = new Set<string>();
+  performerTagIds?.forEach((pt) => {
+    if (pt?.performer_id && pt.tag_ids) {
+      pt.tag_ids.forEach((tagId) => ids.add(tagId));
+    }
+  });
+  return ids;
+}
+
+export function filterSceneGeneralTags<T extends TagWithColor>(
+  tags: T[],
+  performerTagIds?: Array<
+    Pick<GQL.PerformerTag, "performer_id" | "tag_ids"> | null
+  > | null
+): T[] {
+  const performerSpecificTagIds = getPerformerSpecificTagIds(performerTagIds);
+  return tags.filter(
+    (tag) => !tag.is_pose_tag && !performerSpecificTagIds.has(tag.id)
+  );
+}
+
 /**
  * Sorts tags by color preset order
  * 1. By preset sort order (ascending)
  * 2. If same sort, by preset color (ascending)
  * 3. Tags without color go to the end, sorted alphabetically
  */
-export function sortTagsByColorPreset(
-  tags: GQL.TagDataFragment[],
+export function sortTagsByColorPreset<T extends TagWithColor>(
+  tags: T[],
   colorPresets: GQL.ColorPreset[],
   direction: GQL.SortDirectionEnum = GQL.SortDirectionEnum.Asc
-): GQL.TagDataFragment[] {
+): T[] {
   const colorToPreset = new Map<string, GQL.ColorPreset>();
   colorPresets.forEach((preset) => {
     colorToPreset.set(preset.color.toLowerCase(), preset);
@@ -49,7 +80,7 @@ export function sortTagsByColorPreset(
  * Gets the color preset for a tag
  */
 export function getTagColorPreset(
-  tag: GQL.TagDataFragment,
+  tag: TagWithColor,
   colorPresets: GQL.ColorPreset[]
 ): GQL.ColorPreset | null {
   if (!tag.color) return null;

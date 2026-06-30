@@ -523,6 +523,25 @@ func (g *sceneGenerators) Generate(ctx context.Context, s *models.Scene, f *mode
 		}
 	}
 
+	if t.ScanGenerateAIVisionPanels {
+		progress.AddTotal(1)
+		aiVisionFn := func(ctx context.Context) {
+			taskAIVision := GenerateAIVisionTask{
+				Scene:               *s,
+				Overwrite:           overwrite,
+				fileNamingAlgorithm: g.fileNamingAlgorithm,
+			}
+			taskAIVision.Start(ctx)
+			progress.Increment()
+		}
+
+		if g.sequentialScanning {
+			aiVisionFn(ctx)
+		} else {
+			g.taskQueue.Add(fmt.Sprintf("Generating AI vision panels for %s", path), aiVisionFn)
+		}
+	}
+
 	if t.ScanGeneratePhashes {
 		progress.AddTotal(1)
 		phashFn := func(ctx context.Context) {

@@ -12,6 +12,7 @@ import { SettingsTasksPanel } from "./Tasks/SettingsTasksPanel";
 import { SettingsCustomPanel } from "./SettingsCustomPanel";
 import { SettingsPluginsPanel } from "./SettingsPluginsPanel";
 import { SettingsScrapingPanel } from "./SettingsScrapingPanel";
+import { SettingsAIPanel } from "./SettingsAIPanel";
 import { SettingsToolsPanel } from "./SettingsToolsPanel";
 import { SettingsServicesPanel } from "./SettingsServicesPanel";
 import { SettingsContext, useSettings } from "./context";
@@ -26,6 +27,7 @@ const validTabs = [
   "interface",
   "security",
   "metadata-providers",
+  "ai",
   "services",
   "system",
   "plugins",
@@ -175,6 +177,27 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                     }`}
                   >
                     <FormattedMessage id="config.categories.metadata_providers" />
+                  </Button>
+                </Nav.Link>
+              </NavLink>
+            </Nav.Item>
+            <Nav.Item>
+              <NavLink
+                to="/settings?tab=ai"
+                className="nav-link"
+                isActive={(match, location) => {
+                  const params = new URLSearchParams(location.search);
+                  return params.get("tab") === "ai";
+                }}
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="ai" as="span">
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "ai" ? "active" : ""
+                    }`}
+                  >
+                    <FormattedMessage id="config.categories.ai" />
                   </Button>
                 </Nav.Link>
               </NavLink>
@@ -371,6 +394,9 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
             </Tab.Pane>
             <Tab.Pane eventKey="metadata-providers" unmountOnExit>
               <SettingsScrapingPanel />
+            </Tab.Pane>
+            <Tab.Pane eventKey="ai" unmountOnExit>
+              <SettingsAIPanel />
             </Tab.Pane>
             <Tab.Pane eventKey="system">
               <SettingsConfigurationPanel />

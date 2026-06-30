@@ -129,6 +129,22 @@ func (r *sceneResolver) IsNotBroken(ctx context.Context, obj *models.Scene) (boo
 	return obj.IsNotBroken, nil
 }
 
+func (r *sceneResolver) IsTrimmed(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.IsTrimmed, nil
+}
+
+func (r *sceneResolver) IsArchived(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.IsArchived, nil
+}
+
+func (r *sceneResolver) ArchiveReason(ctx context.Context, obj *models.Scene) (*string, error) {
+	return obj.ArchiveReason, nil
+}
+
+func (r *sceneResolver) IsAIFilled(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.IsAIFilled, nil
+}
+
 func (r *sceneResolver) IsProbablyBroken(ctx context.Context, obj *models.Scene) (bool, error) {
 	// Load primary file if not already loaded
 	_, err := r.getPrimaryFile(ctx, obj)

@@ -13,11 +13,27 @@ export interface VRMenuOptions {
   showButton?: boolean;
 }
 
-enum VRType {
+export enum VRType {
   LR180 = "180 LR",
   TB360 = "360 TB",
   Mono360 = "360 Mono",
   Off = "Off",
+}
+
+/** GraphQL `SceneVrProjection` → internal VR menu / videojs-vr projection. */
+export function sceneVrProjectionToVRType(
+  projection: string | null | undefined
+): VRType {
+  switch (projection) {
+    case "STEREO_180_LR":
+      return VRType.LR180;
+    case "STEREO_360_TB":
+      return VRType.TB360;
+    case "MONO_360":
+      return VRType.Mono360;
+    default:
+      return VRType.Off;
+  }
 }
 
 const vrTypeProjection: Record<VRType, ProjectionType> = {
@@ -108,6 +124,13 @@ class VRMenuButton extends videojs.getComponent("MenuButton") {
 
     return this.items;
   }
+
+  selectType(type: VRType) {
+    const item = this.items.find((i) => i.type === type);
+    if (item) {
+      this.onSelected(item);
+    }
+  }
 }
 
 class VRMenuPlugin extends videojs.getPlugin("plugin") {
@@ -166,6 +189,12 @@ class VRMenuPlugin extends videojs.getPlugin("plugin") {
       this.removeButton();
       this.loadVR(VRType.Off);
     }
+  }
+
+  /** Apply projection and sync the control-bar VR menu selection (desktop only). */
+  public applySavedProjection(type: VRType) {
+    if (isVrDevice()) return;
+    this.menu.selectType(type);
   }
 }
 

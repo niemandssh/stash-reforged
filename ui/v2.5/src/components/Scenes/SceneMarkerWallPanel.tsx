@@ -3,7 +3,6 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import * as GQL from "src/core/generated-graphql";
@@ -20,6 +19,7 @@ import TextUtils from "src/utils/text";
 import cx from "classnames";
 import NavUtils from "src/utils/navigation";
 import { markerTitle } from "src/core/markers";
+import { WallHoverPreview } from "../Shared/WallHoverPreview";
 
 function wallItemTitle(sceneMarker: GQL.SceneMarkerDataFragment) {
   const newTitle = markerTitle(sceneMarker);
@@ -37,11 +37,10 @@ function wallItemTitle(sceneMarker: GQL.SceneMarkerDataFragment) {
 interface IMarkerPhoto {
   marker: GQL.SceneMarkerDataFragment;
   link: string;
-  onError?: (photo: PhotoProps<IMarkerPhoto>) => void;
-  /** When animate previews disabled: static image URL (screenshot) */
+  onError?: (failedSrc: string) => void;
   imageSrc?: string;
-  /** When animate previews disabled: video/animation URL for hover */
   videoSrc?: string;
+  animationSrc?: string;
 }
 
 export const MarkerWallItem: React.FC<RenderImageProps<IMarkerPhoto>> = (
@@ -51,15 +50,6 @@ export const MarkerWallItem: React.FC<RenderImageProps<IMarkerPhoto>> = (
   const playSound = configuration?.interface.soundOnPreview ?? false;
   const showTitle = configuration?.interface.wallShowTitle ?? false;
   const animatePreviews = configuration?.interface.wallAnimatePreviews ?? true;
-
-  const [active, setActive] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    if (active && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  }, [active]);
 
   type style = Record<string, string | number | undefined>;
   var divStyle: style = {
@@ -79,17 +69,7 @@ export const MarkerWallItem: React.FC<RenderImageProps<IMarkerPhoto>> = (
     }
   };
 
-  const { marker, imageSrc, videoSrc } = props.photo;
-  const useHoverOnly = !animatePreviews && imageSrc && videoSrc;
-  const video = useHoverOnly
-    ? active
-    : props.photo.src.includes("stream") || props.photo.src.includes("preview");
-  const ImagePreview = video ? "video" : "img";
-  const mediaSrc = useHoverOnly
-    ? active
-      ? videoSrc
-      : imageSrc
-    : props.photo.src;
+  const { marker, imageSrc, videoSrc, animationSrc } = props.photo;
 
   const title = wallItemTitle(marker);
   const tagNames = marker.tags.map((p) => p.name);
@@ -104,54 +84,19 @@ export const MarkerWallItem: React.FC<RenderImageProps<IMarkerPhoto>> = (
         height: props.photo.height,
       }}
     >
-      {useHoverOnly ? (
-        <>
-          <img
-            loading="lazy"
-            key={`${props.photo.key}-img`}
-            src={imageSrc}
-            width={props.photo.width}
-            height={props.photo.height}
-            alt={props.photo.alt}
-            onMouseEnter={() => setActive(true)}
-            onMouseLeave={() => setActive(false)}
-            onClick={handleClick}
-            onError={() => props.photo.onError?.(props.photo)}
-            style={{ display: active ? "none" : "block" }}
-          />
-          <video
-            ref={videoRef}
-            loop
-            playsInline
-            muted={!playSound || !active}
-            key={`${props.photo.key}-video`}
-            src={videoSrc}
-            width={props.photo.width}
-            height={props.photo.height}
-            onMouseEnter={() => setActive(true)}
-            onMouseLeave={() => setActive(false)}
-            onClick={handleClick}
-            onError={() => props.photo.onError?.(props.photo)}
-            style={{ display: active ? "block" : "none" }}
-          />
-        </>
-      ) : (
-        <ImagePreview
-          loading="lazy"
-          loop={video}
-          muted={!video || !playSound || !active}
-          autoPlay={video}
-          key={props.photo.key}
-          src={mediaSrc}
+      {imageSrc && (
+        <WallHoverPreview
+          imageSrc={imageSrc}
+          videoSrc={videoSrc}
+          animationSrc={animationSrc}
+          animatePreviews={animatePreviews}
+          playSound={playSound}
           width={props.photo.width}
           height={props.photo.height}
           alt={props.photo.alt}
-          onMouseEnter={() => setActive(true)}
-          onMouseLeave={() => setActive(false)}
           onClick={handleClick}
-          onError={() => {
-            props.photo.onError?.(props.photo);
-          }}
+          onImageError={() => imageSrc && props.photo.onError?.(imageSrc)}
+          onVideoError={() => videoSrc && props.photo.onError?.(videoSrc)}
         />
       )}
       <div className="lineargradient">
@@ -222,8 +167,8 @@ const MarkerWall: React.FC<IMarkerWallProps> = ({ markers, zoomIndex }) => {
 
   const [erroredImgs, setErroredImgs] = useState<string[]>([]);
 
-  const handleError = useCallback((photo: PhotoProps<IMarkerPhoto>) => {
-    setErroredImgs((prev) => [...prev, photo.src]);
+  const handleError = useCallback((failedSrc: string) => {
+    setErroredImgs((prev) => [...prev, failedSrc]);
   }, []);
 
   useEffect(() => {
@@ -234,16 +179,14 @@ const MarkerWall: React.FC<IMarkerWallProps> = ({ markers, zoomIndex }) => {
     return markers.map((m, index) => {
       const { width = 1280, height = 720 } = getDimensions(m.scene.files[0]);
       const videoSrc = getFirstValidSrc([m.stream, m.preview], erroredImgs);
-      const src = getFirstValidSrc(
-        [m.stream, m.preview, m.screenshot],
-        erroredImgs
-      );
+      const screenshot = m.screenshot ?? "";
 
       return {
         marker: m,
-        src,
-        imageSrc: m.screenshot ?? undefined,
+        src: screenshot,
+        imageSrc: screenshot || undefined,
         videoSrc: videoSrc || undefined,
+        animationSrc: m.preview ?? undefined,
         link: NavUtils.makeSceneMarkerUrl(m),
         width,
         height,

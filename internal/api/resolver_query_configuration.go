@@ -71,6 +71,7 @@ func makeConfigResult() *ConfigResult {
 		Interface: makeConfigInterfaceResult(),
 		Dlna:      makeConfigDLNAResult(),
 		Scraping:  makeConfigScrapingResult(),
+		Ai:        makeConfigAIResult(),
 		Defaults:  makeConfigDefaultsResult(),
 		UI:        makeConfigUIResult(),
 	}
@@ -181,8 +182,8 @@ func makeConfigInterfaceResult() *ConfigInterfaceResult {
 		SoundOnPreview:               &soundOnPreview,
 		WallShowTitle:                &wallShowTitle,
 		WallPlayback:                 &wallPlayback,
-		WallAnimatePreviews:         &wallAnimatePreviews,
-		WallShowAdditionalInfo:      &wallShowAdditionalInfo,
+		WallAnimatePreviews:          &wallAnimatePreviews,
+		WallShowAdditionalInfo:       &wallShowAdditionalInfo,
 		ShowScrubber:                 &showScrubber,
 		MaximumLoopDuration:          &maximumLoopDuration,
 		NoBrowser:                    &noBrowser,
@@ -241,6 +242,28 @@ func makeConfigScrapingResult() *ConfigScrapingResult {
 		ScraperCertCheck:   config.GetScraperCertCheck(),
 		ScraperCDPPath:     &scraperCDPPath,
 		ExcludeTagPatterns: config.GetScraperExcludeTagPatterns(),
+	}
+}
+
+func makeConfigAIResult() *ConfigAIResult {
+	config := config.GetInstance()
+
+	apiKey := config.GetAIDeepseekAPIKey()
+	deepseekModel := config.GetAIDeepseekModel()
+	visionAPIKey := config.GetAIVisionAPIKey()
+	visionAPIURL := config.GetAIVisionAPIURL()
+	visionModel := config.GetAIVisionModel()
+	visionProvider := config.GetAIVisionProvider()
+
+	return &ConfigAIResult{
+		DeepseekAPIKey:   &apiKey,
+		DeepseekModel:    &deepseekModel,
+		SceneFillEnabled: config.GetAISceneFillEnabled(),
+		VisionEnabled:    config.GetAIVisionEnabled(),
+		VisionProvider:   &visionProvider,
+		VisionAPIKey:     &visionAPIKey,
+		VisionAPIURL:     &visionAPIURL,
+		VisionModel:      &visionModel,
 	}
 }
 

@@ -34,7 +34,9 @@ import { CaptionsCriterionOption } from "./criteria/captions";
 import { StashIDCriterionOption } from "./criteria/stash-ids";
 import { RatingCriterionOption } from "./criteria/rating";
 import { PathCriterionOption } from "./criteria/path";
+import { HasTrimTimesCriterionOption } from "./criteria/has-trim-times";
 import { OrientationCriterionOption } from "./criteria/orientation";
+import { createBooleanCriterionOption } from "./criteria/criterion";
 
 const defaultSortBy = "date";
 const sortByOptions = [
@@ -60,6 +62,14 @@ const sortByOptions = [
     {
       messageID: "o_count",
       value: "o_counter",
+    },
+    {
+      messageID: "omg_counter",
+      value: "omg_counter",
+    },
+    {
+      messageID: "o_omg_count",
+      value: "o_omg_counter",
     },
     {
       messageID: "group_scene_number",
@@ -124,6 +134,9 @@ const criterionOptions = [
   createDateCriterionOption("date"),
   createMandatoryTimestampCriterionOption("created_at"),
   createMandatoryTimestampCriterionOption("updated_at"),
+  HasTrimTimesCriterionOption,
+  createBooleanCriterionOption("is_trimmed"),
+  createBooleanCriterionOption("is_archived"),
 ];
 
 export const SceneListFilterOptions = new ListFilterOptions(

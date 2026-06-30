@@ -90,14 +90,14 @@ ORDER BY files.size DESC;
 `
 
 type sceneRow struct {
-	ID        int         `db:"id" goqu:"skipinsert"`
-	Title     zero.String `db:"title"`
-	Code      zero.String `db:"code"`
-	Details   zero.String `db:"details"`
-	Director  zero.String `db:"director"`
-	Date            NullDate    `db:"date"`
-	DateDisplay     zero.String `db:"date_display"`
-	ShootDate       NullDate    `db:"shoot_date"`
+	ID               int         `db:"id" goqu:"skipinsert"`
+	Title            zero.String `db:"title"`
+	Code             zero.String `db:"code"`
+	Details          zero.String `db:"details"`
+	Director         zero.String `db:"director"`
+	Date             NullDate    `db:"date"`
+	DateDisplay      zero.String `db:"date_display"`
+	ShootDate        NullDate    `db:"shoot_date"`
 	ShootDateDisplay zero.String `db:"shoot_date_display"`
 	// expressed as 1-100
 	Rating                  null.Int    `db:"rating"`
@@ -105,6 +105,10 @@ type sceneRow struct {
 	Pinned                  bool        `db:"pinned"`
 	IsBroken                bool        `db:"is_broken"`
 	IsNotBroken             bool        `db:"is_not_broken"`
+	IsTrimmed               bool        `db:"is_trimmed"`
+	IsArchived              bool        `db:"is_archived"`
+	ArchiveReason           zero.String `db:"archive_reason"`
+	IsAIFilled              bool        `db:"is_ai_filled"`
 	AudioOffsetMs           int         `db:"audio_offset_ms"`
 	AudioPlaybackSpeed      float64     `db:"audio_playback_speed"`
 	ForceHLS                bool        `db:"force_hls"`
@@ -139,6 +143,10 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.Pinned = o.Pinned
 	r.IsBroken = o.IsBroken
 	r.IsNotBroken = o.IsNotBroken
+	r.IsTrimmed = o.IsTrimmed
+	r.IsArchived = o.IsArchived
+	r.ArchiveReason = zero.StringFromPtr(o.ArchiveReason)
+	r.IsAIFilled = o.IsAIFilled
 	r.AudioOffsetMs = o.AudioOffsetMs
 	r.AudioPlaybackSpeed = o.AudioPlaybackSpeed
 	r.ForceHLS = o.ForceHLS
@@ -180,15 +188,19 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		Code:                    r.Code.String,
 		Details:                 r.Details.String,
 		Director:                r.Director.String,
-		Date:               r.Date.DatePtr(),
-		DateDisplay:     zeroStringPtr(r.DateDisplay),
-		ShootDate:       r.ShootDate.DatePtr(),
-		ShootDateDisplay: zeroStringPtr(r.ShootDateDisplay),
-		Rating:          nullIntPtr(r.Rating),
+		Date:                    r.Date.DatePtr(),
+		DateDisplay:             zeroStringPtr(r.DateDisplay),
+		ShootDate:               r.ShootDate.DatePtr(),
+		ShootDateDisplay:        zeroStringPtr(r.ShootDateDisplay),
+		Rating:                  nullIntPtr(r.Rating),
 		Organized:               r.Organized,
 		Pinned:                  r.Pinned,
 		IsBroken:                r.IsBroken,
 		IsNotBroken:             r.IsNotBroken,
+		IsTrimmed:               r.IsTrimmed,
+		IsArchived:              r.IsArchived,
+		ArchiveReason:           zeroStringPtr(r.ArchiveReason),
+		IsAIFilled:              r.IsAIFilled,
 		AudioOffsetMs:           r.AudioOffsetMs,
 		AudioPlaybackSpeed:      r.AudioPlaybackSpeed,
 		ForceHLS:                r.ForceHLS,
@@ -247,6 +259,10 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setBool("pinned", o.Pinned)
 	r.setBool("is_broken", o.IsBroken)
 	r.setBool("is_not_broken", o.IsNotBroken)
+	r.setBool("is_trimmed", o.IsTrimmed)
+	r.setBool("is_archived", o.IsArchived)
+	r.setNullString("archive_reason", o.ArchiveReason)
+	r.setBool("is_ai_filled", o.IsAIFilled)
 	r.setInt("audio_offset_ms", o.AudioOffsetMs)
 	r.setFloat64("audio_playback_speed", o.AudioPlaybackSpeed)
 	r.setBool("force_hls", o.ForceHLS)
@@ -1293,6 +1309,7 @@ var sceneSortOptions = sortOptions{
 	"last_played_at",
 	"movie_scene_number",
 	"o_counter",
+	"o_omg_counter",
 	"omg_counter",
 	"organized",
 	"performer_count",
@@ -1369,6 +1386,8 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 			query.sortAndPagination += fmt.Sprintf(", (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
 		} else if sort == "o_counter" {
 			query.sortAndPagination += getCountSortWithoutOrderBy(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+		} else if sort == "o_omg_counter" {
+			query.sortAndPagination += getOAndOMGCounterSortWithoutOrderBy(sceneTable, scenesODatesTable, sceneIDColumn, direction)
 		} else if sort == "group_scene_number" {
 			query.join(groupsScenesTable, "scene_group", "scenes.id = scene_group.scene_id")
 			query.sortAndPagination += getSortWithoutOrderBy("scene_index", direction, "scene_group")
@@ -1521,6 +1540,8 @@ func (qb *SceneStore) setSceneSort(query *queryBuilder, findFilter *models.FindF
 		query.sortAndPagination += fmt.Sprintf(" ORDER BY (SELECT MAX(o_date) FROM %s AS sort WHERE sort.%s = %s.id) %s", scenesODatesTable, sceneIDColumn, sceneTable, getSortDirection(direction))
 	case "o_counter":
 		query.sortAndPagination += getCountSort(sceneTable, scenesODatesTable, sceneIDColumn, direction)
+	case "o_omg_counter":
+		query.sortAndPagination += getOAndOMGCounterSort(sceneTable, scenesODatesTable, sceneIDColumn, direction)
 	case "omg_counter":
 		query.sortAndPagination += getSort(sort, direction, "scenes")
 	default:

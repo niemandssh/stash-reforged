@@ -213,6 +213,13 @@ textarea.scene-description {
   z-index: 10;
 }
 
+.trimmed-badge-overlay {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  z-index: 10;
+}
+
 .probably-broken-badge-overlay {
   position: absolute;
   right: 0.5rem;

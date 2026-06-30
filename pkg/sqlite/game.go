@@ -352,6 +352,7 @@ var gameSortOptions = sortOptions{
 	"date",
 	"id",
 	"o_counter",
+	"o_omg_counter",
 	"omg_counter",
 	"play_count",
 	"rating",
@@ -401,6 +402,8 @@ func (qb *GameStore) setGameSortAndPagination(query *queryBuilder, findFilter *m
 		query.sortAndPagination = getCountSort(gameTable, gamesTagsTable, gameIDColumn, direction)
 	case "play_count":
 		query.sortAndPagination = getCountSort(gameTable, gamesViewDatesTable, gameIDColumn, direction)
+	case "o_omg_counter":
+		query.sortAndPagination = getOAndOMGColumnSort(gameTable, direction)
 	default:
 		query.sortAndPagination = fmt.Sprintf(" ORDER BY games.%s %s", sort, getSortDirection(direction))
 	}

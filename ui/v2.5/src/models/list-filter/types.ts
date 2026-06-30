@@ -224,4 +224,7 @@ export type CriterionType =
   | "has_chapters"
   | "sort_name"
   | "custom_fields"
-  | "color_preset";
+  | "color_preset"
+  | "has_trim_times"
+  | "is_trimmed"
+  | "is_archived";

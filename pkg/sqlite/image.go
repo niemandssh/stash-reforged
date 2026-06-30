@@ -204,11 +204,11 @@ type ImageStore struct {
 
 func NewImageStore(r *storeRepository) *ImageStore {
 	return &ImageStore{
-		tableMgr:         imageTableMgr,
-		oCounterManager:  oCounterManager{imageTableMgr},
+		tableMgr:          imageTableMgr,
+		oCounterManager:   oCounterManager{imageTableMgr},
 		omgCounterManager: omgCounterManager{imageTableMgr},
-		omgDateManager:   omgDateManager{imagesOMGTableMgr},
-		repo:             r,
+		omgDateManager:    omgDateManager{imagesOMGTableMgr},
+		repo:              r,
 	}
 }
 
@@ -963,6 +963,7 @@ var imageSortOptions = sortOptions{
 	"filesize",
 	"id",
 	"o_counter",
+	"o_omg_counter",
 	"omg_counter",
 	"path",
 	"performer_count",
@@ -1023,6 +1024,8 @@ func (qb *ImageStore) setImageSortAndPagination(q *queryBuilder, findFilter *mod
 			sortClause = getCountSort(imageTable, performersImagesTable, imageIDColumn, direction)
 		case "o_counter", "omg_counter":
 			sortClause = getSort(sort, direction, "images")
+		case "o_omg_counter":
+			sortClause = getOAndOMGColumnSort("images", direction)
 		case "mod_time", "filesize":
 			addFilesJoin()
 			sortClause = getSort(sort, direction, "files")
