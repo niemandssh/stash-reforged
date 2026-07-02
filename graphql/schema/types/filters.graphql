@@ -254,6 +254,8 @@ input SceneFilterType {
   is_trimmed: Boolean
   "Filter by is_archived"
   is_archived: Boolean
+  "Filter by remote embed scenes"
+  is_remote: Boolean
   "Filter by o-counter"
   o_counter: IntCriterionInput
   "Filter Scenes that have an exact phash match available"

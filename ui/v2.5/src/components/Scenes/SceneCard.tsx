@@ -50,6 +50,7 @@ import { BrokenBadge } from "../Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 import { TrimmedBadge } from "../Shared/TrimmedBadge";
 import { ArchivedBadge } from "../Shared/ArchivedBadge";
+import { RemoteBadge } from "../Shared/RemoteBadge";
 import { HLSBadge } from "../Shared/HLSBadge";
 import {
   buildSvgFilter,
@@ -550,6 +551,10 @@ const SceneCardOverlays = PatchComponent(
         ) : props.scene.is_archived ? (
           <div className="archived-badge-overlay">
             <ArchivedBadge />
+          </div>
+        ) : props.scene.is_remote ? (
+          <div className="remote-badge-overlay">
+            <RemoteBadge />
           </div>
         ) : props.scene.is_trimmed ? (
           <div className="trimmed-badge-overlay">

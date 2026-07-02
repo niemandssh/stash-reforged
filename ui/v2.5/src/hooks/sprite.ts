@@ -49,16 +49,45 @@ export function useSpriteInfo(vttPath: string | undefined) {
       return;
     }
 
-    fetch(vttPath).then((response) => {
-      if (!response.ok) {
-        setSpriteInfo(null);
-        return;
-      }
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 120;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
-      response.text().then((text) => {
-        setSpriteInfo(getSpriteInfo(vttPath, text));
+    const fetchSprites = () => {
+      fetch(vttPath).then((response) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (response.ok) {
+          response.text().then((text) => {
+            if (!cancelled) {
+              setSpriteInfo(getSpriteInfo(vttPath, text));
+            }
+          });
+          return;
+        }
+
+        if (response.status === 503 && attempts < maxAttempts) {
+          attempts += 1;
+          retryTimer = setTimeout(fetchSprites, 5000);
+          return;
+        }
+
+        setSpriteInfo(null);
       });
-    });
+    };
+
+    setSpriteInfo(undefined);
+    fetchSprites();
+
+    return () => {
+      cancelled = true;
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+      }
+    };
   }, [vttPath]);
 
   return spriteInfo;

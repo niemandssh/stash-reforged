@@ -122,11 +122,25 @@ class VTTThumbnailsPlugin extends videojs.getPlugin("plugin") {
   /**
    * Grabs the contents of the VTT file.
    */
-  private getVttFile(url: string): Promise<string> {
+  private getVttFile(url: string, attempt = 0): Promise<string> {
     return new Promise((resolve, reject) => {
       const req = new XMLHttpRequest();
 
       req.addEventListener("load", () => {
+        if (req.status === 503 && attempt < 120) {
+          window.setTimeout(() => {
+            this.getVttFile(url, attempt + 1)
+              .then(resolve)
+              .catch(reject);
+          }, 5000);
+          return;
+        }
+
+        if (req.status < 200 || req.status >= 300) {
+          reject(new Error(`VTT request failed with status ${req.status}`));
+          return;
+        }
+
         resolve(req.responseText);
       });
       req.addEventListener("error", (e) => {

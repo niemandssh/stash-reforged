@@ -109,6 +109,7 @@ type sceneRow struct {
 	IsArchived              bool        `db:"is_archived"`
 	ArchiveReason           zero.String `db:"archive_reason"`
 	IsAIFilled              bool        `db:"is_ai_filled"`
+	EmbedURL                zero.String `db:"embed_url"`
 	AudioOffsetMs           int         `db:"audio_offset_ms"`
 	AudioPlaybackSpeed      float64     `db:"audio_playback_speed"`
 	ForceHLS                bool        `db:"force_hls"`
@@ -147,6 +148,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.IsArchived = o.IsArchived
 	r.ArchiveReason = zero.StringFromPtr(o.ArchiveReason)
 	r.IsAIFilled = o.IsAIFilled
+	r.EmbedURL = zero.StringFromPtr(o.EmbedURL)
 	r.AudioOffsetMs = o.AudioOffsetMs
 	r.AudioPlaybackSpeed = o.AudioPlaybackSpeed
 	r.ForceHLS = o.ForceHLS
@@ -201,6 +203,7 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		IsArchived:              r.IsArchived,
 		ArchiveReason:           zeroStringPtr(r.ArchiveReason),
 		IsAIFilled:              r.IsAIFilled,
+		EmbedURL:                zeroStringPtr(r.EmbedURL),
 		AudioOffsetMs:           r.AudioOffsetMs,
 		AudioPlaybackSpeed:      r.AudioPlaybackSpeed,
 		ForceHLS:                r.ForceHLS,
@@ -263,6 +266,7 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setBool("is_archived", o.IsArchived)
 	r.setNullString("archive_reason", o.ArchiveReason)
 	r.setBool("is_ai_filled", o.IsAIFilled)
+	r.setNullString("embed_url", o.EmbedURL)
 	r.setInt("audio_offset_ms", o.AudioOffsetMs)
 	r.setFloat64("audio_playback_speed", o.AudioPlaybackSpeed)
 	r.setBool("force_hls", o.ForceHLS)

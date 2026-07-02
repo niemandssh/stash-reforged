@@ -44,6 +44,29 @@ func (g Generator) Screenshot(ctx context.Context, input string, videoWidth int,
 	return ret, nil
 }
 
+// ScreenshotHybridHTTP captures a screenshot from a remote stream using HTTP headers.
+func (g Generator) ScreenshotHybridHTTP(ctx context.Context, input string, videoDuration float64, options ScreenshotOptions, httpHeaders string) ([]byte, error) {
+	lockCtx := g.LockManager.ReadLock(ctx, input)
+	defer lockCtx.Cancel()
+
+	logger.Infof("Creating remote screenshot for %s", input)
+
+	at := screenshotDurationProportion * videoDuration
+	if options.At != nil {
+		at = *options.At
+	}
+
+	ret, err := g.generateBytes(lockCtx, g.ScenePaths, jpgPattern, g.screenshotHTTP(input, screenshotOptions{
+		Time:    at,
+		Quality: screenshotQuality,
+	}, httpHeaders))
+	if err != nil {
+		return nil, err
+	}
+
+	return ret, nil
+}
+
 type screenshotOptions struct {
 	Time    float64
 	Width   int
@@ -60,6 +83,22 @@ func (g Generator) screenshot(input string, options screenshotOptions) generateF
 		}
 
 		args := transcoder.ScreenshotTime(input, options.Time, ssOptions)
+
+		return g.generate(lockCtx, args)
+	}
+}
+
+func (g Generator) screenshotHTTP(input string, options screenshotOptions, httpHeaders string) generateFn {
+	return func(lockCtx *fsutil.LockContext, tmpFn string) error {
+		ssOptions := transcoder.ScreenshotOptions{
+			OutputPath:  tmpFn,
+			OutputType:  transcoder.ScreenshotOutputTypeImage2,
+			Quality:     options.Quality,
+			Width:       options.Width,
+			HTTPHeaders: httpHeaders,
+		}
+
+		args := transcoder.ScreenshotTimeHybrid(input, options.Time, ssOptions)
 
 		return g.generate(lockCtx, args)
 	}

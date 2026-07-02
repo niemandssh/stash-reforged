@@ -44,7 +44,7 @@ class PersistVolumePlugin extends videojs.getPlugin("plugin") {
     if (!this.useLocalForage) return;
     localForage.getItem<number>(levelKey).then((value) => {
       if (value !== null) {
-        this.player.volume(value);
+        this.player.volume(Math.min(2, Math.max(0, value)));
       }
     });
     localForage.getItem<boolean>(mutedKey).then((value) => {

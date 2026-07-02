@@ -41,6 +41,8 @@ type SceneFilterType struct {
 	IsTrimmed *bool `json:"is_trimmed"`
 	// Filter by is_archived
 	IsArchived *bool `json:"is_archived"`
+	// Filter by remote embed
+	IsRemote *bool `json:"is_remote"`
 	// Filter by o-counter
 	OCounter *IntCriterionInput `json:"o_counter"`
 	// Filter by omg-counter
@@ -172,6 +174,7 @@ type SceneCreateInput struct {
 	IsBroken        *bool             `json:"is_broken"`
 	IsTrimmed       *bool             `json:"is_trimmed"`
 	IsArchived      *bool             `json:"is_archived"`
+	EmbedURL        *string           `json:"embed_url"`
 	StudioID        *string           `json:"studio_id"`
 	GalleryIds      []string          `json:"gallery_ids"`
 	PerformerIds    []string          `json:"performer_ids"`
@@ -186,6 +189,8 @@ type SceneCreateInput struct {
 	// Files will be reassigned from existing scenes if applicable.
 	// Files must not already be primary for another scene.
 	FileIds []string `json:"file_ids"`
+	StartTime *float64 `json:"start_time"`
+	EndTime   *float64 `json:"end_time"`
 }
 
 type PerformerTagInput struct {
@@ -219,6 +224,7 @@ type SceneUpdateInput struct {
 	IsArchived              *bool                `json:"is_archived"`
 	ArchiveReason           *string              `json:"archive_reason"`
 	IsAIFilled              *bool                `json:"is_ai_filled"`
+	EmbedURL                *string              `json:"embed_url"`
 	AudioOffsetMs           *int                 `json:"audio_offset_ms"`
 	AudioPlaybackSpeed      *float64             `json:"audio_playback_speed"`
 	ForceHLS                *bool                `json:"force_hls"`

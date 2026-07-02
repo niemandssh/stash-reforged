@@ -132,11 +132,10 @@ function offsetMiddleware(player: VideoJsPlayer) {
       next(null, srcObj);
     },
     duration(seconds: number) {
-      if (source.duration) {
+      if (source?.duration) {
         return source.duration;
-      } else {
-        return seconds;
       }
+      return seconds;
     },
     buffered(buffers: TimeRanges) {
       if (offsetStart === undefined) {

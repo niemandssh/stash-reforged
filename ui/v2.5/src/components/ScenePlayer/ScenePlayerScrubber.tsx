@@ -16,7 +16,7 @@ import {
 import { useSpriteInfo } from "src/hooks/sprite";
 
 interface IScenePlayerScrubberProps {
-  file: GQL.VideoFileDataFragment;
+  duration: number;
   scene: GQL.SceneDataFragment;
   time: number;
   onSeek: (seconds: number) => void;
@@ -35,7 +35,7 @@ interface ISceneSpriteItem {
 }
 
 export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
-  file,
+  duration,
   scene,
   time,
   onSeek,
@@ -83,17 +83,26 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
       position.current = newPosition;
 
       if (seek) {
-        onSeek(percentage * (file.duration || 0));
+        onSeek(percentage * duration);
       }
     },
-    [onSeek, file.duration, scrubWidth]
+    [onSeek, duration, scrubWidth]
   );
 
   const spriteInfo = useSpriteInfo(scene.paths.vtt ?? undefined);
   const [spriteItems, setSpriteItems] = useState<ISceneSpriteItem[]>();
 
   useEffect(() => {
-    if (!spriteInfo) return;
+    if (spriteInfo === undefined) return;
+
+    if (!spriteInfo || spriteInfo.length === 0) {
+      if (width > 0) {
+        setScrubWidth(width);
+        setSpriteItems(undefined);
+      }
+      return;
+    }
+
     let totalWidth = 0;
 
     // Calculate the actual sprite sheet dimensions
@@ -155,7 +164,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     });
     setScrubWidth(totalWidth);
     setSpriteItems(newSprites);
-  }, [spriteInfo]);
+  }, [spriteInfo, width]);
 
   useEffect(() => {
     const onResize = (entries: ResizeObserverEntry[]) => {
@@ -196,8 +205,8 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   useEffect(() => {
     if (!scrubWidth || !width) return;
 
-    const duration = Number(file.duration);
-    const percentage = time / duration;
+    const videoDuration = Number(duration);
+    const percentage = time / videoDuration;
     const newPosition = width / 2 - percentage * scrubWidth;
 
     // Ignore position changes of < 1px
@@ -216,7 +225,7 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     prevTime.current = time;
 
     setPosition(newPosition, false);
-  }, [file.duration, setPosition, time, width, scrubWidth]);
+  }, [duration, setPosition, time, width, scrubWidth]);
 
   const onMouseUp = useCallback(
     (event: MouseEvent) => {
@@ -330,7 +339,6 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
     if (!spriteItems) return;
 
     return scene.scene_markers.map((marker, index) => {
-      const { duration } = file;
       const left = (scrubWidth * marker.seconds) / duration;
       const style = { left: `${left}px` };
 
@@ -368,7 +376,6 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   }
 
   function renderTrimmedSegments() {
-    const { duration } = file;
     const startTime = scene.start_time ?? 0;
     const endTime = scene.end_time ?? 0;
 
@@ -416,9 +423,8 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
   }
 
   function renderMarkerSegments() {
-    if (!file.duration || file.duration <= 0) return null;
+    if (!duration || duration <= 0) return null;
 
-    const { duration } = file;
     const totalWidth = width;
 
     return scene.scene_markers

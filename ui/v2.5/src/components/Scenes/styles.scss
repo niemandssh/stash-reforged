@@ -1200,6 +1200,24 @@ input[type="range"].blue-slider {
       }
     }
 
+    .wall-item-remote-indicator {
+      align-items: center;
+      color: #17a2b8;
+      display: flex;
+      font-size: 0.95rem;
+      justify-content: center;
+      left: 0.5rem;
+      pointer-events: auto;
+      position: absolute;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+      top: 0.5rem;
+      z-index: 2;
+    }
+
+    .wall-item:has(.wall-item-remote-indicator) .wall-item-additional-rating {
+      top: 2rem;
+    }
+
     .wall-item-additional-counts {
       align-items: center;
       color: white;
@@ -1280,6 +1298,10 @@ input[type="range"].blue-slider {
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease;
+      }
+
+      .wall-item-remote-indicator {
+        opacity: 1;
       }
 
       .wall-item-select-check {

@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/stashapp/stash/pkg/embed"
 	"github.com/stashapp/stash/pkg/models"
 )
 
@@ -20,6 +21,17 @@ func NewSceneURLBuilder(baseURL string, scene *models.Scene) SceneURLBuilder {
 		SceneID:   strconv.Itoa(scene.ID),
 		UpdatedAt: strconv.FormatInt(scene.UpdatedAt.Unix(), 10),
 	}
+}
+
+func (b SceneURLBuilder) GetEmbedStreamURL(variant embed.HLSVariant) string {
+	u := fmt.Sprintf("%s/scene/%s/embed/stream.m3u8", b.BaseURL, b.SceneID)
+	if variant.Height > 0 {
+		return u + fmt.Sprintf("?height=%d", variant.Height)
+	}
+	if variant.Bandwidth > 0 {
+		return u + fmt.Sprintf("?bandwidth=%d", variant.Bandwidth)
+	}
+	return u
 }
 
 func (b SceneURLBuilder) GetStreamURL(apiKey string) *url.URL {
@@ -51,6 +63,14 @@ func (b SceneURLBuilder) GetSpriteVTTURL(checksum string) string {
 
 func (b SceneURLBuilder) GetSpriteURL(checksum string) string {
 	return b.BaseURL + "/scene/" + checksum + "_sprite.jpg"
+}
+
+func (b SceneURLBuilder) GetSceneVttThumbsURL() string {
+	return b.BaseURL + "/scene/" + b.SceneID + "/vtt/thumbs"
+}
+
+func (b SceneURLBuilder) GetSceneVttSpriteURL() string {
+	return b.BaseURL + "/scene/" + b.SceneID + "/vtt/sprite"
 }
 
 func (b SceneURLBuilder) GetScreenshotURL() string {

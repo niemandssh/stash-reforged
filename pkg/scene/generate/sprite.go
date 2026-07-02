@@ -52,6 +52,17 @@ func (g Generator) SpriteScreenshotHybrid(ctx context.Context, input string, sec
 	return g.generateImage(lockCtx, args)
 }
 
+func (g Generator) SpriteScreenshotHybridHTTP(ctx context.Context, input string, seconds float64, httpHeaders string) (image.Image, error) {
+	lockCtx := g.LockManager.ReadLock(ctx, input)
+	defer lockCtx.Cancel()
+
+	opts := g.spriteScreenshotOptions()
+	opts.HTTPHeaders = httpHeaders
+	args := transcoder.ScreenshotTimeHybrid(input, seconds, opts)
+
+	return g.generateImage(lockCtx, args)
+}
+
 func (g Generator) SpriteScreenshotSlow(ctx context.Context, input string, frame int) (image.Image, error) {
 	lockCtx := g.LockManager.ReadLock(ctx, input)
 	defer lockCtx.Cancel()
@@ -98,21 +109,29 @@ func (g Generator) CombineSpriteImages(images []image.Image) image.Image {
 	return montage
 }
 
-func (g Generator) SpriteVTT(ctx context.Context, output string, spritePath string, stepSize float64) error {
+func (g Generator) SpriteVTT(ctx context.Context, output string, spritePath string, stepSize float64, spriteImageName ...string) error {
 	lockCtx := g.LockManager.ReadLock(ctx, spritePath)
 	defer lockCtx.Cancel()
 
-	return g.generateFile(lockCtx, g.ScenePaths, vttPattern, output, g.spriteVTT(spritePath, stepSize))
+	imageName := ""
+	if len(spriteImageName) > 0 {
+		imageName = spriteImageName[0]
+	}
+
+	return g.generateFile(lockCtx, g.ScenePaths, vttPattern, output, g.spriteVTT(spritePath, stepSize, imageName))
 }
 
-func (g Generator) spriteVTT(spritePath string, stepSize float64) generateFn {
+func (g Generator) spriteVTT(spritePath string, stepSize float64, spriteImageName string) generateFn {
 	return func(lockCtx *fsutil.LockContext, tmpFn string) error {
 		spriteImage, err := os.Open(spritePath)
 		if err != nil {
 			return err
 		}
 		defer spriteImage.Close()
-		spriteImageName := filepath.Base(spritePath)
+		imageName := spriteImageName
+		if imageName == "" {
+			imageName = filepath.Base(spritePath)
+		}
 		image, _, err := image.DecodeConfig(spriteImage)
 		if err != nil {
 			return err
@@ -128,7 +147,7 @@ func (g Generator) spriteVTT(spritePath string, stepSize float64) generateFn {
 			endTime := utils.GetVTTTime(float64(index+1) * stepSize)
 
 			vttLines = append(vttLines, startTime+" --> "+endTime)
-			vttLines = append(vttLines, fmt.Sprintf("%s#xywh=%d,%d,%d,%d", spriteImageName, x, y, width, height))
+			vttLines = append(vttLines, fmt.Sprintf("%s#xywh=%d,%d,%d,%d", imageName, x, y, width, height))
 			vttLines = append(vttLines, "")
 		}
 		vtt := strings.Join(vttLines, "\n")

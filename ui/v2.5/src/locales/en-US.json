@@ -227,6 +227,8 @@
     "is_not_broken": "Not Broken",
     "is_trimmed": "Trimmed",
     "is_archived": "Archived",
+    "is_remote": "Remote",
+    "scene_embed_url": "Remote video source",
     "is_ai_filled": "Scene data filled with AI",
     "archive_reason": "Archive reason",
     "has_trim_times": "Needs Trimming",

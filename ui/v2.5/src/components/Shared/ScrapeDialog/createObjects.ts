@@ -161,11 +161,14 @@ export function useCreateScrapedGroup(
 }
 
 export function useCreateScrapedTag(
-  props: IUseCreateNewObjectProps<GQL.ScrapedTag>
+  props: IUseCreateNewObjectProps<GQL.ScrapedTag> & {
+    onTagCreated?: (tag: GQL.TagDataFragment) => void;
+  }
 ) {
   const [createTag] = useTagCreate();
 
-  const { scrapeResult, setScrapeResult, newObjects, setNewObjects } = props;
+  const { scrapeResult, setScrapeResult, newObjects, setNewObjects, onTagCreated } =
+    props;
 
   async function createNewTag(toCreate: GQL.ScrapedTag) {
     const input: GQL.TagCreateInput = { name: toCreate.name ?? "" };
@@ -175,11 +178,13 @@ export function useCreateScrapedTag(
     });
 
     const newValue = [...(scrapeResult.newValue ?? [])];
-    if (result.data?.tagCreate)
+    if (result.data?.tagCreate) {
+      onTagCreated?.(result.data.tagCreate);
       newValue.push({
         stored_id: result.data.tagCreate.id,
         name: result.data.tagCreate.name,
       });
+    }
 
     // add the new tag to the new tags value
     const tagClone = scrapeResult.cloneWithValue(newValue);

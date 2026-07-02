@@ -21,6 +21,7 @@ fragment SlimSceneData on Scene {
   is_archived
   archive_reason
   is_ai_filled
+  is_remote
   resume_time
   play_duration
   play_count

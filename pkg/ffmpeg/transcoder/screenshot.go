@@ -14,6 +14,9 @@ type ScreenshotOptions struct {
 	// Verbosity is the logging verbosity. Defaults to LogLevelError if not set.
 	Verbosity ffmpeg.LogLevel
 
+	// HTTPHeaders are passed to ffmpeg before the input, for remote streams.
+	HTTPHeaders string
+
 	UseSelectFilter bool
 }
 
@@ -87,6 +90,10 @@ func screenshotAtTime(input string, t float64, hybrid bool, options ScreenshotOp
 		args = args.Seek(fastSeek)
 	}
 
+	if options.HTTPHeaders != "" {
+		args = append(args, "-headers", options.HTTPHeaders)
+	}
+
 	args = args.Input(input)
 
 	if slowSeek > 0 {
@@ -120,6 +127,10 @@ func ScreenshotFrame(input string, frame int, options ScreenshotOptions) ffmpeg.
 	var args ffmpeg.Args
 	args = args.LogLevel(options.Verbosity)
 	args = args.Overwrite()
+
+	if options.HTTPHeaders != "" {
+		args = append(args, "-headers", options.HTTPHeaders)
+	}
 
 	args = args.Input(input)
 	args = args.VideoFrames(1)

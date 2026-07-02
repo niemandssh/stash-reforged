@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { flushSync } from "react-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button, Form, Col, Row, ButtonGroup } from "react-bootstrap";
 import Mousetrap from "mousetrap";
@@ -28,7 +29,7 @@ import { useTrimContext } from "src/contexts/TrimContext";
 import ImageUtils from "src/utils/image";
 import { getStashIDs } from "src/utils/stashIds";
 import { useFormik } from "formik";
-import { Prompt } from "react-router-dom";
+import { Prompt, useHistory } from "react-router-dom";
 import { ConfigurationContext } from "src/hooks/Config";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { IGroupEntry, SceneGroupTable } from "./SceneGroupTable";
@@ -118,7 +119,9 @@ interface IProps {
   initialCoverImage?: string;
   isNew?: boolean;
   isVisible: boolean;
-  onSubmit: (input: GQL.SceneUpdateInput) => Promise<void>;
+  onSubmit: (
+    input: GQL.SceneUpdateInput | GQL.SceneCreateInput
+  ) => Promise<void | string>;
   onDelete?: () => void;
   onTagsChange?: (
     tags: GQL.Tag[],
@@ -137,6 +140,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 }) => {
   const intl = useIntl();
   const Toast = useToast();
+  const history = useHistory();
 
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [performers, setPerformers] = useState<Performer[]>([]);
@@ -270,6 +274,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
     title: yup.string().ensure(),
     code: yup.string().ensure(),
     urls: yupUniqueStringList(intl),
+    embed_url: yup.string().ensure(),
     date: yupDateString(intl),
     shoot_date: yupDateString(intl),
     director: yup.string().ensure(),
@@ -318,6 +323,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       title: scene.title ?? "",
       code: scene.code ?? "",
       urls: scene.urls ?? [],
+      embed_url: scene.embed_url ?? "",
       date: TextUtils.getDateEditString(scene.date, scene.date_display) ?? "",
       shoot_date: TextUtils.getDateEditString(
         (scene as { shoot_date?: string }).shoot_date,
@@ -844,33 +850,73 @@ export const SceneEditPanel: React.FC<IProps> = ({
       // Extract scene_performers from input to handle it separately
       const { scene_performers, ...inputWithoutScenePerformers } = input;
 
-      const inputWithPerformerTags: GQL.SceneUpdateInput = {
-        ...inputWithoutScenePerformers,
-        id: scene.id!,
-        tag_ids: cleanedTagIds,
-        performer_ids: syncedPerformerIds,
-        performer_tag_ids: cleanedPerformerTagIds,
-        scene_performers: scene_performers || [],
-      };
+      const embedURL = input.embed_url?.trim() ? input.embed_url.trim() : null;
 
-      await onSubmit(inputWithPerformerTags);
+      let newSceneId: string | void;
+
+      if (isNew) {
+        const createInput: GQL.SceneCreateInput = {
+          title: inputWithoutScenePerformers.title || undefined,
+          code: inputWithoutScenePerformers.code || undefined,
+          details: inputWithoutScenePerformers.details || undefined,
+          director: inputWithoutScenePerformers.director || undefined,
+          urls: inputWithoutScenePerformers.urls,
+          embed_url: embedURL ?? undefined,
+          date: inputWithoutScenePerformers.date || undefined,
+          shoot_date: inputWithoutScenePerformers.shoot_date || undefined,
+          organized: inputWithoutScenePerformers.organized,
+          is_broken: inputWithoutScenePerformers.is_broken,
+          is_trimmed: inputWithoutScenePerformers.is_trimmed,
+          studio_id: inputWithoutScenePerformers.studio_id ?? undefined,
+          gallery_ids: inputWithoutScenePerformers.gallery_ids,
+          performer_ids: syncedPerformerIds,
+          scene_performers: scene_performers || [],
+          groups: inputWithoutScenePerformers.groups,
+          tag_ids: cleanedTagIds,
+          cover_image: inputWithoutScenePerformers.cover_image ?? undefined,
+          stash_ids: inputWithoutScenePerformers.stash_ids,
+          start_time: inputWithoutScenePerformers.start_time ?? undefined,
+          end_time: inputWithoutScenePerformers.end_time ?? undefined,
+        };
+
+        newSceneId = await onSubmit(createInput);
+      } else {
+        const inputWithPerformerTags: GQL.SceneUpdateInput = {
+          ...inputWithoutScenePerformers,
+          id: scene.id!,
+          embed_url: embedURL,
+          tag_ids: cleanedTagIds,
+          performer_ids: syncedPerformerIds,
+          performer_tag_ids: cleanedPerformerTagIds,
+          scene_performers: scene_performers || [],
+        };
+
+        await onSubmit(inputWithPerformerTags);
+      }
       // Clear form dirty state after successful save
       if (isMountedRef.current) {
         // Get current values to preserve them
         const currentValues = { ...formik.values };
 
         // Force a complete form reset by calling resetForm with current values
-        formik.resetForm({
-          values: currentValues,
-          touched: {},
-          errors: {},
-          status: undefined,
+        flushSync(() => {
+          formik.resetForm({
+            values: currentValues,
+            touched: {},
+            errors: {},
+            status: undefined,
+          });
         });
 
         // Additional cleanup
         clearHistory();
         setHasUserInteractedWithPoseTags(false);
         setHasUserInteractedWithPerformerTags(false);
+
+        if (isNew && newSceneId) {
+          history.push(`/scenes/${newSceneId}`);
+          return;
+        }
 
         // Force a re-render to ensure formik state is updated
         setTimeout(() => {
@@ -978,9 +1024,12 @@ export const SceneEditPanel: React.FC<IProps> = ({
     }
   }
 
-  function onScrapeDialogClosed(sceneData?: GQL.ScrapedSceneDataFragment) {
+  function onScrapeDialogClosed(
+    sceneData?: GQL.ScrapedSceneDataFragment,
+    supplementalTags?: Tag[]
+  ) {
     if (sceneData) {
-      updateSceneFromScrapedScene(sceneData);
+      updateSceneFromScrapedScene(sceneData, supplementalTags);
     }
     setScrapedScene(undefined);
   }
@@ -1008,7 +1057,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
         sceneGroups={groups}
         scraped={scrapedScene}
         endpoint={endpoint}
-        onClose={(s) => onScrapeDialogClosed(s)}
+        onClose={(s, supplementalTags) =>
+          onScrapeDialogClosed(s, supplementalTags)
+        }
       />
     );
   }
@@ -1049,7 +1100,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
   }
 
   function updateSceneFromScrapedScene(
-    updatedScene: GQL.ScrapedSceneDataFragment
+    updatedScene: GQL.ScrapedSceneDataFragment,
+    supplementalTags?: Tag[]
   ) {
     if (updatedScene.title) {
       formik.setFieldValue("title", updatedScene.title);
@@ -1119,7 +1171,10 @@ export const SceneEditPanel: React.FC<IProps> = ({
       }
     }
 
-    updateTagsStateFromScraper(updatedScene.tags ?? undefined);
+    updateTagsStateFromScraper(
+      updatedScene.tags ?? undefined,
+      supplementalTags
+    );
 
     if (updatedScene.image) {
       // image is a base64 string
@@ -1626,14 +1681,15 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
   function renderDurationField(
     fieldName: keyof InputValues & string,
-    labelId: string
+    labelId: string,
+    options?: { disabled?: boolean }
   ) {
     const title = intl.formatMessage({ id: labelId });
     const control = (
       <DurationInput
         value={formik.values[fieldName] as number | null}
         setValue={(value) => formik.setFieldValue(fieldName, value)}
-        disabled={isLoading}
+        disabled={isLoading || options?.disabled}
         onReset={() =>
           formik.setFieldValue(fieldName, getPlayerPosition() ?? null)
         }
@@ -1729,6 +1785,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
             {renderPerformersField()}
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
+            {renderInputField("embed_url", "url", "scene_embed_url")}
 
             {renderDurationField("start_time", "start_time")}
             {renderDurationField("end_time", "end_time")}

@@ -22,20 +22,32 @@ func (t *GenerateCoverTask) GetDescription() string {
 }
 
 func (t *GenerateCoverTask) Start(ctx context.Context) {
-	scenePath := t.Scene.Path
-
 	r := t.repository
 
 	var required bool
 	if err := r.WithReadTxn(ctx, func(ctx context.Context) error {
 		required = t.required(ctx)
-
-		return t.Scene.LoadPrimaryFile(ctx, r.File)
+		return nil
 	}); err != nil {
 		logger.Error(err)
+		return
 	}
 
 	if !required {
+		return
+	}
+
+	if IsEmbedSpriteScene(&t.Scene) {
+		t.generateEmbedCover(ctx)
+		return
+	}
+
+	scenePath := t.Scene.Path
+
+	if err := r.WithReadTxn(ctx, func(ctx context.Context) error {
+		return t.Scene.LoadPrimaryFile(ctx, r.File)
+	}); err != nil {
+		logger.Error(err)
 		return
 	}
 
@@ -103,6 +115,20 @@ func (t *GenerateCoverTask) Start(ctx context.Context) {
 // required returns true if the sprite needs to be generated
 // assumes in a transaction
 func (t *GenerateCoverTask) required(ctx context.Context) bool {
+	if IsEmbedSpriteScene(&t.Scene) {
+		if t.Overwrite {
+			return true
+		}
+
+		hasCover, err := t.repository.Scene.HasCover(ctx, t.Scene.ID)
+		if err != nil {
+			logger.Errorf("Error getting cover: %v", err)
+			return false
+		}
+
+		return !hasCover
+	}
+
 	if t.Scene.Path == "" {
 		return false
 	}

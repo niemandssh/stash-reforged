@@ -214,6 +214,11 @@ func NewFFProbe(path string) *FFProbe {
 
 // NewVideoFile runs ffprobe on the given path and returns a VideoFile.
 func (f *FFProbe) NewVideoFile(videoPath string) (*VideoFile, error) {
+	return f.NewVideoFileWithHeaders(videoPath, "")
+}
+
+// NewVideoFileWithHeaders runs ffprobe with optional HTTP headers (for remote streams).
+func (f *FFProbe) NewVideoFileWithHeaders(videoPath string, httpHeaders string) (*VideoFile, error) {
 	args := []string{
 		"-v",
 		"quiet",
@@ -226,6 +231,10 @@ func (f *FFProbe) NewVideoFile(videoPath string) (*VideoFile, error) {
 	// show_entries stream_side_data=rotation requires 5.x or later ffprobe
 	if f.version.major >= 5 {
 		args = append(args, "-show_entries", "stream_side_data=rotation")
+	}
+
+	if httpHeaders != "" {
+		args = append(args, "-headers", httpHeaders)
 	}
 
 	args = append(args, videoPath)

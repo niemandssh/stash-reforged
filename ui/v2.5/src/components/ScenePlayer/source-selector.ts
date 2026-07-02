@@ -64,6 +64,15 @@ class SourceMenuButton extends videojs.getComponent("MenuButton") {
 
       return item;
     });
+
+    const el = this.el();
+    if (sources.length <= 1) {
+      el.classList.add("vjs-hidden");
+    } else {
+      el.classList.remove("vjs-hidden");
+    }
+
+    this.update();
   }
 
   createEl() {
@@ -109,6 +118,8 @@ class SourceSelectorPlugin extends videojs.getPlugin("plugin") {
 
   // don't auto play next source if user manually selected a source
   private manuallySelected = false;
+  private switchGeneration = 0;
+  private switchTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(player: VideoJsPlayer) {
     super(player);
@@ -121,19 +132,32 @@ class SourceSelectorPlugin extends videojs.getPlugin("plugin") {
 
       this.manuallySelected = true;
 
-      const loadSrc = this.sources[this.selectedIndex];
+      if (this.switchTimer !== null) {
+        clearTimeout(this.switchTimer);
+      }
 
-      const currentTime = player.currentTime();
-      const paused = player.paused();
-
-      player.src(loadSrc);
-      player.one("canplay", () => {
-        if (paused) {
-          player.pause();
+      const generation = ++this.switchGeneration;
+      this.switchTimer = setTimeout(() => {
+        if (generation !== this.switchGeneration) {
+          return;
         }
-        player.currentTime(currentTime);
-      });
-      player.play();
+
+        const loadSrc = this.sources[this.selectedIndex];
+        const currentTime = player.currentTime();
+        const paused = player.paused();
+
+        player.src(loadSrc);
+        player.one("canplay", () => {
+          if (generation !== this.switchGeneration) {
+            return;
+          }
+          if (paused) {
+            player.pause();
+          }
+          player.currentTime(currentTime);
+        });
+        player.play();
+      }, 200);
     });
 
     player.on("ready", () => {

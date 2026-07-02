@@ -137,6 +137,7 @@ const criterionOptions = [
   HasTrimTimesCriterionOption,
   createBooleanCriterionOption("is_trimmed"),
   createBooleanCriterionOption("is_archived"),
+  createBooleanCriterionOption("is_remote"),
 ];
 
 export const SceneListFilterOptions = new ListFilterOptions(

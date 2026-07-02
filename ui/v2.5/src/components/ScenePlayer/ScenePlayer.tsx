@@ -19,6 +19,8 @@ import "./live";
 import "./PlaylistButtons";
 import "./source-selector";
 import "./persist-volume";
+import "./volume-boost";
+import { MAX_PLAYER_VOLUME } from "./volume-boost";
 import MarkersPlugin, { type IMarker } from "./markers";
 import { Icon } from "src/components/Shared/Icon";
 import { faStop } from "@fortawesome/free-solid-svg-icons";
@@ -172,10 +174,10 @@ function handleHotkeys(player: VideoJsPlayer, event: videojs.KeyboardEvent) {
       toggleABLooping();
       break;
     case 38: // up arrow
-      player.volume(player.volume() + 0.1);
+      player.volume(Math.min(MAX_PLAYER_VOLUME, player.volume() + 0.2));
       break;
     case 40: // down arrow
-      player.volume(player.volume() - 0.1);
+      player.volume(Math.max(0, player.volume() - 0.2));
       break;
     case 48: // 0
       player.currentTime(0);
@@ -463,6 +465,11 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       [scene]
     );
 
+    const scrubDuration = useMemo(
+      () => file?.duration ?? scene.embed_duration ?? 0,
+      [file, scene.embed_duration]
+    );
+
     const maxLoopDuration = interfaceConfig?.maximumLoopDuration ?? 0;
     const looping = useMemo(
       () =>
@@ -571,6 +578,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           },
           markers: {},
           sourceSelector: {},
+          volumeBoost: {},
           persistVolume: {
             onVolumeChange: onVolumeChange ?? undefined,
             useLocalForage: !onVolumeChange,
@@ -606,9 +614,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const vjs = videojs(videoEl, options);
 
       vjs.ready(() => {
-        const v = initialVolume ?? 1;
+        const v = Math.min(MAX_PLAYER_VOLUME, initialVolume ?? 1);
         const m = initialMuted ?? false;
-        vjs.volume(v);
+        vjs.volumeBoost().setLevel(v, false);
         vjs.muted(m);
         vjs.trigger("volumechange");
       });
@@ -650,7 +658,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     useEffect(() => {
       const player = getPlayer();
       if (!player) return;
-      const vol = initialVolume ?? 1;
+      const vol = Math.min(MAX_PLAYER_VOLUME, initialVolume ?? 1);
       const mut = initialMuted ?? false;
       if (player.volume() !== vol) player.volume(vol);
       if (player.muted() !== mut) player.muted(mut);
@@ -1053,8 +1061,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const player = getPlayer();
       if (!player) return;
 
+      const hasStreamSources = (scene.sceneStreams?.length ?? 0) > 0;
+
       // don't re-initialise the player unless the scene has changed
-      if (!file || scene.id === sceneId.current) return;
+      if ((!file && !hasStreamSources) || scene.id === sceneId.current) return;
 
       sceneId.current = scene.id;
 
@@ -1079,7 +1089,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       loadInitialCoverImage(scene.paths.screenshot ?? undefined);
 
       const isSafari = UAParser().browser.name?.includes("Safari");
-      const isLandscape = file.height && file.width && file.width > file.height;
+      const isLandscape =
+        file?.height && file?.width && file.width > file.height;
       const mobileUiOptions = {
         fullscreen: {
           enterOnRotate: true,
@@ -1105,17 +1116,26 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         );
       }
 
-      const { duration } = file;
+      const duration =
+        file?.duration ?? scene.embed_duration ?? undefined;
       const sourceSelector = player.sourceSelector();
-      sourceSelector.setSources(
-        scene.sceneStreams
-          .filter((stream) => {
-            const src = new URL(stream.url);
-            const isFileTranscode = !isDirect(src);
+      const streamSources = scene.sceneStreams
+        .filter((stream) => {
+          const src = new URL(stream.url);
+          const isFileTranscode = !isDirect(src);
 
-            return !(isFileTranscode && isSafari);
-          })
-          .map((stream) => {
+          return !(isFileTranscode && isSafari);
+        })
+        .sort((a, b) => {
+          const height = (label: string | null | undefined) => {
+            const match = label?.match(/^(\d+)p$/i);
+            return match ? Number(match[1]) : 0;
+          };
+          return height(b.label) - height(a.label);
+        });
+
+      sourceSelector.setSources(
+        streamSources.map((stream) => {
             const src = new URL(stream.url);
 
             return {
@@ -1718,12 +1738,13 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
     const isPortrait =
       file && file.height && file.width && file.height > file.width;
+    const hasStreamSources = (scene.sceneStreams?.length ?? 0) > 0;
 
     return (
       <div
         className={cx("VideoPlayer", {
           portrait: isPortrait,
-          "no-file": !file,
+          "no-file": !file && !hasStreamSources,
           "show-initial-cover": showInitialCover,
           "show-initial-cover-image": showInitialCoverImage,
           "fade-initial-cover": fadeInitialCover,
@@ -1753,9 +1774,9 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         {scene.interactive &&
           (interactiveState !== ConnectionState.Ready ||
             getPlayer()?.paused()) && <SceneInteractiveStatus />}
-        {file && showScrubber && (
+        {scrubDuration > 0 && showScrubber && (
           <ScenePlayerScrubber
-            file={file}
+            duration={scrubDuration}
             scene={scene}
             time={time}
             onSeek={onScrubberSeek}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/stashapp/stash/internal/manager"
+	"github.com/stashapp/stash/pkg/embed"
 	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/file"
 	"github.com/stashapp/stash/pkg/job"
@@ -38,6 +39,23 @@ func parsePerformerIDStrings(ids []string) []int {
 		out = append(out, id)
 	}
 	return out
+}
+
+func normalizeEmbedURL(value *string) (*string, error) {
+	if value == nil {
+		return nil, nil
+	}
+
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return nil, nil
+	}
+
+	if _, _, err := embed.Parse(trimmed); err != nil {
+		return nil, fmt.Errorf("invalid embed_url: %w", err)
+	}
+
+	return &trimmed, nil
 }
 
 // used to refetch scene after hooks run
@@ -151,6 +169,19 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 		newScene.ScenePerformers = models.NewRelatedScenePerformers(input.ScenePerformers)
 	}
 
+	embedURL, err := normalizeEmbedURL(input.EmbedURL)
+	if err != nil {
+		return nil, err
+	}
+	newScene.EmbedURL = embedURL
+
+	if input.StartTime != nil {
+		newScene.StartTime = input.StartTime
+	}
+	if input.EndTime != nil {
+		newScene.EndTime = input.EndTime
+	}
+
 	var coverImageData []byte
 	if input.CoverImage != nil {
 		var err error
@@ -169,6 +200,12 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 
 	// Schedule similarity recalculation for the new scene
 	r.scheduleSimilarityRecalculation(ctx, ret.ID)
+
+	if len(fileIDs) == 0 && ret.EmbedURL != nil {
+		if _, err := manager.EnsureEmbedSpriteJob(ctx, ret); err != nil {
+			logger.Warnf("failed to start embed sprite generation for scene %d: %v", ret.ID, err)
+		}
+	}
 
 	return ret, nil
 }
@@ -265,6 +302,13 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.IsArchived = translator.optionalBool(input.IsArchived, "is_archived")
 	updatedScene.ArchiveReason = translator.optionalString(input.ArchiveReason, "archive_reason")
 	updatedScene.IsAIFilled = translator.optionalBool(input.IsAIFilled, "is_ai_filled")
+	if translator.hasField("embed_url") {
+		embedURL, err := normalizeEmbedURL(input.EmbedURL)
+		if err != nil {
+			return nil, err
+		}
+		updatedScene.EmbedURL = models.NewOptionalStringPtr(embedURL)
+	}
 	updatedScene.AudioOffsetMs = translator.optionalInt(input.AudioOffsetMs, "audio_offset_ms")
 	updatedScene.AudioPlaybackSpeed = translator.optionalFloat64(input.AudioPlaybackSpeed, "audio_playback_speed")
 	updatedScene.ForceHLS = translator.optionalBool(input.ForceHLS, "force_hls")
@@ -442,6 +486,12 @@ outer:
 	// Load all relationships for the updated scene
 	if err := finalScene.LoadRelationships(ctx, qb); err != nil {
 		return nil, err
+	}
+
+	if manager.IsEmbedSpriteScene(finalScene) && !manager.EmbedSpritesReady(finalScene) {
+		if _, err := manager.EnsureEmbedSpriteJob(ctx, finalScene); err != nil {
+			logger.Warnf("failed to start embed sprite generation for scene %d: %v", finalScene.ID, err)
+		}
 	}
 
 	return finalScene, nil

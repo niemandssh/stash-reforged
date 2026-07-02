@@ -100,6 +100,7 @@ func (qb *sceneFilterHandler) criterionHandler() criterionHandler {
 		qb.hasTrimTimesCriterionHandler(sceneFilter.HasTrimTimes),
 		boolCriterionHandler(sceneFilter.IsTrimmed, "scenes.is_trimmed", nil),
 		boolCriterionHandler(sceneFilter.IsArchived, "scenes.is_archived", nil),
+		qb.isRemoteCriterionHandler(sceneFilter.IsRemote),
 
 		floatIntCriterionHandler(sceneFilter.Duration, "video_files.duration", qb.addVideoFilesTable),
 		resolutionCriterionHandler(sceneFilter.Resolution, "video_files.height", "video_files.width", qb.addVideoFilesTable),
@@ -308,6 +309,21 @@ func (qb *sceneFilterHandler) hasMarkersCriterionHandler(hasMarkers *string) cri
 			} else {
 				f.addWhere("scene_markers.id IS NULL")
 			}
+		}
+	}
+}
+
+func (qb *sceneFilterHandler) isRemoteCriterionHandler(isRemote *bool) criterionHandlerFunc {
+	return func(ctx context.Context, f *filterBuilder) {
+		if isRemote == nil {
+			return
+		}
+
+		hasEmbedClause := "(scenes.embed_url IS NOT NULL AND TRIM(scenes.embed_url) != '')"
+		if *isRemote {
+			f.addWhere(hasEmbedClause)
+		} else {
+			f.addWhere("NOT " + hasEmbedClause)
 		}
 	}
 }

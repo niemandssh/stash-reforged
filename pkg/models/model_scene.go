@@ -29,6 +29,7 @@ type Scene struct {
 	IsArchived              bool    `json:"is_archived"`
 	ArchiveReason           *string `json:"archive_reason"`
 	IsAIFilled              bool    `json:"is_ai_filled"`
+	EmbedURL                *string `json:"embed_url"`
 	AudioOffsetMs           int     `json:"audio_offset_ms"`
 	AudioPlaybackSpeed      float64 `json:"audio_playback_speed"`
 	ForceHLS                bool    `json:"force_hls"`
@@ -98,6 +99,7 @@ type ScenePartial struct {
 	IsArchived              OptionalBool
 	ArchiveReason           OptionalString
 	IsAIFilled              OptionalBool
+	EmbedURL                OptionalString
 	AudioOffsetMs           OptionalInt
 	AudioPlaybackSpeed      OptionalFloat64
 	ForceHLS                OptionalBool

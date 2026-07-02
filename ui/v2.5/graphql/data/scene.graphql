@@ -25,6 +25,10 @@ fragment SceneData on Scene {
   is_archived
   archive_reason
   is_ai_filled
+  embed_url
+  embed_src
+  embed_duration
+  is_remote
   audio_offset_ms
   audio_playback_speed
   force_hls

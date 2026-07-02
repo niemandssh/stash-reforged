@@ -6,7 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { faStar, faTags } from "@fortawesome/free-solid-svg-icons";
+import { faStar, faTags, faCloud } from "@fortawesome/free-solid-svg-icons";
 import { Icon } from "../Shared/Icon";
 import * as GQL from "src/core/generated-graphql";
 import { SceneQueue } from "src/models/sceneQueue";
@@ -166,6 +166,17 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
           onImageError={() => imageSrc && props.photo.onError?.(imageSrc)}
           onVideoError={() => videoSrc && props.photo.onError?.(videoSrc)}
         />
+      )}
+      {scene.is_remote && (
+        <div
+          className="wall-item-remote-indicator"
+          title={intl.formatMessage({
+            id: "is_remote",
+            defaultMessage: "Remote",
+          })}
+        >
+          <Icon icon={faCloud} />
+        </div>
       )}
       {showAdditionalInfo && hasRating && (
         <div

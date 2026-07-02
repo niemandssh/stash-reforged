@@ -60,6 +60,7 @@ import { BrokenBadge } from "src/components/Shared/BrokenBadge";
 import { ProbablyBrokenBadge } from "src/components/Shared/ProbablyBrokenBadge";
 import { TrimmedBadge } from "src/components/Shared/TrimmedBadge";
 import { ArchivedBadge } from "src/components/Shared/ArchivedBadge";
+import { RemoteBadge } from "src/components/Shared/RemoteBadge";
 import { HLSBadge } from "src/components/Shared/HLSBadge";
 import { TagRequirementsIndicator } from "src/components/Shared/TagRequirementsIndicator";
 import { AIFilledIndicator } from "src/components/Shared/AIFilledIndicator";
@@ -129,6 +130,9 @@ const SubmitStashBoxDraft = lazyComponent(
 );
 const ScenePlayer = lazyComponent(
   () => import("src/components/ScenePlayer/ScenePlayer")
+);
+const SceneEmbedPlayer = lazyComponent(
+  () => import("src/components/ScenePlayer/SceneEmbedPlayer")
 );
 
 const GalleryViewer = lazyComponent(
@@ -1326,7 +1330,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <Icon icon={faCamera} className="mr-2" />
             <FormattedMessage id="actions.generate_thumb_from_current" />
           </Dropdown.Item>
-          {scene.files.length > 0 && (
+          {(scene.files.length > 0 || scene.is_remote) && (
             <Dropdown.Item
               key="save-filtered-screenshot"
               className="bg-secondary text-white d-flex align-items-center"
@@ -1345,7 +1349,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <Icon icon={faImage} className="mr-2" />
             <FormattedMessage id="actions.generate_thumb_default" />
           </Dropdown.Item>
-          {scene.files.length > 0 && (
+          {(scene.files.length > 0 || scene.is_remote) && (
             <Dropdown.Item
               key="regenerate-sprites"
               className="bg-secondary text-white d-flex align-items-center"
@@ -1684,6 +1688,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <div className="scene-header">
               {scene.is_archived ? (
                 <ArchivedBadge />
+              ) : scene.is_remote ? (
+                <RemoteBadge />
               ) : scene.force_hls ? (
                 <HLSBadge />
               ) : scene.is_trimmed ? (
@@ -2288,28 +2294,49 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
           await refetch();
         }}
       />
-      <div className={`scene-player-container ${collapsed ? "expanded" : ""}`}>
-        <ScenePlayer
-          key="ScenePlayer"
-          scene={scene}
-          hideScrubberOverride={hideScrubber}
-          autoplay={autoplay}
-          permitLoop={!continuePlaylist}
-          initialTimestamp={initialTimestamp}
-          sendSetTimestamp={getSetTimestamp}
-          onComplete={onComplete}
-          onNext={() => queueNext(true)}
-          onPrevious={() => queuePrevious(true)}
-          onPlayScene={(sceneId) => loadScene(sceneId, true)}
-          viewedScenes={viewedScenes}
-          onMarkSceneViewed={handleMarkSceneViewed}
-          markerPlaylist={markerPlaylist}
-          initialPlaylistIndex={initialPlaylistIndex}
-          onClearMarkerPlaylist={onStopMarkers}
-          initialVolume={scene.video_filters?.volume_level ?? 1}
-          initialMuted={scene.video_filters?.volume_muted ?? false}
-          onVolumeChange={onVolumeChangeStable}
-        />
+      <div
+        className={`scene-player-container ${collapsed ? "expanded" : ""} ${
+          scene.files.length === 0 &&
+          scene.embed_src &&
+          (scene.sceneStreams?.length ?? 0) === 0
+            ? "has-embed-player"
+            : ""
+        }`}
+      >
+        {(scene.files.length > 0 ||
+          (scene.sceneStreams?.length ?? 0) > 0) && (
+          <ScenePlayer
+            key="ScenePlayer"
+            scene={scene}
+            hideScrubberOverride={hideScrubber}
+            autoplay={autoplay}
+            permitLoop={!continuePlaylist}
+            initialTimestamp={initialTimestamp}
+            sendSetTimestamp={getSetTimestamp}
+            onComplete={onComplete}
+            onNext={() => queueNext(true)}
+            onPrevious={() => queuePrevious(true)}
+            onPlayScene={(sceneId) => loadScene(sceneId, true)}
+            viewedScenes={viewedScenes}
+            onMarkSceneViewed={handleMarkSceneViewed}
+            markerPlaylist={markerPlaylist}
+            initialPlaylistIndex={initialPlaylistIndex}
+            onClearMarkerPlaylist={onStopMarkers}
+            initialVolume={scene.video_filters?.volume_level ?? 1}
+            initialMuted={scene.video_filters?.volume_muted ?? false}
+            onVolumeChange={onVolumeChangeStable}
+          />
+        )}
+        {scene.files.length === 0 &&
+          scene.embed_src &&
+          (scene.sceneStreams?.length ?? 0) === 0 && (
+            <SceneEmbedPlayer
+              key="SceneEmbedPlayer"
+              scene={scene}
+              embedSrc={scene.embed_src}
+              initialTimestamp={initialTimestamp}
+            />
+          )}
       </div>
       <div className="scene-right-edge-panel">
         <div className="scene-right-ears">

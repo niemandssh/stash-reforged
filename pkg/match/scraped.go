@@ -246,5 +246,6 @@ func ScrapedTag(ctx context.Context, qb models.TagQueryer, s *models.ScrapedTag)
 
 	id := strconv.Itoa(t.ID)
 	s.StoredID = &id
+	s.Name = t.Name
 	return nil
 }

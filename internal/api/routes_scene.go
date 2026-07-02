@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -12,6 +14,7 @@ import (
 
 	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/internal/manager/config"
+	"github.com/stashapp/stash/pkg/embed"
 	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/file/video"
 	"github.com/stashapp/stash/pkg/fsutil"
@@ -54,6 +57,11 @@ type sceneRoutes struct {
 func (rs sceneRoutes) Routes() chi.Router {
 	r := chi.NewRouter()
 
+	// Hash-based sprite routes must be registered before /{sceneId}, otherwise chi
+	// treats e.g. "remote_4030_thumbs.vtt" as a scene ID and SceneCtx returns 400.
+	r.Get("/{sceneHash}_thumbs.vtt", rs.VttThumbs)
+	r.Get("/{sceneHash}_sprite.jpg", rs.VttSprite)
+
 	r.Route("/{sceneId}", func(r chi.Router) {
 		r.Use(rs.SceneCtx)
 
@@ -74,17 +82,18 @@ func (rs sceneRoutes) Routes() chi.Router {
 		r.Get("/vtt/chapter", rs.VttChapter)
 		r.Get("/vtt/thumbs", rs.VttThumbs)
 		r.Get("/vtt/sprite", rs.VttSprite)
+		r.Get("/vtt/{asset}", rs.VttSpriteAsset)
 		r.Get("/funscript", rs.Funscript)
 		r.Get("/interactive_csv", rs.InteractiveCSV)
 		r.Get("/interactive_heatmap", rs.InteractiveHeatmap)
 		r.Get("/caption", rs.CaptionLang)
+		r.Get("/embed/stream.m3u8", rs.EmbedStreamManifest)
+		r.Get("/embed/proxy", rs.EmbedStreamProxy)
 
 		r.Get("/scene_marker/{sceneMarkerId}/stream", rs.SceneMarkerStream)
 		r.Get("/scene_marker/{sceneMarkerId}/preview", rs.SceneMarkerPreview)
 		r.Get("/scene_marker/{sceneMarkerId}/screenshot", rs.SceneMarkerScreenshot)
 	})
-	r.Get("/{sceneHash}_thumbs.vtt", rs.VttThumbs)
-	r.Get("/{sceneHash}_sprite.jpg", rs.VttSprite)
 
 	return r
 }
@@ -346,25 +355,85 @@ func (rs sceneRoutes) VttThumbs(w http.ResponseWriter, r *http.Request) {
 	scene, ok := r.Context().Value(sceneKey).(*models.Scene)
 	var sceneHash string
 	if ok && scene != nil {
-		sceneHash = scene.GetHash(config.GetInstance().GetVideoFileNamingAlgorithm())
+		sceneHash = manager.SceneSpriteHash(scene, config.GetInstance().GetVideoFileNamingAlgorithm())
 	} else {
 		sceneHash = chi.URLParam(r, "sceneHash")
 	}
 	filepath := manager.GetInstance().Paths.Scene.GetSpriteVttFilePath(sceneHash)
 
 	w.Header().Set("Content-Type", "text/vtt")
+
+	if ok && scene != nil && manager.IsEmbedSpriteScene(scene) {
+		if !manager.EmbedSpritesReady(scene) {
+			if started, err := manager.EnsureEmbedSpriteJob(r.Context(), scene); err != nil {
+				logger.Warnf("failed to start embed sprite generation for scene %d: %v", scene.ID, err)
+			} else if started {
+				logger.Infof("started embed sprite generation for scene %d", scene.ID)
+			}
+			w.Header().Set("Retry-After", "5")
+			http.Error(w, "embed sprites are being generated", http.StatusServiceUnavailable)
+			return
+		}
+
+		data, err := os.ReadFile(filepath)
+		if err != nil {
+			utils.ServeStaticFile(w, r, filepath)
+			return
+		}
+		utils.ServeStaticContent(w, r, rewriteEmbedSpriteVTT(data))
+		return
+	}
+
 	utils.ServeStaticFile(w, r, filepath)
+}
+
+func (rs sceneRoutes) VttSpriteAsset(w http.ResponseWriter, r *http.Request) {
+	asset := chi.URLParam(r, "asset")
+	if asset == "thumbs" {
+		http.NotFound(w, r)
+		return
+	}
+	if asset == "sprite" || strings.HasSuffix(asset, "_sprite.jpg") {
+		rs.VttSprite(w, r)
+		return
+	}
+	http.NotFound(w, r)
+}
+
+var embedSpriteVTTLineRe = regexp.MustCompile(`^(\S+)_sprite\.jpg(#xywh=)`)
+
+func rewriteEmbedSpriteVTT(data []byte) []byte {
+	lines := strings.Split(string(data), "\n")
+	for i, line := range lines {
+		if embedSpriteVTTLineRe.MatchString(line) {
+			lines[i] = embedSpriteVTTLineRe.ReplaceAllString(line, "sprite$2")
+		}
+	}
+	return []byte(strings.Join(lines, "\n"))
 }
 
 func (rs sceneRoutes) VttSprite(w http.ResponseWriter, r *http.Request) {
 	scene, ok := r.Context().Value(sceneKey).(*models.Scene)
 	var sceneHash string
 	if ok && scene != nil {
-		sceneHash = scene.GetHash(config.GetInstance().GetVideoFileNamingAlgorithm())
+		sceneHash = manager.SceneSpriteHash(scene, config.GetInstance().GetVideoFileNamingAlgorithm())
 	} else {
 		sceneHash = chi.URLParam(r, "sceneHash")
 	}
 	filepath := manager.GetInstance().Paths.Scene.GetSpriteImageFilePath(sceneHash)
+
+	if ok && scene != nil && manager.IsEmbedSpriteScene(scene) {
+		if !manager.EmbedSpritesReady(scene) {
+			if started, err := manager.EnsureEmbedSpriteJob(r.Context(), scene); err != nil {
+				logger.Warnf("failed to start embed sprite generation for scene %d: %v", scene.ID, err)
+			} else if started {
+				logger.Infof("started embed sprite generation for scene %d", scene.ID)
+			}
+			w.Header().Set("Retry-After", "5")
+			http.Error(w, "embed sprites are being generated", http.StatusServiceUnavailable)
+			return
+		}
+	}
 
 	utils.ServeStaticFile(w, r, filepath)
 }
@@ -557,6 +626,109 @@ func (rs sceneRoutes) SceneMarkerScreenshot(w http.ResponseWriter, r *http.Reque
 	} else {
 		utils.ServeStaticFile(w, r, filepath)
 	}
+}
+
+func (rs sceneRoutes) EmbedStreamManifest(w http.ResponseWriter, r *http.Request) {
+	scene := r.Context().Value(sceneKey).(*models.Scene)
+	if scene.EmbedURL == nil || strings.TrimSpace(*scene.EmbedURL) == "" {
+		http.Error(w, "scene has no embed URL", http.StatusNotFound)
+		return
+	}
+
+	requestedHeight := 0
+	requestedBandwidth := 0
+	if heightParam := r.URL.Query().Get("height"); heightParam != "" {
+		parsed, err := strconv.Atoi(heightParam)
+		if err != nil || parsed < 0 {
+			http.Error(w, "invalid height parameter", http.StatusBadRequest)
+			return
+		}
+		requestedHeight = parsed
+	}
+	if bandwidthParam := r.URL.Query().Get("bandwidth"); bandwidthParam != "" {
+		parsed, err := strconv.Atoi(bandwidthParam)
+		if err != nil || parsed < 0 {
+			http.Error(w, "invalid bandwidth parameter", http.StatusBadRequest)
+			return
+		}
+		requestedBandwidth = parsed
+	}
+
+	body, manifestURL, err := embed.ResolveMediaPlaylist(
+		*scene.EmbedURL,
+		requestedHeight,
+		requestedBandwidth,
+	)
+	if err != nil {
+		rs.writeEmbedStreamError(w, scene.ID, err)
+		return
+	}
+
+	sceneID := chi.URLParam(r, "sceneId")
+	proxyPath := "/scene/" + sceneID + "/embed/proxy"
+	rewritten, err := embed.RewriteM3U8(body, manifestURL, proxyPath)
+	if err != nil {
+		logger.Warnf("embed stream manifest rewrite failed for scene %d: %v", scene.ID, err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/vnd.apple.mpegurl")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(rewritten)
+}
+
+func (rs sceneRoutes) EmbedStreamProxy(w http.ResponseWriter, r *http.Request) {
+	upstream := r.URL.Query().Get("u")
+	if upstream == "" {
+		http.Error(w, "missing upstream URL", http.StatusBadRequest)
+		return
+	}
+
+	if !embed.IsAllowedProxyURL(upstream) {
+		http.Error(w, "upstream URL not allowed", http.StatusForbidden)
+		return
+	}
+
+	body, contentType, err := embed.FetchStreamResource(upstream)
+	if err != nil {
+		logger.Warnf("embed stream proxy fetch failed: %v", err)
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+
+	if embed.IsM3U8Content(contentType, upstream) {
+		sceneID := chi.URLParam(r, "sceneId")
+		proxyPath := "/scene/" + sceneID + "/embed/proxy"
+		rewritten, err := embed.RewriteM3U8(body, upstream, proxyPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		body = rewritten
+		contentType = "application/vnd.apple.mpegurl"
+	}
+
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(body)
+}
+
+func (rs sceneRoutes) writeEmbedStreamError(w http.ResponseWriter, sceneID int, err error) {
+	if errors.Is(err, embed.ErrStreamNotSupported) || errors.Is(err, embed.ErrUnsupportedSite) {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if errors.Is(err, embed.ErrStreamNotFound) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	logger.Warnf("embed stream extraction failed for scene %d: %v", sceneID, err)
+	http.Error(w, err.Error(), http.StatusBadGateway)
 }
 
 func (rs sceneRoutes) SceneCtx(next http.Handler) http.Handler {

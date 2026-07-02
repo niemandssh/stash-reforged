@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/stashapp/stash/internal/api/loaders"
 	"github.com/stashapp/stash/internal/api/urlbuilders"
 	"github.com/stashapp/stash/internal/manager"
+	"github.com/stashapp/stash/pkg/embed"
+	"github.com/stashapp/stash/pkg/ffmpeg"
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/models"
 )
@@ -145,6 +148,40 @@ func (r *sceneResolver) IsAIFilled(ctx context.Context, obj *models.Scene) (bool
 	return obj.IsAIFilled, nil
 }
 
+func (r *sceneResolver) EmbedURL(ctx context.Context, obj *models.Scene) (*string, error) {
+	return obj.EmbedURL, nil
+}
+
+func (r *sceneResolver) EmbedSrc(ctx context.Context, obj *models.Scene) (*string, error) {
+	if obj.EmbedURL == nil || *obj.EmbedURL == "" {
+		return nil, nil
+	}
+
+	src, _, err := embed.Parse(*obj.EmbedURL)
+	if err != nil {
+		return nil, nil
+	}
+
+	return &src, nil
+}
+
+func (r *sceneResolver) IsRemote(ctx context.Context, obj *models.Scene) (bool, error) {
+	return obj.EmbedURL != nil && strings.TrimSpace(*obj.EmbedURL) != "", nil
+}
+
+func (r *sceneResolver) EmbedDuration(ctx context.Context, obj *models.Scene) (*float64, error) {
+	if obj.EmbedURL == nil || strings.TrimSpace(*obj.EmbedURL) == "" {
+		return nil, nil
+	}
+
+	duration, _, err := embed.ExtractVideoDuration(*obj.EmbedURL)
+	if err != nil {
+		return nil, nil
+	}
+
+	return &duration, nil
+}
+
 func (r *sceneResolver) IsProbablyBroken(ctx context.Context, obj *models.Scene) (bool, error) {
 	// Load primary file if not already loaded
 	_, err := r.getPrimaryFile(ctx, obj)
@@ -166,9 +203,22 @@ func (r *sceneResolver) Paths(ctx context.Context, obj *models.Scene) (*ScenePat
 	previewPath := builder.GetStreamPreviewURL()
 	streamPath := builder.GetStreamURL(config.GetAPIKey()).String()
 	webpPath := builder.GetStreamPreviewImageURL()
-	objHash := obj.GetHash(config.GetVideoFileNamingAlgorithm())
-	vttPath := builder.GetSpriteVTTURL(objHash)
-	spritePath := builder.GetSpriteURL(objHash)
+
+	_, err := r.getPrimaryFile(ctx, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	var vttPath string
+	var spritePath string
+	if manager.IsEmbedSpriteScene(obj) {
+		vttPath = builder.GetSceneVttThumbsURL()
+		spritePath = builder.GetSceneVttSpriteURL()
+	} else {
+		objHash := obj.GetHash(config.GetVideoFileNamingAlgorithm())
+		vttPath = builder.GetSpriteVTTURL(objHash)
+		spritePath = builder.GetSpriteURL(objHash)
+	}
 	funscriptPath := builder.GetFunscriptURL()
 	captionBasePath := builder.GetCaptionURL()
 	interactiveHeatmap := builder.GetInteractiveHeatmapURL()
@@ -453,13 +503,53 @@ func (r *sceneResolver) SceneStreams(ctx context.Context, obj *models.Scene) ([]
 		return nil, err
 	}
 
+	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
+
+	if obj.Files.Primary() == nil {
+		return embedSceneStreamEndpoints(baseURL, obj), nil
+	}
+
 	config := manager.GetInstance().Config
 
-	baseURL, _ := ctx.Value(BaseURLCtxKey).(string)
 	builder := urlbuilders.NewSceneURLBuilder(baseURL, obj)
 	apiKey := config.GetAPIKey()
 
 	return manager.GetSceneStreamPaths(obj, builder.GetStreamURL(apiKey), config.GetMaxStreamingTranscodeSize())
+}
+
+func embedSceneStreamEndpoints(baseURL string, scene *models.Scene) []*manager.SceneStreamEndpoint {
+	if scene.EmbedURL == nil || strings.TrimSpace(*scene.EmbedURL) == "" {
+		return nil
+	}
+
+	_, site, err := embed.Parse(*scene.EmbedURL)
+	if err != nil || !embed.SupportsNativeStreaming(site) {
+		return nil
+	}
+
+	builder := urlbuilders.NewSceneURLBuilder(baseURL, scene)
+	mimeType := ffmpeg.MimeHLS
+
+	heights := []int{0}
+	if variants, _, err := embed.ExtractStreamVariants(*scene.EmbedURL); err == nil {
+		if extracted := embed.HeightsFromVariants(variants); len(extracted) > 0 {
+			heights = extracted
+		}
+	}
+
+	endpoints := make([]*manager.SceneStreamEndpoint, 0, len(heights))
+	for _, height := range heights {
+		variant := embed.HLSVariant{Height: height}
+		label := embed.VariantLabel(variant)
+		streamURL := builder.GetEmbedStreamURL(variant)
+		endpoints = append(endpoints, &manager.SceneStreamEndpoint{
+			URL:      streamURL,
+			MimeType: &mimeType,
+			Label:    &label,
+		})
+	}
+
+	return endpoints
 }
 
 func (r *sceneResolver) Interactive(ctx context.Context, obj *models.Scene) (bool, error) {

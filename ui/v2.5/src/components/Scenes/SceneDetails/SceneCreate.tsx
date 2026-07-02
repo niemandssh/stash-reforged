@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
-import { useHistory, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { SceneEditPanel } from "./SceneEditPanel";
 import * as GQL from "src/core/generated-graphql";
 import { mutateCreateScene, useFindScene } from "src/core/StashService";
@@ -9,7 +9,6 @@ import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { useToast } from "src/hooks/Toast";
 
 const SceneCreate: React.FC = () => {
-  const history = useHistory();
   const intl = useIntl();
   const Toast = useToast();
 
@@ -64,13 +63,13 @@ const SceneCreate: React.FC = () => {
       file_ids: fileID ? [fileID] : undefined,
     });
     if (result.data?.sceneCreate?.id) {
-      history.push(`/scenes/${result.data.sceneCreate.id}`);
       Toast.success(
         intl.formatMessage(
           { id: "toast.created_entity" },
           { entity: intl.formatMessage({ id: "scene" }).toLocaleLowerCase() }
         )
       );
+      return result.data.sceneCreate.id;
     }
   }
 

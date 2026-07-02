@@ -1,5 +1,5 @@
 import * as GQL from "src/core/generated-graphql";
-import { useTagCreate } from "src/core/StashService";
+import { getClient, useTagCreate } from "src/core/StashService";
 import { useEffect, useState } from "react";
 import { Tag, TagSelect, TagSelectProps } from "src/components/Tags/TagSelect";
 import { useToast } from "src/hooks/Toast";
@@ -184,10 +184,12 @@ export function useTagsEdit(
         tags.concat([
           {
             id: result.data.tagCreate.id,
-            name: toCreate.name ?? "",
-            aliases: [],
-            is_pose_tag: false,
-            color: undefined, // New tags don't have color initially
+            name: result.data.tagCreate.name,
+            sort_name: result.data.tagCreate.sort_name,
+            aliases: result.data.tagCreate.aliases,
+            image_path: result.data.tagCreate.image_path,
+            is_pose_tag: result.data.tagCreate.is_pose_tag,
+            color: result.data.tagCreate.color,
           },
         ])
       );
@@ -213,31 +215,114 @@ export function useTagsEdit(
     }
   }
 
-  function updateTagsStateFromScraper(
-    scrapedTags?: Pick<GQL.ScrapedTag, "name" | "stored_id">[]
+  function scrapedTagToTag(
+    scraped: Pick<GQL.ScrapedTag, "name" | "stored_id">
+  ): Tag {
+    return {
+      id: scraped.stored_id!,
+      name: scraped.name ?? "",
+      aliases: [],
+      is_pose_tag: false,
+      color: undefined,
+    };
+  }
+
+  function tagDataToTag(tag: GQL.TagDataFragment): Tag {
+    return {
+      id: tag.id,
+      name: tag.name,
+      sort_name: tag.sort_name,
+      aliases: tag.aliases,
+      image_path: tag.image_path,
+      is_pose_tag: tag.is_pose_tag,
+      color: tag.color,
+    };
+  }
+
+  async function resolveTagsByIDs(
+    ids: string[],
+    existing: Map<string, Tag>
+  ): Promise<Map<string, Tag>> {
+    const resolved = new Map(existing);
+    const uniqueMissing = [...new Set(ids.filter((id) => !resolved.has(id)))];
+
+    if (uniqueMissing.length === 0) {
+      return resolved;
+    }
+
+    const client = getClient();
+    await Promise.all(
+      uniqueMissing.map(async (id) => {
+        try {
+          let result = await client.query<GQL.FindTagQuery>({
+            query: GQL.FindTagDocument,
+            variables: { id },
+            fetchPolicy: "cache-first",
+          });
+          if (!result.data?.findTag) {
+            result = await client.query<GQL.FindTagQuery>({
+              query: GQL.FindTagDocument,
+              variables: { id },
+              fetchPolicy: "network-only",
+            });
+          }
+          if (result.data?.findTag) {
+            resolved.set(id, tagDataToTag(result.data.findTag));
+          }
+        } catch {
+          // Tag may not exist (e.g. stale stored_id from scraper)
+        }
+      })
+    );
+
+    return resolved;
+  }
+
+  async function updateTagsStateFromScraper(
+    scrapedTags?: Pick<GQL.ScrapedTag, "name" | "stored_id">[],
+    supplementalTags?: Tag[]
   ) {
     if (!scrapedTags) {
       return;
     }
 
-    // map tags to their ids and filter out those not found
     const idTags = scrapedTags.filter(
       (t) => t.stored_id !== undefined && t.stored_id !== null
     );
     const newNewTags = scrapedTags.filter((t) => !t.stored_id);
-    onSetTags(
-      idTags.map((p) => {
-        return {
-          id: p.stored_id!,
-          name: p.name ?? "",
-          aliases: [],
-          is_pose_tag: false,
-          color: undefined, // Scraped tags don't have color info
-        };
-      })
-    );
-
     setNewTags(newNewTags);
+
+    if (idTags.length === 0) {
+      onSetTags([]);
+      return;
+    }
+
+    const tagMap = new Map<string, Tag>();
+    for (const tag of tags) {
+      tagMap.set(tag.id, tag);
+    }
+    for (const tag of supplementalTags ?? []) {
+      tagMap.set(tag.id, tag);
+    }
+
+    const ids = idTags.map((t) => t.stored_id!);
+    const resolvedMap = await resolveTagsByIDs(ids, tagMap);
+
+    const seen = new Set<string>();
+    const resolvedTags = idTags
+      .map((scrapedTag) => {
+        const id = scrapedTag.stored_id!;
+        return resolvedMap.get(id) ?? scrapedTagToTag(scrapedTag);
+      })
+      .filter((tag) => {
+        if (seen.has(tag.id)) {
+          return false;
+        }
+        seen.add(tag.id);
+        return true;
+      });
+
+    onSetTags(resolvedTags);
   }
 
   function renderNewTags() {

@@ -40,7 +40,10 @@ interface ISceneScrapeDialogProps {
   scraped: GQL.ScrapedScene;
   endpoint?: string;
 
-  onClose: (scrapedScene?: GQL.ScrapedScene) => void;
+  onClose: (
+    scrapedScene?: GQL.ScrapedScene,
+    supplementalTags?: Tag[]
+  ) => void;
 }
 
 export const SceneScrapeDialog: React.FC<ISceneScrapeDialogProps> = ({
@@ -131,7 +134,7 @@ export const SceneScrapeDialog: React.FC<ISceneScrapeDialogProps> = ({
     scraped.groups?.filter((t) => !t.stored_id) ?? []
   );
 
-  const { tags, newTags, scrapedTagsRow } = useScrapedTags(
+  const { tags, newTags, createdTags, scrapedTagsRow } = useScrapedTags(
     sceneTags,
     scraped.tags
   );
@@ -291,7 +294,10 @@ export const SceneScrapeDialog: React.FC<ISceneScrapeDialogProps> = ({
       )}
       renderScrapeRows={renderScrapeRows}
       onClose={(apply) => {
-        onClose(apply ? makeNewScrapedItem() : undefined);
+        onClose(
+          apply ? makeNewScrapedItem() : undefined,
+          apply ? createdTags : undefined
+        );
       }}
     />
   );
