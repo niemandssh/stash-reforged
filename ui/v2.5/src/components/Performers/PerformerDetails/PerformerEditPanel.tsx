@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Button, Form, Dropdown } from "react-bootstrap";
 import { FormattedMessage, useIntl } from "react-intl";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
 import {
@@ -495,20 +496,23 @@ export const PerformerEditPanel: React.FC<IPerformerDetails> = ({
     setIsLoading(false);
   }
 
+  const editSaveHotkey = useHotkey("edit.save");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+
   // set up hotkeys
   useEffect(() => {
     if (isVisible) {
-      Mousetrap.bind("s s", () => {
+      Mousetrap.bind(editSaveHotkey, () => {
         if (formik.dirty) {
           formik.submitForm();
         }
       });
 
       return () => {
-        Mousetrap.unbind("s s");
+        Mousetrap.unbind(editSaveHotkey);
 
         if (!isNew) {
-          Mousetrap.unbind("d d");
+          Mousetrap.unbind(entityDeleteHotkey);
         }
       };
     }

@@ -474,7 +474,12 @@ export const ScenePlayerScrubber: React.FC<IScenePlayerScrubberProps> = ({
         </div>
         <div ref={indicatorEl} id="scrubber-position-indicator" />
         <div id="scrubber-current-position">
-          <span>{TextUtils.secondsToTimestamp(time)}</span>
+          <span>
+            {TextUtils.secondsToTimestamp(time)}
+            {duration > 0
+              ? ` / ${TextUtils.secondsToTimestamp(duration)}`
+              : ""}
+          </span>
         </div>
         <div className="scrubber-viewport">
           <div ref={sliderEl} className="scrubber-slider">

@@ -15,6 +15,10 @@ func postProcessTags(ctx context.Context, tqb models.TagQueryer, scrapedTags []*
 	ret = make([]*models.ScrapedTag, 0, len(scrapedTags))
 
 	for _, t := range scrapedTags {
+		if t == nil {
+			continue
+		}
+
 		err := match.ScrapedTag(ctx, tqb, t)
 		if err != nil {
 			return nil, err
@@ -29,12 +33,16 @@ func postProcessTags(ctx context.Context, tqb models.TagQueryer, scrapedTags []*
 // It returns the filtered list of tags and a list of the excluded tags
 func FilterTags(excludeRegexps []*regexp.Regexp, tags []*models.ScrapedTag) (newTags []*models.ScrapedTag, ignoredTags []string) {
 	if len(excludeRegexps) == 0 {
-		return tags, nil
+		return filterNilScrapedTags(tags), nil
 	}
 
 	newTags = make([]*models.ScrapedTag, 0, len(tags))
 
 	for _, t := range tags {
+		if t == nil {
+			continue
+		}
+
 		ignore := false
 		for _, reg := range excludeRegexps {
 			if reg.MatchString(strings.ToLower(t.Name)) {

@@ -15,6 +15,7 @@ interface IMultiSetProps {
   ids?: string[];
   mode: GQL.BulkUpdateIdMode;
   disabled?: boolean;
+  creatable?: boolean;
   onUpdate: (ids: string[]) => void;
   onSetMode: (mode: GQL.BulkUpdateIdMode) => void;
   menuPortalTarget?: HTMLElement | null;
@@ -50,6 +51,7 @@ const Select: React.FC<IMultiSetProps> = (props) => {
       isClearable={false}
       onSelect={onUpdate}
       ids={props.ids ?? []}
+      creatable={props.creatable}
       menuPortalTarget={props.menuPortalTarget}
     />
   );

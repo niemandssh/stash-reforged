@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { SortDirectionEnum } from "src/core/generated-graphql";
 import {
   Button,
@@ -79,14 +80,16 @@ export const SearchTermInput: React.FC<{
     onFilterUpdate
   );
 
+  const focusSearchHotkey = useHotkey("list.focusSearch");
+
   useEffect(() => {
-    Mousetrap.bind("/", (e) => {
+    Mousetrap.bind(focusSearchHotkey, (e) => {
       setQueryFocus();
       e.preventDefault();
     });
 
     return () => {
-      Mousetrap.unbind("/");
+      Mousetrap.unbind(focusSearchHotkey);
     };
   });
 
@@ -353,13 +356,15 @@ export const ListFilter: React.FC<IListFilterProps> = ({
     onFilterUpdate(newFilter);
   }, [filter, onFilterUpdate]);
 
+  const reshuffleRandomHotkey = useHotkey("list.reshuffleRandom");
+
   useEffect(() => {
-    Mousetrap.bind("r", () => onReshuffleRandomSort());
+    Mousetrap.bind(reshuffleRandomHotkey, () => onReshuffleRandomSort());
 
     return () => {
-      Mousetrap.unbind("r");
+      Mousetrap.unbind(reshuffleRandomHotkey);
     };
-  }, [onReshuffleRandomSort]);
+  }, [onReshuffleRandomSort, reshuffleRandomHotkey]);
 
   function render() {
     return (

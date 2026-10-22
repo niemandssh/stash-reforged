@@ -3,6 +3,7 @@ import {
   faVenus,
   faTransgenderAlt,
   faMars,
+  faUserFriends,
 } from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -21,6 +22,8 @@ const GenderIcon: React.FC<IIconProps> = ({ gender, className }) => {
         ? faMars
         : gender === GQL.GenderEnum.Female
         ? faVenus
+        : gender === GQL.GenderEnum.Couple
+        ? faUserFriends
         : faTransgenderAlt;
     return (
       <FontAwesomeIcon

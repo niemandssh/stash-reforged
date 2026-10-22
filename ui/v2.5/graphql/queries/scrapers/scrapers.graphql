@@ -110,6 +110,16 @@ query ScrapeSceneURL($url: String!) {
   }
 }
 
+query ResolveVideoURLDuration($url: String!) {
+  resolveVideoURLDuration(url: $url)
+}
+
+query RemoteSceneSuggestionResults($job_id: ID!) {
+  remoteSceneSuggestionResults(job_id: $job_id) {
+    ...ScrapedSceneData
+  }
+}
+
 query ScrapeSingleGallery(
   $source: ScraperSourceInput!
   $input: ScrapeSingleGalleryInput!

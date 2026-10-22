@@ -5,7 +5,8 @@ import { RatingSystemType } from "src/utils/rating";
 export function useRatingKeybinds(
   isVisible: boolean,
   ratingSystem: RatingSystemType | undefined,
-  setRating: (v: number) => void
+  setRating: (v: number) => void,
+  triggerHotkey = "r"
 ) {
   const firstChar = useRef<string | undefined>(undefined);
 
@@ -64,7 +65,7 @@ export function useRatingKeybinds(
   useEffect(() => {
     if (!isVisible) return;
 
-    Mousetrap.bind("r", () => {
+    Mousetrap.bind(triggerHotkey, () => {
       // numeric keypresses get caught by jwplayer, so blur the element
       // if the rating sequence is started
       if (document.activeElement instanceof HTMLElement) {
@@ -79,7 +80,7 @@ export function useRatingKeybinds(
     });
 
     return () => {
-      Mousetrap.unbind("r");
+      Mousetrap.unbind(triggerHotkey);
     };
   });
 }

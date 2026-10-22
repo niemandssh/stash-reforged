@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { useHistory, useLocation } from "react-router-dom";
 import { isEqual, isFunction } from "lodash-es";
@@ -238,10 +239,20 @@ export function useListKeyboardShortcuts(props: {
     displayMode,
   } = props;
 
+  const openFilterEditorHotkey = useHotkey("list.openFilterEditor");
+  const pageNextHotkey = useHotkey("list.pageNext");
+  const pagePreviousHotkey = useHotkey("list.pagePrevious");
+  const pageForward10Hotkey = useHotkey("list.pageForward10");
+  const pageBack10Hotkey = useHotkey("list.pageBack10");
+  const pageLastHotkey = useHotkey("list.pageLast");
+  const pageFirstHotkey = useHotkey("list.pageFirst");
+  const selectAllHotkey = useHotkey("list.selectAll");
+  const selectNoneHotkey = useHotkey("list.selectNone");
+
   // set up hotkeys
   useEffect(() => {
     if (showEditFilter) {
-      Mousetrap.bind("f", (e) => {
+      Mousetrap.bind(openFilterEditorHotkey, (e) => {
         showEditFilter();
         // prevent default behavior of typing f in a text field
         // otherwise the filter dialog closes, the query field is focused and
@@ -250,10 +261,10 @@ export function useListKeyboardShortcuts(props: {
       });
 
       return () => {
-        Mousetrap.unbind("f");
+        Mousetrap.unbind(openFilterEditorHotkey);
       };
     }
-  }, [showEditFilter]);
+  }, [showEditFilter, openFilterEditorHotkey]);
 
   useEffect(() => {
     if (!currentPage || !changePage || !pages) return;
@@ -268,44 +279,55 @@ export function useListKeyboardShortcuts(props: {
       }
     }
 
-    Mousetrap.bind("right", () => {
+    Mousetrap.bind(pageNextHotkey, () => {
       changePage(currentPage + 1);
     });
-    Mousetrap.bind("left", () => {
+    Mousetrap.bind(pagePreviousHotkey, () => {
       changePage(currentPage - 1);
     });
-    Mousetrap.bind("shift+right", () => {
+    Mousetrap.bind(pageForward10Hotkey, () => {
       changePage(Math.min(pages, currentPage + 10));
     });
-    Mousetrap.bind("shift+left", () => {
+    Mousetrap.bind(pageBack10Hotkey, () => {
       changePage(Math.max(1, currentPage - 10));
     });
-    Mousetrap.bind("ctrl+end", () => {
+    Mousetrap.bind(pageLastHotkey, () => {
       changePage(pages);
     });
-    Mousetrap.bind("ctrl+home", () => {
+    Mousetrap.bind(pageFirstHotkey, () => {
       changePage(1);
     });
 
     return () => {
-      Mousetrap.unbind("right");
-      Mousetrap.unbind("left");
-      Mousetrap.unbind("shift+right");
-      Mousetrap.unbind("shift+left");
-      Mousetrap.unbind("ctrl+end");
-      Mousetrap.unbind("ctrl+home");
+      Mousetrap.unbind(pageNextHotkey);
+      Mousetrap.unbind(pagePreviousHotkey);
+      Mousetrap.unbind(pageForward10Hotkey);
+      Mousetrap.unbind(pageBack10Hotkey);
+      Mousetrap.unbind(pageLastHotkey);
+      Mousetrap.unbind(pageFirstHotkey);
     };
-  }, [currentPage, onChangePage, pages, displayMode]);
+  }, [
+    currentPage,
+    onChangePage,
+    pages,
+    displayMode,
+    pageNextHotkey,
+    pagePreviousHotkey,
+    pageForward10Hotkey,
+    pageBack10Hotkey,
+    pageLastHotkey,
+    pageFirstHotkey,
+  ]);
 
   useEffect(() => {
-    Mousetrap.bind("s a", () => onSelectAll?.());
-    Mousetrap.bind("s n", () => onSelectNone?.());
+    Mousetrap.bind(selectAllHotkey, () => onSelectAll?.());
+    Mousetrap.bind(selectNoneHotkey, () => onSelectNone?.());
 
     return () => {
-      Mousetrap.unbind("s a");
-      Mousetrap.unbind("s n");
+      Mousetrap.unbind(selectAllHotkey);
+      Mousetrap.unbind(selectNoneHotkey);
     };
-  }, [onSelectAll, onSelectNone]);
+  }, [onSelectAll, onSelectNone, selectAllHotkey, selectNoneHotkey]);
 }
 
 export function useListSelect<T extends IHasID = IHasID>(items: T[]) {

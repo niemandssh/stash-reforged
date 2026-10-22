@@ -278,25 +278,26 @@ else
 	@touch ui/v2.5/build/index.html
 endif
 
-# Regenerates GraphQL files
+# Regenerates GraphQL files (backend gqlgen, dataloaders, UI gqlgen, login locales — in parallel)
 .PHONY: generate
-generate: generate-backend generate-ui
+generate: touch-ui
+	go run ./scripts/generate_backend.go -all
 
 .PHONY: generate-ui
 generate-ui:
-	cd ui/v2.5 && bun run gqlgen
+	go run ./scripts/generate_backend.go -ui
 
 .PHONY: generate-backend
 generate-backend: touch-ui
-	go generate ./cmd/stash
+	go run ./scripts/generate_backend.go
 
 .PHONY: generate-login-locale
 generate-login-locale:
-	go generate ./ui
+	go run ./scripts/generate_backend.go -login-locale
 
 .PHONY: generate-dataloaders
 generate-dataloaders:
-	go generate ./internal/api/loaders
+	go run ./scripts/generate_backend.go -dataloaders
 
 # Regenerates stash-box client files
 .PHONY: generate-stash-box-client
@@ -369,7 +370,7 @@ ifdef STASH_SOURCEMAPS
 endif
 
 .PHONY: ui
-ui: generate ui-only generate-login-locale
+ui: generate ui-only
 
 .PHONY: ui-only
 ui-only: ui-env
@@ -445,7 +446,7 @@ start:
 	make server-start
 
 dev:
-	make generate && make server-start
+	make generate && BUILD_DATE="dev" make server-start
 
 gstart:
 	make generate && make server-start

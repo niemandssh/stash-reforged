@@ -4,6 +4,7 @@ import { ButtonVariant } from "react-bootstrap/types";
 import { Icon } from "./Icon";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { FormattedMessage } from "react-intl";
+import { useConfirmOnEnter } from "src/hooks/modal";
 
 interface IButton {
   text?: string;
@@ -46,63 +47,70 @@ export const ModalComponent: React.FC<IModal> = ({
   footerButtons,
   leftFooterButtons,
   hideFooter,
-}) => (
-  <Modal
-    className="ModalComponent"
-    keyboard={false}
-    onHide={onHide ?? defaultOnHide}
-    show={show}
-    dialogClassName={dialogClassName}
-    {...modalProps}
-  >
-    <Modal.Header>
-      {icon ? <Icon icon={icon} /> : ""}
-      <span>{header ?? ""}</span>
-    </Modal.Header>
-    <Modal.Body>{children}</Modal.Body>
-    {!hideFooter && (
-      <Modal.Footer className="ModalFooter">
-        <div>{leftFooterButtons}</div>
-        <div>
-          {footerButtons}
-          {cancel ? (
-            <Button
-              disabled={isRunning}
-              variant={cancel.variant ?? "primary"}
-              onClick={cancel.onClick}
-              className="ml-2"
-            >
-              {cancel.text ?? (
-                <FormattedMessage
-                  id="actions.cancel"
-                  defaultMessage="Cancel"
-                  description="Cancels the current action and dismisses the modal."
-                />
-              )}
-            </Button>
-          ) : null}
-          {accept ? (
-            <Button
-              disabled={isRunning || disabled || accept.disabled}
-              variant={accept.variant ?? "primary"}
-              onClick={accept.onClick}
-              className="ml-2"
-            >
-              {isRunning ? (
-                <Spinner animation="border" role="status" size="sm" />
-              ) : (
-                accept.text ?? (
+}) => {
+  const confirmDisabled =
+    !!isRunning || !!disabled || !!accept?.disabled || !accept?.onClick;
+
+  useConfirmOnEnter(show, accept?.onClick, confirmDisabled);
+
+  return (
+    <Modal
+      className="ModalComponent"
+      keyboard
+      onHide={onHide ?? defaultOnHide}
+      show={show}
+      dialogClassName={dialogClassName}
+      {...modalProps}
+    >
+      <Modal.Header>
+        {icon ? <Icon icon={icon} /> : ""}
+        <span>{header ?? ""}</span>
+      </Modal.Header>
+      <Modal.Body>{children}</Modal.Body>
+      {!hideFooter && (
+        <Modal.Footer className="ModalFooter">
+          <div>{leftFooterButtons}</div>
+          <div>
+            {footerButtons}
+            {cancel ? (
+              <Button
+                disabled={isRunning}
+                variant={cancel.variant ?? "primary"}
+                onClick={cancel.onClick}
+                className="ml-2"
+              >
+                {cancel.text ?? (
                   <FormattedMessage
-                    id="actions.close"
-                    defaultMessage="Close"
-                    description="Closes the current modal."
+                    id="actions.cancel"
+                    defaultMessage="Cancel"
+                    description="Cancels the current action and dismisses the modal."
                   />
-                )
-              )}
-            </Button>
-          ) : null}
-        </div>
-      </Modal.Footer>
-    )}
-  </Modal>
-);
+                )}
+              </Button>
+            ) : null}
+            {accept ? (
+              <Button
+                disabled={isRunning || disabled || accept.disabled}
+                variant={accept.variant ?? "primary"}
+                onClick={accept.onClick}
+                className="ml-2"
+              >
+                {isRunning ? (
+                  <Spinner animation="border" role="status" size="sm" />
+                ) : (
+                  accept.text ?? (
+                    <FormattedMessage
+                      id="actions.close"
+                      defaultMessage="Close"
+                      description="Closes the current modal."
+                    />
+                  )
+                )}
+              </Button>
+            ) : null}
+          </div>
+        </Modal.Footer>
+      )}
+    </Modal>
+  );
+};

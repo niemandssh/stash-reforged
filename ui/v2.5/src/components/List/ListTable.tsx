@@ -47,6 +47,11 @@ interface IListTableProps<T> {
   selectedIds: Set<string>;
   onSelectChange: (id: string, selected: boolean, shiftKey: boolean) => void;
   renderCell: (column: IColumn, item: T, index: number) => React.ReactNode;
+  renderRowWrapper?: (
+    item: T,
+    index: number,
+    row: React.ReactElement
+  ) => React.ReactNode;
 }
 
 export const ListTable = <T extends { id: string }>(
@@ -61,6 +66,7 @@ export const ListTable = <T extends { id: string }>(
     selectedIds,
     onSelectChange,
     renderCell,
+    renderRowWrapper,
   } = props;
 
   const visibleColumns = useMemo(() => {
@@ -72,7 +78,7 @@ export const ListTable = <T extends { id: string }>(
   const renderObjectRow = (item: T, index: number) => {
     let shiftKey = false;
 
-    return (
+    const row = (
       <tr key={item.id}>
         <td className="select-col">
           <label>
@@ -99,6 +105,12 @@ export const ListTable = <T extends { id: string }>(
         ))}
       </tr>
     );
+
+    if (renderRowWrapper) {
+      return renderRowWrapper(item, index, row);
+    }
+
+    return row;
   };
 
   const columnHeaders = useMemo(() => {

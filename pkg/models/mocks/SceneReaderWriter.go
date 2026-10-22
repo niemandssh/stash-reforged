@@ -159,6 +159,29 @@ func (_m *SceneReaderWriter) AddViews(ctx context.Context, sceneID int, dates []
 	return r0, r1
 }
 
+// AddWatchLater provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) AddWatchLater(ctx context.Context, id int) (*time.Time, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 *time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int) *time.Time); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // All provides a mock function with given fields: ctx
 func (_m *SceneReaderWriter) All(ctx context.Context) ([]*models.Scene, error) {
 	ret := _m.Called(ctx)
@@ -380,6 +403,27 @@ func (_m *SceneReaderWriter) CountViews(ctx context.Context, id int) (int, error
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
 		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CountWatchLater provides a mock function with given fields: ctx
+func (_m *SceneReaderWriter) CountWatchLater(ctx context.Context) (int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(context.Context) int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -846,6 +890,29 @@ func (_m *SceneReaderWriter) FindMany(ctx context.Context, ids []int) ([]*models
 	return r0, r1
 }
 
+// FindWatchLater provides a mock function with given fields: ctx, page, perPage
+func (_m *SceneReaderWriter) FindWatchLater(ctx context.Context, page int, perPage int) ([]models.WatchLaterEntry, error) {
+	ret := _m.Called(ctx, page, perPage)
+
+	var r0 []models.WatchLaterEntry
+	if rf, ok := ret.Get(0).(func(context.Context, int, int) []models.WatchLaterEntry); ok {
+		r0 = rf(ctx, page, perPage)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.WatchLaterEntry)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int, int) error); ok {
+		r1 = rf(ctx, page, perPage)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAggregatedViewHistory provides a mock function with given fields: ctx, page, perPage
 func (_m *SceneReaderWriter) GetAggregatedViewHistory(ctx context.Context, page int, perPage int) ([]models.AggregatedView, error) {
 	ret := _m.Called(ctx, page, perPage)
@@ -1091,6 +1158,29 @@ func (_m *SceneReaderWriter) GetManyFileIDs(ctx context.Context, ids []int) ([][
 	return r0, r1
 }
 
+// GetManyInWatchLater provides a mock function with given fields: ctx, ids
+func (_m *SceneReaderWriter) GetManyInWatchLater(ctx context.Context, ids []int) ([]bool, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []bool
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []bool); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]bool)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetManyLastViewed provides a mock function with given fields: ctx, ids
 func (_m *SceneReaderWriter) GetManyLastViewed(ctx context.Context, ids []int) ([]*time.Time, error) {
 	ret := _m.Called(ctx, ids)
@@ -1252,6 +1342,29 @@ func (_m *SceneReaderWriter) GetManyViewDates(ctx context.Context, ids []int) ([
 	return r0, r1
 }
 
+// GetManyWatchLaterAt provides a mock function with given fields: ctx, ids
+func (_m *SceneReaderWriter) GetManyWatchLaterAt(ctx context.Context, ids []int) ([]*time.Time, error) {
+	ret := _m.Called(ctx, ids)
+
+	var r0 []*time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, []int) []*time.Time); ok {
+		r0 = rf(ctx, ids)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, []int) error); ok {
+		r1 = rf(ctx, ids)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetOCount provides a mock function with given fields: ctx, id
 func (_m *SceneReaderWriter) GetOCount(ctx context.Context, id int) (int, error) {
 	ret := _m.Called(ctx, id)
@@ -1312,6 +1425,29 @@ func (_m *SceneReaderWriter) GetODatesInRange(ctx context.Context, start time.Ti
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
 		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetOHistoryEntries provides a mock function with given fields: ctx, sceneID
+func (_m *SceneReaderWriter) GetOHistoryEntries(ctx context.Context, sceneID int) ([]models.OHistoryEntry, error) {
+	ret := _m.Called(ctx, sceneID)
+
+	var r0 []models.OHistoryEntry
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.OHistoryEntry); ok {
+		r0 = rf(ctx, sceneID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.OHistoryEntry)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, sceneID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1400,6 +1536,29 @@ func (_m *SceneReaderWriter) GetOMGDatesInRange(ctx context.Context, start time.
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, time.Time, time.Time) error); ok {
 		r1 = rf(ctx, start, end)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetOMGHistoryEntries provides a mock function with given fields: ctx, sceneID
+func (_m *SceneReaderWriter) GetOMGHistoryEntries(ctx context.Context, sceneID int) ([]models.OHistoryEntry, error) {
+	ret := _m.Called(ctx, sceneID)
+
+	var r0 []models.OHistoryEntry
+	if rf, ok := ret.Get(0).(func(context.Context, int) []models.OHistoryEntry); ok {
+		r0 = rf(ctx, sceneID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.OHistoryEntry)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, sceneID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1568,6 +1727,29 @@ func (_m *SceneReaderWriter) GetViewDates(ctx context.Context, relatedID int) ([
 	return r0, r1
 }
 
+// GetWatchLaterAt provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) GetWatchLaterAt(ctx context.Context, id int) (*time.Time, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 *time.Time
+	if rf, ok := ret.Get(0).(func(context.Context, int) *time.Time); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*time.Time)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // HasCover provides a mock function with given fields: ctx, sceneID
 func (_m *SceneReaderWriter) HasCover(ctx context.Context, sceneID int) (bool, error) {
 	ret := _m.Called(ctx, sceneID)
@@ -1598,6 +1780,27 @@ func (_m *SceneReaderWriter) IncrementOMGCounter(ctx context.Context, id int) (i
 		r0 = rf(ctx, id)
 	} else {
 		r0 = ret.Get(0).(int)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, int) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// IsInWatchLater provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) IsInWatchLater(ctx context.Context, id int) (bool, error) {
+	ret := _m.Called(ctx, id)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, int) bool); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
@@ -1715,6 +1918,34 @@ func (_m *SceneReaderWriter) QueryCount(ctx context.Context, sceneFilter *models
 	}
 
 	return r0, r1
+}
+
+// RemoveFile provides a mock function with given fields: ctx, sceneID, fileID
+func (_m *SceneReaderWriter) RemoveFile(ctx context.Context, sceneID int, fileID models.FileID) error {
+	ret := _m.Called(ctx, sceneID, fileID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, models.FileID) error); ok {
+		r0 = rf(ctx, sceneID, fileID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveWatchLater provides a mock function with given fields: ctx, id
+func (_m *SceneReaderWriter) RemoveWatchLater(ctx context.Context, id int) error {
+	ret := _m.Called(ctx, id)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int) error); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // ResetActivity provides a mock function with given fields: ctx, sceneID, resetResume, resetDuration

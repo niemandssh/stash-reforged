@@ -12,6 +12,7 @@ import (
 type SceneService interface {
 	Create(ctx context.Context, input *models.Scene, fileIDs []models.FileID, coverImage []byte) (*models.Scene, error)
 	AssignFile(ctx context.Context, sceneID int, fileID models.FileID) error
+	RemoveFile(ctx context.Context, sceneID int, fileID models.FileID, opts scene.RemoveFileOptions) error
 	Merge(ctx context.Context, sourceIDs []int, destinationID int, fileDeleter *scene.FileDeleter, options scene.MergeOptions) error
 	Destroy(ctx context.Context, scene *models.Scene, fileDeleter *scene.FileDeleter, deleteGenerated, deleteFile bool) error
 	Archive(ctx context.Context, scene *models.Scene, deleteFile bool, archiveReason *string, fileDeleter *scene.FileDeleter) error

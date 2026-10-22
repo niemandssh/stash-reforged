@@ -23,3 +23,9 @@ mutation PerformerDestroy($id: ID!) {
 mutation PerformersDestroy($ids: [ID!]!) {
   performersDestroy(ids: $ids)
 }
+
+mutation PerformersMerge($input: PerformersMergeInput!) {
+  performersMerge(input: $input) {
+    ...PerformerData
+  }
+}

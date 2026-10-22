@@ -18,6 +18,7 @@ import { ProbablyBrokenBadge } from "../Shared/ProbablyBrokenBadge";
 import { TrimmedBadge } from "../Shared/TrimmedBadge";
 import { ArchivedBadge } from "../Shared/ArchivedBadge";
 import { PinIcon } from "../Shared/PinIcon";
+import { SceneContextMenu } from "../Shared/SceneContextMenu";
 
 interface ISceneListTableProps {
   scenes: GQL.SlimSceneDataFragment[];
@@ -471,6 +472,21 @@ export const SceneListTable: React.FC<ISceneListTableProps> = (
       selectedIds={props.selectedIds}
       onSelectChange={props.onSelectChange}
       renderCell={renderCell}
+      renderRowWrapper={(scene, index, row) => {
+        const sceneLink = props.queue
+          ? props.queue.makeLink(scene.id, { sceneIndex: index })
+          : `/scenes/${scene.id}`;
+        return (
+          <SceneContextMenu
+            key={scene.id}
+            sceneId={scene.id}
+            sceneUrl={sceneLink}
+            watchLater={scene.watch_later ?? false}
+          >
+            {row}
+          </SceneContextMenu>
+        );
+      }}
     />
   );
 };

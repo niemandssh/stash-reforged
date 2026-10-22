@@ -31,8 +31,12 @@ type SceneFilterType struct {
 	Rating100 *IntCriterionInput `json:"rating100"`
 	// Filter by organized
 	Organized *bool `json:"organized"`
+	// Filter by classified
+	Classified *bool `json:"classified"`
 	// Filter by pinned
 	Pinned *bool `json:"pinned"`
+	// Filter by watch later
+	WatchLater *bool `json:"watch_later"`
 	// Filter by is_broken
 	IsBroken *bool `json:"is_broken"`
 	// Filter scenes that have start_time and/or end_time set (need trimming)
@@ -93,6 +97,8 @@ type SceneFilterType struct {
 	StashID *StringCriterionInput `json:"stash_id"`
 	// Filter by StashID Endpoint
 	StashIDEndpoint *StashIDCriterionInput `json:"stash_id_endpoint"`
+	// Filter by embed url
+	EmbedURL *StringCriterionInput `json:"embed_url"`
 	// Filter by url
 	URL *StringCriterionInput `json:"url"`
 	// Filter by interactive
@@ -171,6 +177,7 @@ type SceneCreateInput struct {
 	ShootDate       *string           `json:"shoot_date"`
 	Rating100       *int              `json:"rating100"`
 	Organized       *bool             `json:"organized"`
+	Classified      *bool             `json:"classified"`
 	IsBroken        *bool             `json:"is_broken"`
 	IsTrimmed       *bool             `json:"is_trimmed"`
 	IsArchived      *bool             `json:"is_archived"`
@@ -188,7 +195,7 @@ type SceneCreateInput struct {
 	// The first id will be assigned as primary.
 	// Files will be reassigned from existing scenes if applicable.
 	// Files must not already be primary for another scene.
-	FileIds []string `json:"file_ids"`
+	FileIds   []string `json:"file_ids"`
 	StartTime *float64 `json:"start_time"`
 	EndTime   *float64 `json:"end_time"`
 }
@@ -217,6 +224,7 @@ type SceneUpdateInput struct {
 	Rating100               *int                 `json:"rating100"`
 	OCounter                *int                 `json:"o_counter"`
 	Organized               *bool                `json:"organized"`
+	Classified              *bool                `json:"classified"`
 	Pinned                  *bool                `json:"pinned"`
 	IsBroken                *bool                `json:"is_broken"`
 	IsNotBroken             *bool                `json:"is_not_broken"`

@@ -15,6 +15,10 @@ import {
 } from "src/components/Shared/ScrapeDialog/scrapeResult";
 import { Studio } from "src/components/Studios/StudioSelect";
 import { useCreateScrapedStudio } from "src/components/Shared/ScrapeDialog/createObjects";
+import {
+  scrapedStudioForCreate,
+  scrapedStudioForSelect,
+} from "src/components/Shared/ScrapeDialog/scrapedStudio";
 import { ScrapedStudioRow } from "src/components/Shared/ScrapeDialog/ScrapedObjectsRow";
 import { uniq } from "lodash-es";
 import { Tag } from "src/components/Tags/TagSelect";
@@ -70,7 +74,7 @@ export const GroupScrapeDialog: React.FC<IGroupScrapeDialogProps> = ({
             name: groupStudio.name,
           }
         : undefined,
-      scraped.studio?.stored_id ? scraped.studio : undefined
+      scrapedStudioForSelect(scraped.studio)
     )
   );
   const [urls, setURLs] = useState<ScrapeResult<string[]>>(
@@ -89,7 +93,7 @@ export const GroupScrapeDialog: React.FC<IGroupScrapeDialogProps> = ({
   );
 
   const [newStudio, setNewStudio] = useState<GQL.ScrapedStudio | undefined>(
-    scraped.studio && !scraped.studio.stored_id ? scraped.studio : undefined
+    scrapedStudioForCreate(scraped.studio)
   );
 
   const createNewStudio = useCreateScrapedStudio({

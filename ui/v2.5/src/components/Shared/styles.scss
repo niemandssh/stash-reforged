@@ -210,10 +210,43 @@
 }
 
 .scrape-dialog {
+  .modal-dialog {
+    max-width: min(1400px, 96vw);
+    width: 96vw;
+  }
+
   .modal-content .dialog-container {
     max-height: calc(100vh - 14rem);
     overflow-y: auto;
     padding-right: 15px;
+  }
+
+  .input-group .react-select {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 1%;
+  }
+
+  .input-group .react-select__control {
+    height: auto;
+    min-height: 38px;
+    white-space: normal;
+  }
+
+  .input-group .react-select__value-container {
+    flex-wrap: wrap;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .input-group .react-select__multi-value {
+    max-width: none;
+  }
+
+  .input-group .react-select__multi-value__label {
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
   }
 
   .image-selection-parent {

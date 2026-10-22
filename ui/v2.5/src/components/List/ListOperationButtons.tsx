@@ -7,6 +7,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { FormattedMessage, useIntl } from "react-intl";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Icon } from "../Shared/Icon";
@@ -78,27 +79,32 @@ export const ListOperationButtons: React.FC<IListOperationButtonsProps> = ({
 }) => {
   const intl = useIntl();
 
-  useEffect(() => {
-    Mousetrap.bind("s a", () => onSelectAll?.());
-    Mousetrap.bind("s n", () => onSelectNone?.());
+  const selectAllHotkey = useHotkey("list.selectAll");
+  const selectNoneHotkey = useHotkey("list.selectNone");
+  const bulkEditHotkey = useHotkey("list.bulkEdit");
+  const bulkDeleteHotkey = useHotkey("list.bulkDelete");
 
-    Mousetrap.bind("e", () => {
+  useEffect(() => {
+    Mousetrap.bind(selectAllHotkey, () => onSelectAll?.());
+    Mousetrap.bind(selectNoneHotkey, () => onSelectNone?.());
+
+    Mousetrap.bind(bulkEditHotkey, () => {
       if (itemsSelected) {
         onEdit?.();
       }
     });
 
-    Mousetrap.bind("d d", () => {
+    Mousetrap.bind(bulkDeleteHotkey, () => {
       if (itemsSelected) {
         onDelete?.();
       }
     });
 
     return () => {
-      Mousetrap.unbind("s a");
-      Mousetrap.unbind("s n");
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("d d");
+      Mousetrap.unbind(selectAllHotkey);
+      Mousetrap.unbind(selectNoneHotkey);
+      Mousetrap.unbind(bulkEditHotkey);
+      Mousetrap.unbind(bulkDeleteHotkey);
     };
   });
 

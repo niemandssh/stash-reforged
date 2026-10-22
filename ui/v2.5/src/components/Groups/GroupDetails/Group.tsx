@@ -3,6 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Helmet } from "react-helmet";
 import cx from "classnames";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import {
   useFindGroup,
@@ -230,24 +231,31 @@ const GroupPage: React.FC<IProps> = ({ group, tabKey }) => {
     id: group.id,
   });
 
+  const toggleEditHotkey = useHotkey("detail.toggleEdit");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+  const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
+
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("e", () => toggleEditing());
-    Mousetrap.bind("d d", () => {
+    Mousetrap.bind(toggleEditHotkey, () => toggleEditing());
+    Mousetrap.bind(entityDeleteHotkey, () => {
       setIsDeleteAlertOpen(true);
     });
-    Mousetrap.bind(",", () => setCollapsed(!collapsed));
+    Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
 
     return () => {
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("d d");
+      Mousetrap.unbind(toggleEditHotkey);
+      Mousetrap.unbind(entityDeleteHotkey);
     };
   });
+
+  const ratingTriggerHotkey = useHotkey("rating.trigger");
 
   useRatingKeybinds(
     true,
     configuration?.ui.ratingSystemOptions?.type,
-    setRating
+    setRating,
+    ratingTriggerHotkey
   );
 
   async function onSave(input: GQL.GroupCreateInput) {

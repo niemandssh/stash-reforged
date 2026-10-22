@@ -8,6 +8,7 @@ import { StudioSelect } from "../Shared/Select";
 import { ModalComponent } from "../Shared/Modal";
 import { MultiSet } from "../Shared/MultiSet";
 import { useToast } from "src/hooks/Toast";
+import { ConfigurationContext } from "src/hooks/Config";
 import * as FormUtils from "src/utils/form";
 import { RatingSystem } from "../Shared/Rating/RatingSystem";
 import { URLListInput } from "../Shared/URLField";
@@ -34,6 +35,9 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
 ) => {
   const intl = useIntl();
   const Toast = useToast();
+  const { configuration } = React.useContext(ConfigurationContext);
+  const performerCreatable =
+    !configuration?.interface.disableDropdownCreate?.performer;
   const [rating100, setRating] = useState<number | undefined>(undefined);
   const [studioId, setStudioId] = useState<string | undefined>(undefined);
 
@@ -64,6 +68,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
   const [urls, setUrls] = useState<string[]>([]);
   const [existingUrls, setExistingUrls] = useState<string[]>([]);
   const [organized, setOrganized] = useState<boolean | undefined>();
+  const [classified, setClassified] = useState<boolean | undefined>();
 
   const [updateScenes] = useBulkSceneUpdate(getSceneInput());
 
@@ -71,6 +76,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
   const [isUpdating, setIsUpdating] = useState(false);
 
   const checkboxRef = React.createRef<HTMLInputElement>();
+  const classifiedCheckboxRef = React.createRef<HTMLInputElement>();
 
   function getSceneInput(): GQL.BulkSceneUpdateInput {
     // need to determine what we are actually setting on each scene
@@ -106,6 +112,9 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     if (organized !== undefined) {
       sceneInput.organized = organized;
     }
+    if (classified !== undefined) {
+      sceneInput.classified = classified;
+    }
 
     return sceneInput;
   }
@@ -133,6 +142,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     let updateGroupIds: string[] = [];
     let updateUrls: string[] = [];
     let updateOrganized: boolean | undefined;
+    let updateClassified: boolean | undefined;
     let first = true;
 
     state.forEach((scene: GQL.SlimSceneDataFragment) => {
@@ -163,6 +173,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
         updateUrls = sceneURLs;
         first = false;
         updateOrganized = scene.organized;
+        updateClassified = scene.classified;
       } else {
         if (sceneRating !== updateRating) {
           updateRating = undefined;
@@ -185,6 +196,9 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
         if (scene.organized !== updateOrganized) {
           updateOrganized = undefined;
         }
+        if (scene.classified !== updateClassified) {
+          updateClassified = undefined;
+        }
       }
     });
 
@@ -195,6 +209,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     setExistingGroupIds(updateGroupIds);
     setExistingUrls(updateUrls);
     setOrganized(updateOrganized);
+    setClassified(updateClassified);
   }, [props.selected]);
 
   useEffect(() => {
@@ -202,6 +217,12 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
       checkboxRef.current.indeterminate = organized === undefined;
     }
   }, [organized, checkboxRef]);
+
+  useEffect(() => {
+    if (classifiedCheckboxRef.current) {
+      classifiedCheckboxRef.current.indeterminate = classified === undefined;
+    }
+  }, [classified, classifiedCheckboxRef]);
 
   function renderMultiSelect(
     type: "performers" | "tags" | "groups",
@@ -229,6 +250,7 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
         key={`${type}-select`}
         type={type}
         disabled={isUpdating}
+        creatable={type === "performers" && performerCreatable}
         onUpdate={(itemIDs) => {
           switch (type) {
             case "performers":
@@ -338,13 +360,16 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
     );
   }
 
-  function cycleOrganized() {
-    if (organized) {
-      setOrganized(undefined);
-    } else if (organized === undefined) {
-      setOrganized(false);
+  function cycleFlag(
+    value: boolean | undefined,
+    setValue: (v: boolean | undefined) => void
+  ) {
+    if (value) {
+      setValue(undefined);
+    } else if (value === undefined) {
+      setValue(false);
     } else {
-      setOrganized(true);
+      setValue(true);
     }
   }
 
@@ -436,7 +461,17 @@ export const EditScenesDialog: React.FC<IListOperationProps> = (
               label={intl.formatMessage({ id: "organized" })}
               checked={organized}
               ref={checkboxRef}
-              onChange={() => cycleOrganized()}
+              onChange={() => cycleFlag(organized, setOrganized)}
+            />
+          </Form.Group>
+
+          <Form.Group controlId="classified">
+            <Form.Check
+              type="checkbox"
+              label={intl.formatMessage({ id: "classified" })}
+              checked={classified}
+              ref={classifiedCheckboxRef}
+              onChange={() => cycleFlag(classified, setClassified)}
             />
           </Form.Group>
         </Form>

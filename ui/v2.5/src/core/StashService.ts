@@ -185,6 +185,20 @@ export const queryFindScenesByIDForSelect = (sceneIDs: string[]) =>
     },
   });
 
+export const queryFindPerformersByIDs = (ids: string[]) =>
+  client.query<GQL.FindPerformersByIDsQuery>({
+    query: GQL.FindPerformersByIDsDocument,
+    variables: { ids },
+    fetchPolicy: "network-only",
+  });
+
+export const queryFindStudiosByIDs = (ids: string[]) =>
+  client.query<GQL.FindStudiosByIDsQuery>({
+    query: GQL.FindStudiosByIDsDocument,
+    variables: { ids },
+    fetchPolicy: "network-only",
+  });
+
 export const querySceneByPathRegex = (filter: GQL.FindFilterType) =>
   client.query<GQL.FindScenesByPathRegexQuery>({
     query: GQL.FindScenesByPathRegexDocument,
@@ -430,6 +444,79 @@ export const queryFindStudiosForSelect = (filter: ListFilterModel) =>
       studio_filter: filter.makeFilter(),
     },
   });
+
+export const queryFindStudioByAlias = async (
+  ...hostnames: string[]
+): Promise<GQL.SelectStudioDataFragment | undefined> => {
+  const uniqueHostnames = [...new Set(hostnames.filter(Boolean))];
+
+  for (const hostname of uniqueHostnames) {
+    // Try exact alias match first
+    const result = await client.query<GQL.FindStudiosForSelectQuery>({
+      query: GQL.FindStudiosForSelectDocument,
+      variables: {
+        studio_filter: {
+          aliases: {
+            value: hostname,
+            modifier: GQL.CriterionModifier.Equals,
+          },
+        },
+        filter: {
+          per_page: 1,
+        },
+      },
+    });
+
+    const studios = result.data?.findStudios?.studios;
+    if (studios && studios.length > 0) {
+      return studios[0];
+    }
+
+    // Fallback: try matching by studio name
+    const nameResult = await client.query<GQL.FindStudiosForSelectQuery>({
+      query: GQL.FindStudiosForSelectDocument,
+      variables: {
+        studio_filter: {
+          name: {
+            value: hostname,
+            modifier: GQL.CriterionModifier.Includes,
+          },
+        },
+        filter: {
+          per_page: 1,
+        },
+      },
+    });
+
+    const nameStudios = nameResult.data?.findStudios?.studios;
+    if (nameStudios && nameStudios.length > 0) {
+      return nameStudios[0];
+    }
+
+    // Fallback: try INCLUDES on alias (in case only part of hostname matches)
+    const includesResult = await client.query<GQL.FindStudiosForSelectQuery>({
+      query: GQL.FindStudiosForSelectDocument,
+      variables: {
+        studio_filter: {
+          aliases: {
+            value: hostname,
+            modifier: GQL.CriterionModifier.Includes,
+          },
+        },
+        filter: {
+          per_page: 1,
+        },
+      },
+    });
+
+    const includesStudios = includesResult.data?.findStudios?.studios;
+    if (includesStudios && includesStudios.length > 0) {
+      return includesStudios[0];
+    }
+  }
+
+  return undefined;
+};
 
 export const useFindTag = (id: string) => {
   const skip = id === "new" || id === "";
@@ -1590,6 +1677,54 @@ export const useSceneResetPlayCount = () =>
       evictQueries(cache, [
         GQL.FindSceneDocument, // individual scene page
       ]);
+    },
+  });
+
+const updateSceneWatchLaterCache = (
+  cache: ApolloCache<unknown>,
+  sceneId: string,
+  watchLater: boolean,
+  addedAt?: string | null
+) => {
+  cache.modify({
+    id: cache.identify({ __typename: "Scene", id: sceneId }),
+    fields: {
+      watch_later() {
+        return watchLater;
+      },
+      watch_later_at() {
+        return addedAt ?? null;
+      },
+    },
+  });
+};
+
+export const useSceneAddWatchLater = () =>
+  GQL.useSceneAddWatchLaterMutation({
+    update(cache, result, { variables }) {
+      const mutationResult = result.data?.sceneAddWatchLater;
+      if (!mutationResult || !variables) return;
+
+      updateSceneWatchLaterCache(
+        cache,
+        variables.id,
+        mutationResult.watchLater,
+        mutationResult.addedAt
+      );
+
+      evictQueries(cache, [GQL.FindWatchLaterDocument]);
+    },
+  });
+
+export const useSceneRemoveWatchLater = () =>
+  GQL.useSceneRemoveWatchLaterMutation({
+    update(cache, result, { variables }) {
+      const mutationResult = result.data?.sceneRemoveWatchLater;
+      if (!mutationResult || !variables) return;
+
+      updateSceneWatchLaterCache(cache, variables.id, false, null);
+
+      evictQueries(cache, [GQL.FindWatchLaterDocument]);
     },
   });
 
@@ -2893,6 +3028,31 @@ export const usePerformersDestroy = (
     },
   });
 
+export const usePerformersMerge = () =>
+  GQL.usePerformersMergeMutation({
+    update(cache, result, { variables }) {
+      if (!result.data?.performersMerge || !variables) return;
+
+      const { source, destination } = variables.input;
+
+      for (const id of source) {
+        const obj = { __typename: "Performer", id };
+        deleteObject(cache, obj, GQL.FindPerformerDocument);
+      }
+
+      updateStats(cache, "performer_count", -source.length);
+
+      const obj = { __typename: "Performer", id: destination };
+      evictTypeFields(
+        cache,
+        performerMutationImpactedTypeFields,
+        cache.identify(obj)
+      );
+
+      evictQueries(cache, performerMutationImpactedQueries);
+    },
+  });
+
 export const usePerformerProfileImageCreate = () =>
   GQL.usePerformerProfileImageCreateMutation({
     refetchQueries: performerMutationImpactedQueries,
@@ -3009,6 +3169,31 @@ export const useStudiosDestroy = (input: GQL.StudiosDestroyMutationVariables) =>
       updateStats(cache, "studio_count", -ids.length);
 
       evictTypeFields(cache, studioMutationImpactedTypeFields);
+      evictQueries(cache, studioMutationImpactedQueries);
+    },
+  });
+
+export const useStudiosMerge = () =>
+  GQL.useStudiosMergeMutation({
+    update(cache, result, { variables }) {
+      if (!result.data?.studiosMerge || !variables) return;
+
+      const { source, destination } = variables.input;
+
+      for (const id of source) {
+        const obj = { __typename: "Studio", id };
+        deleteObject(cache, obj, GQL.FindStudioDocument);
+      }
+
+      updateStats(cache, "studio_count", -source.length);
+
+      const obj = { __typename: "Studio", id: destination };
+      evictTypeFields(
+        cache,
+        studioMutationImpactedTypeFields,
+        cache.identify(obj)
+      );
+
       evictQueries(cache, studioMutationImpactedQueries);
     },
   });
@@ -3311,6 +3496,28 @@ export const queryScrapeSceneURL = (url: string) =>
   client.query<GQL.ScrapeSceneUrlQuery>({
     query: GQL.ScrapeSceneUrlDocument,
     variables: { url },
+    fetchPolicy: "network-only",
+  });
+
+export const queryResolveVideoURLDuration = (url: string) =>
+  client.query<GQL.ResolveVideoUrlDurationQuery>({
+    query: GQL.ResolveVideoUrlDurationDocument,
+    variables: { url },
+    fetchPolicy: "network-only",
+  });
+
+export const mutateStartRemoteSceneSuggestions = (
+  input: GQL.RemoteSceneSuggestionsInput
+) =>
+  client.mutate<GQL.StartRemoteSceneSuggestionsMutation>({
+    mutation: GQL.StartRemoteSceneSuggestionsDocument,
+    variables: { input },
+  });
+
+export const queryRemoteSceneSuggestionResults = (jobId: string) =>
+  client.query<GQL.RemoteSceneSuggestionResultsQuery>({
+    query: GQL.RemoteSceneSuggestionResultsDocument,
+    variables: { job_id: jobId },
     fetchPolicy: "network-only",
   });
 

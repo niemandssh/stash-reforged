@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import { useFindScenes, getClient } from "src/core/StashService";
 import { ListFilterModel } from "src/models/list-filter/filter";
@@ -18,6 +19,9 @@ import { SceneCardsGrid } from "./SceneCardsGrid";
 import { TaggerContext } from "../Tagger/context";
 import { IdentifyDialog } from "../Dialogs/IdentifyDialog/IdentifyDialog";
 import { ConfigurationContext } from "src/hooks/Config";
+import RemoteSceneSuggestionsCarousel, {
+  RemoteSuggestionsContext,
+} from "./RemoteSceneSuggestions/RemoteSceneSuggestionsCarousel";
 import {
   faPencil,
   faPlay,
@@ -50,6 +54,7 @@ import cx from "classnames";
 import { RatingCriterionOption } from "src/models/list-filter/criteria/rating";
 import { SidebarRatingFilter } from "../List/Filters/RatingFilter";
 import { OrganizedCriterionOption } from "src/models/list-filter/criteria/organized";
+import { ClassifiedCriterionOption } from "src/models/list-filter/criteria/classified";
 import { SidebarBooleanFilter } from "../List/Filters/BooleanFilter";
 import {
   FilteredSidebarHeader,
@@ -213,16 +218,17 @@ function usePlayRandom(filter: ListFilterModel, count: number) {
 
 function useAddKeybinds(filter: ListFilterModel, count: number) {
   const playRandom = usePlayRandom(filter, count);
+  const playRandomHotkey = useHotkey("list.playRandom");
 
   useEffect(() => {
-    Mousetrap.bind("p r", () => {
+    Mousetrap.bind(playRandomHotkey, () => {
       playRandom();
     });
 
     return () => {
-      Mousetrap.unbind("p r");
+      Mousetrap.unbind(playRandomHotkey);
     };
-  }, [playRandom]);
+  }, [playRandom, playRandomHotkey]);
 }
 
 const SceneList: React.FC<{
@@ -354,6 +360,13 @@ const SidebarContent: React.FC<{
           title={<FormattedMessage id="organized" />}
           data-type={OrganizedCriterionOption.type}
           option={OrganizedCriterionOption}
+          filter={filter}
+          setFilter={setFilter}
+        />
+        <SidebarBooleanFilter
+          title={<FormattedMessage id="classified" />}
+          data-type={ClassifiedCriterionOption.type}
+          option={ClassifiedCriterionOption}
           filter={filter}
           setFilter={setFilter}
         />
@@ -585,13 +598,21 @@ interface IFilteredScenes {
   view?: View;
   alterQuery?: boolean;
   fromGroupId?: string;
+  remoteSuggestionsContext?: RemoteSuggestionsContext;
 }
 
 export const FilteredSceneList = (props: IFilteredScenes) => {
   const intl = useIntl();
   const history = useHistory();
 
-  const { filterHook, defaultSort, view, alterQuery, fromGroupId } = props;
+  const {
+    filterHook,
+    defaultSort,
+    view,
+    alterQuery,
+    fromGroupId,
+    remoteSuggestionsContext,
+  } = props;
 
   // States
   const {
@@ -644,22 +665,25 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
     setShowSidebar,
   });
 
+  const bulkEditHotkey = useHotkey("list.bulkEdit");
+  const bulkDeleteHotkey = useHotkey("list.bulkDelete");
+
   useEffect(() => {
-    Mousetrap.bind("e", () => {
+    Mousetrap.bind(bulkEditHotkey, () => {
       if (hasSelection) {
         onEdit?.();
       }
     });
 
-    Mousetrap.bind("d d", () => {
+    Mousetrap.bind(bulkDeleteHotkey, () => {
       if (hasSelection) {
         onDelete?.();
       }
     });
 
     return () => {
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("d d");
+      Mousetrap.unbind(bulkEditHotkey);
+      Mousetrap.unbind(bulkDeleteHotkey);
     };
   });
 
@@ -898,6 +922,10 @@ export const FilteredSceneList = (props: IFilteredScenes) => {
             />
           </Sidebar>
           <div>
+            <RemoteSceneSuggestionsCarousel
+              context={remoteSuggestionsContext}
+            />
+
             <ButtonToolbar
               className={cx("scene-list-toolbar", {
                 "has-selection": hasSelection,

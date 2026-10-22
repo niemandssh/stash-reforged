@@ -270,7 +270,9 @@ func Initialize() (*Server, error) {
 			themeColor := cfg.GetThemeColor()
 			data, err := fs.ReadFile(uiFS, "index.html")
 			if err != nil {
-				panic(err)
+				logger.Errorf("UI not available: %v", err)
+				http.Error(w, "UI not built. Run `make ui` in the repository root, then restart the server.", http.StatusServiceUnavailable)
+				return
 			}
 			indexHtml := string(data)
 

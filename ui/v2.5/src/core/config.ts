@@ -40,6 +40,173 @@ export type FrontPageContent = ISavedFilterRow | ICustomFilter;
 
 export const defaultMaxOptionsShown = 200;
 
+// Identifiers for user-configurable keyboard shortcuts. Each maps to a
+// Mousetrap-compatible key combo string (e.g. "alt+r", "del", "ctrl+shift+d").
+// Actions that mean the same thing on multiple pages (e.g. "save the current
+// edit form", "delete the current entity") share a single id rather than
+// being duplicated per-page, so re-binding one hotkey updates every page it
+// applies to.
+export type HotkeyAction =
+  // global navigation
+  | "nav.openManual"
+  | "nav.gotoSettings"
+  | "nav.newItem"
+  | "nav.goto.scenes"
+  | "nav.goto.games"
+  | "nav.goto.images"
+  | "nav.goto.groups"
+  | "nav.goto.markers"
+  | "nav.goto.galleries"
+  | "nav.goto.performers"
+  | "nav.goto.studios"
+  | "nav.goto.tags"
+  | "nav.goto.history"
+  | "nav.goto.watchLater"
+  | "scene.firstReview"
+  | "scene.review"
+  | "scene.random"
+  | "scene.randomBest"
+  // rating
+  | "rating.trigger"
+  // list pages (scenes/galleries/images/performers/studios/tags/groups/markers)
+  | "list.playRandom"
+  | "list.focusSearch"
+  | "list.closeSidebar"
+  | "list.selectAll"
+  | "list.selectNone"
+  | "list.bulkEdit"
+  | "list.bulkDelete"
+  | "list.openFilterEditor"
+  | "list.reshuffleRandom"
+  | "list.pageNext"
+  | "list.pagePrevious"
+  | "list.pageForward10"
+  | "list.pageBack10"
+  | "list.pageFirst"
+  | "list.pageLast"
+  | "list.viewGrid"
+  | "list.viewList"
+  | "list.viewWall"
+  | "list.viewSlideshow"
+  | "list.viewWeb"
+  | "list.zoomIn"
+  | "list.zoomOut"
+  // image slideshow
+  | "slideshow.previous"
+  | "slideshow.next"
+  | "slideshow.playPause"
+  // shared entity detail page actions
+  | "detail.tabDetails"
+  | "detail.tabEdit"
+  | "detail.tabHistory"
+  | "detail.tabFileInfo"
+  | "detail.toggleEdit"
+  | "detail.toggleFavorite"
+  | "detail.toggleSidebar"
+  | "detail.incrementO"
+  | "detail.newSubItem"
+  | "edit.save"
+  | "entity.delete"
+  | "scene.delete"
+  // scene detail page specifics
+  | "scene.toggleQueuePanel"
+  | "scene.toggleMarkersPanel"
+  | "scene.toggleFileInfoPanel"
+  | "scene.queueNext"
+  | "scene.queuePrevious"
+  | "scene.queueRandom"
+  | "scene.hideScrubber"
+  // gallery detail page specifics
+  | "gallery.tabChapters"
+  // performer detail page specifics
+  | "performer.tabScenes"
+  | "performer.tabGalleries"
+  | "performer.tabGroups";
+
+export const defaultHotkeys: Record<HotkeyAction, string> = {
+  "nav.openManual": "?",
+  "nav.gotoSettings": "g z",
+  "nav.newItem": "n",
+  "nav.goto.scenes": "g s",
+  "nav.goto.games": "g a",
+  "nav.goto.images": "g i",
+  "nav.goto.groups": "g v",
+  "nav.goto.markers": "g k",
+  "nav.goto.galleries": "g l",
+  "nav.goto.performers": "g p",
+  "nav.goto.studios": "g u",
+  "nav.goto.tags": "g t",
+  "nav.goto.history": "g h",
+  "nav.goto.watchLater": "g w",
+  "scene.firstReview": "alt+e",
+  "scene.review": "alt+r",
+  "scene.random": "alt+w",
+  "scene.randomBest": "alt+q",
+
+  "rating.trigger": "r",
+
+  "list.playRandom": "p r",
+  "list.focusSearch": "/",
+  "list.closeSidebar": "esc",
+  "list.selectAll": "s a",
+  "list.selectNone": "s n",
+  "list.bulkEdit": "e",
+  "list.bulkDelete": "d d",
+  "list.openFilterEditor": "f",
+  "list.reshuffleRandom": "r",
+  "list.pageNext": "right",
+  "list.pagePrevious": "left",
+  "list.pageForward10": "shift+right",
+  "list.pageBack10": "shift+left",
+  "list.pageFirst": "ctrl+home",
+  "list.pageLast": "ctrl+end",
+  "list.viewGrid": "v g",
+  "list.viewList": "v l",
+  "list.viewWall": "v w",
+  "list.viewSlideshow": "v s",
+  "list.viewWeb": "v e",
+  "list.zoomIn": "+",
+  "list.zoomOut": "-",
+
+  "slideshow.previous": "left",
+  "slideshow.next": "right",
+  "slideshow.playPause": "space",
+
+  "detail.tabDetails": "a",
+  "detail.tabEdit": "e",
+  "detail.tabHistory": "h",
+  "detail.tabFileInfo": "f",
+  "detail.toggleEdit": "e",
+  "detail.toggleFavorite": "f",
+  "detail.toggleSidebar": ",",
+  "detail.incrementO": "o",
+  "detail.newSubItem": "n",
+  "edit.save": "s s",
+  "entity.delete": "d d",
+  "scene.delete": "del",
+
+  "scene.toggleQueuePanel": "q",
+  "scene.toggleMarkersPanel": "k",
+  "scene.toggleFileInfoPanel": "i",
+  "scene.queueNext": "p n",
+  "scene.queuePrevious": "p p",
+  "scene.queueRandom": "p r",
+  "scene.hideScrubber": ".",
+
+  "gallery.tabChapters": "c",
+
+  "performer.tabScenes": "c",
+  "performer.tabGalleries": "g",
+  "performer.tabGroups": "m",
+};
+
+export function getHotkey(
+  hotkeys: Partial<Record<HotkeyAction, string>> | undefined,
+  action: HotkeyAction
+): string {
+  return hotkeys?.[action] ?? defaultHotkeys[action];
+}
+
 export interface IUIConfig {
   // unknown to prevent direct access - use getFrontPageContent
   frontPageContent?: unknown;
@@ -112,6 +279,20 @@ export interface IUIConfig {
 
   // Настройки отображения для конкретных галерей
   galleryDisplayModes?: Record<string, DisplayMode>;
+
+  // Remote scene suggestions (/scenes)
+  remoteSceneSuggestionsEnabled?: boolean;
+  remoteSceneSuggestionsMinDurationMinutes?: number;
+  remoteSceneSuggestionsLimit?: number;
+  remoteSceneSuggestionsProviders?: string[];
+  remoteSceneSuggestionsPriorityTagIds?: string[];
+  remoteSceneSuggestionsStopTagIds?: string[];
+
+  /** Preferred tags for scene cards (ordered). First match paints the preview stripe. */
+  scenePreferredTagIds?: string[];
+
+  // user-configurable keyboard shortcuts - see HotkeyAction
+  hotkeys?: Partial<Record<HotkeyAction, string>>;
 }
 
 export function getFrontPageContent(

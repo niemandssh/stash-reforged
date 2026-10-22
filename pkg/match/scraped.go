@@ -198,6 +198,10 @@ func ScrapedGroup(ctx context.Context, qb GroupNamesFinder, storedID *string, na
 // ScrapedTag matches the provided tag with the tags
 // in the database and sets the ID field if one is found.
 func ScrapedTag(ctx context.Context, qb models.TagQueryer, s *models.ScrapedTag) error {
+	if s == nil {
+		return nil
+	}
+
 	if s.StoredID != nil {
 		return nil
 	}

@@ -11,7 +11,10 @@ fragment SlimSceneData on Scene {
   o_counter
   omgCounter
   organized
+  classified
   pinned
+  watch_later
+  watch_later_at
   interactive
   interactive_speed
   is_broken

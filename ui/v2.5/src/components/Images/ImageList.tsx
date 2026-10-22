@@ -9,6 +9,7 @@ import { FormattedNumber, useIntl } from "react-intl";
 import cloneDeep from "lodash-es/cloneDeep";
 import { useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import { queryFindImages, useFindImages } from "src/core/StashService";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
@@ -333,16 +334,18 @@ export const ImageList: React.FC<IImageList> = ({
     },
   ];
 
+  const playRandomHotkey = useHotkey("list.playRandom");
+
   function addKeybinds(
     result: GQL.FindImagesQueryResult,
     filter: ListFilterModel
   ) {
-    Mousetrap.bind("p r", () => {
+    Mousetrap.bind(playRandomHotkey, () => {
       viewRandom(result, filter);
     });
 
     return () => {
-      Mousetrap.unbind("p r");
+      Mousetrap.unbind(playRandomHotkey);
     };
   }
 

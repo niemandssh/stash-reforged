@@ -14,6 +14,7 @@ import {
 } from "./criteria/groups";
 import { GalleriesCriterionOption } from "./criteria/galleries";
 import { OrganizedCriterionOption } from "./criteria/organized";
+import { ClassifiedCriterionOption } from "./criteria/classified";
 import { PerformersCriterionOption } from "./criteria/performers";
 import { ResolutionCriterionOption } from "./criteria/resolution";
 import { StudiosCriterionOption } from "./criteria/studios";
@@ -41,6 +42,7 @@ import { createBooleanCriterionOption } from "./criteria/criterion";
 const defaultSortBy = "date";
 const sortByOptions = [
   "organized",
+  "classified",
   "date",
   "file_count",
   "filesize",
@@ -98,6 +100,7 @@ const criterionOptions = [
   PhashCriterionOption,
   DuplicatedCriterionOption,
   OrganizedCriterionOption,
+  ClassifiedCriterionOption,
   RatingCriterionOption,
   createMandatoryNumberCriterionOption("o_counter", "o_count"),
   ResolutionCriterionOption,

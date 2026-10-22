@@ -37,6 +37,7 @@ export interface SceneCopyPayload {
   shoot_date?: string | null;
   rating100?: number | null;
   organized: boolean;
+  classified?: boolean;
   play_count?: number | null;
   start_time?: number | null;
   end_time?: number | null;
@@ -135,6 +136,7 @@ export function serializeSceneCopyPayload(
     shoot_date: (scene as { shoot_date?: string }).shoot_date ?? undefined,
     rating100: scene.rating100 ?? undefined,
     organized: scene.organized ?? false,
+    classified: scene.classified ?? false,
     play_count: scene.play_count ?? undefined,
     start_time: scene.start_time ?? undefined,
     end_time: scene.end_time ?? undefined,
@@ -380,6 +382,7 @@ export async function applySceneCopyPayload(
     shoot_date: payload.shoot_date ?? undefined,
     rating100: payload.rating100 ?? undefined,
     organized: payload.organized,
+    classified: payload.classified,
     start_time: payload.start_time ?? undefined,
     end_time: payload.end_time ?? undefined,
     is_broken: payload.is_broken,

@@ -21,6 +21,7 @@ import (
 	"golang.org/x/net/html/charset"
 
 	"github.com/stashapp/stash/pkg/logger"
+	"github.com/stashapp/stash/pkg/utils"
 )
 
 const scrapeDefaultSleep = time.Second * 2
@@ -54,9 +55,10 @@ func loadURL(ctx context.Context, loadURL string, client *http.Client, scraperCo
 	}
 
 	userAgent := globalConfig.GetScraperUserAgent()
-	if userAgent != "" {
-		req.Header.Set("User-Agent", userAgent)
+	if userAgent == "" {
+		userAgent = utils.GetUserAgent()
 	}
+	req.Header.Set("User-Agent", userAgent)
 
 	if driverOptions != nil { // setting the Headers after the UA allows us to override it from inside the scraper
 		for _, h := range driverOptions.Headers {

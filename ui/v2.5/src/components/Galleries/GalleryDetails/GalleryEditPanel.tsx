@@ -3,6 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Prompt } from "react-router-dom";
 import { Button, Form, Col, Row } from "react-bootstrap";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
 import {
@@ -206,20 +207,23 @@ export const GalleryEditPanel: React.FC<IProps> = ({
     }
   }, [gallery.tags, allTags]);
 
+  const editSaveHotkey = useHotkey("edit.save");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+
   useEffect(() => {
     if (isVisible) {
-      Mousetrap.bind("s s", () => {
+      Mousetrap.bind(editSaveHotkey, () => {
         if (formik.dirty) {
           formik.submitForm();
         }
       });
-      Mousetrap.bind("d d", () => {
+      Mousetrap.bind(entityDeleteHotkey, () => {
         onDelete();
       });
 
       return () => {
-        Mousetrap.unbind("s s");
-        Mousetrap.unbind("d d");
+        Mousetrap.unbind(editSaveHotkey);
+        Mousetrap.unbind(entityDeleteHotkey);
       };
     }
   });

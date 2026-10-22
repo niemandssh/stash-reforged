@@ -73,6 +73,9 @@ const Images = lazyComponent(() => import("./components/Images/Images"));
 const ViewHistory = lazyComponent(
   () => import("./components/ViewHistory/ViewHistory")
 );
+const WatchLater = lazyComponent(
+  () => import("./components/WatchLater/WatchLater")
+);
 const Setup = lazyComponent(() => import("./components/Setup/Setup"));
 const Migrate = lazyComponent(() => import("./components/Setup/Migrate"));
 
@@ -253,6 +256,7 @@ export const App: React.FC = () => {
             <Route path="/groups" component={Groups} />
             <Route path="/stats" component={Stats} />
             <Route path="/history" component={ViewHistory} />
+            <Route path="/watch-later" component={WatchLater} />
             <Route path="/settings" component={Settings} />
             <Route
               path="/sceneFilenameParser"

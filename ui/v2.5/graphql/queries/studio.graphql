@@ -13,6 +13,14 @@ query FindStudio($id: ID!) {
   }
 }
 
+query FindStudiosByIDs($ids: [ID!]!) {
+  findStudios(filter: { per_page: -1 }, ids: $ids) {
+    studios {
+      ...StudioData
+    }
+  }
+}
+
 query FindStudiosForSelect(
   $filter: FindFilterType
   $studio_filter: StudioFilterType

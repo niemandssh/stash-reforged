@@ -14,6 +14,7 @@ const SceneCreate: React.FC = () => {
 
   const location = useLocation();
   const query = useMemo(() => new URLSearchParams(location.search), [location]);
+  const scrapeUrl = query.get("scrapeUrl");
 
   // create scene from provided scene id if applicable
   const { data, loading } = useFindScene(query.get("from_scene_id") ?? "new");
@@ -30,9 +31,10 @@ const SceneCreate: React.FC = () => {
     }
 
     return {
-      title: query.get("q") ?? undefined,
+      title: query.get("q") ?? "Untitled",
+      urls: scrapeUrl ? [scrapeUrl] : undefined,
     };
-  }, [data?.findScene, query]);
+  }, [data?.findScene, query, scrapeUrl]);
 
   useEffect(() => {
     async function fetchCoverImage() {

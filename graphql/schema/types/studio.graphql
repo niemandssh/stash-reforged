@@ -63,6 +63,13 @@ input StudioDestroyInput {
   id: ID!
 }
 
+input StudiosMergeInput {
+  source: [ID!]!
+  destination: ID!
+  # values defined here will override values in the destination
+  values: StudioUpdateInput
+}
+
 type FindStudiosResultType {
   count: Int!
   studios: [Studio!]!

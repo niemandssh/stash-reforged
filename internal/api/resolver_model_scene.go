@@ -157,8 +157,8 @@ func (r *sceneResolver) EmbedSrc(ctx context.Context, obj *models.Scene) (*strin
 		return nil, nil
 	}
 
-	src, _, err := embed.Parse(*obj.EmbedURL)
-	if err != nil {
+	src, site, err := embed.Parse(*obj.EmbedURL)
+	if err != nil || embed.IsDirectMediaSite(site) || strings.TrimSpace(src) == "" {
 		return nil, nil
 	}
 
@@ -174,7 +174,7 @@ func (r *sceneResolver) EmbedDuration(ctx context.Context, obj *models.Scene) (*
 		return nil, nil
 	}
 
-	duration, _, err := embed.ExtractVideoDuration(*obj.EmbedURL)
+	duration, err := manager.ResolveEmbedDuration(*obj.EmbedURL)
 	if err != nil {
 		return nil, nil
 	}
@@ -527,21 +527,94 @@ func embedSceneStreamEndpoints(baseURL string, scene *models.Scene) []*manager.S
 		return nil
 	}
 
-	builder := urlbuilders.NewSceneURLBuilder(baseURL, scene)
-	mimeType := ffmpeg.MimeHLS
+	variants, _, err := embed.ExtractStreamVariants(*scene.EmbedURL)
+	if err != nil || len(variants) == 0 {
+		return nil
+	}
 
-	heights := []int{0}
-	if variants, _, err := embed.ExtractStreamVariants(*scene.EmbedURL); err == nil {
-		if extracted := embed.HeightsFromVariants(variants); len(extracted) > 0 {
-			heights = extracted
+	builder := urlbuilders.NewSceneURLBuilder(baseURL, scene)
+
+	// PlayerJS / KVS pages use a stable endpoint that re-extracts temporary media URLs.
+	if embed.IsPlayerJSSite(site) || embed.IsKVSSite(site) || embed.IsJWPlayerSite(site) {
+		if allProgressiveEmbedVariants(variants) || len(embed.HeightsFromVariants(variants)) == 0 {
+			return refreshableProgressiveEmbedStreamEndpoints(builder, variants)
 		}
 	}
 
+	// Direct progressive media (e.g. https://…/video.mp4) is served via the embed proxy.
+	if embed.IsDirectMediaSite(site) || allProgressiveEmbedVariants(variants) {
+		return progressiveEmbedStreamEndpoints(builder, variants)
+	}
+
+	heights := embed.HeightsFromVariants(variants)
+	if len(heights) == 0 {
+		return progressiveEmbedStreamEndpoints(builder, variants)
+	}
+
+	mimeType := ffmpeg.MimeHLS
 	endpoints := make([]*manager.SceneStreamEndpoint, 0, len(heights))
 	for _, height := range heights {
 		variant := embed.HLSVariant{Height: height}
 		label := embed.VariantLabel(variant)
 		streamURL := builder.GetEmbedStreamURL(variant)
+		endpoints = append(endpoints, &manager.SceneStreamEndpoint{
+			URL:      streamURL,
+			MimeType: &mimeType,
+			Label:    &label,
+		})
+	}
+
+	return endpoints
+}
+
+func allProgressiveEmbedVariants(variants []embed.HLSVariant) bool {
+	if len(variants) == 0 {
+		return false
+	}
+	for _, v := range variants {
+		if !embed.IsProgressiveMediaURL(v.URL) {
+			return false
+		}
+	}
+	return true
+}
+
+func progressiveEmbedStreamEndpoints(builder urlbuilders.SceneURLBuilder, variants []embed.HLSVariant) []*manager.SceneStreamEndpoint {
+	return progressiveEmbedStreamEndpointsWithURL(builder, variants, false)
+}
+
+func refreshableProgressiveEmbedStreamEndpoints(builder urlbuilders.SceneURLBuilder, variants []embed.HLSVariant) []*manager.SceneStreamEndpoint {
+	return progressiveEmbedStreamEndpointsWithURL(builder, variants, true)
+}
+
+func progressiveEmbedStreamEndpointsWithURL(builder urlbuilders.SceneURLBuilder, variants []embed.HLSVariant, refreshable bool) []*manager.SceneStreamEndpoint {
+	mimeType := ffmpeg.MimeMp4Video
+	endpoints := make([]*manager.SceneStreamEndpoint, 0, len(variants))
+	seen := make(map[string]struct{}, len(variants))
+
+	for _, variant := range variants {
+		if !embed.IsProgressiveMediaURL(variant.URL) {
+			continue
+		}
+		key := variant.URL
+		if refreshable {
+			key = fmt.Sprintf("%d:%d", variant.Height, variant.Bandwidth)
+		}
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+
+		label := embed.VariantLabel(variant)
+		if variant.Height == 0 && (label == "" || label == "HLS") {
+			label = "MP4"
+		}
+		var streamURL string
+		if refreshable {
+			streamURL = builder.GetEmbedProgressiveStreamURL(variant)
+		} else {
+			streamURL = builder.GetEmbedProxyURL(variant.URL)
+		}
 		endpoints = append(endpoints, &manager.SceneStreamEndpoint{
 			URL:      streamURL,
 			MimeType: &mimeType,
@@ -634,6 +707,14 @@ func (r *sceneResolver) LastPlayedAt(ctx context.Context, obj *models.Scene) (*t
 	}
 
 	return ret, nil
+}
+
+func (r *sceneResolver) WatchLater(ctx context.Context, obj *models.Scene) (bool, error) {
+	return loaders.From(ctx).SceneWatchLater.Load(obj.ID)
+}
+
+func (r *sceneResolver) WatchLaterAt(ctx context.Context, obj *models.Scene) (*time.Time, error) {
+	return loaders.From(ctx).SceneWatchLaterAt.Load(obj.ID)
 }
 
 func (r *sceneResolver) PlayCount(ctx context.Context, obj *models.Scene) (*int, error) {

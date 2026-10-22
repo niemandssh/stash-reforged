@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/stashapp/stash/internal/manager"
 	"github.com/stashapp/stash/pkg/match"
 	"github.com/stashapp/stash/pkg/models"
 	"github.com/stashapp/stash/pkg/scraper"
@@ -71,6 +72,19 @@ func (r *queryResolver) ScrapeSceneURL(ctx context.Context, url string) (*models
 	}
 
 	return ret, nil
+}
+
+func (r *queryResolver) ResolveVideoURLDuration(ctx context.Context, url string) (*float64, error) {
+	duration, err := manager.ResolveEmbedDuration(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if duration <= 0 {
+		return nil, nil
+	}
+
+	return &duration, nil
 }
 
 func (r *queryResolver) ScrapeGalleryURL(ctx context.Context, url string) (*models.ScrapedGallery, error) {

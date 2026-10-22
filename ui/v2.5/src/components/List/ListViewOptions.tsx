@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { Button, Dropdown, Overlay, Popover } from "react-bootstrap";
 import { DisplayMode } from "src/models/list-filter/types";
 import { useIntl } from "react-intl";
@@ -80,39 +81,45 @@ export const ListViewOptions: React.FC<IListViewOptionsProps> = ({
   const overlayTarget = useRef(null);
   const [showOptions, setShowOptions] = useState(false);
 
+  const viewGridHotkey = useHotkey("list.viewGrid");
+  const viewListHotkey = useHotkey("list.viewList");
+  const viewWallHotkey = useHotkey("list.viewWall");
+  const viewSlideshowHotkey = useHotkey("list.viewSlideshow");
+  const viewWebHotkey = useHotkey("list.viewWeb");
+
   useEffect(() => {
-    Mousetrap.bind("v g", () => {
+    Mousetrap.bind(viewGridHotkey, () => {
       if (displayModeOptions.includes(DisplayMode.Grid)) {
         onSetDisplayMode(DisplayMode.Grid);
       }
     });
-    Mousetrap.bind("v l", () => {
+    Mousetrap.bind(viewListHotkey, () => {
       if (displayModeOptions.includes(DisplayMode.List)) {
         onSetDisplayMode(DisplayMode.List);
       }
     });
-    Mousetrap.bind("v w", () => {
+    Mousetrap.bind(viewWallHotkey, () => {
       if (displayModeOptions.includes(DisplayMode.Wall)) {
         onSetDisplayMode(DisplayMode.Wall);
       }
     });
-    Mousetrap.bind("v s", () => {
+    Mousetrap.bind(viewSlideshowHotkey, () => {
       if (displayModeOptions.includes(DisplayMode.Slideshow)) {
         onSetDisplayMode(DisplayMode.Slideshow);
       }
     });
-    Mousetrap.bind("v e", () => {
+    Mousetrap.bind(viewWebHotkey, () => {
       if (displayModeOptions.includes(DisplayMode.Web)) {
         onSetDisplayMode(DisplayMode.Web);
       }
     });
 
     return () => {
-      Mousetrap.unbind("v g");
-      Mousetrap.unbind("v l");
-      Mousetrap.unbind("v w");
-      Mousetrap.unbind("v s");
-      Mousetrap.unbind("v e");
+      Mousetrap.unbind(viewGridHotkey);
+      Mousetrap.unbind(viewListHotkey);
+      Mousetrap.unbind(viewWallHotkey);
+      Mousetrap.unbind(viewSlideshowHotkey);
+      Mousetrap.unbind(viewWebHotkey);
     };
   });
 

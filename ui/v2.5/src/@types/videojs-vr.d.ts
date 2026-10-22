@@ -105,6 +105,8 @@ declare module "videojs-vr" {
       setProjection(projection: ProjectionType): void;
       init(): void;
       reset(): void;
+      on(event: "initialized", handler: () => void): void;
+      off(event: "initialized", handler: () => void): void;
 
       cameraVector: THREE.Vector3;
 

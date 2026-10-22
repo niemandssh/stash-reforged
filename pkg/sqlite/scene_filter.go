@@ -96,7 +96,22 @@ func (qb *sceneFilterHandler) criterionHandler() criterionHandler {
 		qb.oCountCriterionHandler(sceneFilter.OCounter),
 		intCriterionHandler(sceneFilter.OmegCounter, "scenes.omg_counter", nil),
 		boolCriterionHandler(sceneFilter.Organized, "scenes.organized", nil),
+		boolCriterionHandler(sceneFilter.Classified, "scenes.classified", nil),
 		boolCriterionHandler(sceneFilter.Pinned, "scenes.pinned", nil),
+		criterionHandlerFunc(func(ctx context.Context, f *filterBuilder) {
+			if sceneFilter.WatchLater != nil {
+				f.addLeftJoin(
+					scenesWatchLaterTable,
+					"scene_watch_later",
+					fmt.Sprintf("scene_watch_later.%s = scenes.id", sceneIDColumn),
+				)
+				if *sceneFilter.WatchLater {
+					f.addWhere("scene_watch_later.scene_id IS NOT NULL")
+				} else {
+					f.addWhere("scene_watch_later.scene_id IS NULL")
+				}
+			}
+		}),
 		qb.hasTrimTimesCriterionHandler(sceneFilter.HasTrimTimes),
 		boolCriterionHandler(sceneFilter.IsTrimmed, "scenes.is_trimmed", nil),
 		boolCriterionHandler(sceneFilter.IsArchived, "scenes.is_archived", nil),
@@ -113,6 +128,7 @@ func (qb *sceneFilterHandler) criterionHandler() criterionHandler {
 		qb.hasMarkersCriterionHandler(sceneFilter.HasMarkers),
 		qb.isMissingCriterionHandler(sceneFilter.IsMissing),
 		qb.urlsCriterionHandler(sceneFilter.URL),
+		stringCriterionHandler(sceneFilter.EmbedURL, "scenes.embed_url"),
 
 		criterionHandlerFunc(func(ctx context.Context, f *filterBuilder) {
 			if sceneFilter.StashID != nil {

@@ -168,6 +168,9 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
   const [organized, setOrganized] = useState(
     new ZeroableScrapeResult<boolean>(dest.organized)
   );
+  const [classified, setClassified] = useState(
+    new ZeroableScrapeResult<boolean>(dest.classified)
+  );
 
   const [image, setImage] = useState<ScrapeResult<string>>(
     new ScrapeResult<string>(dest.paths.screenshot)
@@ -302,6 +305,13 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
       )
     );
 
+    setClassified(
+      new ScrapeResult(
+        dest.classified ?? false,
+        sources.every((s) => s.classified)
+      )
+    );
+
     setStashIDs(
       new ScrapeResult(
         dest.stash_ids,
@@ -335,6 +345,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
       tags,
       details,
       organized,
+      classified,
       stashIDs,
       image,
     ]);
@@ -352,6 +363,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
     tags,
     details,
     organized,
+    classified,
     stashIDs,
     image,
   ]);
@@ -546,6 +558,27 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
           onChange={(value) => setOrganized(value)}
         />
         <ScrapeDialogRow
+          title={intl.formatMessage({ id: "classified" })}
+          result={classified}
+          renderOriginalField={() => (
+            <FormControl
+              value={classified.originalValue ? trueString : falseString}
+              readOnly
+              onChange={() => {}}
+              className="bg-secondary text-white border-secondary"
+            />
+          )}
+          renderNewField={() => (
+            <FormControl
+              value={classified.newValue ? trueString : falseString}
+              readOnly
+              onChange={() => {}}
+              className="bg-secondary text-white border-secondary"
+            />
+          )}
+          onChange={(value) => setClassified(value)}
+        />
+        <ScrapeDialogRow
           title={intl.formatMessage({ id: "stash_id" })}
           result={stashIDs}
           renderOriginalField={() => (
@@ -600,6 +633,7 @@ const SceneMergeDetails: React.FC<ISceneMergeDetailsProps> = ({
         tag_ids: tags.getNewValue()?.map((t) => t.stored_id!),
         details: details.getNewValue(),
         organized: organized.getNewValue(),
+        classified: classified.getNewValue(),
         stash_ids: stashIDs.getNewValue(),
         cover_image: coverImage,
       },

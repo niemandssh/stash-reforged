@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { Form } from "react-bootstrap";
 
 export interface IZoomSelectProps {
@@ -15,21 +16,24 @@ export const ZoomSelect: React.FC<IZoomSelectProps> = ({
   zoomIndex,
   onChangeZoom,
 }) => {
+  const zoomInHotkey = useHotkey("list.zoomIn");
+  const zoomOutHotkey = useHotkey("list.zoomOut");
+
   useEffect(() => {
-    Mousetrap.bind("+", () => {
+    Mousetrap.bind(zoomInHotkey, () => {
       if (zoomIndex !== undefined && zoomIndex < maxZoom) {
         onChangeZoom(zoomIndex + 1);
       }
     });
-    Mousetrap.bind("-", () => {
+    Mousetrap.bind(zoomOutHotkey, () => {
       if (zoomIndex !== undefined && zoomIndex > minZoom) {
         onChangeZoom(zoomIndex - 1);
       }
     });
 
     return () => {
-      Mousetrap.unbind("+");
-      Mousetrap.unbind("-");
+      Mousetrap.unbind(zoomInHotkey);
+      Mousetrap.unbind(zoomOutHotkey);
     };
   });
 

@@ -116,6 +116,26 @@ type CombinedAggregatedView struct {
 	ViewCount   int        `json:"view_count"`
 }
 
+// WatchLaterEntry represents a scene in the watch later list.
+type WatchLaterEntry struct {
+	SceneID int       `json:"scene_id"`
+	AddedAt time.Time `json:"added_at"`
+}
+
+type WatchLaterReader interface {
+	IsInWatchLater(ctx context.Context, id int) (bool, error)
+	GetManyInWatchLater(ctx context.Context, ids []int) ([]bool, error)
+	GetWatchLaterAt(ctx context.Context, id int) (*time.Time, error)
+	GetManyWatchLaterAt(ctx context.Context, ids []int) ([]*time.Time, error)
+	FindWatchLater(ctx context.Context, page, perPage int) ([]WatchLaterEntry, error)
+	CountWatchLater(ctx context.Context) (int, error)
+}
+
+type WatchLaterWriter interface {
+	AddWatchLater(ctx context.Context, id int) (*time.Time, error)
+	RemoveWatchLater(ctx context.Context, id int) error
+}
+
 type ODateReader interface {
 	GetOCount(ctx context.Context, id int) (int, error)
 	GetManyOCount(ctx context.Context, ids []int) ([]int, error)
@@ -156,6 +176,8 @@ type SceneReader interface {
 
 	GetCombinedAggregatedViewHistory(ctx context.Context, page, perPage int) ([]CombinedAggregatedView, error)
 	GetCombinedAggregatedViewHistoryCount(ctx context.Context) (int, error)
+
+	WatchLaterReader
 	GetOMGCounter(ctx context.Context, id int) (int, error)
 	GetOHistoryEntries(ctx context.Context, sceneID int) ([]OHistoryEntry, error)
 	GetOMGHistoryEntries(ctx context.Context, sceneID int) ([]OHistoryEntry, error)
@@ -199,10 +221,12 @@ type SceneWriter interface {
 	AddFileID(ctx context.Context, id int, fileID FileID) error
 	AddGalleryIDs(ctx context.Context, sceneID int, galleryIDs []int) error
 	AssignFiles(ctx context.Context, sceneID int, fileID []FileID) error
+	RemoveFile(ctx context.Context, sceneID int, fileID FileID) error
 
 	OHistoryWriter
 	OMGHistoryWriter
 	ViewHistoryWriter
+	WatchLaterWriter
 	SaveActivity(ctx context.Context, sceneID int, resumeTime *float64, playDuration *float64) (bool, error)
 	ResetActivity(ctx context.Context, sceneID int, resetResume bool, resetDuration bool) (bool, error)
 	IncrementOMGCounter(ctx context.Context, id int) (int, error)

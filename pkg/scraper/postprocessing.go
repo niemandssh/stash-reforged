@@ -2,7 +2,9 @@ package scraper
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/stashapp/stash/pkg/logger"
 	"github.com/stashapp/stash/pkg/match"
@@ -11,10 +13,101 @@ import (
 	"github.com/stashapp/stash/pkg/utils"
 )
 
-// postScrape handles post-processing of scraped content. If the content
+type postScrapeOptions struct {
+	titleCandidates    []string
+	skipImageDownload  bool
+}
+
+func titleCandidatesFromScene(scene *models.Scene) []string {
+	if scene == nil {
+		return nil
+	}
+
+	candidates := make([]string, 0, 2)
+	if scene.Title != "" {
+		candidates = append(candidates, scene.Title)
+	}
+
+	if scene.Path != "" {
+		base := filepath.Base(scene.Path)
+		if name := strings.TrimSuffix(base, filepath.Ext(base)); name != "" {
+			candidates = append(candidates, name)
+		}
+	}
+
+	return uniqueStrings(candidates)
+}
+
+func titleCandidatesFromScrapedSceneInput(scene *models.ScrapedSceneInput) []string {
+	if scene == nil || scene.Title == nil {
+		return nil
+	}
+
+	return uniqueStrings([]string{*scene.Title})
+}
+
+func uniqueStrings(values []string) []string {
+	seen := make(map[string]struct{}, len(values))
+	unique := make([]string, 0, len(values))
+
+	for _, value := range values {
+		value = strings.TrimSpace(value)
+		if value == "" {
+			continue
+		}
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		unique = append(unique, value)
+	}
+
+	return unique
+}
+
+func scrapedSceneTitleCandidates(scene models.ScrapedScene, opts postScrapeOptions) []string {
+	candidates := make([]string, 0, 1+len(opts.titleCandidates))
+	if scene.Title != nil {
+		candidates = append(candidates, *scene.Title)
+	}
+	candidates = append(candidates, opts.titleCandidates...)
+	return uniqueStrings(candidates)
+}
+
+func filterNilScrapedTags(tags []*models.ScrapedTag) []*models.ScrapedTag {
+	if len(tags) == 0 {
+		return tags
+	}
+
+	ret := make([]*models.ScrapedTag, 0, len(tags))
+	for _, t := range tags {
+		if t != nil {
+			ret = append(ret, t)
+		}
+	}
+
+	return ret
+}
+
+func filterNilScrapedPerformers(performers []*models.ScrapedPerformer) []*models.ScrapedPerformer {
+	if len(performers) == 0 {
+		return performers
+	}
+
+	ret := make([]*models.ScrapedPerformer, 0, len(performers))
+	for _, p := range performers {
+		if p != nil {
+			ret = append(ret, p)
+		}
+	}
+
+	return ret
+}
+
+// postScrape handles post-processing of scraped content.
 // requires post-processing, this function fans out to the given content
 // type and post-processes it.
-func (c Cache) postScrape(ctx context.Context, content ScrapedContent, excludeTagRE []*regexp.Regexp) (_ ScrapedContent, ignoredTags []string, err error) {
+func (c Cache) postScrape(ctx context.Context, content ScrapedContent, excludeTagRE []*regexp.Regexp, opts postScrapeOptions) (_ ScrapedContent, ignoredTags []string, err error) {
 	// Analyze the concrete type, call the right post-processing function
 	switch v := content.(type) {
 	case *models.ScrapedPerformer:
@@ -25,10 +118,10 @@ func (c Cache) postScrape(ctx context.Context, content ScrapedContent, excludeTa
 		return c.postScrapePerformer(ctx, v, excludeTagRE)
 	case *models.ScrapedScene:
 		if v != nil {
-			return c.postScrapeScene(ctx, *v, excludeTagRE)
+			return c.postScrapeScene(ctx, *v, excludeTagRE, opts)
 		}
 	case models.ScrapedScene:
-		return c.postScrapeScene(ctx, v, excludeTagRE)
+		return c.postScrapeScene(ctx, v, excludeTagRE, opts)
 	case *models.ScrapedGallery:
 		if v != nil {
 			return c.postScrapeGallery(ctx, *v, excludeTagRE)
@@ -62,7 +155,11 @@ func (c Cache) postScrape(ctx context.Context, content ScrapedContent, excludeTa
 // postScrapeSingle handles post-processing of a single scraped content item.
 // This is a convenience function that includes logging the ignored tags, as opposed to logging them in the caller.
 func (c Cache) postScrapeSingle(ctx context.Context, content ScrapedContent) (ScrapedContent, error) {
-	ret, ignoredTags, err := c.postScrape(ctx, content, c.compileExcludeTagPatterns())
+	return c.postScrapeSingleWithOptions(ctx, content, postScrapeOptions{})
+}
+
+func (c Cache) postScrapeSingleWithOptions(ctx context.Context, content ScrapedContent, opts postScrapeOptions) (ScrapedContent, error) {
+	ret, ignoredTags, err := c.postScrape(ctx, content, c.compileExcludeTagPatterns(), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -72,6 +169,8 @@ func (c Cache) postScrapeSingle(ctx context.Context, content ScrapedContent) (Sc
 }
 
 func (c Cache) postScrapePerformer(ctx context.Context, p models.ScrapedPerformer, excludeTagRE []*regexp.Regexp) (_ ScrapedContent, ignoredTags []string, err error) {
+	models.NormalizeScrapedPerformer(&p)
+
 	r := c.repository
 	if err := r.WithReadTxn(ctx, func(ctx context.Context) error {
 		tqb := r.TagFinder
@@ -81,6 +180,9 @@ func (c Cache) postScrapePerformer(ctx context.Context, p models.ScrapedPerforme
 			return err
 		}
 		p.Tags, ignoredTags = FilterTags(excludeTagRE, tags)
+
+		remainingURLs, _ := match.ExtractStudioURLs(ctx, r.StudioFinder, performerURLList(&p))
+		setPerformerURLList(&p, remainingURLs)
 
 		return nil
 	}); err != nil {
@@ -94,15 +196,9 @@ func (c Cache) postScrapePerformer(ctx context.Context, p models.ScrapedPerforme
 
 	p.Country = resolveCountryName(p.Country)
 
-	// populate URL/URLs
-	// if URLs are provided, only use those
-	if len(p.URLs) > 0 {
-		p.URL = &p.URLs[0]
-	} else {
+	// populate URL/URLs from social handles only when no URLs remain
+	if len(p.URLs) == 0 {
 		urls := []string{}
-		if p.URL != nil {
-			urls = append(urls, *p.URL)
-		}
 		if p.Twitter != nil && *p.Twitter != "" {
 			// handle twitter profile names
 			u := utils.URLFromHandle(*p.Twitter, "https://twitter.com")
@@ -115,7 +211,7 @@ func (c Cache) postScrapePerformer(ctx context.Context, p models.ScrapedPerforme
 		}
 
 		if len(urls) > 0 {
-			p.URLs = urls
+			setPerformerURLList(&p, urls)
 		}
 	}
 
@@ -186,22 +282,32 @@ func (c Cache) postScrapeGroup(ctx context.Context, m models.ScrapedGroup, exclu
 	return m, ignoredTags, nil
 }
 
-func (c Cache) postScrapeScenePerformer(ctx context.Context, p models.ScrapedPerformer, excludeTagRE []*regexp.Regexp) (ignoredTags []string, err error) {
+func (c Cache) postScrapeScenePerformer(ctx context.Context, p *models.ScrapedPerformer, excludeTagRE []*regexp.Regexp) (ignoredTags []string, studio *models.ScrapedStudio, err error) {
+	if p == nil {
+		return nil, nil, nil
+	}
+
+	models.NormalizeScrapedPerformer(p)
+
 	tqb := c.repository.TagFinder
+	sqb := c.repository.StudioFinder
 
 	tags, err := postProcessTags(ctx, tqb, p.Tags)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	p.Tags = tags
 	p.Tags, ignoredTags = FilterTags(excludeTagRE, tags)
 
 	p.Country = resolveCountryName(p.Country)
 
-	return ignoredTags, nil
+	remainingURLs, extractedStudio := match.ExtractStudioURLs(ctx, sqb, performerURLList(p))
+	setPerformerURLList(p, remainingURLs)
+
+	return ignoredTags, extractedStudio, nil
 }
 
-func (c Cache) postScrapeScene(ctx context.Context, scene models.ScrapedScene, excludeTagRE []*regexp.Regexp) (_ ScrapedContent, ignoredTags []string, err error) {
+func (c Cache) postScrapeScene(ctx context.Context, scene models.ScrapedScene, excludeTagRE []*regexp.Regexp, opts postScrapeOptions) (_ ScrapedContent, ignoredTags []string, err error) {
 	// set the URL/URLs field
 	if scene.URL == nil && len(scene.URLs) > 0 {
 		scene.URL = &scene.URLs[0]
@@ -217,14 +323,16 @@ func (c Cache) postScrapeScene(ctx context.Context, scene models.ScrapedScene, e
 		tqb := r.TagFinder
 		sqb := r.StudioFinder
 
-		for _, p := range scene.Performers {
-			if p == nil {
-				continue
-			}
+		scene.Performers = filterNilScrapedPerformers(scene.Performers)
 
-			thisIgnoredTags, err := c.postScrapeScenePerformer(ctx, *p, excludeTagRE)
+		for _, p := range scene.Performers {
+			thisIgnoredTags, extractedStudio, err := c.postScrapeScenePerformer(ctx, p, excludeTagRE)
 			if err != nil {
 				return err
+			}
+
+			if scene.Studio == nil && extractedStudio != nil {
+				scene.Studio = extractedStudio
 			}
 
 			if err := match.ScrapedPerformer(ctx, pqb, p, ""); err != nil {
@@ -270,14 +378,38 @@ func (c Cache) postScrapeScene(ctx context.Context, scene models.ScrapedScene, e
 			}
 		}
 
+		scene.Tags = filterNilScrapedTags(scene.Tags)
+
 		tags, err := postProcessTags(ctx, tqb, scene.Tags)
 		if err != nil {
 			return err
 		}
 		scene.Tags, ignoredTags = FilterTags(excludeTagRE, tags)
 
+		if scene.Studio == nil {
+			remainingSceneURLs, extractedStudio := match.ExtractStudioURLs(ctx, sqb, scene.URLs)
+			scene.URLs = remainingSceneURLs
+			if len(remainingSceneURLs) > 0 {
+				scene.URL = &remainingSceneURLs[0]
+			} else {
+				scene.URL = nil
+			}
+			if extractedStudio != nil {
+				scene.Studio = extractedStudio
+			}
+		}
+
+		if scene.Studio == nil {
+			for _, title := range scrapedSceneTitleCandidates(scene, opts) {
+				if extractedStudio, ok := match.StudioFromTitle(ctx, sqb, title); ok {
+					scene.Studio = extractedStudio
+					break
+				}
+			}
+		}
+
 		if scene.Studio != nil {
-			err := match.ScrapedStudio(ctx, sqb, scene.Studio, "")
+			err := match.ScrapedStudioHierarchy(ctx, sqb, scene.Studio, "")
 			if err != nil {
 				return err
 			}
@@ -289,8 +421,10 @@ func (c Cache) postScrapeScene(ctx context.Context, scene models.ScrapedScene, e
 	}
 
 	// post-process - set the image if applicable
-	if err := setSceneImage(ctx, c.client, &scene, c.globalConfig); err != nil {
-		logger.Warnf("Could not set image using URL %s: %v", *scene.Image, err)
+	if !opts.skipImageDownload {
+		if err := setSceneImage(ctx, c.client, &scene, c.globalConfig); err != nil {
+			logger.Warnf("Could not set image using URL %s: %v", *scene.Image, err)
+		}
 	}
 
 	return scene, ignoredTags, nil

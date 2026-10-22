@@ -6,6 +6,10 @@ import { VIDEO_PLAYER_ID } from "src/components/ScenePlayer/util";
 import { useSceneUpdate } from "src/core/StashService";
 import { useToast } from "src/hooks/Toast";
 import * as GQL from "src/core/generated-graphql";
+import {
+  DEFAULT_VR_ROTATE_SPEED,
+  DEFAULT_VR_ZOOM_SPEED,
+} from "src/components/ScenePlayer/vrCameraControls";
 
 interface ISceneVideoFilterPanelProps {
   scene: GQL.SceneDataFragment;
@@ -57,6 +61,47 @@ const Slider: React.FC<ISliderProps> = (sliderProps: ISliderProps) => {
         role="presentation"
         onClick={() => sliderProps.setValue(sliderProps.range.default)}
         onKeyPress={() => sliderProps.setValue(sliderProps.range.default)}
+      >
+        <TruncatedText text={sliderProps.displayValue} />
+      </span>
+    </div>
+  );
+};
+
+interface IFloatSliderProps {
+  title: string;
+  className?: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+  value: number;
+  setValue: (value: React.SetStateAction<number>) => void;
+  displayValue: string;
+}
+
+const FloatSlider: React.FC<IFloatSliderProps> = (sliderProps) => {
+  return (
+    <div className="row form-group">
+      <span className="col-sm-3">{sliderProps.title}</span>
+      <span className="col-sm-7">
+        <Form.Control
+          className={`filter-slider d-inline-flex ml-sm-3 ${sliderProps.className ?? ""}`}
+          type="range"
+          min={sliderProps.min}
+          max={sliderProps.max}
+          step={sliderProps.step}
+          value={sliderProps.value}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            sliderProps.setValue(Number.parseFloat(e.currentTarget.value))
+          }
+        />
+      </span>
+      <span
+        className="col-sm-2 filter-slider-value"
+        role="presentation"
+        onClick={() => sliderProps.setValue(sliderProps.defaultValue)}
+        onKeyPress={() => sliderProps.setValue(sliderProps.defaultValue)}
       >
         <TruncatedText text={sliderProps.displayValue} />
       </span>
@@ -128,6 +173,18 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     max: 300,
     divider: 100,
   };
+  const vrRotateSpeedRange = {
+    min: 0.002,
+    default: DEFAULT_VR_ROTATE_SPEED,
+    max: 0.05,
+    step: 0.001,
+  };
+  const vrZoomSpeedRange = {
+    min: 0.25,
+    default: DEFAULT_VR_ZOOM_SPEED,
+    max: 4,
+    step: 0.05,
+  };
 
   const intl = useIntl();
   const [sceneUpdate] = useSceneUpdate();
@@ -180,6 +237,12 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
   const [vrProjectionValue, setVrProjectionValue] = useState<GQL.SceneVrProjection>(
     () =>
       props.scene.video_filters?.vr_projection ?? GQL.SceneVrProjection.None
+  );
+  const [vrRotateSpeedValue, setVrRotateSpeedValue] = useState(
+    () => props.scene.video_filters?.vr_rotate_speed ?? vrRotateSpeedRange.default
+  );
+  const [vrZoomSpeedValue, setVrZoomSpeedValue] = useState(
+    () => props.scene.video_filters?.vr_zoom_speed ?? vrZoomSpeedRange.default
   );
   const [rotateValue, setRotateValue] = useState(
     () => props.scene.video_transforms?.rotate ?? rotateRange.default
@@ -301,6 +364,12 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     setVrProjectionValue(
       props.scene.video_filters?.vr_projection ?? GQL.SceneVrProjection.None
     );
+    setVrRotateSpeedValue(
+      props.scene.video_filters?.vr_rotate_speed ?? vrRotateSpeedRange.default
+    );
+    setVrZoomSpeedValue(
+      props.scene.video_filters?.vr_zoom_speed ?? vrZoomSpeedRange.default
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.scene.id,
@@ -310,6 +379,8 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
     props.scene.video_filters?.volume_level,
     props.scene.video_filters?.volume_muted,
     props.scene.video_filters?.vr_projection,
+    props.scene.video_filters?.vr_rotate_speed,
+    props.scene.video_filters?.vr_zoom_speed,
   ]);
 
   // Sync text and numeric values
@@ -687,9 +758,13 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
       volume_level: null,
       volume_muted: null,
       vr_projection: null,
+      vr_rotate_speed: null,
+      vr_zoom_speed: null,
     };
 
     setVrProjectionValue(GQL.SceneVrProjection.None);
+    setVrRotateSpeedValue(vrRotateSpeedRange.default);
+    setVrZoomSpeedValue(vrZoomSpeedRange.default);
 
     sceneUpdate({
       variables: {
@@ -756,6 +831,12 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
         vrProjectionValue !== GQL.SceneVrProjection.None
           ? vrProjectionValue
           : null,
+      vr_rotate_speed:
+        vrRotateSpeedValue !== vrRotateSpeedRange.default
+          ? vrRotateSpeedValue
+          : null,
+      vr_zoom_speed:
+        vrZoomSpeedValue !== vrZoomSpeedRange.default ? vrZoomSpeedValue : null,
     };
 
     const videoTransforms: GQL.VideoTransforms = {
@@ -881,6 +962,36 @@ export const SceneVideoFilterPanel: React.FC<ISceneVideoFilterPanelProps> = (
           </Form.Control>
           <small className="text-muted d-block mt-1">
             <FormattedMessage id="effect_filters.vr_projection_hint" />
+          </small>
+        </span>
+      </div>
+      <FloatSlider
+        title={intl.formatMessage({ id: "effect_filters.vr_rotate_speed" })}
+        className="vr-rotate-speed-slider"
+        min={vrRotateSpeedRange.min}
+        max={vrRotateSpeedRange.max}
+        step={vrRotateSpeedRange.step}
+        defaultValue={vrRotateSpeedRange.default}
+        value={vrRotateSpeedValue}
+        setValue={setVrRotateSpeedValue}
+        displayValue={vrRotateSpeedValue.toFixed(3)}
+      />
+      <FloatSlider
+        title={intl.formatMessage({ id: "effect_filters.vr_zoom_speed" })}
+        className="vr-zoom-speed-slider"
+        min={vrZoomSpeedRange.min}
+        max={vrZoomSpeedRange.max}
+        step={vrZoomSpeedRange.step}
+        defaultValue={vrZoomSpeedRange.default}
+        value={vrZoomSpeedValue}
+        setValue={setVrZoomSpeedValue}
+        displayValue={`${vrZoomSpeedValue.toFixed(2)}×`}
+      />
+      <div className="row form-group">
+        <span className="col-sm-3"></span>
+        <span className="col-sm-9">
+          <small className="text-muted">
+            <FormattedMessage id="effect_filters.vr_controls_hint" />
           </small>
         </span>
       </div>

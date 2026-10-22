@@ -93,6 +93,8 @@ type PerformerWriter interface {
 	PerformerCreator
 	PerformerUpdater
 	PerformerDestroyer
+
+	Merge(ctx context.Context, source []int, destination int) error
 }
 
 // PerformerReaderWriter provides all performer methods.

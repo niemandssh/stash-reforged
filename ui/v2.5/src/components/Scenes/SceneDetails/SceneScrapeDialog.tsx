@@ -26,6 +26,10 @@ import {
   useCreateScrapedPerformer,
   useCreateScrapedStudio,
 } from "src/components/Shared/ScrapeDialog/createObjects";
+import {
+  scrapedStudioForCreate,
+  scrapedStudioForSelect,
+} from "src/components/Shared/ScrapeDialog/scrapedStudio";
 import { Tag } from "src/components/Tags/TagSelect";
 import { Studio } from "src/components/Studios/StudioSelect";
 import { Group } from "src/components/Groups/GroupSelect";
@@ -86,11 +90,11 @@ export const SceneScrapeDialog: React.FC<ISceneScrapeDialogProps> = ({
             name: sceneStudio.name,
           }
         : undefined,
-      scraped.studio?.stored_id ? scraped.studio : undefined
+      scrapedStudioForSelect(scraped.studio)
     )
   );
   const [newStudio, setNewStudio] = useState<GQL.ScrapedStudio | undefined>(
-    scraped.studio && !scraped.studio.stored_id ? scraped.studio : undefined
+    scrapedStudioForCreate(scraped.studio)
   );
 
   const [stashID, setStashID] = useState(

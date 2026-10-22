@@ -46,12 +46,8 @@ func (t *GenerateEmbedSpriteTask) Generate(ctx context.Context) error {
 	}
 
 	embedURL := strings.TrimSpace(*t.Scene.EmbedURL)
-	streamURL, _, err := embed.ExtractStreamURL(embedURL)
-	if err != nil {
-		return err
-	}
 
-	duration, _, err := embed.ExtractVideoDuration(embedURL)
+	duration, err := ResolveEmbedDuration(embedURL)
 	if err != nil {
 		return err
 	}
@@ -71,7 +67,14 @@ func (t *GenerateEmbedSpriteTask) Generate(ctx context.Context) error {
 		}
 	}
 
-	headers := embed.StreamHTTPHeadersForURL(*t.Scene.EmbedURL)
+	// Resolve a fresh media URL after duration probing. Temporary PlayerJS links are
+	// downloaded once so auth tokens cannot expire across many ffmpeg seeks.
+	input, headers, cleanup, err := prepareEmbedSpriteSource(ctx, embedURL)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
 	chunkCount := embedSpriteRows * embedSpriteCols
 	stepSize := duration / float64(chunkCount)
 
@@ -91,7 +94,12 @@ func (t *GenerateEmbedSpriteTask) Generate(ctx context.Context) error {
 		}
 
 		time := float64(i) * stepSize
-		img, err := generator.SpriteScreenshotHybridHTTP(ctx, streamURL, time, headers)
+		var img image.Image
+		if headers != "" {
+			img, err = generator.SpriteScreenshotHybridHTTP(ctx, input, time, headers)
+		} else {
+			img, err = generator.SpriteScreenshotHybrid(ctx, input, time)
+		}
 		if err != nil {
 			return fmt.Errorf("embed sprite screenshot at %.2fs: %w", time, err)
 		}

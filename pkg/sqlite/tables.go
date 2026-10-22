@@ -332,6 +332,14 @@ var (
 		dateColumn: goqu.T(scenesOMGDatesTable).Col(sceneOMGDateColumn),
 	}
 
+	scenesWatchLaterTableMgr = &watchLaterTable{
+		table: table{
+			table:    goqu.T(scenesWatchLaterTable),
+			idColumn: goqu.T(scenesWatchLaterTable).Col(sceneIDColumn),
+		},
+		dateColumn: goqu.T(scenesWatchLaterTable).Col(sceneWatchLaterAtColumn),
+	}
+
 	sceneSimilaritiesTableMgr = &table{
 		table:    goqu.T(sceneSimilaritiesTable),
 		idColumn: goqu.T(sceneSimilaritiesTable).Col(idColumn),

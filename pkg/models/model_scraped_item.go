@@ -2,6 +2,9 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -9,6 +12,105 @@ import (
 	"github.com/stashapp/stash/pkg/sliceutil/stringslice"
 	"github.com/stashapp/stash/pkg/utils"
 )
+
+var scrapedAliasPrefixRE = regexp.MustCompile(`(?i)^aka[.\s]+`)
+var scrapedPerformerNameAkaRE = regexp.MustCompile(`(?i)\s+aka\s+`)
+
+func cleanAliasValue(alias string) string {
+	return strings.TrimSpace(scrapedAliasPrefixRE.ReplaceAllString(strings.TrimSpace(alias), ""))
+}
+
+func parsePerformerNameAka(name string) (performerName string, alias string, ok bool) {
+	parts := scrapedPerformerNameAkaRE.Split(strings.TrimSpace(name), 2)
+	if len(parts) != 2 {
+		return name, "", false
+	}
+
+	performerName = strings.TrimSpace(parts[0])
+	alias = cleanAliasValue(parts[1])
+	if performerName == "" || alias == "" {
+		return name, "", false
+	}
+
+	return performerName, alias, true
+}
+
+func appendScrapedPerformerAlias(p *ScrapedPerformer, alias string) {
+	alias = strings.TrimSpace(alias)
+	if alias == "" {
+		return
+	}
+
+	if p.Name != nil && strings.EqualFold(*p.Name, alias) {
+		return
+	}
+
+	existing := []string{}
+	if p.Aliases != nil && strings.TrimSpace(*p.Aliases) != "" {
+		existing = stringslice.FromString(*p.Aliases, ",")
+	}
+
+	for _, existingAlias := range existing {
+		if strings.EqualFold(existingAlias, alias) {
+			return
+		}
+	}
+
+	existing = append(existing, alias)
+	joined := strings.Join(existing, ",")
+	p.Aliases = &joined
+}
+
+// NormalizeScrapedPerformer splits "Name aka Alias" names and cleans alias values.
+func NormalizeScrapedPerformer(p *ScrapedPerformer) {
+	if p == nil {
+		return
+	}
+
+	if p.Name != nil {
+		if name, alias, ok := parsePerformerNameAka(*p.Name); ok {
+			p.Name = &name
+			appendScrapedPerformerAlias(p, alias)
+		}
+	}
+
+	CleanScrapedPerformerAliases(p)
+}
+
+// CleanScrapedPerformerAliases removes common alias prefixes such as "aka".
+func CleanScrapedPerformerAliases(p *ScrapedPerformer) {
+	if p == nil || p.Aliases == nil || strings.TrimSpace(*p.Aliases) == "" {
+		return
+	}
+
+	aliases := stringslice.FromString(*p.Aliases, ",")
+	cleaned := make([]string, 0, len(aliases))
+	changed := false
+	for _, alias := range aliases {
+		trimmed := strings.TrimSpace(alias)
+		value := cleanAliasValue(alias)
+		if value == "" {
+			changed = true
+			continue
+		}
+		if value != trimmed {
+			changed = true
+		}
+		cleaned = append(cleaned, value)
+	}
+
+	if !changed {
+		return
+	}
+
+	if len(cleaned) == 0 {
+		p.Aliases = nil
+		return
+	}
+
+	joined := strings.Join(cleaned, ",")
+	p.Aliases = &joined
+}
 
 type ScrapedStudio struct {
 	// Set if studio matched
@@ -138,6 +240,42 @@ type ScrapedPerformer struct {
 	RemoteSiteID       *string  `json:"remote_site_id"`
 	RemoteDeleted      bool     `json:"remote_deleted"`
 	RemoteMergedIntoId *string  `json:"remote_merged_into_id"`
+}
+
+func (p *ScrapedPerformer) UnmarshalJSON(data []byte) error {
+	type Alias ScrapedPerformer
+	aux := struct {
+		Aliases json.RawMessage `json:"aliases"`
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	if len(aux.Aliases) == 0 || string(aux.Aliases) == "null" {
+		NormalizeScrapedPerformer(p)
+		return nil
+	}
+
+	var aliases string
+	if err := json.Unmarshal(aux.Aliases, &aliases); err == nil {
+		p.Aliases = &aliases
+		NormalizeScrapedPerformer(p)
+		return nil
+	}
+
+	var aliasList []string
+	if err := json.Unmarshal(aux.Aliases, &aliasList); err == nil {
+		joined := strings.Join(aliasList, ",")
+		p.Aliases = &joined
+		NormalizeScrapedPerformer(p)
+		return nil
+	}
+
+	return fmt.Errorf("aliases must be a string or array of strings")
 }
 
 func (ScrapedPerformer) IsScrapedContent() {}

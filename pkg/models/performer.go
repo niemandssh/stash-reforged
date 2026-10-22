@@ -15,6 +15,7 @@ const (
 	GenderEnumTransgenderFemale GenderEnum = "TRANSGENDER_FEMALE"
 	GenderEnumIntersex          GenderEnum = "INTERSEX"
 	GenderEnumNonBinary         GenderEnum = "NON_BINARY"
+	GenderEnumCouple            GenderEnum = "COUPLE"
 )
 
 var AllGenderEnum = []GenderEnum{
@@ -24,11 +25,12 @@ var AllGenderEnum = []GenderEnum{
 	GenderEnumTransgenderFemale,
 	GenderEnumIntersex,
 	GenderEnumNonBinary,
+	GenderEnumCouple,
 }
 
 func (e GenderEnum) IsValid() bool {
 	switch e {
-	case GenderEnumMale, GenderEnumFemale, GenderEnumTransgenderMale, GenderEnumTransgenderFemale, GenderEnumIntersex, GenderEnumNonBinary:
+	case GenderEnumMale, GenderEnumFemale, GenderEnumTransgenderMale, GenderEnumTransgenderFemale, GenderEnumIntersex, GenderEnumNonBinary, GenderEnumCouple:
 		return true
 	}
 	return false

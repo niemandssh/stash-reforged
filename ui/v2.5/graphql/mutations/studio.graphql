@@ -17,3 +17,9 @@ mutation StudioDestroy($id: ID!) {
 mutation StudiosDestroy($ids: [ID!]!) {
   studiosDestroy(ids: $ids)
 }
+
+mutation StudiosMerge($input: StudiosMergeInput!) {
+  studiosMerge(input: $input) {
+    ...StudioData
+  }
+}

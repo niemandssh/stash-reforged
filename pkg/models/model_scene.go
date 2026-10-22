@@ -22,6 +22,7 @@ type Scene struct {
 	// Rating expressed in 1-100 scale
 	Rating                  *int    `json:"rating"`
 	Organized               bool    `json:"organized"`
+	Classified              bool    `json:"classified"`
 	Pinned                  bool    `json:"pinned"`
 	IsBroken                bool    `json:"is_broken"`
 	IsNotBroken             bool    `json:"is_not_broken"`
@@ -92,6 +93,7 @@ type ScenePartial struct {
 	// Rating expressed in 1-100 scale
 	Rating                  OptionalInt
 	Organized               OptionalBool
+	Classified              OptionalBool
 	Pinned                  OptionalBool
 	IsBroken                OptionalBool
 	IsNotBroken             OptionalBool
@@ -302,6 +304,7 @@ func (s ScenePartial) UpdateInput(id int) SceneUpdateInput {
 		Date:         dateStr,
 		Rating100:    s.Rating.Ptr(),
 		Organized:    s.Organized.Ptr(),
+		Classified:   s.Classified.Ptr(),
 		IsBroken:     s.IsBroken.Ptr(),
 		StudioID:     s.StudioID.StringPtr(),
 		GalleryIds:   s.GalleryIDs.IDStrings(),
@@ -378,19 +381,21 @@ type SimilarScene struct {
 
 // VideoFilters represents video filter settings for a scene
 type VideoFilters struct {
-	Contrast     *int               `json:"contrast"`
-	Brightness   *int               `json:"brightness"`
-	Gamma        *int               `json:"gamma"`
-	Saturate     *int               `json:"saturate"`
-	HueRotate    *int               `json:"hue_rotate"`
-	WhiteBalance *int               `json:"white_balance"`
-	Red          *int               `json:"red"`
-	Green        *int               `json:"green"`
-	Blue         *int               `json:"blue"`
-	Blur         *int               `json:"blur"`
-	VolumeLevel  *float64           `json:"volume_level"`
-	VolumeMuted  *bool              `json:"volume_muted"`
-	VRProjection *SceneVRProjection `json:"vr_projection,omitempty"`
+	Contrast      *int               `json:"contrast"`
+	Brightness    *int               `json:"brightness"`
+	Gamma         *int               `json:"gamma"`
+	Saturate      *int               `json:"saturate"`
+	HueRotate     *int               `json:"hue_rotate"`
+	WhiteBalance  *int               `json:"white_balance"`
+	Red           *int               `json:"red"`
+	Green         *int               `json:"green"`
+	Blue          *int               `json:"blue"`
+	Blur          *int               `json:"blur"`
+	VolumeLevel   *float64           `json:"volume_level"`
+	VolumeMuted   *bool              `json:"volume_muted"`
+	VRProjection  *SceneVRProjection `json:"vr_projection,omitempty"`
+	VRRotateSpeed *float64           `json:"vr_rotate_speed,omitempty"`
+	VRZoomSpeed   *float64           `json:"vr_zoom_speed,omitempty"`
 }
 
 // VideoTransforms represents video transformation settings for a scene

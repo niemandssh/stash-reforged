@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -382,4 +383,140 @@ func TestScrapedStudio_ToPartial(t *testing.T) {
 			assert.Equal(t, tt.want, got)
 		})
 	}
+}
+
+func TestScrapedPerformerUnmarshalJSON_aliases(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    *string
+		wantErr bool
+	}{
+		{
+			name:  "alias string",
+			input: `{"name": "test", "aliases": "alias1, alias2"}`,
+			want:  strPtr("alias1, alias2"),
+		},
+		{
+			name:  "alias array",
+			input: `{"name": "test", "aliases": ["alias1", "alias2"]}`,
+			want:  strPtr("alias1,alias2"),
+		},
+		{
+			name:  "null aliases",
+			input: `{"name": "test", "aliases": null}`,
+			want:  nil,
+		},
+		{
+			name:    "invalid aliases",
+			input:   `{"name": "test", "aliases": 123}`,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got ScrapedPerformer
+			err := json.Unmarshal([]byte(tt.input), &got)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
+
+			if tt.want == nil {
+				assert.Nil(t, got.Aliases)
+				return
+			}
+
+			assert.NotNil(t, got.Aliases)
+			assert.Equal(t, *tt.want, *got.Aliases)
+		})
+	}
+}
+
+func strPtr(s string) *string {
+	return &s
+}
+
+func TestScrapedSceneUnmarshalJSON_performerAliasesArray(t *testing.T) {
+	input := `{
+		"title": "test scene",
+		"performers": [
+			{
+				"name": "Performer One",
+				"aliases": ["alias1", "alias2"]
+			}
+		]
+	}`
+
+	var got ScrapedScene
+	err := json.Unmarshal([]byte(input), &got)
+	assert.NoError(t, err)
+	assert.Len(t, got.Performers, 1)
+	assert.NotNil(t, got.Performers[0].Aliases)
+	assert.Equal(t, "alias1,alias2", *got.Performers[0].Aliases)
+}
+
+func TestCleanScrapedPerformerAliases(t *testing.T) {
+	aliases := "aka Montrealbbc, aka OtherName"
+	performer := &ScrapedPerformer{
+		Aliases: &aliases,
+	}
+
+	CleanScrapedPerformerAliases(performer)
+
+	assert.NotNil(t, performer.Aliases)
+	assert.Equal(t, "Montrealbbc,OtherName", *performer.Aliases)
+}
+
+func TestNormalizeScrapedPerformer_nameAkaAlias(t *testing.T) {
+	name := "Marin Niko aka Marin Nico"
+	performer := &ScrapedPerformer{
+		Name: &name,
+	}
+
+	NormalizeScrapedPerformer(performer)
+
+	assert.NotNil(t, performer.Name)
+	assert.Equal(t, "Marin Niko", *performer.Name)
+	assert.NotNil(t, performer.Aliases)
+	assert.Equal(t, "Marin Nico", *performer.Aliases)
+}
+
+func TestScrapedPerformerUnmarshalJSON_nameAkaAlias(t *testing.T) {
+	input := `{"name": "Marin Niko aka Marin Nico"}`
+
+	var got ScrapedPerformer
+	err := json.Unmarshal([]byte(input), &got)
+	assert.NoError(t, err)
+	assert.NotNil(t, got.Name)
+	assert.Equal(t, "Marin Niko", *got.Name)
+	assert.NotNil(t, got.Aliases)
+	assert.Equal(t, "Marin Nico", *got.Aliases)
+}
+
+func TestNormalizeScrapedPerformer_nameAkaAliasAppendsExisting(t *testing.T) {
+	name := "Marin Niko aka Marin Nico"
+	aliases := "Existing Alias"
+	performer := &ScrapedPerformer{
+		Name:    &name,
+		Aliases: &aliases,
+	}
+
+	NormalizeScrapedPerformer(performer)
+
+	assert.Equal(t, "Marin Niko", *performer.Name)
+	assert.Equal(t, "Existing Alias,Marin Nico", *performer.Aliases)
+}
+
+func TestScrapedPerformerUnmarshalJSON_stripsAkaPrefix(t *testing.T) {
+	input := `{"name": "test", "aliases": ["aka Montrealbbc", "aka OtherName"]}`
+
+	var got ScrapedPerformer
+	err := json.Unmarshal([]byte(input), &got)
+	assert.NoError(t, err)
+	assert.NotNil(t, got.Aliases)
+	assert.Equal(t, "Montrealbbc,OtherName", *got.Aliases)
 }

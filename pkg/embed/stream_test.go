@@ -144,8 +144,11 @@ func TestExtractVideoDuration(t *testing.T) {
 }
 
 func TestExtractStreamURLUnsupportedSite(t *testing.T) {
-	_, _, err := ExtractStreamURL("https://www.youtube.com/watch?v=abc")
-	if err != ErrUnsupportedSite {
-		t.Fatalf("ExtractStreamURL() error = %v, want %v", err, ErrUnsupportedSite)
+	_, site, err := ExtractStreamURL("https://www.youtube.com/watch?v=abc")
+	if site != SitePlayerJS {
+		t.Fatalf("site = %q, want %q", site, SitePlayerJS)
+	}
+	if err == nil {
+		t.Fatal("expected extraction error for non-playerjs page")
 	}
 }

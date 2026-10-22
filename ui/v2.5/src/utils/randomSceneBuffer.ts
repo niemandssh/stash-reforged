@@ -64,3 +64,4 @@ export function randomSceneBufferKeyForRating(
 }
 
 export const RANDOM_SCENE_BUFFER_KEY_UNORGANISED = "unorganised";
+export const RANDOM_SCENE_BUFFER_KEY_UNCLASSIFIED = "unclassified";

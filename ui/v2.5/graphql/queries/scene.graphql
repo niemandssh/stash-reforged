@@ -104,6 +104,18 @@ query FindScenesForSelect(
   }
 }
 
+query FindScenesByEmbedURL($embed_url: String!) {
+  findScenes(
+    scene_filter: { embed_url: { value: $embed_url, modifier: EQUALS } }
+    filter: { per_page: -1 }
+  ) {
+    count
+    scenes {
+      ...SelectSceneData
+    }
+  }
+}
+
 query FindSimilarScenes($id: ID!, $limit: Int) {
   findScene(id: $id) {
     similar_scenes(limit: $limit) {

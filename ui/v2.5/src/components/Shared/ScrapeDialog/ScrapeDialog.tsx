@@ -18,6 +18,7 @@ import {
   faPencilAlt,
   faPlus,
   faTimes,
+  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { getCountryByISO } from "src/utils/country";
 import { CountrySelect } from "../CountrySelect";
@@ -38,6 +39,8 @@ interface IScrapedRowProps<T, V> extends IScrapedFieldProps<T> {
   newValues?: V[];
   onCreateNew?: (index: number) => void;
   getName?: (value: V) => string;
+  onMergeOriginalIntoNew?: () => void;
+  mergeOriginalTooltip?: string;
 }
 
 function renderButtonIcon(selected: boolean) {
@@ -136,6 +139,17 @@ export const ScrapeDialogRow = <T, V>(props: IScrapedRowProps<T, V>) => {
                 </Button>
               </InputGroup.Prepend>
               {props.renderNewField(props.result)}
+              {props.onMergeOriginalIntoNew && (
+                <InputGroup.Append>
+                  <Button
+                    variant="secondary"
+                    onClick={props.onMergeOriginalIntoNew}
+                    title={props.mergeOriginalTooltip}
+                  >
+                    <Icon className="fa-fw" icon={faArrowRight} />
+                  </Button>
+                </InputGroup.Append>
+              )}
             </InputGroup>
             {renderNewValues()}
           </Col>
@@ -449,7 +463,7 @@ export const ScrapeDialog: React.FC<IScrapeDialogProps> = (
         text: intl.formatMessage({ id: "actions.cancel" }),
         variant: "secondary",
       }}
-      modalProps={{ size: "lg", dialogClassName: "scrape-dialog" }}
+      modalProps={{ size: "xl", dialogClassName: "scrape-dialog" }}
     >
       <div className="dialog-container">
         <Form>

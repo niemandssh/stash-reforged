@@ -53,6 +53,7 @@
     "created_entity": "Created {entity_type}: {entity_name}",
     "customise": "Customise",
     "delete": "Delete",
+    "detach": "Detach",
     "delete_entity": "Delete {entityType}",
     "delete_file": "Delete file",
     "delete_file_and_funscript": "Delete file (and funscript)",
@@ -305,6 +306,7 @@
       "about": "About",
       "changelog": "Changelog",
       "custom": "Custom",
+      "hotkeys": "Hot Keys",
       "interface": "Interface",
       "logs": "Logs",
       "metadata_providers": "Metadata Providers",
@@ -335,6 +337,106 @@
       "redirect": "Redirect",
       "redirect_home_to_scenes": "Redirect home page to scenes",
       "redirect_home_to_scenes_desc": "Automatically redirect from home page to scenes page when entering the application"
+    },
+    "hotkeys": {
+      "record": "Record",
+      "press_keys": "Press keys…",
+      "reset_default": "Reset to default",
+      "esc_closes_modals": "Pressing Esc always closes any open dialog, regardless of the hotkeys configured below.",
+      "groups": {
+        "scenes": "Scenes",
+        "entity_detail": "Entity Detail Pages",
+        "lists": "List Pages",
+        "slideshow": "Image Slideshow",
+        "navigation": "Navigation"
+      },
+      "scene": {
+        "first_review": "First review random unclassified scene",
+        "review": "Review random unorganised scene",
+        "random": "Open random scene",
+        "random_best": "Open random best scene",
+        "delete": "Delete current scene",
+        "toggle_queue_panel": "Toggle queue sidebar panel",
+        "toggle_markers_panel": "Toggle markers sidebar panel",
+        "toggle_file_info_panel": "Toggle file info sidebar panel",
+        "queue_next": "Play next scene in queue",
+        "queue_previous": "Play previous scene in queue",
+        "queue_random": "Play random scene in queue",
+        "hide_scrubber": "Show/hide preview scrubber"
+      },
+      "detail": {
+        "tab_details": "Switch to Details tab",
+        "tab_edit": "Switch to Edit tab",
+        "tab_history": "Switch to History tab",
+        "tab_file_info": "Switch to File Info tab",
+        "toggle_edit": "Toggle edit mode",
+        "toggle_favorite": "Toggle favorite",
+        "toggle_sidebar": "Collapse/expand sidebar",
+        "increment_o": "Increment O counter",
+        "new_sub_item": "Create new item (chapter/marker)"
+      },
+      "edit": {
+        "save": "Save current edit form"
+      },
+      "entity": {
+        "delete": "Delete current entity"
+      },
+      "gallery": {
+        "tab_chapters": "Switch to Chapters tab"
+      },
+      "performer": {
+        "tab_scenes": "Switch to Scenes tab",
+        "tab_galleries": "Switch to Galleries tab",
+        "tab_groups": "Switch to Groups tab"
+      },
+      "rating": {
+        "trigger": "Start rating entry"
+      },
+      "list": {
+        "play_random": "Open random item from list",
+        "focus_search": "Focus search box",
+        "close_sidebar": "Close filter sidebar",
+        "select_all": "Select all",
+        "select_none": "Select none",
+        "bulk_edit": "Edit selected items",
+        "bulk_delete": "Delete selected items",
+        "open_filter_editor": "Open filter editor",
+        "reshuffle_random": "Reshuffle random sort",
+        "page_next": "Next page",
+        "page_previous": "Previous page",
+        "page_forward_10": "Skip forward 10 pages",
+        "page_back_10": "Skip back 10 pages",
+        "page_first": "First page",
+        "page_last": "Last page",
+        "view_grid": "Switch to Grid view",
+        "view_list": "Switch to List view",
+        "view_wall": "Switch to Wall view",
+        "view_slideshow": "Switch to Slideshow view",
+        "view_web": "Switch to Web view",
+        "zoom_in": "Zoom in",
+        "zoom_out": "Zoom out"
+      },
+      "slideshow": {
+        "previous": "Previous image",
+        "next": "Next image",
+        "play_pause": "Play/pause slideshow"
+      },
+      "nav": {
+        "open_manual": "Open manual",
+        "goto_settings": "Go to Settings",
+        "new_item": "Create new item",
+        "goto_scenes": "Go to Scenes",
+        "goto_games": "Go to Games",
+        "goto_images": "Go to Images",
+        "goto_groups": "Go to Groups",
+        "goto_markers": "Go to Markers",
+        "goto_galleries": "Go to Galleries",
+        "goto_performers": "Go to Performers",
+        "goto_studios": "Go to Studios",
+        "goto_tags": "Go to Tags",
+        "goto_history": "Go to History",
+        "goto_watch_later": "Go to Watch Later"
+      }
     },
     "dlna": {
       "allow_temp_ip": "Allow {tempIP}",
@@ -1245,7 +1347,10 @@
     "vr_projection_mono_360": "360° monoscopic (equirectangular)",
     "vr_projection_none": "Normal (flat)",
     "vr_projection_stereo_180_lr": "180° side-by-side stereo",
-    "vr_projection_stereo_360_tb": "360° top-bottom stereo"
+    "vr_projection_stereo_360_tb": "360° top-bottom stereo",
+    "vr_rotate_speed": "VR movement speed",
+    "vr_zoom_speed": "VR zoom speed",
+    "vr_controls_hint": "In VR mode: WASD to look around, Q/E and mouse wheel to zoom. Save to apply per scene."
   },
   "empty_server": "Add some scenes to your server to view recommendations on this page.",
   "errors": {
@@ -1298,6 +1403,7 @@
     "INTERSEX": "Intersex",
     "MALE": "Male",
     "NON_BINARY": "Non-Binary",
+    "COUPLE": "Couple",
     "TRANSGENDER_FEMALE": "Transgender Female",
     "TRANSGENDER_MALE": "Transgender Male"
   },
@@ -1394,6 +1500,7 @@
   "omgdate_recorded_no": "No OMG Date Recorded",
   "operations": "Operations",
   "organized": "Organised",
+  "classified": "Classified",
   "not_organized": "Not organised",
   "orientation": "Orientation",
   "package_manager": {
@@ -1742,6 +1849,7 @@
     "updated_entity": "Updated {entity}",
     "primary_file_set": "Set {fileName} as primary file",
     "error_setting_primary_file": "Error setting primary file: {error}",
+    "file_detached_from_scene": "File detached from scene",
     "url_image_load_failed": "Failed to load image from URL",
     "scene_with_similars_updated": "Scene with similars was updated",
     "similarity_recalculation_started": "Started similarity recalculation for scene {sceneId}",
@@ -1789,8 +1897,13 @@
   "at_production": "at production",
   "dead_at": "Dead at",
   "zip_file_count": "Zip File Count",
+  "first_review": "First Review",
+  "first_review_unclassified_video_title": "Review random unclassified video ({hotkey})",
+  "no_scenes_to_first_review": "No unclassified scenes to review",
   "no_scenes_to_review": "No scenes without rating, without tags, or unorganised scenes to review",
   "no_scenes_available": "No scenes with rating >= {ratingThreshold}",
   "no_best_scenes_available": "No scenes with rating >= {ratingThreshold}",
-  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video"
+  "review_unrated_video_title": "Review unrated video, video without tags, or unorganised video ({hotkey})",
+  "random_scene_title": "Open random scene with rating >= {ratingThreshold} ({hotkey})",
+  "random_best_scene_title": "Open random best scene with rating >= {ratingThreshold} ({hotkey})"
 }

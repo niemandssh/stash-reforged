@@ -195,6 +195,35 @@
       }
     }
   }
+
+  .remote-scene-suggestions-tag-setting {
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    > div:last-child {
+      flex: 0 1 auto;
+      max-width: 360px;
+      min-width: 240px;
+      text-align: left;
+    }
+
+    .tag-select {
+      width: 100%;
+    }
+
+    /* stylelint-disable selector-class-pattern */
+    .tag-select .react-select__control {
+      height: auto;
+      min-height: 38px;
+      white-space: normal;
+    }
+
+    .tag-select .react-select__value-container {
+      flex-wrap: wrap;
+    }
+    /* stylelint-enable selector-class-pattern */
+  }
 }
 
 #stashes .card {

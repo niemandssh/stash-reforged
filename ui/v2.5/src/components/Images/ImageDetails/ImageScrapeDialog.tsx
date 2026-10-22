@@ -22,6 +22,10 @@ import {
   useCreateScrapedPerformer,
   useCreateScrapedStudio,
 } from "src/components/Shared/ScrapeDialog/createObjects";
+import {
+  scrapedStudioForCreate,
+  scrapedStudioForSelect,
+} from "src/components/Shared/ScrapeDialog/scrapedStudio";
 import { uniq } from "lodash-es";
 import { Tag } from "src/components/Tags/TagSelect";
 import { Studio } from "src/components/Studios/StudioSelect";
@@ -76,11 +80,11 @@ export const ImageScrapeDialog: React.FC<IImageScrapeDialogProps> = ({
             name: imageStudio.name,
           }
         : undefined,
-      scraped.studio?.stored_id ? scraped.studio : undefined
+      scrapedStudioForSelect(scraped.studio)
     )
   );
   const [newStudio, setNewStudio] = useState<GQL.ScrapedStudio | undefined>(
-    scraped.studio && !scraped.studio.stored_id ? scraped.studio : undefined
+    scrapedStudioForCreate(scraped.studio)
   );
 
   const [performers, setPerformers] = useState<

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { FormattedMessage } from "react-intl";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import { ChapterEntries } from "./ChapterEntry";
 import { GalleryChapterForm } from "./GalleryChapterForm";
@@ -21,14 +22,16 @@ export const GalleryChapterPanel: React.FC<IGalleryChapterPanelProps> = ({
   const [editingChapter, setEditingChapter] =
     useState<GQL.GalleryChapterDataFragment>();
 
+  const newSubItemHotkey = useHotkey("detail.newSubItem");
+
   // set up hotkeys
   useEffect(() => {
     if (!isVisible) return;
 
-    Mousetrap.bind("n", () => onOpenEditor());
+    Mousetrap.bind(newSubItemHotkey, () => onOpenEditor());
 
     return () => {
-      Mousetrap.unbind("n");
+      Mousetrap.unbind(newSubItemHotkey);
     };
   });
 

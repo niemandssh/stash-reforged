@@ -3,6 +3,7 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import { useIntl } from "react-intl";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import {
   queryFindSceneMarkers,
@@ -49,16 +50,18 @@ export const SceneMarkerList: React.FC<ISceneMarkerList> = ({
     },
   ];
 
+  const playRandomHotkey = useHotkey("list.playRandom");
+
   function addKeybinds(
     result: GQL.FindSceneMarkersQueryResult,
     filter: ListFilterModel
   ) {
-    Mousetrap.bind("p r", () => {
+    Mousetrap.bind(playRandomHotkey, () => {
       playRandom(result, filter);
     });
 
     return () => {
-      Mousetrap.unbind("p r");
+      Mousetrap.unbind(playRandomHotkey);
     };
   }
 

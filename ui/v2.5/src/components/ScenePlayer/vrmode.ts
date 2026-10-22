@@ -4,6 +4,11 @@ import "videojs-vr";
 // separate type import, otherwise typescript elides the above import
 // and the plugin does not get initialized
 import type { ProjectionType, Plugin as VideoJsVRPlugin } from "videojs-vr";
+import {
+  attachVRCameraControlsWhenReady,
+  VRCameraControlSettings,
+  VRCameraControls,
+} from "./vrCameraControls";
 
 export interface VRMenuOptions {
   /**
@@ -137,16 +142,45 @@ class VRMenuPlugin extends videojs.getPlugin("plugin") {
   private menu: VRMenuButton;
   private showButton: boolean;
   private vr?: VideoJsVRPlugin;
+  private readonly cameraControls: VRCameraControls;
+  private activeVRType: VRType = VRType.Off;
+  private readonly onVRInitialized: () => void;
+  private readonly onLoadedMetadata: () => void;
 
   constructor(player: VideoJsPlayer, options: VRMenuOptions) {
     super(player);
 
     this.menu = new VRMenuButton(player);
     this.showButton = options.showButton ?? false;
+    this.cameraControls = new VRCameraControls(player);
+
+    this.onVRInitialized = () => {
+      if (this.activeVRType !== VRType.Off && this.vr) {
+        attachVRCameraControlsWhenReady(
+          this.player,
+          this.vr,
+          this.cameraControls
+        );
+      }
+    };
+
+    this.onLoadedMetadata = () => {
+      if (this.activeVRType === VRType.Off || !this.vr) {
+        return;
+      }
+
+      // videojs-vr re-inits on loadedmetadata and replaces controls3d
+      attachVRCameraControlsWhenReady(
+        this.player,
+        this.vr,
+        this.cameraControls
+      );
+    };
 
     if (isVrDevice()) return;
 
     this.vr = this.player.vr();
+    this.vr.on("initialized", this.onVRInitialized);
 
     this.menu.on("typeselected", (_, type: VRType) => {
       this.loadVR(type);
@@ -157,12 +191,27 @@ class VRMenuPlugin extends videojs.getPlugin("plugin") {
         this.addButton();
       }
     });
+
+    player.on("loadedmetadata", this.onLoadedMetadata);
+
+    player.on("dispose", () => {
+      this.vr?.off("initialized", this.onVRInitialized);
+      player.off("loadedmetadata", this.onLoadedMetadata);
+      this.cameraControls.detach();
+    });
   }
 
   private loadVR(type: VRType) {
+    this.activeVRType = type;
+    this.cameraControls.detach();
+
     const projection = vrTypeProjection[type];
     this.vr?.setProjection(projection);
     this.vr?.init();
+
+    if (type !== VRType.Off && this.vr) {
+      attachVRCameraControlsWhenReady(this.player, this.vr, this.cameraControls);
+    }
   }
 
   private addButton() {
@@ -187,6 +236,7 @@ class VRMenuPlugin extends videojs.getPlugin("plugin") {
       this.addButton();
     } else {
       this.removeButton();
+      this.cameraControls.detach();
       this.loadVR(VRType.Off);
     }
   }
@@ -195,6 +245,10 @@ class VRMenuPlugin extends videojs.getPlugin("plugin") {
   public applySavedProjection(type: VRType) {
     if (isVrDevice()) return;
     this.menu.selectType(type);
+  }
+
+  public setCameraControlSettings(settings: VRCameraControlSettings) {
+    this.cameraControls.setSettings(settings);
   }
 }
 

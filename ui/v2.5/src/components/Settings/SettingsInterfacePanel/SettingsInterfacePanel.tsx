@@ -6,6 +6,7 @@ import { PercentInput } from "src/components/Shared/PercentInput";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { CheckboxGroup } from "./CheckboxGroup";
 import { SettingSection } from "../SettingSection";
+import { TagIDSelect } from "src/components/Tags/TagSelect";
 import {
   BooleanSetting,
   ModalSetting,
@@ -56,7 +57,42 @@ const allMenuItems = [
   { id: "studios", headingID: "studios" },
   { id: "tags", headingID: "tags" },
   { id: "history", headingID: "view_history" },
+  { id: "watch-later", headingID: "watch_later" },
 ];
+
+type RemoteSceneSuggestionsTagSettingProps = {
+  headingId: string;
+  descriptionId: string;
+  instanceId: string;
+  ids: string[];
+  onSelect: (tagIds: string[]) => void;
+};
+
+const RemoteSceneSuggestionsTagSetting: React.FC<
+  RemoteSceneSuggestionsTagSettingProps
+> = ({ headingId, descriptionId, instanceId, ids, onSelect }) => {
+  const intl = useIntl();
+
+  return (
+    <div className="setting remote-scene-suggestions-tag-setting">
+      <div>
+        <h3>{intl.formatMessage({ id: headingId })}</h3>
+        <div className="sub-heading">
+          {intl.formatMessage({ id: descriptionId })}
+        </div>
+      </div>
+      <div>
+        <TagIDSelect
+          instanceId={instanceId}
+          ids={ids}
+          isMulti
+          menuPortalTarget={document.body}
+          onSelect={(tags) => onSelect(tags.map((tag) => tag.id))}
+        />
+      </div>
+    </div>
+  );
+};
 
 export const SettingsInterfacePanel: React.FC = PatchComponent(
   "SettingsInterfacePanel",
@@ -274,6 +310,114 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
           />
         </SettingSection>
 
+        <SettingSection headingID="config.ui.remote_scene_suggestions.heading">
+          <BooleanSetting
+            id="remote-scene-suggestions-enabled"
+            headingID="config.ui.remote_scene_suggestions.options.enabled.heading"
+            subHeadingID="config.ui.remote_scene_suggestions.options.enabled.description"
+            checked={ui.remoteSceneSuggestionsEnabled ?? true}
+            onChange={(v) =>
+              saveUI({
+                remoteSceneSuggestionsEnabled: v,
+              })
+            }
+          />
+
+          {(ui.remoteSceneSuggestionsEnabled ?? true) && (
+            <>
+              <NumberSetting
+                id="remote-scene-suggestions-min-duration"
+                headingID="config.ui.remote_scene_suggestions.options.min_duration.heading"
+                subHeadingID="config.ui.remote_scene_suggestions.options.min_duration.description"
+                value={ui.remoteSceneSuggestionsMinDurationMinutes ?? 10}
+                min={0}
+                max={600}
+                onChange={(v) =>
+                  saveUI({
+                    remoteSceneSuggestionsMinDurationMinutes: v,
+                  })
+                }
+              />
+
+              <NumberSetting
+                id="remote-scene-suggestions-limit"
+                headingID="config.ui.remote_scene_suggestions.options.limit.heading"
+                subHeadingID="config.ui.remote_scene_suggestions.options.limit.description"
+                value={ui.remoteSceneSuggestionsLimit ?? 12}
+                min={1}
+                max={48}
+                onChange={(v) =>
+                  saveUI({
+                    remoteSceneSuggestionsLimit: v,
+                  })
+                }
+              />
+
+              <CheckboxGroup
+                groupId="remote-scene-suggestions-providers"
+                items={[
+                  {
+                    id: "pornhub",
+                    headingID:
+                      "config.ui.remote_scene_suggestions.providers.pornhub",
+                  },
+                  {
+                    id: "xvideos",
+                    headingID:
+                      "config.ui.remote_scene_suggestions.providers.xvideos",
+                  },
+                  {
+                    id: "xnxx",
+                    headingID:
+                      "config.ui.remote_scene_suggestions.providers.xnxx",
+                  },
+                  {
+                    id: "xhamster",
+                    headingID:
+                      "config.ui.remote_scene_suggestions.providers.xhamster",
+                  },
+                ]}
+                checkedIds={
+                  ui.remoteSceneSuggestionsProviders ?? [
+                    "pornhub",
+                    "xvideos",
+                    "xnxx",
+                    "xhamster",
+                  ]
+                }
+                onChange={(ids) =>
+                  saveUI({
+                    remoteSceneSuggestionsProviders: ids,
+                  })
+                }
+              />
+
+              <RemoteSceneSuggestionsTagSetting
+                headingId="config.ui.remote_scene_suggestions.options.priority_tags.heading"
+                descriptionId="config.ui.remote_scene_suggestions.options.priority_tags.description"
+                instanceId="remote-scene-suggestions-priority-tags"
+                ids={ui.remoteSceneSuggestionsPriorityTagIds ?? []}
+                onSelect={(tagIds) =>
+                  saveUI({
+                    remoteSceneSuggestionsPriorityTagIds: tagIds,
+                  })
+                }
+              />
+              <RemoteSceneSuggestionsTagSetting
+                headingId="config.ui.remote_scene_suggestions.options.stop_tags.heading"
+                descriptionId="config.ui.remote_scene_suggestions.options.stop_tags.description"
+                instanceId="remote-scene-suggestions-stop-tags"
+                ids={ui.remoteSceneSuggestionsStopTagIds ?? []}
+                onSelect={(tagIds) =>
+                  saveUI({
+                    remoteSceneSuggestionsStopTagIds: tagIds,
+                  })
+                }
+              />
+            </>
+          )}
+        </SettingSection>
+
         <SettingSection headingID="config.ui.desktop_integration.desktop_integration">
           <BooleanSetting
             id="skip-browser"
@@ -351,6 +495,17 @@ export const SettingsInterfacePanel: React.FC = PatchComponent(
             headingID="config.ui.scene_list.options.show_studio_as_text"
             checked={iface.showStudioAsText ?? undefined}
             onChange={(v) => saveInterface({ showStudioAsText: v })}
+          />
+          <RemoteSceneSuggestionsTagSetting
+            headingId="config.ui.scene_preferred_tags.heading"
+            descriptionId="config.ui.scene_preferred_tags.description"
+            instanceId="scene-preferred-tags"
+            ids={ui.scenePreferredTagIds ?? []}
+            onSelect={(tagIds) =>
+              saveUI({
+                scenePreferredTagIds: tagIds,
+              })
+            }
           />
         </SettingSection>
 

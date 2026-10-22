@@ -39,10 +39,12 @@ const (
 	PerformerCreatePost  TriggerEnum = "Performer.Create.Post"
 	PerformerUpdatePost  TriggerEnum = "Performer.Update.Post"
 	PerformerDestroyPost TriggerEnum = "Performer.Destroy.Post"
+	PerformerMergePost   TriggerEnum = "Performer.Merge.Post"
 
 	StudioCreatePost  TriggerEnum = "Studio.Create.Post"
 	StudioUpdatePost  TriggerEnum = "Studio.Update.Post"
 	StudioDestroyPost TriggerEnum = "Studio.Destroy.Post"
+	StudioMergePost   TriggerEnum = "Studio.Merge.Post"
 
 	TagCreatePost  TriggerEnum = "Tag.Create.Post"
 	TagUpdatePost  TriggerEnum = "Tag.Update.Post"
@@ -77,10 +79,12 @@ var AllHookTriggerEnum = []TriggerEnum{
 
 	PerformerCreatePost,
 	PerformerUpdatePost,
+	PerformerMergePost,
 	PerformerDestroyPost,
 
 	StudioCreatePost,
 	StudioUpdatePost,
+	StudioMergePost,
 	StudioDestroyPost,
 
 	TagCreatePost,
@@ -118,14 +122,17 @@ func (e TriggerEnum) IsValid() bool {
 
 		PerformerCreatePost,
 		PerformerUpdatePost,
+		PerformerMergePost,
 		PerformerDestroyPost,
 
 		StudioCreatePost,
 		StudioUpdatePost,
+		StudioMergePost,
 		StudioDestroyPost,
 
 		TagCreatePost,
 		TagUpdatePost,
+		TagMergePost,
 		TagDestroyPost:
 		return true
 	}

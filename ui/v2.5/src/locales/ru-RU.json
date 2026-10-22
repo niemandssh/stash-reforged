@@ -38,6 +38,8 @@
         "created_entity": "Создано {entity_type}: {entity_name}",
         "customise": "Настроить",
         "delete": "Удалить",
+        "detach": "Открепить",
+        "detach_file": "Открепить файл от сцены",
         "delete_entity": "Удалить {entityType}",
         "delete_file": "Удалить файл",
         "delete_file_and_funscript": "Удалить файл (вместе с funscript)",
@@ -82,6 +84,7 @@
         "merge_into": "Слияние в",
         "merge_into_other_scene": "Объединить с другой сценой...",
         "merge_from_other_scene": "Объединить из другой сцены...",
+        "merge_tags_from_existing": "Добавить теги из существующих к scraped",
         "migrate_blobs": "Перенос блоков",
         "migrate_scene_screenshots": "Перенос скриншотов сцены",
         "next_action": "Вперёд",
@@ -823,6 +826,42 @@
                     "toggle_sound": "Включить звук"
                 }
             },
+            "remote_scene_suggestions": {
+                "heading": "Подсказки по удаленным сценам",
+                "get_more": "Ещё сцены",
+                "options": {
+                    "enabled": {
+                        "heading": "Включить",
+                        "description": "Показывать карусель временных предложений на странице «Сцены» (/scenes)."
+                    },
+                    "min_duration": {
+                        "heading": "Минимальная длительность видео (мин.)",
+                        "description": "Предлагать только видео длиннее указанного порога."
+                    },
+                    "limit": {
+                        "heading": "Количество загружаемых сцен",
+                        "description": "Сколько предложений загружать в карусель."
+                    },
+                    "priority_tags": {
+                        "heading": "Приоритетные теги",
+                        "description": "Подходящие предложения показываются первыми. Под превью — цветная полоса по самому приоритетному совпавшему тегу."
+                    },
+                    "stop_tags": {
+                        "heading": "Стоп-теги",
+                        "description": "Предложения с любым из этих тегов не показываются."
+                    }
+                },
+                "providers": {
+                    "pornhub": "PornHub",
+                    "xvideos": "XVideos",
+                    "xnxx": "Xnxx",
+                    "xhamster": "XHamster"
+                }
+            },
+            "scene_preferred_tags": {
+                "heading": "Предпочитаемые теги сцен",
+                "description": "На карточках сцен под превью показывается цветная полоса по самому приоритетному совпавшему тегу. Полоса скрывается при скраббере или наведении на превью."
+            },
             "scroll_attempts_before_change": {
                 "description": "Количество попыток прокрутки перед переходом к следующему/предыдущему элементу. Применяется только для режима прокрутки наклона Y.",
                 "heading": "Количество попыток прокрутки до перехода"
@@ -978,6 +1017,14 @@
             "destination": "Назначение",
             "source": "Источник"
         },
+        "merge_performers": {
+            "destination": "Назначение",
+            "source": "Источник"
+        },
+        "merge_studios": {
+            "destination": "Назначение",
+            "source": "Источник"
+        },
         "overwrite_filter_confirm": "Вы уверены, что хотите перезаписать существующий сохраненный запрос {entityName}?",
         "reassign_entity_title": "{count, plural, one {Переназначить {singularEntity}} other {Переназначить {pluralEntity}}}",
         "reassign_files": {
@@ -1045,6 +1092,10 @@
             "description": "Сцена будет помечена как архивированная.",
             "reason": "Причина архивации",
             "reason_placeholder": "Необязательная причина архивации…"
+        },
+        "detach_file": {
+            "desc": "Открепить этот файл от сцены? Файл на диске не будет удалён.",
+            "delete_sprites": "Удалить сгенерированные спрайты (миниатюры в плеере)"
         },
         "performers_found": "{count} исполнителей найдено",
         "clear_o_history_confirm": "Вы уверены, что хотите очистить историю О?",
@@ -1183,7 +1234,10 @@
         "vr_projection_mono_360": "360° моно (эквиректангуляр)",
         "vr_projection_none": "Обычное (плоское)",
         "vr_projection_stereo_180_lr": "180° стерео (рядом)",
-        "vr_projection_stereo_360_tb": "360° стерео (сверху/снизу)"
+        "vr_projection_stereo_360_tb": "360° стерео (сверху/снизу)",
+        "vr_rotate_speed": "Скорость перемещения в VR",
+        "vr_zoom_speed": "Скорость зума в VR",
+        "vr_controls_hint": "В режиме VR: WASD — осмотр, Q/E и колёсико мыши — зум. Сохраните настройки для этой сцены."
     },
     "empty_server": "Добавьте несколько сцен на свой сервер, чтобы просмотреть рекомендации на этой странице.",
     "ethnicity": "Этническая принадлежность",
@@ -1220,6 +1274,7 @@
         "INTERSEX": "Интерсекс",
         "MALE": "Мужчина",
         "NON_BINARY": "Не бинарный",
+        "COUPLE": "Пара",
         "TRANSGENDER_FEMALE": "Женщина трансгендер",
         "TRANSGENDER_MALE": "Мужчина трансгендер"
     },
@@ -1371,6 +1426,7 @@
     "sceneTagger": "Пометка сцен тэгами",
     "scene_code": "Идентификатор сцены",
     "scene_embed_url": "Удалённый источник видео",
+    "scene_embed_url.duplicate_warning": "Эта ссылка уже используется в следующих сценах",
     "scene_count": "Количество сцен",
     "scene_created_at": "Сцена создана",
     "scene_date": "Дата сцены",
@@ -1539,6 +1595,8 @@
         "merged_scenes": "Объединенные сцены",
         "scene_ai_fill_applied": "Данные сцены от ИИ применены",
         "merged_tags": "Объединенные тэги",
+        "merged_performers": "Объединенные перформеры",
+        "merged_studios": "Объединенные студии",
         "reassign_past_tense": "Файл переназначен",
         "removed_entity": "Удален {count, plural, one {{singularEntity}} other {{pluralEntity}}}",
         "rescanning_entity": "Повторное сканирование {count, plural, one {{singularEntity}} other {{pluralEntity}}}…",
@@ -1558,6 +1616,7 @@
         "updated_entity": "Обновлен {entity}",
         "primary_file_set": "Установлен {fileName} как главный файл",
         "error_setting_primary_file": "Ошибка установки главного файла: {error}",
+        "file_detached_from_scene": "Файл откреплён от сцены",
         "url_image_load_failed": "Не удалось загрузить изображение из URL",
         "scene_with_similars_updated": "Сцена с похожими была обновлена",
         "image_index_too_large": "Ошибка: индекс изображения больше, чем количество изображений в Галерее",
@@ -1773,7 +1832,9 @@
     "no_scenes_to_review": "Нет сцен без рейтинга, без тегов или неорганизованных сцен для рецензирования",
     "no_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
     "no_best_scenes_available": "Нет сцен с рейтингом >= {ratingThreshold}",
-    "review_unrated_video_title": "Рецензировать видео без рейтинга, без тегов или неорганизованное видео",
+    "review_unrated_video_title": "Рецензировать видео без рейтинга, без тегов или неорганизованное видео ({hotkey})",
+    "random_scene_title": "Случайная сцена с рейтингом >= {ratingThreshold} ({hotkey})",
+    "random_best_scene_title": "Случайная лучшая сцена с рейтингом >= {ratingThreshold} ({hotkey})",
     "tag_requirements": {
         "title": "Требования к тегам",
         "summary": "Заполнено: {filled}/{total} (минимум {min})"

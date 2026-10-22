@@ -3,6 +3,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import {
   queryScrapeGroupURL,
   useListGroupScrapers,
@@ -140,13 +141,15 @@ export const GroupEditPanel: React.FC<IGroupEditPanel> = ({
     setContainingGroups(group.containing_groups?.map((m) => m.group) ?? []);
   }, [group.containing_groups]);
 
+  const editSaveHotkey = useHotkey("edit.save");
+
   // set up hotkeys
   useEffect(() => {
     // Mousetrap.bind("u", (e) => {
     //   setStudioFocus()
     //   e.preventDefault();
     // });
-    Mousetrap.bind("s s", () => {
+    Mousetrap.bind(editSaveHotkey, () => {
       if (formik.dirty) {
         formik.submitForm();
       }
@@ -154,7 +157,7 @@ export const GroupEditPanel: React.FC<IGroupEditPanel> = ({
 
     return () => {
       // Mousetrap.unbind("u");
-      Mousetrap.unbind("s s");
+      Mousetrap.unbind(editSaveHotkey);
     };
   });
 

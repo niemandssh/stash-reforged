@@ -33,6 +33,7 @@ import { useConfigureUI } from "src/core/StashService";
 import { FilterMode } from "src/core/generated-graphql";
 import { useFocusOnce } from "src/utils/focus";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import ScreenUtils from "src/utils/screen";
 
 interface ICriterionList {
@@ -319,14 +320,16 @@ export const EditFilterDialog: React.FC<IEditFilterProps> = ({
     editingCriterionChanged,
   ]);
 
+  const focusSearchHotkey = useHotkey("list.focusSearch");
+
   useEffect(() => {
-    Mousetrap.bind("/", (e) => {
+    Mousetrap.bind(focusSearchHotkey, (e) => {
       setSearchFocus();
       e.preventDefault();
     });
 
     return () => {
-      Mousetrap.unbind("/");
+      Mousetrap.unbind(focusSearchHotkey);
     };
   });
 

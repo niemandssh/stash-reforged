@@ -26,6 +26,8 @@ interface IScenePreviewProps {
   onProtectedHover?: () => void;
   /** Called when pointer leaves the scrubber area (e.g. to start layout hide timer) */
   onProtectedLeave?: () => void;
+  /** Called when scrubber active index becomes set/unset */
+  onScrubbingChange?: (scrubbing: boolean) => void;
 }
 
 function scaleToFit(dimensions: { w: number; h: number }, bounds: DOMRect) {
@@ -50,6 +52,7 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
   transforms,
   onProtectedHover,
   onProtectedLeave,
+  onScrubbingChange,
 }) => {
   const imageParentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState({});
@@ -75,6 +78,10 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
       setHasLoaded(true);
     }
   }, [activeIndex]);
+
+  useEffect(() => {
+    onScrubbingChange?.(activeIndex !== undefined);
+  }, [activeIndex, onScrubbingChange]);
 
   const uniqueId = useMemo(
     () =>

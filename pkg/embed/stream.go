@@ -42,6 +42,7 @@ var (
 	flashvarsVariantCacheMu sync.RWMutex
 	flashvarsVariantCache   = map[string]cachedVariantsEntry{}
 	flashvarsVariantGroup   singleflight.Group
+	remotePageVariantGroup  singleflight.Group
 )
 
 type flashvarsPayload struct {
@@ -84,6 +85,69 @@ func ExtractStreamVariants(rawURL string) ([]HLSVariant, Site, error) {
 			return nil, site, err
 		}
 		return variants, site, nil
+	case SiteXHamster:
+		variants, err := extractXHamsterStreamVariants(rawURL, embedSrc)
+		if err != nil {
+			return nil, SiteXHamster, err
+		}
+		return variants, SiteXHamster, nil
+	case SiteDirect:
+		mediaURL, err := normalizeDirectMediaURL(rawURL)
+		if err != nil {
+			return nil, SiteDirect, err
+		}
+		return []HLSVariant{{
+			URL:    mediaURL,
+			Height: inferHeightFromURL(mediaURL),
+		}}, SiteDirect, nil
+	case SitePlayerJS:
+		variants, site, err := extractCachedRemotePageVariants(rawURL)
+		if err != nil {
+			return nil, site, err
+		}
+		return variants, site, nil
+	case SiteKVS:
+		variants, site, err := extractCachedRemotePageVariants(rawURL)
+		if err != nil {
+			return nil, site, err
+		}
+		return variants, site, nil
+	case SiteVKVideo:
+		variants, err := extractVKVideoStreamVariants(rawURL, embedSrc)
+		if err != nil {
+			return nil, SiteVKVideo, err
+		}
+		return variants, SiteVKVideo, nil
+	case SiteJWPlayer:
+		variants, err := extractCachedJWPlayerVariants(rawURL)
+		if err != nil {
+			return nil, SiteJWPlayer, err
+		}
+		return variants, SiteJWPlayer, nil
+	case SiteNewgrounds:
+		variants, err := extractNewgroundsStreamVariants(rawURL)
+		if err != nil {
+			return nil, SiteNewgrounds, err
+		}
+		return variants, SiteNewgrounds, nil
+	case SiteVJav:
+		variants, err := extractCachedVJavVariants(rawURL)
+		if err != nil {
+			return nil, SiteVJav, err
+		}
+		return variants, SiteVJav, nil
+	case SiteEporner:
+		variants, err := extractEpornerStreamVariants(rawURL)
+		if err != nil {
+			return nil, SiteEporner, err
+		}
+		return variants, SiteEporner, nil
+	case SiteTNAFlix:
+		variants, err := extractTNAFlixStreamVariants(rawURL)
+		if err != nil {
+			return nil, SiteTNAFlix, err
+		}
+		return variants, SiteTNAFlix, nil
 	default:
 		return nil, site, ErrStreamNotSupported
 	}
@@ -479,6 +543,48 @@ func setCachedVariants(cacheKey string, variants []HLSVariant) {
 	}
 }
 
+type remotePageVariantsResult struct {
+	variants []HLSVariant
+	site     Site
+}
+
+// extractCachedRemotePageVariants caches PlayerJS/KVS resolutions briefly so Range
+// seeks against /embed/media do not re-fetch and re-decrypt the page on every request.
+func extractCachedRemotePageVariants(rawURL string) ([]HLSVariant, Site, error) {
+	cacheKey := "page:" + strings.TrimSpace(rawURL)
+	if variants, ok := getCachedVariants(cacheKey); ok {
+		return variants, siteFromRemoteVariants(variants), nil
+	}
+
+	result, err, _ := remotePageVariantGroup.Do(cacheKey, func() (interface{}, error) {
+		if variants, ok := getCachedVariants(cacheKey); ok {
+			return remotePageVariantsResult{variants: variants, site: siteFromRemoteVariants(variants)}, nil
+		}
+
+		variants, site, err := extractPlayerJSStreamVariants(rawURL)
+		if err != nil {
+			return nil, err
+		}
+		setCachedVariants(cacheKey, variants)
+		return remotePageVariantsResult{variants: variants, site: site}, nil
+	})
+	if err != nil {
+		return nil, SitePlayerJS, err
+	}
+
+	out := result.(remotePageVariantsResult)
+	return out.variants, out.site, nil
+}
+
+func siteFromRemoteVariants(variants []HLSVariant) Site {
+	for _, v := range variants {
+		if strings.Contains(strings.ToLower(v.URL), "/get_file/") {
+			return SiteKVS
+		}
+	}
+	return SitePlayerJS
+}
+
 func invalidateCachedVariants(cacheKey string) {
 	flashvarsVariantCacheMu.Lock()
 	delete(flashvarsVariantCache, cacheKey)
@@ -562,6 +668,67 @@ func ExtractVideoDuration(rawURL string) (float64, Site, error) {
 			return 0, site, err
 		}
 		return duration, site, nil
+	case SiteXHamster:
+		duration, err := extractXHamsterDuration(rawURL, embedSrc)
+		if err != nil {
+			return 0, site, err
+		}
+		return duration, SiteXHamster, nil
+	case SiteDirect:
+		return 0, SiteDirect, ErrStreamNotFound
+	case SitePlayerJS:
+		duration, err := extractPlayerJSDuration(rawURL)
+		if err == nil && duration > 0 {
+			return duration, SitePlayerJS, nil
+		}
+		// Page may actually be KVS; duration probing falls back to ffprobe.
+		return 0, SitePlayerJS, ErrStreamNotFound
+	case SiteKVS:
+		body, err := fetchPlayerJSPage(rawURL)
+		if err != nil {
+			return 0, SiteKVS, err
+		}
+		duration, err := extractKVSDurationFromHTML(string(body))
+		if err != nil {
+			return 0, SiteKVS, err
+		}
+		return duration, SiteKVS, nil
+	case SiteVKVideo:
+		duration, err := extractVKVideoDuration(rawURL, embedSrc)
+		if err != nil {
+			return 0, SiteVKVideo, err
+		}
+		return duration, SiteVKVideo, nil
+	case SiteJWPlayer:
+		duration, err := extractJWPlayerDuration(rawURL)
+		if err != nil {
+			return 0, SiteJWPlayer, err
+		}
+		return duration, SiteJWPlayer, nil
+	case SiteNewgrounds:
+		duration, err := extractNewgroundsDuration(rawURL)
+		if err == nil && duration > 0 {
+			return duration, SiteNewgrounds, nil
+		}
+		return 0, SiteNewgrounds, ErrStreamNotFound
+	case SiteVJav:
+		duration, err := extractVJavDuration(rawURL)
+		if err != nil {
+			return 0, SiteVJav, err
+		}
+		return duration, SiteVJav, nil
+	case SiteEporner:
+		duration, err := extractEpornerDuration(rawURL)
+		if err != nil {
+			return 0, SiteEporner, err
+		}
+		return duration, SiteEporner, nil
+	case SiteTNAFlix:
+		duration, err := extractTNAFlixDuration(rawURL)
+		if err != nil {
+			return 0, SiteTNAFlix, err
+		}
+		return duration, SiteTNAFlix, nil
 	default:
 		return 0, site, ErrStreamNotSupported
 	}

@@ -22,14 +22,7 @@ func (t *GenerateCoverTask) generateEmbedCover(ctx context.Context) {
 		return
 	}
 
-	streamURL, _, err := embed.ExtractStreamURL(embedURL)
-	if err != nil {
-		logger.Errorf("error extracting embed stream for cover: %v", err)
-		logErrorOutput(err)
-		return
-	}
-
-	duration, _, err := embed.ExtractVideoDuration(embedURL)
+	duration, err := ResolveEmbedDuration(embedURL)
 	if err != nil {
 		logger.Errorf("error extracting embed duration for cover: %v", err)
 		logErrorOutput(err)
@@ -37,6 +30,14 @@ func (t *GenerateCoverTask) generateEmbedCover(ctx context.Context) {
 	}
 	if duration <= 0 {
 		logger.Errorf("invalid embed duration for scene %d", t.Scene.ID)
+		return
+	}
+
+	// Re-extract after duration probing so temporary CDN tokens are still fresh.
+	streamURL, _, err := embed.ExtractStreamURL(embedURL)
+	if err != nil {
+		logger.Errorf("error extracting embed stream for cover: %v", err)
+		logErrorOutput(err)
 		return
 	}
 
@@ -60,7 +61,7 @@ func (t *GenerateCoverTask) generateEmbedCover(ctx context.Context) {
 		streamURL,
 		duration,
 		generate.ScreenshotOptions{At: &at},
-		embed.StreamHTTPHeadersForURL(embedURL),
+		embed.StreamHTTPHeadersForMediaURL(embedURL, streamURL),
 	)
 	if err != nil {
 		logger.Errorf("Error generating embed screenshot: %v", err)

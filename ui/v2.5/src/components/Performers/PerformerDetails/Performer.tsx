@@ -5,12 +5,13 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { Tabs, Tab, Col, Row } from "react-bootstrap";
-import { useIntl } from "react-intl";
+import { Tabs, Tab, Col, Row, Dropdown } from "react-bootstrap";
+import { FormattedMessage, useIntl } from "react-intl";
 import { useHistory, Redirect, RouteComponentProps } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import cx from "classnames";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import {
   useFindPerformer,
@@ -37,6 +38,7 @@ import { PerformerImagesPanel } from "./PerformerImagesPanel";
 import { PerformerAppearsWithPanel } from "./performerAppearsWithPanel";
 import { PerformerEditPanel } from "./PerformerEditPanel";
 import { PerformerSubmitButton } from "./PerformerSubmitButton";
+import { PerformerMergeModal } from "./PerformerMergeDialog";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { ProfileImageSlider } from "./ProfileImageSlider";
 import { useLoadStickyHeader } from "src/hooks/detailsPanel";
@@ -55,6 +57,11 @@ import { AliasList } from "src/components/Shared/DetailsPage/AliasList";
 import { HeaderImage } from "src/components/Shared/DetailsPage/HeaderImage";
 import { PatchComponent } from "src/patch";
 import { ILightboxImage } from "src/hooks/Lightbox/types";
+import { Icon } from "src/components/Shared/Icon";
+import {
+  faSignInAlt,
+  faSignOutAlt,
+} from "@fortawesome/free-solid-svg-icons";
 
 interface IProps {
   performer: GQL.PerformerDataFragment;
@@ -107,15 +114,19 @@ const PerformerTabs: React.FC<{
     baseURL: `/performers/${performer.id}`,
   });
 
+  const tabScenesHotkey = useHotkey("performer.tabScenes");
+  const tabGalleriesHotkey = useHotkey("performer.tabGalleries");
+  const tabGroupsHotkey = useHotkey("performer.tabGroups");
+
   useEffect(() => {
-    Mousetrap.bind("c", () => setTabKey("scenes"));
-    Mousetrap.bind("g", () => setTabKey("galleries"));
-    Mousetrap.bind("m", () => setTabKey("groups"));
+    Mousetrap.bind(tabScenesHotkey, () => setTabKey("scenes"));
+    Mousetrap.bind(tabGalleriesHotkey, () => setTabKey("galleries"));
+    Mousetrap.bind(tabGroupsHotkey, () => setTabKey("groups"));
 
     return () => {
-      Mousetrap.unbind("c");
-      Mousetrap.unbind("g");
-      Mousetrap.unbind("m");
+      Mousetrap.unbind(tabScenesHotkey);
+      Mousetrap.unbind(tabGalleriesHotkey);
+      Mousetrap.unbind(tabGroupsHotkey);
     };
   });
 
@@ -439,6 +450,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
 
     const [collapsed, setCollapsed] = useState<boolean>(!showAllDetails);
     const [isEditing, setIsEditing] = useState<boolean>(false);
+    const [mergeType, setMergeType] = useState<"from" | "into" | undefined>();
     const [image, setImage] = useState<string | null>();
     const [encodingImage, setEncodingImage] = useState<boolean>(false);
     const [currentPerformer, setCurrentPerformer] =
@@ -547,22 +559,31 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
       }
     }
 
+    const ratingTriggerHotkey = useHotkey("rating.trigger");
+
     useRatingKeybinds(
       true,
       configuration?.ui.ratingSystemOptions?.type,
-      setRating
+      setRating,
+      ratingTriggerHotkey
     );
+
+    const toggleEditHotkey = useHotkey("detail.toggleEdit");
+    const toggleFavoriteHotkey = useHotkey("detail.toggleFavorite");
+    const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
 
     // set up hotkeys
     useEffect(() => {
-      Mousetrap.bind("e", () => toggleEditing());
-      Mousetrap.bind("f", () => setFavorite(!currentPerformer.favorite));
-      Mousetrap.bind(",", () => setCollapsed(!collapsed));
+      Mousetrap.bind(toggleEditHotkey, () => toggleEditing());
+      Mousetrap.bind(toggleFavoriteHotkey, () =>
+        setFavorite(!currentPerformer.favorite)
+      );
+      Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
 
       return () => {
-        Mousetrap.unbind("e");
-        Mousetrap.unbind("f");
-        Mousetrap.unbind(",");
+        Mousetrap.unbind(toggleEditHotkey);
+        Mousetrap.unbind(toggleFavoriteHotkey);
+        Mousetrap.unbind(toggleSidebarHotkey);
       };
     });
 
@@ -639,6 +660,47 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
     const handleImageChange = useCallback(() => {
       // No-op function for image change
     }, []);
+
+    function renderMergeButton() {
+      return (
+        <Dropdown>
+          <Dropdown.Toggle variant="secondary">
+            <FormattedMessage id="actions.merge" />
+            ...
+          </Dropdown.Toggle>
+          <Dropdown.Menu className="bg-secondary text-white">
+            <Dropdown.Item
+              className="bg-secondary text-white"
+              onClick={() => setMergeType("from")}
+            >
+              <Icon icon={faSignInAlt} />
+              <FormattedMessage id="actions.merge_from" />
+              ...
+            </Dropdown.Item>
+            <Dropdown.Item
+              className="bg-secondary text-white"
+              onClick={() => setMergeType("into")}
+            >
+              <Icon icon={faSignOutAlt} />
+              <FormattedMessage id="actions.merge_into" />
+              ...
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      );
+    }
+
+    function renderMergeDialog() {
+      if (!mergeType) return;
+      return (
+        <PerformerMergeModal
+          performer={currentPerformer}
+          onClose={() => setMergeType(undefined)}
+          show={!!mergeType}
+          mergeType={mergeType}
+        />
+      );
+    }
 
     if (isDestroying)
       return (
@@ -764,7 +826,8 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
                         onImageChange={handleImageChange}
                         classNames="mb-2"
                         customButtons={
-                          <div>
+                          <div className="d-flex gap-2">
+                            {renderMergeButton()}
                             <PerformerSubmitButton performer={performer} />
                           </div>
                         }
@@ -794,6 +857,7 @@ const PerformerPage: React.FC<IProps> = PatchComponent(
             </div>
           </div>
         </div>
+        {renderMergeDialog()}
       </div>
     );
   }

@@ -84,8 +84,11 @@ func TestSupportsNativeStreaming(t *testing.T) {
 	if !SupportsNativeStreaming(SiteXVideos) {
 		t.Fatal("expected xvideos native streaming support")
 	}
-	if SupportsNativeStreaming(SiteXHamster) {
-		t.Fatal("did not expect xhamster native streaming support")
+	if !SupportsNativeStreaming(SiteXnxx) {
+		t.Fatal("expected xnxx native streaming support")
+	}
+	if !SupportsNativeStreaming(SiteXHamster) {
+		t.Fatal("expected xhamster native streaming support")
 	}
 }
 
@@ -93,5 +96,25 @@ func TestStreamHTTPHeadersForURL(t *testing.T) {
 	headers := StreamHTTPHeadersForURL("https://www.xvideos.com/video.abc/test")
 	if !strings.Contains(headers, "Referer: https://www.xvideos.com/") {
 		t.Fatalf("headers = %q", headers)
+	}
+
+	xnxxHeaders := StreamHTTPHeadersForURL("https://www.xnxx.com/video-abc123/test")
+	if !strings.Contains(xnxxHeaders, "Referer: https://www.xnxx.com/") {
+		t.Fatalf("xnxx headers = %q", xnxxHeaders)
+	}
+}
+
+func TestSiteForProxyHostXnxxCDN(t *testing.T) {
+	if got := siteForProxyHost("hls-cdn77.xnxx-cdn.com"); got != SiteXnxx {
+		t.Fatalf("siteForProxyHost(xnxx-cdn) = %q, want %q", got, SiteXnxx)
+	}
+}
+
+func TestXnxxViewPageURLForID(t *testing.T) {
+	if got := xnxxViewPageURLForID("10dkxj42"); got != "https://www.xnxx.com/video-10dkxj42/" {
+		t.Fatalf("alphanumeric = %q", got)
+	}
+	if got := xnxxViewPageURLForID("12345"); got != "https://www.xnxx.com/video12345/" {
+		t.Fatalf("numeric = %q", got)
 	}
 }

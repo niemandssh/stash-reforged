@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Accordion, Button, Card } from "react-bootstrap";
+import { Accordion, Button, Card, Form } from "react-bootstrap";
 import {
   FormattedMessage,
   FormattedNumber,
@@ -10,6 +10,8 @@ import { useHistory } from "react-router-dom";
 import { TruncatedText } from "src/components/Shared/TruncatedText";
 import { DeleteFilesDialog } from "src/components/Shared/DeleteFilesDialog";
 import { ReassignFilesDialog } from "src/components/Shared/ReassignFilesDialog";
+import { ModalComponent } from "src/components/Shared/Modal";
+import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import * as GQL from "src/core/generated-graphql";
 import {
   mutateSceneSetPrimaryFile,
@@ -238,12 +240,41 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
   const Toast = useToast();
   const intl = useIntl();
   const [scanVideoFileThreats] = useScanVideoFileThreats();
+  const [sceneRemoveFile] = GQL.useSceneRemoveFileMutation();
 
   const [loading, setLoading] = useState(false);
   const [scanningThreats, setScanningThreats] = useState<string | null>(null);
   const [deletingFile, setDeletingFile] = useState<GQL.VideoFileDataFragment>();
   const [reassigningFile, setReassigningFile] =
     useState<GQL.VideoFileDataFragment>();
+  const [detachingFileId, setDetachingFileId] = useState<string | null>(null);
+  const [detachDeleteSprites, setDetachDeleteSprites] = useState(false);
+
+  async function onSceneRemoveFileConfirmed(fileID: string) {
+    try {
+      const result = await sceneRemoveFile({
+        variables: {
+          input: {
+            scene_id: props.scene.id,
+            file_id: fileID,
+            delete_sprites: detachDeleteSprites,
+          },
+        },
+      });
+
+      if (result.data?.sceneRemoveFile && props.onRefetch) {
+        await props.onRefetch();
+        Toast.success(
+          intl.formatMessage({ id: "toast.file_detached_from_scene" })
+        );
+      }
+    } catch (e) {
+      Toast.error(e);
+    } finally {
+      setDetachingFileId(null);
+      setDetachDeleteSprites(false);
+    }
+  }
 
   async function onScanThreats(fileId: string) {
     try {
@@ -315,13 +346,85 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
     }
 
     if (scene.files.length === 1) {
+      const file = scene.files[0];
       return (
-        <FileInfoPanel
-          sceneID={scene.id}
-          file={scene.files[0]}
-          onScanThreats={onScanThreats}
-          scanningThreats={scanningThreats === scene.files[0].id}
-        />
+        <>
+          <FileInfoPanel
+            sceneID={scene.id}
+            file={file}
+            onScanThreats={onScanThreats}
+            scanningThreats={scanningThreats === file.id}
+          />
+
+          {deletingFile && (
+            <DeleteFilesDialog
+              onClose={() => setDeletingFile(undefined)}
+              selected={[deletingFile]}
+              onRefetch={onRefetch}
+            />
+          )}
+
+          <div className="mt-2 d-flex flex-wrap" style={{ gap: "0.5rem" }}>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={loading}
+              onClick={() => setDeletingFile(file)}
+            >
+              <FormattedMessage id="actions.delete_file" />
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setDetachingFileId(file.id)}
+            >
+              <FormattedMessage
+                id="actions.detach_file"
+                defaultMessage="Detach file"
+              />
+            </Button>
+          </div>
+
+          {detachingFileId && (
+            <ModalComponent
+              show
+              icon={faTrashAlt}
+              header={intl.formatMessage({ id: "actions.detach_file" })}
+              accept={{
+                variant: "danger",
+                onClick: () => onSceneRemoveFileConfirmed(detachingFileId),
+                text: intl.formatMessage({ id: "actions.detach" }),
+              }}
+              cancel={{
+                onClick: () => {
+                  setDetachingFileId(null);
+                  setDetachDeleteSprites(false);
+                },
+                text: intl.formatMessage({ id: "actions.cancel" }),
+                variant: "secondary",
+              }}
+              isRunning={false}
+            >
+              <p>
+                <FormattedMessage id="dialogs.detach_file.desc" />
+              </p>
+              <Form.Check
+                id="detach-delete-sprites"
+                className="mb-3"
+                checked={detachDeleteSprites}
+                label={intl.formatMessage({
+                  id: "dialogs.detach_file.delete_sprites",
+                })}
+                onChange={() => setDetachDeleteSprites(!detachDeleteSprites)}
+              />
+              <div className="delete-dialog alert alert-warning text-break">
+                <ul>
+                  <li>{TextUtils.fileNameFromPath(file.path)}</li>
+                </ul>
+              </div>
+            </ModalComponent>
+          )}
+        </>
       );
     }
 
@@ -397,7 +500,7 @@ const _SceneFileInfoPanel: React.FC<ISceneFileInfoPanelProps> = (
         ))}
       </Accordion>
     );
-  }, [scene, loading, Toast, deletingFile, reassigningFile, intl, onRefetch, onScanThreats, scanningThreats]);
+  }, [scene, loading, Toast, deletingFile, reassigningFile, intl, onRefetch, onScanThreats, scanningThreats, detachingFileId]);
 
   return (
     <>

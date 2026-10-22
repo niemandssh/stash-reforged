@@ -65,6 +65,10 @@ type VideoFilters {
   volume_muted: Boolean
   "When not NONE, opens 360/VR view on load and shows the VR projection control in the player."
   vr_projection: SceneVrProjection
+  "WASD view rotation speed in VR mode (OrbitControls rotate step per frame)."
+  vr_rotate_speed: Float
+  "Zoom speed multiplier for Q/E keys and mouse wheel in VR mode (1.0 = default)."
+  vr_zoom_speed: Float
 }
 
 type VideoTransforms {
@@ -89,6 +93,8 @@ input VideoFiltersInput {
   volume_level: Float
   volume_muted: Boolean
   vr_projection: SceneVrProjection
+  vr_rotate_speed: Float
+  vr_zoom_speed: Float
 }
 
 input VideoTransformsInput {
@@ -120,6 +126,7 @@ type Scene {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean!
+  classified: Boolean!
   pinned: Boolean!
   o_counter: Int
   omgCounter: Int
@@ -134,7 +141,7 @@ type Scene {
   archive_reason: String
   "Scene metadata was filled using AI"
   is_ai_filled: Boolean!
-  "Remote video page URL (PornHub, XVideos, XHamster, Xnxx)"
+  "Remote video URL"
   embed_url: String
   "Resolved iframe src for embed_url"
   embed_src: String
@@ -157,6 +164,11 @@ type Scene {
   play_duration: Float
   "The number ot times a scene has been played"
   play_count: Int
+
+  "Whether the scene is in the watch later list"
+  watch_later: Boolean!
+  "When the scene was added to watch later"
+  watch_later_at: Time
 
   "Video trimming - start time in seconds"
   start_time: Float
@@ -254,6 +266,7 @@ input SceneCreateInput {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
+  classified: Boolean
   is_broken: Boolean
   is_trimmed: Boolean
   embed_url: String
@@ -297,6 +310,7 @@ input SceneUpdateInput {
   o_counter: Int
     @deprecated(reason: "Unsupported - Use sceneIncrementO/sceneDecrementO")
   organized: Boolean
+  classified: Boolean
   pinned: Boolean
   is_broken: Boolean
   is_not_broken: Boolean
@@ -369,6 +383,7 @@ input BulkSceneUpdateInput {
   # rating expressed as 1-100
   rating100: Int
   organized: Boolean
+  classified: Boolean
   is_broken: Boolean
   is_not_broken: Boolean
   studio_id: ID
@@ -451,6 +466,13 @@ type SceneStreamEndpoint {
 input AssignSceneFileInput {
   scene_id: ID!
   file_id: ID!
+}
+
+input SceneRemoveFileInput {
+  scene_id: ID!
+  file_id: ID!
+  "When true, deletes generated sprite image and VTT for this scene's file hash"
+  delete_sprites: Boolean
 }
 
 input SceneMergeInput {

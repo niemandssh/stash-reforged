@@ -1,10 +1,11 @@
-import { Tabs, Tab, Form } from "react-bootstrap";
+import { Tabs, Tab, Form, Dropdown } from "react-bootstrap";
 import React, { useEffect, useMemo, useState } from "react";
 import { useHistory, Redirect, RouteComponentProps } from "react-router-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Helmet } from "react-helmet";
 import cx from "classnames";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 
 import * as GQL from "src/core/generated-graphql";
 import {
@@ -25,12 +26,14 @@ import { StudioImagesPanel } from "./StudioImagesPanel";
 import { StudioChildrenPanel } from "./StudioChildrenPanel";
 import { StudioPerformersPanel } from "./StudioPerformersPanel";
 import { StudioEditPanel } from "./StudioEditPanel";
+import { StudioMergeModal } from "./StudioMergeDialog";
 import {
   CompressedStudioDetailsPanel,
   StudioDetailsPanel,
 } from "./StudioDetailsPanel";
 import { StudioGroupsPanel } from "./StudioGroupsPanel";
-import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import { faTrashAlt, faSignInAlt, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { Icon } from "src/components/Shared/Icon";
 import { RatingSystem } from "src/components/Shared/Rating/RatingSystem";
 import { DetailImage } from "src/components/Shared/DetailImage";
 import { useRatingKeybinds } from "src/hooks/keybinds";
@@ -277,6 +280,7 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
   // Editing state
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
+  const [mergeType, setMergeType] = useState<"from" | "into" | undefined>();
 
   // Editing studio state
   const [image, setImage] = useState<string | null>();
@@ -320,27 +324,35 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
     }
   }
 
+  const toggleEditHotkey = useHotkey("detail.toggleEdit");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+  const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
+  const toggleFavoriteHotkey = useHotkey("detail.toggleFavorite");
+
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("e", () => toggleEditing());
-    Mousetrap.bind("d d", () => {
+    Mousetrap.bind(toggleEditHotkey, () => toggleEditing());
+    Mousetrap.bind(entityDeleteHotkey, () => {
       setIsDeleteAlertOpen(true);
     });
-    Mousetrap.bind(",", () => setCollapsed(!collapsed));
-    Mousetrap.bind("f", () => setFavorite(!studio.favorite));
+    Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
+    Mousetrap.bind(toggleFavoriteHotkey, () => setFavorite(!studio.favorite));
 
     return () => {
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("d d");
-      Mousetrap.unbind(",");
-      Mousetrap.unbind("f");
+      Mousetrap.unbind(toggleEditHotkey);
+      Mousetrap.unbind(entityDeleteHotkey);
+      Mousetrap.unbind(toggleSidebarHotkey);
+      Mousetrap.unbind(toggleFavoriteHotkey);
     };
   });
+
+  const ratingTriggerHotkey = useHotkey("rating.trigger");
 
   useRatingKeybinds(
     true,
     configuration?.ui.ratingSystemOptions?.type,
-    setRating
+    setRating,
+    ratingTriggerHotkey
   );
 
   async function onSave(input: GQL.StudioCreateInput) {
@@ -405,6 +417,47 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
           />
         </p>
       </ModalComponent>
+    );
+  }
+
+  function renderMergeButton() {
+    return (
+      <Dropdown>
+        <Dropdown.Toggle variant="secondary">
+          <FormattedMessage id="actions.merge" />
+          ...
+        </Dropdown.Toggle>
+        <Dropdown.Menu className="bg-secondary text-white">
+          <Dropdown.Item
+            className="bg-secondary text-white"
+            onClick={() => setMergeType("from")}
+          >
+            <Icon icon={faSignInAlt} />
+            <FormattedMessage id="actions.merge_from" />
+            ...
+          </Dropdown.Item>
+          <Dropdown.Item
+            className="bg-secondary text-white"
+            onClick={() => setMergeType("into")}
+          >
+            <Icon icon={faSignOutAlt} />
+            <FormattedMessage id="actions.merge_into" />
+            ...
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+    );
+  }
+
+  function renderMergeDialog() {
+    if (!mergeType) return;
+    return (
+      <StudioMergeModal
+        studio={studio}
+        onClose={() => setMergeType(undefined)}
+        show={!!mergeType}
+        mergeType={mergeType}
+      />
     );
   }
 
@@ -529,6 +582,7 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
                   onAutoTag={onAutoTag}
                   autoTagDisabled={studio.ignore_auto_tag}
                   onDelete={onDelete}
+                  customButtons={renderMergeButton()}
                 />
               )}
             </div>
@@ -555,6 +609,7 @@ const StudioPage: React.FC<IProps> = ({ studio, tabKey }) => {
         </div>
       </div>
       {renderDeleteAlert()}
+      {renderMergeDialog()}
     </div>
   );
 };

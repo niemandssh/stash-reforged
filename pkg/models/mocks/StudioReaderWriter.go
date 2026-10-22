@@ -381,6 +381,20 @@ func (_m *StudioReaderWriter) HasImage(ctx context.Context, studioID int) (bool,
 	return r0, r1
 }
 
+// Merge provides a mock function with given fields: ctx, source, destination
+func (_m *StudioReaderWriter) Merge(ctx context.Context, source []int, destination int) error {
+	ret := _m.Called(ctx, source, destination)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, []int, int) error); ok {
+		r0 = rf(ctx, source, destination)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // Query provides a mock function with given fields: ctx, studioFilter, findFilter
 func (_m *StudioReaderWriter) Query(ctx context.Context, studioFilter *models.StudioFilterType, findFilter *models.FindFilterType) ([]*models.Studio, int, error) {
 	ret := _m.Called(ctx, studioFilter, findFilter)

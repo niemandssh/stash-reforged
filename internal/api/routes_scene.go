@@ -88,6 +88,7 @@ func (rs sceneRoutes) Routes() chi.Router {
 		r.Get("/interactive_heatmap", rs.InteractiveHeatmap)
 		r.Get("/caption", rs.CaptionLang)
 		r.Get("/embed/stream.m3u8", rs.EmbedStreamManifest)
+		r.Get("/embed/media", rs.EmbedProgressiveStream)
 		r.Get("/embed/proxy", rs.EmbedStreamProxy)
 
 		r.Get("/scene_marker/{sceneMarkerId}/stream", rs.SceneMarkerStream)
@@ -678,15 +679,80 @@ func (rs sceneRoutes) EmbedStreamManifest(w http.ResponseWriter, r *http.Request
 	_, _ = w.Write(rewritten)
 }
 
+// EmbedProgressiveStream re-extracts the current progressive media URL for the scene
+// (needed for PlayerJS temporary links) and proxies it with Range support.
+func (rs sceneRoutes) EmbedProgressiveStream(w http.ResponseWriter, r *http.Request) {
+	scene := r.Context().Value(sceneKey).(*models.Scene)
+	if scene.EmbedURL == nil || strings.TrimSpace(*scene.EmbedURL) == "" {
+		http.Error(w, "scene has no embed URL", http.StatusNotFound)
+		return
+	}
+
+	embedURL := strings.TrimSpace(*scene.EmbedURL)
+	variants, _, err := embed.ExtractStreamVariants(embedURL)
+	if err != nil {
+		rs.writeEmbedStreamError(w, scene.ID, err)
+		return
+	}
+
+	requestedHeight := 0
+	requestedBandwidth := 0
+	if heightParam := r.URL.Query().Get("height"); heightParam != "" {
+		parsed, err := strconv.Atoi(heightParam)
+		if err != nil || parsed < 0 {
+			http.Error(w, "invalid height parameter", http.StatusBadRequest)
+			return
+		}
+		requestedHeight = parsed
+	}
+	if bandwidthParam := r.URL.Query().Get("bandwidth"); bandwidthParam != "" {
+		parsed, err := strconv.Atoi(bandwidthParam)
+		if err != nil || parsed < 0 {
+			http.Error(w, "invalid bandwidth parameter", http.StatusBadRequest)
+			return
+		}
+		requestedBandwidth = parsed
+	}
+
+	selected, err := embed.SelectVariantForRequest(variants, requestedHeight, requestedBandwidth)
+	if err != nil {
+		rs.writeEmbedStreamError(w, scene.ID, err)
+		return
+	}
+
+	if !embed.IsProgressiveMediaURL(selected.URL) {
+		http.Error(w, "selected variant is not progressive media", http.StatusBadRequest)
+		return
+	}
+
+	if err := embed.ProxyProgressiveMediaForEmbed(w, r, selected.URL, embedURL); err != nil {
+		logger.Warnf("embed progressive stream failed for scene %d: %v", scene.ID, err)
+	}
+}
+
 func (rs sceneRoutes) EmbedStreamProxy(w http.ResponseWriter, r *http.Request) {
+	scene := r.Context().Value(sceneKey).(*models.Scene)
 	upstream := r.URL.Query().Get("u")
 	if upstream == "" {
 		http.Error(w, "missing upstream URL", http.StatusBadRequest)
 		return
 	}
 
-	if !embed.IsAllowedProxyURL(upstream) {
+	sceneEmbed := ""
+	if scene.EmbedURL != nil {
+		sceneEmbed = *scene.EmbedURL
+	}
+
+	if !embed.IsAllowedProxyURLForScene(upstream, sceneEmbed) {
 		http.Error(w, "upstream URL not allowed", http.StatusForbidden)
+		return
+	}
+
+	// Progressive media (direct MP4 etc.) is streamed with Range support.
+	if embed.IsProgressiveMediaURL(upstream) {
+		if err := embed.ProxyProgressiveMedia(w, r, upstream); err != nil {
+			logger.Warnf("embed progressive proxy failed for scene %d: %v", scene.ID, err)
+		}
 		return
 	}
 

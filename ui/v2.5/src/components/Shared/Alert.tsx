@@ -1,6 +1,7 @@
 import { Button, Modal } from "react-bootstrap";
 import { FormattedMessage } from "react-intl";
 import { PatchComponent } from "src/patch";
+import { useConfirmOnEnter } from "src/hooks/modal";
 
 export interface IAlertModalProps {
   text: JSX.Element | string;
@@ -21,6 +22,8 @@ export const AlertModal: React.FC<IAlertModalProps> = PatchComponent(
     onConfirm,
     onCancel,
   }) => {
+    useConfirmOnEnter(!!show, onConfirm);
+
     return (
       <Modal show={show}>
         <Modal.Body>{text}</Modal.Body>

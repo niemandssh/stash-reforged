@@ -31,7 +31,7 @@ func ProcessImageInput(ctx context.Context, imageInput string) ([]byte, error) {
 	}
 
 	// assume input is a URL. Read it.
-	return ReadImageFromURL(ctx, imageInput)
+	return ReadImageFromURL(ctx, SanitizeImageURL(imageInput))
 }
 
 // ReadImageFromURL returns image data from a URL

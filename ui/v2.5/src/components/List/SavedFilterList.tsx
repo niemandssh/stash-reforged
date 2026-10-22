@@ -10,6 +10,7 @@ import {
   OverlayTrigger,
   Tooltip,
 } from "react-bootstrap";
+import { useConfirmOnEnter } from "src/hooks/modal";
 import {
   useConfigureUISetting,
   useFindSavedFilters,
@@ -128,6 +129,8 @@ const DeleteAlert: React.FC<{
   deletingFilter: SavedFilterDataFragment | undefined;
   onClose: (confirm?: boolean) => void;
 }> = ({ deletingFilter, onClose }) => {
+  useConfirmOnEnter(!!deletingFilter, () => onClose(true));
+
   if (!deletingFilter) {
     return null;
   }
@@ -158,6 +161,8 @@ const OverwriteAlert: React.FC<{
   overwritingFilter: SavedFilterDataFragment | undefined;
   onClose: (confirm?: boolean) => void;
 }> = ({ overwritingFilter, onClose }) => {
+  useConfirmOnEnter(!!overwritingFilter, () => onClose(true));
+
   if (!overwritingFilter) {
     return null;
   }

@@ -32,6 +32,8 @@ import {
   queryFindScenes,
   queryFindScenesByID,
   useSceneIncrementPlayCount,
+  useSceneAddWatchLater,
+  useSceneRemoveWatchLater,
   useSceneConvertToMP4,
   useSceneConvertHLSToMP4,
   useSceneCompressVideo,
@@ -68,7 +70,9 @@ import { useToast } from "src/hooks/Toast";
 import SceneQueue, { QueuedScene } from "src/models/sceneQueue";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { OrganizedButton } from "./OrganizedButton";
+import { ClassifiedButton } from "./ClassifiedButton";
 import { ConfigurationContext } from "src/hooks/Config";
 import { getPlayerPosition } from "src/components/ScenePlayer/util";
 import {
@@ -103,6 +107,7 @@ import {
   faSlidersH,
   faFileAlt,
   faHistory,
+  faClock,
   faEdit,
   faTimes,
   faCopy,
@@ -120,6 +125,11 @@ import {
 import { SceneCountAttributeModal } from "./SceneCountAttributeModal";
 import { useRatingKeybinds } from "src/hooks/keybinds";
 import { lazyComponent } from "src/utils/lazyComponent";
+import {
+  getRandomUnorganisedScene,
+  makeReviewSceneLink,
+  REVIEW_SCENE_QUERY_PARAM,
+} from "src/utils/randomSceneSelection";
 import cx from "classnames";
 import { PatchComponent, PatchContainerComponent } from "src/patch";
 import { isHLSVideo } from "src/utils/hlsDetection";
@@ -242,6 +252,7 @@ interface IProps {
   setRightSidebarPanel?: React.Dispatch<
     React.SetStateAction<"queue" | "markers" | "fileinfo" | null>
   >;
+  initialTabKey?: string;
 }
 
 interface ISceneParams {
@@ -277,6 +288,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     playingTagId,
     onPlayAllMarkers,
     setRightSidebarPanel: setRightSidebarPanelFromProps,
+    initialTabKey,
   } = props;
 
   const Toast = useToast();
@@ -328,6 +340,8 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   }, [scene.performers, scene.scene_performers]);
 
   const [incrementPlay] = useSceneIncrementPlayCount();
+  const [addWatchLater] = useSceneAddWatchLater();
+  const [removeWatchLater] = useSceneRemoveWatchLater();
   const [convertToMP4] = useSceneConvertToMP4();
   const [convertHLSToMP4] = useSceneConvertHLSToMP4();
   const [compressVideo] = useSceneCompressVideo();
@@ -341,7 +355,10 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
   const colorPresets = presetsData?.findColorPresets?.color_presets || [];
 
   const [organizedLoading, setOrganizedLoading] = useState(false);
-  const [activeTabKey, setActiveTabKey] = useState("scene-details-panel");
+  const [classifiedLoading, setClassifiedLoading] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState(
+    initialTabKey || "scene-details-panel"
+  );
   const [editingTags, setEditingTags] = useState<GQL.Tag[] | null>(null);
 
   // Combine scene tags and performer tags for TagRequirementsIndicator
@@ -387,6 +404,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     });
   }
 
+  function toggleWatchLater() {
+    if (scene.watch_later) {
+      removeWatchLater({ variables: { id: scene.id } });
+    } else {
+      addWatchLater({ variables: { id: scene.id } });
+    }
+  }
+
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState<boolean>(false);
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
@@ -411,6 +436,7 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
         lastSceneData.code !== scene.code ||
         lastSceneData.urls !== scene.urls ||
         lastSceneData.organized !== scene.organized ||
+        lastSceneData.classified !== scene.classified ||
         lastSceneData.is_broken !== scene.is_broken ||
         lastSceneData.is_not_broken !== scene.is_not_broken ||
         lastSceneData.start_time !== scene.start_time ||
@@ -528,56 +554,83 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
     });
   }
 
+  const ratingTriggerHotkey = useHotkey("rating.trigger");
+
   useRatingKeybinds(
     true,
     configuration?.ui.ratingSystemOptions?.type,
-    setRating
+    setRating,
+    ratingTriggerHotkey
   );
+
+  const deleteHotkey = useHotkey("scene.delete");
+  const tabDetailsHotkey = useHotkey("detail.tabDetails");
+  const toggleQueuePanelHotkey = useHotkey("scene.toggleQueuePanel");
+  const tabEditHotkey = useHotkey("detail.tabEdit");
+  const toggleMarkersPanelHotkey = useHotkey("scene.toggleMarkersPanel");
+  const toggleFileInfoPanelHotkey = useHotkey("scene.toggleFileInfoPanel");
+  const tabHistoryHotkey = useHotkey("detail.tabHistory");
+  const incrementOHotkey = useHotkey("detail.incrementO");
+  const queueNextHotkey = useHotkey("scene.queueNext");
+  const queuePreviousHotkey = useHotkey("scene.queuePrevious");
+  const queueRandomHotkey = useHotkey("scene.queueRandom");
+  const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
 
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("a", () => setActiveTabKey("scene-details-panel"));
+    Mousetrap.bind(tabDetailsHotkey, () =>
+      setActiveTabKey("scene-details-panel")
+    );
     if (queueScenes.length > 0 && setRightSidebarPanelFromProps) {
-      Mousetrap.bind("q", () =>
+      Mousetrap.bind(toggleQueuePanelHotkey, () =>
         setRightSidebarPanelFromProps((p) => (p === "queue" ? null : "queue"))
       );
     }
-    Mousetrap.bind("e", () => setActiveTabKey("scene-edit-panel"));
+    Mousetrap.bind(tabEditHotkey, () => setActiveTabKey("scene-edit-panel"));
     if (setRightSidebarPanelFromProps) {
-      Mousetrap.bind("k", () =>
+      Mousetrap.bind(toggleMarkersPanelHotkey, () =>
         setRightSidebarPanelFromProps((p) =>
           p === "markers" ? null : "markers"
         )
       );
     }
     if (setRightSidebarPanelFromProps) {
-      Mousetrap.bind("i", () =>
+      Mousetrap.bind(toggleFileInfoPanelHotkey, () =>
         setRightSidebarPanelFromProps((p) =>
           p === "fileinfo" ? null : "fileinfo"
         )
       );
     }
-    Mousetrap.bind("h", () => setActiveTabKey("scene-history-panel"));
-    Mousetrap.bind("o", () => {
+    Mousetrap.bind(tabHistoryHotkey, () =>
+      setActiveTabKey("scene-history-panel")
+    );
+    Mousetrap.bind(incrementOHotkey, () => {
       onIncrementOClick();
     });
-    Mousetrap.bind("p n", () => onQueueNext());
-    Mousetrap.bind("p p", () => onQueuePrevious());
-    Mousetrap.bind("p r", () => onQueueRandom());
-    Mousetrap.bind(",", () => setCollapsed(!collapsed));
+    Mousetrap.bind(queueNextHotkey, () => onQueueNext());
+    Mousetrap.bind(queuePreviousHotkey, () => onQueuePrevious());
+    Mousetrap.bind(queueRandomHotkey, () => onQueueRandom());
+    Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
+    Mousetrap.bind(deleteHotkey, () => {
+      if (document.querySelector(".modal.show")) {
+        return;
+      }
+      setIsDeleteAlertOpen(true);
+    });
 
     return () => {
-      Mousetrap.unbind("a");
-      Mousetrap.unbind("q");
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("k");
-      Mousetrap.unbind("i");
-      Mousetrap.unbind("h");
-      Mousetrap.unbind("o");
-      Mousetrap.unbind("p n");
-      Mousetrap.unbind("p p");
-      Mousetrap.unbind("p r");
-      Mousetrap.unbind(",");
+      Mousetrap.unbind(tabDetailsHotkey);
+      Mousetrap.unbind(toggleQueuePanelHotkey);
+      Mousetrap.unbind(tabEditHotkey);
+      Mousetrap.unbind(toggleMarkersPanelHotkey);
+      Mousetrap.unbind(toggleFileInfoPanelHotkey);
+      Mousetrap.unbind(tabHistoryHotkey);
+      Mousetrap.unbind(incrementOHotkey);
+      Mousetrap.unbind(queueNextHotkey);
+      Mousetrap.unbind(queuePreviousHotkey);
+      Mousetrap.unbind(queueRandomHotkey);
+      Mousetrap.unbind(toggleSidebarHotkey);
+      Mousetrap.unbind(deleteHotkey);
     };
   });
 
@@ -614,6 +667,24 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
       Toast.error(e);
     } finally {
       setOrganizedLoading(false);
+    }
+  };
+
+  const onClassifiedClick = async () => {
+    try {
+      setClassifiedLoading(true);
+      await updateScene({
+        variables: {
+          input: {
+            id: scene.id,
+            classified: !scene.classified,
+          },
+        },
+      });
+    } catch (e) {
+      Toast.error(e);
+    } finally {
+      setClassifiedLoading(false);
     }
   };
 
@@ -1242,6 +1313,21 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
           className="bg-secondary text-white"
           style={{ maxHeight: "80vh", overflowY: "auto" }}
         >
+          <Dropdown.Item
+            key="watch-later"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => toggleWatchLater()}
+          >
+            <Icon icon={faClock} className="mr-2" />
+            <FormattedMessage
+              id={
+                scene.watch_later
+                  ? "actions.remove_from_watch_later"
+                  : "actions.add_to_watch_later"
+              }
+            />
+          </Dropdown.Item>
+          <Dropdown.Divider style={{ borderTopColor: "#52616d" }} />
           {!!scene.files.length && (
             <Dropdown.Item
               key="rescan"
@@ -1323,6 +1409,14 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
             <FormattedMessage id="actions.generate" />
           </Dropdown.Item>
           <Dropdown.Item
+            key="generate-default"
+            className="bg-secondary text-white d-flex align-items-center"
+            onClick={() => onGenerateScreenshot()}
+          >
+            <Icon icon={faImage} className="mr-2" />
+            <FormattedMessage id="actions.generate_thumb_default" />
+          </Dropdown.Item>
+          <Dropdown.Item
             key="generate-screenshot"
             className="bg-secondary text-white d-flex align-items-center"
             onClick={() => onGenerateScreenshot(getPlayerPosition())}
@@ -1341,14 +1435,6 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
               <FormattedMessage id="actions.make_screen_from_current" />
             </Dropdown.Item>
           )}
-          <Dropdown.Item
-            key="generate-default"
-            className="bg-secondary text-white d-flex align-items-center"
-            onClick={() => onGenerateScreenshot()}
-          >
-            <Icon icon={faImage} className="mr-2" />
-            <FormattedMessage id="actions.generate_thumb_default" />
-          </Dropdown.Item>
           {(scene.files.length > 0 || scene.is_remote) && (
             <Dropdown.Item
               key="regenerate-sprites"
@@ -1774,6 +1860,13 @@ const ScenePage: React.FC<IProps> = PatchComponent("ScenePage", (props) => {
                     onClick={onOrganizedClick}
                   />
                 </span>
+                <span>
+                  <ClassifiedButton
+                    loading={classifiedLoading}
+                    classified={scene.classified}
+                    onClick={onClassifiedClick}
+                  />
+                </span>
               </span>
               <span className="scene-toolbar-group">
                 <span>{renderOperations()}</span>
@@ -1907,6 +2000,8 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
     setViewedScenes((prev) => new Set(prev).add(sceneId));
   }, []);
   const [continuePlaylist, setContinuePlaylist] = useState(queryContinue);
+  const hideScrubberHotkey = useHotkey("scene.hideScrubber");
+
   const [hideScrubber, setHideScrubber] = useState(
     !(configuration?.interface.showScrubber ?? true)
   );
@@ -1931,6 +2026,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   const [queueStart, setQueueStart] = useState(1);
 
   const autoplay = queryParams.get("autoplay") === "true";
+  const autoEdit = queryParams.get("autoEdit") === "true";
   const autoPlayOnSelected =
     configuration?.interface.autostartVideoOnPlaySelected ?? false;
 
@@ -2076,12 +2172,14 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
 
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind(".", () => setHideScrubber((value) => !value));
+    Mousetrap.bind(hideScrubberHotkey, () =>
+      setHideScrubber((value) => !value)
+    );
 
     return () => {
-      Mousetrap.unbind(".");
+      Mousetrap.unbind(hideScrubberHotkey);
     };
-  }, []);
+  }, [hideScrubberHotkey]);
 
   async function getQueueFilterScenes(filter: ListFilterModel) {
     const query = await queryFindScenes(filter);
@@ -2226,6 +2324,18 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
   }
 
   function onDelete() {
+    if (queryParams.get(REVIEW_SCENE_QUERY_PARAM) === "true") {
+      void (async () => {
+        const nextSceneId = await getRandomUnorganisedScene();
+        if (nextSceneId) {
+          history.replace(makeReviewSceneLink(nextSceneId));
+        } else {
+          history.goBack();
+        }
+      })();
+      return;
+    }
+
     if (
       continuePlaylist &&
       currentQueueIndex >= 0 &&
@@ -2289,6 +2399,7 @@ const SceneLoader: React.FC<RouteComponentProps<ISceneParams>> = ({
         playingTagId={playingTagId}
         onPlayAllMarkers={onPlayAllMarkers}
         setRightSidebarPanel={setRightSidebarPanel}
+        initialTabKey={autoEdit ? "scene-edit-panel" : undefined}
         onSaved={async () => {
           // force refetch immediately after save to provide latest data to form
           await refetch();

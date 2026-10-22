@@ -36,6 +36,13 @@ func TestIsAllowedProxyURL(t *testing.T) {
 	}{
 		{"https://ee-h.phncdn.com/hls/test.m3u8", true},
 		{"https://www.pornhub.com/video/get_media", true},
+		{"https://hls-cdn77.xnxx-cdn.com/abc/0/hls.m3u8", true},
+		{"https://mp4-cdn77.xnxx-cdn.com/abc/0/video_360p.mp4", true},
+		{"https://cdn77-vid.xvideos-cdn.com/hls.m3u8", true},
+		{"https://video7.xhcdn.com/key=abc/media=hls4/test.m3u8", true},
+		{"https://cdn77-pr.pvvstream.pro/videos/480/-204376816_456239053.mp4?secure=abc", true},
+		{"https://uploads.ungrounded.net/alternate/7870000/7870047_alternate_366343.720p.mp4?1782611121", true},
+		{"https://www.xnxx.com/embedframe/abc", true},
 		{"https://evil.example.com/video.ts", false},
 		{"http://ee-h.phncdn.com/video.ts", false},
 	}

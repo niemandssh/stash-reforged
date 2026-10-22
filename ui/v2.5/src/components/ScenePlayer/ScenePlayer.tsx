@@ -30,11 +30,13 @@ import "./big-buttons";
 import "./track-activity";
 import "./vrmode";
 import { sceneVrProjectionToVRType, VRType } from "./vrmode";
+import { vrCameraSettingsFromFilters } from "./vrCameraControls";
 import "./control-bar-toggle";
 import cx from "classnames";
 import {
   useSceneSaveActivity,
   useSceneIncrementPlayCount,
+  useSceneRemoveWatchLater,
 } from "src/core/StashService";
 import { useTrimContext } from "src/contexts/TrimContext";
 
@@ -290,6 +292,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
     const sceneId = useRef<string>();
     const [sceneSaveActivity] = useSceneSaveActivity();
     const [sceneIncrementPlayCount] = useSceneIncrementPlayCount();
+    const [sceneRemoveWatchLater] = useSceneRemoveWatchLater();
 
     const [time, setTime] = useState(0);
     const [ready, setReady] = useState(false);
@@ -700,6 +703,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
 
       const vrMenu = player.vrMenu();
 
+      vrMenu.setCameraControlSettings(
+        vrCameraSettingsFromFilters(scene.video_filters)
+      );
+
       const saved = scene.video_filters?.vr_projection;
       const activeSaved =
         saved != null && saved !== GQL.SceneVrProjection.None;
@@ -719,6 +726,8 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       getPlayer,
       scene.id,
       scene.video_filters?.vr_projection,
+      scene.video_filters?.vr_rotate_speed,
+      scene.video_filters?.vr_zoom_speed,
       scene.tags,
       vrTag,
     ]);
@@ -1108,11 +1117,13 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         player.mobileUi(mobileUiOptions);
       }
 
-      function isDirect(src: URL) {
+      function supportsNativeSeek(src: URL) {
         return (
           src.pathname.endsWith("/stream") ||
           src.pathname.endsWith("/stream.mpd") ||
-          src.pathname.endsWith("/stream.m3u8")
+          src.pathname.endsWith("/stream.m3u8") ||
+          src.pathname.endsWith("/embed/media") ||
+          src.pathname.endsWith("/embed/proxy")
         );
       }
 
@@ -1122,7 +1133,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       const streamSources = scene.sceneStreams
         .filter((stream) => {
           const src = new URL(stream.url);
-          const isFileTranscode = !isDirect(src);
+          const isFileTranscode = !supportsNativeSeek(src);
 
           return !(isFileTranscode && isSafari);
         })
@@ -1142,7 +1153,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
               src: stream.url,
               type: stream.mime_type ?? undefined,
               label: stream.label ?? undefined,
-              offset: !isDirect(src),
+              offset: !supportsNativeSeek(src),
               duration,
             };
           })
@@ -1258,8 +1269,28 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       player.ready(() => {
         player.vttThumbnails().src(scene.paths.vtt ?? null);
 
-        if (startPosition) {
+        const applyStartPosition = () => {
+          if (!startPosition) {
+            return;
+          }
+          // Progressive remote MP4 often ignores seeks before metadata is available.
+          // Re-apply after loadedmetadata / early playback so resume sticks.
           player.currentTime(startPosition);
+          setTime(startPosition);
+        };
+
+        if (startPosition) {
+          if (player.readyState() >= 1) {
+            applyStartPosition();
+          } else {
+            player.one("loadedmetadata", applyStartPosition);
+          }
+          // Some browsers reset to 0 when playback actually starts.
+          player.one("playing", () => {
+            if (Math.abs((player.currentTime() ?? 0) - startPosition) > 1) {
+              applyStartPosition();
+            }
+          });
         }
 
         // Initialize Video.js progress bar trim styles
@@ -1589,9 +1620,21 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
         });
       }
 
+      async function removeFromWatchLater() {
+        if (!scene.id || !scene.watch_later) return;
+
+        await sceneRemoveWatchLater({
+          variables: {
+            id: scene.id,
+          },
+        });
+      }
+
       const activity = player.trackActivity();
       activity.saveActivity = saveActivity;
       activity.incrementPlayCount = incrementPlayCount;
+      activity.removeFromWatchLater = removeFromWatchLater;
+      activity.watchLater = scene.watch_later ?? false;
       activity.minimumPlayPercent = minimumPlayPercent;
       activity.setEnabled(trackActivity);
     }, [
@@ -1601,6 +1644,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
       trackActivity,
       minimumPlayPercent,
       sceneIncrementPlayCount,
+      sceneRemoveWatchLater,
       sceneSaveActivity,
     ]);
 

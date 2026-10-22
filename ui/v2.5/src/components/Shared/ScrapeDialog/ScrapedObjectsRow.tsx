@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import { ScrapeDialogRow } from "src/components/Shared/ScrapeDialog/ScrapeDialog";
 import { PerformerSelect } from "src/components/Performers/PerformerSelect";
@@ -10,6 +11,8 @@ import { TagIDSelect } from "src/components/Tags/TagSelect";
 import { StudioSelect } from "src/components/Studios/StudioSelect";
 import { GroupSelect } from "src/components/Groups/GroupSelect";
 import { uniq } from "lodash-es";
+import { sortStoredIdObjects } from "src/utils/data";
+import clone from "lodash-es/clone";
 
 interface IScrapedStudioRow {
   title: string;
@@ -99,6 +102,8 @@ interface IScrapedObjectsRow<T> {
     onChange?: (value: T[]) => void
   ) => JSX.Element;
   getName: (value: T) => string;
+  onMergeOriginalIntoNew?: () => void;
+  mergeOriginalTooltip?: string;
 }
 
 export const ScrapedObjectsRow = <T,>(props: IScrapedObjectsRow<T>) => {
@@ -110,6 +115,8 @@ export const ScrapedObjectsRow = <T,>(props: IScrapedObjectsRow<T>) => {
     onCreateNew,
     renderObjects,
     getName,
+    onMergeOriginalIntoNew,
+    mergeOriginalTooltip,
   } = props;
 
   return (
@@ -128,6 +135,8 @@ export const ScrapedObjectsRow = <T,>(props: IScrapedObjectsRow<T>) => {
         if (onCreateNew) onCreateNew(newObjects![i]);
       }}
       getName={getName}
+      onMergeOriginalIntoNew={onMergeOriginalIntoNew}
+      mergeOriginalTooltip={mergeOriginalTooltip}
     />
   );
 };
@@ -268,6 +277,47 @@ export const ScrapedGroupsRow: React.FC<
 export const ScrapedTagsRow: React.FC<
   IScrapedObjectRowImpl<GQL.ScrapedTag>
 > = ({ title, result, onChange, newObjects, onCreateNew }) => {
+  const intl = useIntl();
+
+  function mergeScrapedTags(
+    original: GQL.ScrapedTag[] | undefined,
+    current: GQL.ScrapedTag[] | undefined
+  ) {
+    const merged = [...(current ?? [])];
+
+    for (const tag of original ?? []) {
+      const exists = merged.some((existing) => {
+        if (tag.stored_id && existing.stored_id) {
+          return existing.stored_id === tag.stored_id;
+        }
+
+        return (
+          tag.name &&
+          existing.name &&
+          existing.name.toLowerCase() === tag.name.toLowerCase()
+        );
+      });
+
+      if (!exists) {
+        merged.push(tag);
+      }
+    }
+
+    return sortStoredIdObjects(merged) ?? merged.filter((t) => t.stored_id);
+  }
+
+  function handleMergeOriginalIntoNew() {
+    const merged = mergeScrapedTags(
+      result.originalValue ?? undefined,
+      result.newValue ?? undefined
+    );
+    const ret = clone(result);
+    ret.newValue = merged;
+    ret.useNewValue = true;
+    ret.scraped = true;
+    onChange(ret);
+  }
+
   function renderScrapedTags(
     scrapeResult: ScrapeResult<GQL.ScrapedTag[]>,
     isNew?: boolean,
@@ -307,6 +357,14 @@ export const ScrapedTagsRow: React.FC<
       newObjects={newObjects}
       onCreateNew={onCreateNew}
       getName={getObjectName}
+      onMergeOriginalIntoNew={
+        (result.originalValue?.length ?? 0) > 0
+          ? handleMergeOriginalIntoNew
+          : undefined
+      }
+      mergeOriginalTooltip={intl.formatMessage({
+        id: "actions.merge_tags_from_existing",
+      })}
     />
   );
 };

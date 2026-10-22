@@ -16,6 +16,7 @@ import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import { useToast } from "src/hooks/Toast";
 import * as Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import {
   OCounterButton,
@@ -132,10 +133,17 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
     });
   }
 
+  const ratingTriggerHotkey = useHotkey("rating.trigger");
+  const tabDetailsHotkey = useHotkey("detail.tabDetails");
+  const tabEditHotkey = useHotkey("detail.tabEdit");
+  const tabFileInfoHotkey = useHotkey("detail.tabFileInfo");
+  const incrementOHotkey = useHotkey("detail.incrementO");
+
   useRatingKeybinds(
     true,
     configuration?.ui.ratingSystemOptions?.type,
-    setRating
+    setRating,
+    ratingTriggerHotkey
   );
 
   function onDeleteDialogClosed(deleted: boolean) {
@@ -243,18 +251,22 @@ const ImagePage: React.FC<IProps> = ({ image }) => {
 
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("a", () => setActiveTabKey("image-details-panel"));
-    Mousetrap.bind("e", () => setActiveTabKey("image-edit-panel"));
-    Mousetrap.bind("f", () => setActiveTabKey("image-file-info-panel"));
-    Mousetrap.bind("o", () => {
+    Mousetrap.bind(tabDetailsHotkey, () =>
+      setActiveTabKey("image-details-panel")
+    );
+    Mousetrap.bind(tabEditHotkey, () => setActiveTabKey("image-edit-panel"));
+    Mousetrap.bind(tabFileInfoHotkey, () =>
+      setActiveTabKey("image-file-info-panel")
+    );
+    Mousetrap.bind(incrementOHotkey, () => {
       onIncrementClick();
     });
 
     return () => {
-      Mousetrap.unbind("a");
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("f");
-      Mousetrap.unbind("o");
+      Mousetrap.unbind(tabDetailsHotkey);
+      Mousetrap.unbind(tabEditHotkey);
+      Mousetrap.unbind(tabFileInfoHotkey);
+      Mousetrap.unbind(incrementOHotkey);
     };
   });
 

@@ -3,6 +3,7 @@ import { useIntl } from "react-intl";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { DetailsEditNavbar } from "src/components/Shared/DetailsEditNavbar";
 import { Form } from "react-bootstrap";
@@ -113,16 +114,18 @@ export const StudioEditPanel: React.FC<IStudioEditPanel> = ({
     setEncodingImage(encodingImage);
   }, [setEncodingImage, encodingImage]);
 
+  const editSaveHotkey = useHotkey("edit.save");
+
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("s s", () => {
+    Mousetrap.bind(editSaveHotkey, () => {
       if (formik.dirty) {
         formik.submitForm();
       }
     });
 
     return () => {
-      Mousetrap.unbind("s s");
+      Mousetrap.unbind(editSaveHotkey);
     };
   });
 

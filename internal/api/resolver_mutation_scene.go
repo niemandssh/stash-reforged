@@ -115,6 +115,7 @@ func (r *mutationResolver) SceneCreate(ctx context.Context, input models.SceneCr
 	newScene.Director = translator.string(input.Director)
 	newScene.Rating = input.Rating100
 	newScene.Organized = translator.bool(input.Organized)
+	newScene.Classified = translator.bool(input.Classified)
 	newScene.IsBroken = translator.bool(input.IsBroken)
 	newScene.IsTrimmed = translator.bool(input.IsTrimmed)
 	newScene.StashIDs = models.NewRelatedStashIDs(models.StashIDInputs(input.StashIds).ToStashIDs())
@@ -291,6 +292,7 @@ func scenePartialFromInput(input models.SceneUpdateInput, translator changesetTr
 	updatedScene.StartTime = translator.optionalFloat64(input.StartTime, "start_time")
 	updatedScene.EndTime = translator.optionalFloat64(input.EndTime, "end_time")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
+	updatedScene.Classified = translator.optionalBool(input.Classified, "classified")
 	updatedScene.Pinned = translator.optionalBool(input.Pinned, "pinned")
 
 	// Video filters and transforms
@@ -529,6 +531,7 @@ func (r *mutationResolver) BulkSceneUpdate(ctx context.Context, input BulkSceneU
 	updatedScene.Director = translator.optionalString(input.Director, "director")
 	updatedScene.Rating = translator.optionalInt(input.Rating100, "rating100")
 	updatedScene.Organized = translator.optionalBool(input.Organized, "organized")
+	updatedScene.Classified = translator.optionalBool(input.Classified, "classified")
 	updatedScene.IsBroken = translator.optionalBool(input.IsBroken, "is_broken")
 	updatedScene.IsNotBroken = translator.optionalBool(input.IsNotBroken, "is_not_broken")
 
@@ -744,6 +747,42 @@ func (r *mutationResolver) SceneAssignFile(ctx context.Context, input AssignScen
 	}); err != nil {
 		return false, fmt.Errorf("assigning file to scene: %w", err)
 	}
+
+	return true, nil
+}
+
+func (r *mutationResolver) SceneRemoveFile(ctx context.Context, input SceneRemoveFileInput) (bool, error) {
+	sceneID, err := strconv.Atoi(input.SceneID)
+	if err != nil {
+		return false, fmt.Errorf("converting scene id: %w", err)
+	}
+
+	fileID, err := strconv.Atoi(input.FileID)
+	if err != nil {
+		return false, fmt.Errorf("converting file id: %w", err)
+	}
+
+	fileNamingAlgo := manager.GetInstance().Config.GetVideoFileNamingAlgorithm()
+	deleteSprites := utils.IsTrue(input.DeleteSprites)
+
+	fileDeleter := &scene.FileDeleter{
+		Deleter:        file.NewDeleter(),
+		FileNamingAlgo: fileNamingAlgo,
+		Paths:          manager.GetInstance().Paths,
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		return r.Resolver.sceneService.RemoveFile(ctx, sceneID, models.FileID(fileID), scene.RemoveFileOptions{
+			DeleteSprites:  deleteSprites,
+			FileNamingAlgo: fileNamingAlgo,
+			FileDeleter:    fileDeleter,
+		})
+	}); err != nil {
+		fileDeleter.Rollback()
+		return false, fmt.Errorf("removing file from scene: %w", err)
+	}
+
+	fileDeleter.Commit()
 
 	return true, nil
 }
@@ -1210,6 +1249,43 @@ func (r *mutationResolver) SceneResetPlayCount(ctx context.Context, id string) (
 	}
 
 	return ret, nil
+}
+
+func (r *mutationResolver) SceneAddWatchLater(ctx context.Context, id string) (*WatchLaterMutationResult, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	var addedAt *time.Time
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		addedAt, err = r.repository.Scene.AddWatchLater(ctx, sceneID)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	return &WatchLaterMutationResult{
+		WatchLater: true,
+		AddedAt:    addedAt,
+	}, nil
+}
+
+func (r *mutationResolver) SceneRemoveWatchLater(ctx context.Context, id string) (*WatchLaterMutationResult, error) {
+	sceneID, err := strconv.Atoi(id)
+	if err != nil {
+		return nil, fmt.Errorf("converting id: %w", err)
+	}
+
+	if err := r.withTxn(ctx, func(ctx context.Context) error {
+		return r.repository.Scene.RemoveWatchLater(ctx, sceneID)
+	}); err != nil {
+		return nil, err
+	}
+
+	return &WatchLaterMutationResult{
+		WatchLater: false,
+	}, nil
 }
 
 // deprecated

@@ -59,6 +59,7 @@ export function useCreateScrapedStudio(props: IUseCreateNewStudioProps) {
         input: {
           name: toCreate.name,
           url: toCreate.url,
+          parent_id: toCreate.parent?.stored_id,
         },
       },
     });

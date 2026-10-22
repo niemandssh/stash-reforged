@@ -17,12 +17,36 @@ import * as GQL from "src/core/generated-graphql";
 // Blonde::#ffcc00
 // Blue Eyes::#0099ff
 // No Color Tag
-// Paste accepts comma, semicolon, pipe or newline as separators.
+// Paste accepts comma, semicolon, pipe, newline, or (when no other delimiter) spaces.
 
 const TAG_SEPARATOR = "\n";
 const TAG_COLOR_SEPARATOR = "::";
-/** Splits pasted text into tag parts: comma, semicolon, pipe, newline */
-export const TAG_PASTE_DELIMITERS = /[,;\n|]+/;
+const TAG_PASTE_EXPLICIT_DELIMITERS = /[,;\n|]+/;
+
+/** Splits pasted text into tag name parts. */
+export function parsePastedTagNames(text: string): string[] {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const hasExplicitDelimiter = /[,;\n|]/.test(trimmed);
+  const hasColorMarker = trimmed.includes(TAG_COLOR_SEPARATOR);
+
+  let parts: string[];
+  if (hasExplicitDelimiter) {
+    const withoutLeadingTrailingDelimiters = trimmed
+      .replace(/^[,;\n|]+/, "")
+      .replace(/[,;\n|]+$/, "");
+    parts = withoutLeadingTrailingDelimiters.split(TAG_PASTE_EXPLICIT_DELIMITERS);
+  } else if (/\s/.test(trimmed) && !hasColorMarker) {
+    parts = trimmed.split(/\s+/);
+  } else {
+    parts = [trimmed];
+  }
+
+  return parts.map((part) => part.trim()).filter((part) => part.length > 0);
+}
 
 export function serializeTags(tags: Tag[]): string {
   return tags
@@ -41,20 +65,7 @@ export interface ParsedTag {
 }
 
 export function deserializeTags(text: string): ParsedTag[] {
-  if (!text || !text.trim()) {
-    return [];
-  }
-
-  const trimmed = text.trim();
-  const withoutLeadingTrailingDelimiters = trimmed
-    .replace(/^[,;\n|]+/, "")
-    .replace(/[,;\n|]+$/, "");
-
-  return withoutLeadingTrailingDelimiters
-    .split(TAG_PASTE_DELIMITERS)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0)
-    .map((line) => {
+  return parsePastedTagNames(text).map((line) => {
       const separatorIndex = line.lastIndexOf(TAG_COLOR_SEPARATOR);
       if (separatorIndex > 0) {
         const name = line.substring(0, separatorIndex).trim();

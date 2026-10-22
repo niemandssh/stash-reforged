@@ -32,6 +32,7 @@ import { SceneCountAttributeModal } from "./SceneDetails/SceneCountAttributeModa
 import { useToast } from "src/hooks/Toast";
 import {
   faBox,
+  faCircleCheck,
   faCopy,
   faFilm,
   faImages,
@@ -43,6 +44,7 @@ import { objectPath, objectTitle } from "src/core/files";
 import { PinIcon } from "../Shared/PinIcon";
 import { PreviewScrubber } from "./PreviewScrubber";
 import { PatchComponent } from "src/patch";
+import { SceneContextMenu } from "../Shared/SceneContextMenu";
 import { StudioOverlay } from "../Shared/GridCard/StudioOverlay";
 import { GroupTag } from "../Groups/GroupTag";
 import { FileSize } from "../Shared/FileSize";
@@ -58,6 +60,7 @@ import {
   needsColorMatrix,
   needsGammaAdjustment,
 } from "src/utils/videoFilters";
+import { getPreferredTagHighlightColor } from "./RemoteSceneSuggestions/tagMatching";
 
 interface IScenePreviewProps {
   isPortrait: boolean;
@@ -69,6 +72,7 @@ interface IScenePreviewProps {
   sceneId?: string;
   filters?: GQL.Maybe<GQL.VideoFilters>;
   transforms?: GQL.Maybe<GQL.VideoTransforms>;
+  preferredTagColor?: string | null;
 }
 
 export const ScenePreview: React.FC<IScenePreviewProps> = ({
@@ -81,8 +85,10 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
   sceneId,
   filters,
   transforms,
+  preferredTagColor,
 }) => {
   const videoEl = useRef<HTMLVideoElement>(null);
+  const [scrubbing, setScrubbing] = useState(false);
   const uniqueId = useMemo(
     () =>
       `scene-preview-${sceneId ?? "unknown"}-${Math.random()
@@ -135,7 +141,20 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
   }, [filterStyle]);
 
   return (
-    <div className={cx("scene-card-preview", { portrait: isPortrait })}>
+    <div
+      className={cx("scene-card-preview", {
+        portrait: isPortrait,
+        "scene-card-preview--scrubbing": scrubbing,
+        "scene-card-preview--preferred-tag": !!preferredTagColor,
+      })}
+      style={
+        preferredTagColor
+          ? ({
+              ["--preferred-tag-color" as string]: preferredTagColor,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       <img
         className="scene-card-preview-image"
         loading="lazy"
@@ -159,6 +178,7 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
         sceneId={sceneId}
         filters={filters}
         transforms={transforms}
+        onScrubbingChange={setScrubbing}
       />
       {svgFilter}
     </div>
@@ -437,6 +457,23 @@ const SceneCardPopovers = PatchComponent(
       }
     }
 
+    function maybeRenderClassified() {
+      if (props.scene.classified) {
+        return (
+          <OverlayTrigger
+            overlay={<Tooltip id="classified-tooltip">{"Classified"}</Tooltip>}
+            placement="bottom"
+          >
+            <div className="classified">
+              <Button className="minimal">
+                <Icon icon={faCircleCheck} />
+              </Button>
+            </div>
+          </OverlayTrigger>
+        );
+      }
+    }
+
     function maybeRenderDupeCopies() {
       const phash = file
         ? file.fingerprints.find((fp) => fp.type === "phash")
@@ -471,6 +508,7 @@ const SceneCardPopovers = PatchComponent(
               {maybeRenderOMGCounter()}
               {maybeRenderGallery()}
               {maybeRenderOrganized()}
+              {maybeRenderClassified()}
               {maybeRenderDupeCopies()}
             </ButtonGroup>
           </>
@@ -590,6 +628,22 @@ const SceneCardImage = PatchComponent(
       [props.scene]
     );
 
+    const preferredTagColor = useMemo(() => {
+      const preferredTagIds =
+        configuration?.ui?.scenePreferredTagIds ?? [];
+      if (preferredTagIds.length === 0) {
+        return null;
+      }
+      const tagsById = new Map(
+        (props.scene.tags ?? []).map((tag) => [tag.id, tag])
+      );
+      return getPreferredTagHighlightColor(
+        preferredTagIds,
+        tagsById,
+        props.scene.tags ?? []
+      );
+    }, [configuration?.ui?.scenePreferredTagIds, props.scene.tags]);
+
     function maybeRenderSceneSpecsOverlay() {
       return (
         <div className="scene-specs-overlay">
@@ -657,6 +711,7 @@ const SceneCardImage = PatchComponent(
           soundActive={configuration?.interface?.soundOnPreview ?? false}
           vttPath={props.scene.paths.vtt ?? undefined}
           onScrubberClick={onScrubberClick}
+          preferredTagColor={preferredTagColor}
         />
         <RatingBanner rating={props.scene.rating100} />
         {maybeRenderSceneSpecsOverlay()}
@@ -780,7 +835,12 @@ export const SceneCard = PatchComponent(
     );
 
     return (
-      <GridCard
+      <SceneContextMenu
+        sceneId={props.scene.id}
+        sceneUrl={sceneLink}
+        watchLater={props.scene.watch_later ?? false}
+      >
+        <GridCard
         className={`scene-card ${zoomIndex()} ${filelessClass()}`}
         url={sceneLink}
         title={titleElement}
@@ -804,6 +864,7 @@ export const SceneCard = PatchComponent(
         pinButton={pinButton}
         isPinned={props.scene.pinned}
       />
+      </SceneContextMenu>
     );
   }
 );

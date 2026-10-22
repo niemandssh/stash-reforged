@@ -194,8 +194,12 @@ func (c *Cache) ReloadScrapers() {
 	// Add built-in scrapers
 	freeOnes := getFreeonesScraper(c.globalConfig)
 	autoTag := getAutoTagScraper(c.repository, c.globalConfig)
+	xvideosSearch := getXvideosSearchScraper(c.globalConfig)
+	xvideosListing := getXvideosListingScraper(c.globalConfig)
 	scrapers[freeOnes.spec().ID] = freeOnes
 	scrapers[autoTag.spec().ID] = autoTag
+	scrapers[xvideosSearch.spec().ID] = xvideosSearch
+	scrapers[xvideosListing.spec().ID] = xvideosListing
 
 	logger.Debugf("Reading scraper configs from %s", path)
 
@@ -215,6 +219,9 @@ func (c *Cache) ReloadScrapers() {
 	if err != nil {
 		logger.Errorf("Error reading scraper configs: %v", err)
 	}
+
+	newgroundsScraper := getNewgroundsScraper(c.globalConfig)
+	scrapers[newgroundsScraper.spec().ID] = newgroundsScraper
 
 	c.scrapers = scrapers
 }
@@ -265,6 +272,22 @@ func (c Cache) compileExcludeTagPatterns() []*regexp.Regexp {
 }
 
 func (c Cache) ScrapeName(ctx context.Context, id, query string, ty ScrapeContentType) ([]ScrapedContent, error) {
+	return c.ScrapeNameWithOptions(ctx, id, query, ty, postScrapeOptions{
+		titleCandidates: uniqueStrings([]string{query}),
+	})
+}
+
+// ScrapeNameSkipImages scrapes by name but leaves scene image URLs as remote
+// HTTP links instead of downloading them to base64. Used by remote suggestions
+// where downloading every search thumb is too slow / failure-prone.
+func (c Cache) ScrapeNameSkipImages(ctx context.Context, id, query string, ty ScrapeContentType) ([]ScrapedContent, error) {
+	return c.ScrapeNameWithOptions(ctx, id, query, ty, postScrapeOptions{
+		titleCandidates:   uniqueStrings([]string{query}),
+		skipImageDownload: true,
+	})
+}
+
+func (c Cache) ScrapeNameWithOptions(ctx context.Context, id, query string, ty ScrapeContentType, opts postScrapeOptions) ([]ScrapedContent, error) {
 	// find scraper with the provided id
 	s := c.findScraper(id)
 	if s == nil {
@@ -289,7 +312,7 @@ func (c Cache) ScrapeName(ctx context.Context, id, query string, ty ScrapeConten
 	var ignoredTags []string
 	for i, cc := range content {
 		var thisIgnoredTags []string
-		content[i], thisIgnoredTags, err = c.postScrape(ctx, cc, ignoredRegex)
+		content[i], thisIgnoredTags, err = c.postScrape(ctx, cc, ignoredRegex, opts)
 		if err != nil {
 			return nil, fmt.Errorf("error while post-scraping with scraper %s: %w", id, err)
 		}
@@ -321,13 +344,28 @@ func (c Cache) ScrapeFragment(ctx context.Context, id string, input Input) (Scra
 		return nil, fmt.Errorf("error while fragment scraping with scraper %s: %w", id, err)
 	}
 
-	return c.postScrapeSingle(ctx, content)
+	opts := postScrapeOptions{}
+	if input.Scene != nil {
+		opts.titleCandidates = titleCandidatesFromScrapedSceneInput(input.Scene)
+	}
+
+	return c.postScrapeSingleWithOptions(ctx, content, opts)
 }
 
 // ScrapeURL scrapes a given url for the given content. Searches the scraper cache
 // and picks the first scraper capable of scraping the given url into the desired
 // content. Returns the scraped content or an error if the scrape fails.
 func (c Cache) ScrapeURL(ctx context.Context, url string, ty ScrapeContentType) (ScrapedContent, error) {
+	return c.ScrapeURLWithOptions(ctx, url, ty, postScrapeOptions{})
+}
+
+// ScrapeURLSkipImages scrapes a URL but keeps remote image URLs instead of
+// downloading them to base64.
+func (c Cache) ScrapeURLSkipImages(ctx context.Context, url string, ty ScrapeContentType) (ScrapedContent, error) {
+	return c.ScrapeURLWithOptions(ctx, url, ty, postScrapeOptions{skipImageDownload: true})
+}
+
+func (c Cache) ScrapeURLWithOptions(ctx context.Context, url string, ty ScrapeContentType, opts postScrapeOptions) (ScrapedContent, error) {
 	logger.Infof("ScrapeURL: searching scrapers for URL '%s' with type %v", url, ty)
 	logger.Infof("ScrapeURL: total scrapers available: %d", len(c.scrapers))
 
@@ -353,7 +391,7 @@ func (c Cache) ScrapeURL(ctx context.Context, url string, ty ScrapeContentType) 
 			}
 
 			logger.Infof("ScrapeURL: scraper %s returned content successfully", spec.Name)
-			return c.postScrapeSingle(ctx, ret)
+			return c.postScrapeSingleWithOptions(ctx, ret, opts)
 		} else {
 			logger.Infof("ScrapeURL: scraper %s does NOT support URL %s", spec.Name, url)
 		}
@@ -374,6 +412,7 @@ func (c Cache) ScrapeID(ctx context.Context, scraperID string, id int, ty Scrape
 	}
 
 	var ret ScrapedContent
+	var opts postScrapeOptions
 	switch ty {
 	case ScrapeContentTypeScene:
 		ss, ok := s.(sceneScraper)
@@ -385,6 +424,8 @@ func (c Cache) ScrapeID(ctx context.Context, scraperID string, id int, ty Scrape
 		if err != nil {
 			return nil, fmt.Errorf("scraper %s: unable to load scene id %v: %w", scraperID, id, err)
 		}
+
+		opts.titleCandidates = titleCandidatesFromScene(scene)
 
 		// don't assign nil concrete pointer to ret interface, otherwise nil
 		// detection is harder
@@ -441,7 +482,7 @@ func (c Cache) ScrapeID(ctx context.Context, scraperID string, id int, ty Scrape
 		}
 	}
 
-	return c.postScrapeSingle(ctx, ret)
+	return c.postScrapeSingleWithOptions(ctx, ret, opts)
 }
 
 func (c Cache) getScene(ctx context.Context, sceneID int) (*models.Scene, error) {

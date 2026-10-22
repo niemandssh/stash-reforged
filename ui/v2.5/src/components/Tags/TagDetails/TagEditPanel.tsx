@@ -8,6 +8,7 @@ import ImageUtils from "src/utils/image";
 import { useFormik } from "formik";
 import { Prompt } from "react-router-dom";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import isEqual from "lodash-es/isEqual";
 import { useToast } from "src/hooks/Toast";
@@ -109,16 +110,18 @@ export const TagEditPanel: React.FC<ITagEditPanel> = ({
     setChildTags(tag.children ?? []);
   }, [tag.children]);
 
+  const editSaveHotkey = useHotkey("edit.save");
+
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("s s", () => {
+    Mousetrap.bind(editSaveHotkey, () => {
       if (formik.dirty) {
         formik.submitForm();
       }
     });
 
     return () => {
-      Mousetrap.unbind("s s");
+      Mousetrap.unbind(editSaveHotkey);
     };
   });
 

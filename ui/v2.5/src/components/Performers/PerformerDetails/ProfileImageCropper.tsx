@@ -223,18 +223,22 @@ export const ProfileImageCropper: React.FC<IProfileImageCropperProps> = ({
 
       const imageDataUrl = croppedCanvas.toDataURL();
 
-      const result = await updateProfileImage({
-        variables: {
-          input: {
-            id: profileImageId.toString(),
-            image: imageDataUrl,
+      if (!profileImageId) {
+        await handleImageUpload(imageDataUrl);
+      } else {
+        const result = await updateProfileImage({
+          variables: {
+            input: {
+              id: profileImageId.toString(),
+              image: imageDataUrl,
+            },
           },
-        },
-      });
+        });
 
-      if (result.data?.performerProfileImageUpdate) {
-        Toast.success("Image cropped successfully");
-        onImageUpdate?.();
+        if (result.data?.performerProfileImageUpdate) {
+          Toast.success("Image cropped successfully");
+          onImageUpdate?.();
+        }
       }
     } catch (error) {
       console.error("Error cropping image:", error);

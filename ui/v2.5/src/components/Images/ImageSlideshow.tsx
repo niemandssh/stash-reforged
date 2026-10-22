@@ -11,6 +11,7 @@ import {
 import * as GQL from "src/core/generated-graphql";
 import { objectTitle } from "src/core/files";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { PageNavigationInput } from "./PageNavigationInput";
 
 interface IImageSlideshowProps {
@@ -72,21 +73,32 @@ export const ImageSlideshow: React.FC<IImageSlideshowProps> = ({
     }
   }, []);
 
+  const previousHotkey = useHotkey("slideshow.previous");
+  const nextHotkey = useHotkey("slideshow.next");
+  const playPauseHotkey = useHotkey("slideshow.playPause");
+
   // Keyboard navigation
   useEffect(() => {
-    Mousetrap.bind("left", goToPrevious);
-    Mousetrap.bind("right", goToNext);
-    Mousetrap.bind("space", (e) => {
+    Mousetrap.bind(previousHotkey, goToPrevious);
+    Mousetrap.bind(nextHotkey, goToNext);
+    Mousetrap.bind(playPauseHotkey, (e) => {
       e.preventDefault();
       togglePlayPause();
     });
 
     return () => {
-      Mousetrap.unbind("left");
-      Mousetrap.unbind("right");
-      Mousetrap.unbind("space");
+      Mousetrap.unbind(previousHotkey);
+      Mousetrap.unbind(nextHotkey);
+      Mousetrap.unbind(playPauseHotkey);
     };
-  }, [goToPrevious, goToNext, togglePlayPause]);
+  }, [
+    goToPrevious,
+    goToNext,
+    togglePlayPause,
+    previousHotkey,
+    nextHotkey,
+    playPauseHotkey,
+  ]);
 
   if (!images.length) {
     return (

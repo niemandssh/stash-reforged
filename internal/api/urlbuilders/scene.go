@@ -34,6 +34,23 @@ func (b SceneURLBuilder) GetEmbedStreamURL(variant embed.HLSVariant) string {
 	return u
 }
 
+// GetEmbedProgressiveStreamURL returns a stable progressive stream endpoint that
+// re-extracts temporary media URLs (e.g. PlayerJS) on each request.
+func (b SceneURLBuilder) GetEmbedProgressiveStreamURL(variant embed.HLSVariant) string {
+	u := fmt.Sprintf("%s/scene/%s/embed/media", b.BaseURL, b.SceneID)
+	if variant.Height > 0 {
+		return u + fmt.Sprintf("?height=%d", variant.Height)
+	}
+	if variant.Bandwidth > 0 {
+		return u + fmt.Sprintf("?bandwidth=%d", variant.Bandwidth)
+	}
+	return u
+}
+
+func (b SceneURLBuilder) GetEmbedProxyURL(upstream string) string {
+	return fmt.Sprintf("%s/scene/%s/embed/proxy?u=%s", b.BaseURL, b.SceneID, url.QueryEscape(upstream))
+}
+
 func (b SceneURLBuilder) GetStreamURL(apiKey string) *url.URL {
 	u, err := url.Parse(fmt.Sprintf("%s/scene/%s/stream", b.BaseURL, b.SceneID))
 	if err != nil {

@@ -21,6 +21,14 @@ query FindPerformer($id: ID!) {
   }
 }
 
+query FindPerformersByIDs($ids: [ID!]!) {
+  findPerformers(filter: { per_page: -1 }, ids: $ids) {
+    performers {
+      ...PerformerData
+    }
+  }
+}
+
 query FindPerformersForSelect(
   $filter: FindFilterType
   $performer_filter: PerformerFilterType

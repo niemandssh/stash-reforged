@@ -1,0 +1,9 @@
+input RemoteSceneSuggestionsInput {
+  providers: [String!]
+  min_duration_minutes: Int
+  limit: Int
+  priority_tag_ids: [ID!]
+  stop_tag_ids: [ID!]
+  context_tag_id: ID
+  context_performer_id: ID
+}

@@ -2,6 +2,7 @@ import React, { PropsWithChildren, useState } from "react";
 import { useIntl } from "react-intl";
 import cloneDeep from "lodash-es/cloneDeep";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { useHistory } from "react-router-dom";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
@@ -123,16 +124,18 @@ export const GroupList: React.FC<IGroupList> = ({
     ...providedOperations,
   ];
 
+  const playRandomHotkey = useHotkey("list.playRandom");
+
   function addKeybinds(
     result: GQL.FindGroupsQueryResult,
     filter: ListFilterModel
   ) {
-    Mousetrap.bind("p r", () => {
+    Mousetrap.bind(playRandomHotkey, () => {
       viewRandom(result, filter);
     });
 
     return () => {
-      Mousetrap.unbind("p r");
+      Mousetrap.unbind(playRandomHotkey);
     };
   }
 

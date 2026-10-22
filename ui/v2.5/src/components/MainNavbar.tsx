@@ -15,7 +15,6 @@ import { Nav, Navbar, Button, Fade } from "react-bootstrap";
 import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import { Link, NavLink, useLocation, useHistory } from "react-router-dom";
 import Mousetrap from "mousetrap";
-import * as GQL from "src/core/generated-graphql";
 
 import SessionUtils from "src/utils/session";
 import { Icon } from "src/components/Shared/Icon";
@@ -29,6 +28,7 @@ import {
   faChartColumn,
   faFilm,
   faHistory,
+  faClock,
   faImage,
   faImages,
   faMapMarkerAlt,
@@ -47,22 +47,22 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { baseURL } from "src/core/createClient";
 import { PatchComponent } from "src/patch";
-import { getClient } from "src/core/StashService";
 import {
-  addToRandomSceneBuffer,
-  clearRandomSceneBuffer,
-  getRandomSceneBuffer,
-  randomSceneBufferKeyForRating,
-  RANDOM_SCENE_BUFFER_KEY_UNORGANISED,
-  shouldClearRandomSceneBuffer,
-} from "src/utils/randomSceneBuffer";
+  getRandomBestScene,
+  getRandomScene,
+  getRandomUnclassifiedScene,
+  getRandomUnorganisedScene,
+  makeReviewSceneLink,
+} from "src/utils/randomSceneSelection";
+import { useHotkey } from "src/hooks/hotkeys";
+import { getHotkey, HotkeyAction } from "src/core/config";
 
 interface IMenuItem {
   name: string;
   message: MessageDescriptor;
   href: string;
   icon: IconDefinition;
-  hotkey: string;
+  hotkeyAction: HotkeyAction;
   userCreatable?: boolean;
 }
 const messages = defineMessages({
@@ -118,6 +118,10 @@ const messages = defineMessages({
     id: "view_history",
     defaultMessage: "History",
   },
+  watchLater: {
+    id: "watch_later",
+    defaultMessage: "Watch Later",
+  },
 });
 
 const allMenuItems: IMenuItem[] = [
@@ -126,14 +130,14 @@ const allMenuItems: IMenuItem[] = [
     message: messages.scenes,
     href: "/scenes",
     icon: faPlayCircle,
-    hotkey: "g s",
+    hotkeyAction: "nav.goto.scenes",
   },
   {
     name: "games",
     message: messages.games,
     href: "/games",
     icon: faGamepad,
-    hotkey: "g a",
+    hotkeyAction: "nav.goto.games",
     userCreatable: true,
   },
   {
@@ -141,14 +145,14 @@ const allMenuItems: IMenuItem[] = [
     message: messages.images,
     href: "/images",
     icon: faImage,
-    hotkey: "g i",
+    hotkeyAction: "nav.goto.images",
   },
   {
     name: "groups",
     message: messages.groups,
     href: "/groups",
     icon: faFilm,
-    hotkey: "g v",
+    hotkeyAction: "nav.goto.groups",
     userCreatable: true,
   },
   {
@@ -156,14 +160,14 @@ const allMenuItems: IMenuItem[] = [
     message: messages.markers,
     href: "/scenes/markers",
     icon: faMapMarkerAlt,
-    hotkey: "g k",
+    hotkeyAction: "nav.goto.markers",
   },
   {
     name: "galleries",
     message: messages.galleries,
     href: "/galleries",
     icon: faImages,
-    hotkey: "g l",
+    hotkeyAction: "nav.goto.galleries",
     userCreatable: true,
   },
   {
@@ -171,7 +175,7 @@ const allMenuItems: IMenuItem[] = [
     message: messages.performers,
     href: "/performers",
     icon: faUser,
-    hotkey: "g p",
+    hotkeyAction: "nav.goto.performers",
     userCreatable: true,
   },
   {
@@ -179,7 +183,7 @@ const allMenuItems: IMenuItem[] = [
     message: messages.studios,
     href: "/studios",
     icon: faVideo,
-    hotkey: "g u",
+    hotkeyAction: "nav.goto.studios",
     userCreatable: true,
   },
   {
@@ -187,7 +191,7 @@ const allMenuItems: IMenuItem[] = [
     message: messages.tags,
     href: "/tags",
     icon: faTag,
-    hotkey: "g t",
+    hotkeyAction: "nav.goto.tags",
     userCreatable: true,
   },
   {
@@ -195,128 +199,20 @@ const allMenuItems: IMenuItem[] = [
     message: messages.viewHistory,
     href: "/history",
     icon: faHistory,
-    hotkey: "g h",
+    hotkeyAction: "nav.goto.history",
+  },
+  {
+    name: "watch-later",
+    message: messages.watchLater,
+    href: "/watch-later",
+    icon: faClock,
+    hotkeyAction: "nav.goto.watchLater",
   },
 ];
 
 const newPathsList = allMenuItems
   .filter((item) => item.userCreatable)
   .map((item) => item.href);
-
-const MAX_RANDOM_SCENE_ATTEMPTS = 25;
-
-const fetchRandomSceneId = async (
-  baseFilter: GQL.SceneFilterType,
-  poolCount: number,
-  excludeIds: Set<string>
-): Promise<string | null> => {
-  const client = getClient();
-
-  for (let attempt = 0; attempt < MAX_RANDOM_SCENE_ATTEMPTS; attempt++) {
-    const randomPage = Math.floor(Math.random() * poolCount) + 1;
-
-    const result = await client.query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 1,
-          page: randomPage,
-          sort: "random",
-        },
-        scene_filter: baseFilter,
-      },
-    });
-
-    const scenes = result.data?.findScenes?.scenes || [];
-    if (scenes.length === 0) {
-      return null;
-    }
-
-    const sceneId = scenes[0]?.id || null;
-    if (sceneId && !excludeIds.has(sceneId)) {
-      return sceneId;
-    }
-  }
-
-  return null;
-};
-
-const getRandomSceneWithFilter = async (
-  bufferKey: string,
-  baseFilter: GQL.SceneFilterType
-): Promise<string | null> => {
-  try {
-    const countResult = await getClient().query<GQL.FindScenesQuery>({
-      query: GQL.FindScenesDocument,
-      variables: {
-        filter: {
-          per_page: 0,
-        },
-        scene_filter: baseFilter,
-      },
-    });
-
-    const totalCount = countResult.data?.findScenes?.count || 0;
-    if (totalCount === 0) {
-      return null;
-    }
-
-    let buffer = getRandomSceneBuffer(bufferKey);
-    if (shouldClearRandomSceneBuffer(buffer, totalCount)) {
-      clearRandomSceneBuffer(bufferKey);
-      buffer = [];
-    }
-
-    let excludeIds = new Set(buffer);
-    let sceneId = await fetchRandomSceneId(
-      baseFilter,
-      totalCount,
-      excludeIds
-    );
-
-    if (!sceneId && excludeIds.size > 0) {
-      clearRandomSceneBuffer(bufferKey);
-      excludeIds = new Set();
-      sceneId = await fetchRandomSceneId(baseFilter, totalCount, excludeIds);
-    }
-
-    if (sceneId) {
-      addToRandomSceneBuffer(bufferKey, sceneId);
-    }
-
-    return sceneId;
-  } catch (error) {
-    console.error("Error getting random scene:", error);
-    return null;
-  }
-};
-
-/** Returns a random scene that is not organised (packed). */
-const getRandomUnorganisedScene = async (): Promise<string | null> => {
-  return getRandomSceneWithFilter(RANDOM_SCENE_BUFFER_KEY_UNORGANISED, {
-    organized: false,
-  });
-};
-
-const getRandomScene = async (
-  ratingThreshold: number = 55
-): Promise<string | null> => {
-  return getRandomSceneWithFilter(
-    randomSceneBufferKeyForRating(ratingThreshold),
-    {
-      rating100: {
-        modifier: GQL.CriterionModifier.GreaterThan,
-        value: ratingThreshold - 1, // > (threshold-1) means >= threshold
-      },
-    }
-  );
-};
-
-const getRandomBestScene = async (
-  ratingThreshold: number = 90
-): Promise<string | null> => {
-  return getRandomScene(ratingThreshold);
-};
 
 const MainNavbarMenuItems = PatchComponent(
   "MainNavBar.MenuItems",
@@ -403,12 +299,25 @@ export const MainNavbar: React.FC = () => {
   const handleReviewClick = useCallback(async () => {
     const sceneId = await getRandomUnorganisedScene();
     if (sceneId) {
-      history.push(`/scenes/${sceneId}`);
+      history.push(makeReviewSceneLink(sceneId));
     } else {
       alert(
         intl.formatMessage({
           id: "no_scenes_to_review",
           defaultMessage: "No unorganised scenes to review",
+        })
+      );
+    }
+  }, [history, intl]);
+
+  const handleFirstReviewClick = useCallback(async () => {
+    const sceneId = await getRandomUnclassifiedScene();
+    if (sceneId) {
+      history.push(makeReviewSceneLink(sceneId));
+    } else {
+      alert(
+        intl.formatMessage({
+          id: "no_scenes_to_first_review",
         })
       );
     }
@@ -446,34 +355,44 @@ export const MainNavbar: React.FC = () => {
     }
   }, [history, intl, configuration]);
 
+  const firstReviewHotkey = useHotkey("scene.firstReview");
+  const reviewHotkey = useHotkey("scene.review");
+  const randomHotkey = useHotkey("scene.random");
+  const randomBestHotkey = useHotkey("scene.randomBest");
+  const openManualHotkey = useHotkey("nav.openManual");
+  const gotoSettingsHotkey = useHotkey("nav.gotoSettings");
+  const newItemHotkey = useHotkey("nav.newItem");
+
   useEffect(() => {
-    const handleAltShortcuts = (event: globalThis.KeyboardEvent) => {
-      if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
-        return;
-      }
-
-      switch (event.code) {
-        case "KeyR":
-          event.preventDefault();
-          handleReviewClick();
-          break;
-        case "KeyW":
-          event.preventDefault();
-          handleRandomClick();
-          break;
-        case "KeyQ":
-          event.preventDefault();
-          handleRandomBestClick();
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleAltShortcuts);
+    Mousetrap.bind(firstReviewHotkey, () => {
+      handleFirstReviewClick();
+    });
+    Mousetrap.bind(reviewHotkey, () => {
+      handleReviewClick();
+    });
+    Mousetrap.bind(randomHotkey, () => {
+      handleRandomClick();
+    });
+    Mousetrap.bind(randomBestHotkey, () => {
+      handleRandomBestClick();
+    });
 
     return () => {
-      window.removeEventListener("keydown", handleAltShortcuts);
+      Mousetrap.unbind(firstReviewHotkey);
+      Mousetrap.unbind(reviewHotkey);
+      Mousetrap.unbind(randomHotkey);
+      Mousetrap.unbind(randomBestHotkey);
     };
-  }, [handleReviewClick, handleRandomClick, handleRandomBestClick]);
+  }, [
+    firstReviewHotkey,
+    reviewHotkey,
+    randomHotkey,
+    randomBestHotkey,
+    handleFirstReviewClick,
+    handleReviewClick,
+    handleRandomClick,
+    handleRandomBestClick,
+  ]);
 
   const pathname = location.pathname.replace(/\/$/, "");
   let newPath = newPathsList.includes(pathname) ? `${pathname}/new` : null;
@@ -486,24 +405,28 @@ export const MainNavbar: React.FC = () => {
 
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("?", () => openManual());
-    Mousetrap.bind("g z", () => goto("/settings"));
+    const menuItemHotkeys = menuItems.map((item) =>
+      getHotkey(configuration?.ui.hotkeys, item.hotkeyAction)
+    );
 
-    menuItems.forEach((item) =>
-      Mousetrap.bind(item.hotkey, () => goto(item.href))
+    Mousetrap.bind(openManualHotkey, () => openManual());
+    Mousetrap.bind(gotoSettingsHotkey, () => goto("/settings"));
+
+    menuItems.forEach((item, i) =>
+      Mousetrap.bind(menuItemHotkeys[i], () => goto(item.href))
     );
 
     if (newPath) {
-      Mousetrap.bind("n", () => history.push(String(newPath)));
+      Mousetrap.bind(newItemHotkey, () => history.push(String(newPath)));
     }
 
     return () => {
-      Mousetrap.unbind("?");
-      Mousetrap.unbind("g z");
-      menuItems.forEach((item) => Mousetrap.unbind(item.hotkey));
+      Mousetrap.unbind(openManualHotkey);
+      Mousetrap.unbind(gotoSettingsHotkey);
+      menuItemHotkeys.forEach((key) => Mousetrap.unbind(key));
 
       if (newPath) {
-        Mousetrap.unbind("n");
+        Mousetrap.unbind(newItemHotkey);
       }
     };
   });
@@ -668,11 +591,28 @@ export const MainNavbar: React.FC = () => {
             type="button"
             className="btn btn-primary review-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
+            onClick={handleFirstReviewClick}
+            title={intl.formatMessage(
+              { id: "first_review_unclassified_video_title" },
+              { hotkey: firstReviewHotkey }
+            )}
+          >
+            <Icon icon={faStarHalfStroke} className="mr-1" />
+            <FormattedMessage id="first_review" />
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary review-btn ml-2"
+            style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleReviewClick}
-            title={intl.formatMessage({
-              id: "review_unrated_video_title",
-              defaultMessage: "Review random unorganised video",
-            })}
+            title={intl.formatMessage(
+              {
+                id: "review_unrated_video_title",
+                defaultMessage:
+                  "Review random unorganised video ({hotkey})",
+              },
+              { hotkey: reviewHotkey }
+            )}
           >
             <Icon icon={faStarHalfStroke} className="mr-1" />
             Review
@@ -682,9 +622,18 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary random-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleRandomClick}
-            title={`Open random scene with rating >= ${
-              configuration?.interface?.randomRatingThreshold ?? 55
-            }`}
+            title={intl.formatMessage(
+              {
+                id: "random_scene_title",
+                defaultMessage:
+                  "Open random scene with rating >= {ratingThreshold} ({hotkey})",
+              },
+              {
+                ratingThreshold:
+                  configuration?.interface?.randomRatingThreshold ?? 55,
+                hotkey: randomHotkey,
+              }
+            )}
           >
             <Icon icon={faRandom} className="mr-1" />
             Random
@@ -694,9 +643,18 @@ export const MainNavbar: React.FC = () => {
             className="btn btn-primary random-best-btn ml-2"
             style={{ display: "inline-block", visibility: "visible" }}
             onClick={handleRandomBestClick}
-            title={`Open random scene with rating >= ${
-              configuration?.interface?.randomBestRatingThreshold ?? 90
-            }`}
+            title={intl.formatMessage(
+              {
+                id: "random_best_scene_title",
+                defaultMessage:
+                  "Open random scene with rating >= {ratingThreshold} ({hotkey})",
+              },
+              {
+                ratingThreshold:
+                  configuration?.interface?.randomBestRatingThreshold ?? 90,
+                hotkey: randomBestHotkey,
+              }
+            )}
           >
             <Icon icon={faStar} className="mr-1" />
             Random best

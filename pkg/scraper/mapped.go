@@ -887,6 +887,7 @@ func mapFieldValue(destVal reflect.Value, key string, value interface{}) error {
 	if field.IsValid() && field.CanSet() {
 		switch v := value.(type) {
 		case string:
+			v = strings.TrimSpace(v)
 			// if the field is a pointer to a string, then we need to convert the string to a pointer
 			// if the field is a string slice, then we need to convert the string to a slice
 			switch {
@@ -898,6 +899,46 @@ func mapFieldValue(destVal reflect.Value, key string, value interface{}) error {
 				field.Set(ptr)
 			case fieldType.Kind() == reflect.Slice && fieldType.Elem().Kind() == reflect.String:
 				field.Set(reflect.ValueOf([]string{v}))
+			case fieldType.Kind() == reflect.Int, fieldType.Kind() == reflect.Int64:
+				if v == "" {
+					return nil
+				}
+				n, err := strconv.Atoi(v)
+				if err != nil {
+					return fmt.Errorf("cannot convert %q to %s: %w", v, fieldType, err)
+				}
+				field.SetInt(int64(n))
+			case fieldType.Kind() == reflect.Ptr && (fieldType.Elem().Kind() == reflect.Int || fieldType.Elem().Kind() == reflect.Int64):
+				if v == "" {
+					return nil
+				}
+				n, err := strconv.Atoi(v)
+				if err != nil {
+					return fmt.Errorf("cannot convert %q to %s: %w", v, fieldType, err)
+				}
+				ptr := reflect.New(fieldType.Elem())
+				ptr.Elem().SetInt(int64(n))
+				field.Set(ptr)
+			case fieldType.Kind() == reflect.Float64:
+				if v == "" {
+					return nil
+				}
+				f, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return fmt.Errorf("cannot convert %q to %s: %w", v, fieldType, err)
+				}
+				field.SetFloat(f)
+			case fieldType.Kind() == reflect.Ptr && fieldType.Elem().Kind() == reflect.Float64:
+				if v == "" {
+					return nil
+				}
+				f, err := strconv.ParseFloat(v, 64)
+				if err != nil {
+					return fmt.Errorf("cannot convert %q to %s: %w", v, fieldType, err)
+				}
+				ptr := reflect.New(fieldType.Elem())
+				ptr.Elem().SetFloat(f)
+				field.Set(ptr)
 			default:
 				return fmt.Errorf("cannot convert %T to %s", value, fieldType)
 			}

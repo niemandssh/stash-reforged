@@ -20,7 +20,7 @@ var (
 // SupportsNativeStreaming reports whether a site supports native HLS playback in Stash.
 func SupportsNativeStreaming(site Site) bool {
 	switch site {
-	case SitePornHub, SiteXVideos, SiteXnxx:
+	case SitePornHub, SiteXVideos, SiteXnxx, SiteXHamster, SiteVKVideo, SiteDirect, SitePlayerJS, SiteKVS, SiteJWPlayer, SiteNewgrounds, SiteVJav, SiteEporner, SiteTNAFlix:
 		return true
 	default:
 		return false
@@ -52,7 +52,13 @@ func html5PlayerViewPageURL(rawURL string, site Site) string {
 		}
 	case SiteXnxx:
 		if m := xnxxEmbedRe.FindStringSubmatch(embedSrc); len(m) == 2 {
-			return "https://www.xnxx.com/embedframe/" + m[1]
+			return xnxxViewPageURLForID(m[1])
+		}
+		if m := xnxxPageRe.FindStringSubmatch(rawURL); len(m) == 2 {
+			return xnxxViewPageURLForID(m[1])
+		}
+		if m := xnxxPageNumRe.FindStringSubmatch(rawURL); len(m) == 2 {
+			return xnxxViewPageURLForID(m[1])
 		}
 	}
 
@@ -62,6 +68,19 @@ func html5PlayerViewPageURL(rawURL string, site Site) string {
 func siteHomeURL(site Site) string {
 	referer, _ := siteReferer(site)
 	return strings.TrimRight(referer, "/")
+}
+
+func xnxxViewPageURLForID(id string) string {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return ""
+	}
+	for _, r := range id {
+		if r < '0' || r > '9' {
+			return "https://www.xnxx.com/video-" + id + "/"
+		}
+	}
+	return "https://www.xnxx.com/video" + id + "/"
 }
 
 func extractHTML5PlayerStreamVariants(embedSrc string, site Site) ([]HLSVariant, error) {
@@ -243,14 +262,24 @@ func fetchStreamResourceForSite(rawURL string, site Site) ([]byte, string, error
 
 func siteReferer(site Site) (referer, origin string) {
 	switch site {
+	case SitePornHub:
+		return "https://www.pornhub.com/", "https://www.pornhub.com"
 	case SiteXVideos:
 		return "https://www.xvideos.com/", "https://www.xvideos.com"
 	case SiteXnxx:
 		return "https://www.xnxx.com/", "https://www.xnxx.com"
 	case SiteXHamster:
 		return "https://xhamster.com/", "https://xhamster.com"
+	case SiteVKVideo:
+		return "https://vk.com/", "https://vk.com"
+	case SiteEporner:
+		return "https://www.eporner.com/", "https://www.eporner.com"
+	case SiteTNAFlix:
+		return "https://www.tnaflix.com/", "https://www.tnaflix.com"
+	case SiteNewgrounds:
+		return "https://www.newgrounds.com/", "https://www.newgrounds.com"
 	default:
-		return "https://www.pornhub.com/", "https://www.pornhub.com"
+		return "", ""
 	}
 }
 
@@ -259,10 +288,16 @@ func siteForProxyHost(host string) Site {
 	switch {
 	case strings.HasSuffix(host, "xvideos-cdn.com") || strings.Contains(host, "xvideos."):
 		return SiteXVideos
-	case strings.Contains(host, "xnxx."):
+	case strings.HasSuffix(host, "xnxx-cdn.com") || strings.Contains(host, "xnxx."):
 		return SiteXnxx
-	case strings.Contains(host, "xhamster."):
+	case strings.HasSuffix(host, "eporner.com"):
+		return SiteEporner
+	case strings.HasSuffix(host, "tnaflix.com"):
+		return SiteTNAFlix
+	case strings.HasSuffix(host, "xhcdn.com") || strings.Contains(host, "xhamster."):
 		return SiteXHamster
+	case strings.HasSuffix(host, "vkvideo.ru") || strings.HasSuffix(host, "userapi.com") || strings.Contains(host, "vk."):
+		return SiteVKVideo
 	default:
 		return SitePornHub
 	}
@@ -271,6 +306,10 @@ func siteForProxyHost(host string) Site {
 func applySiteHeaders(req *http.Request, site Site) {
 	referer, origin := siteReferer(site)
 	req.Header.Set("User-Agent", streamUserAgent)
-	req.Header.Set("Referer", referer)
-	req.Header.Set("Origin", origin)
+	if referer != "" {
+		req.Header.Set("Referer", referer)
+	}
+	if origin != "" {
+		req.Header.Set("Origin", origin)
+	}
 }

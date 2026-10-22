@@ -7,7 +7,12 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
   totalPlayDuration = 0;
   currentPlayDuration = 0;
   minimumPlayPercent = 0;
+  watchLater = false;
+  minimumWatchLaterRemoveSeconds = 30;
   incrementPlayCount: () => Promise<void> = () => {
+    return Promise.resolve();
+  };
+  removeFromWatchLater: () => Promise<void> = () => {
     return Promise.resolve();
   };
   saveActivity: (resumeTime: number, playDuration: number) => Promise<void> =
@@ -17,6 +22,7 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
 
   private enabled = false;
   private playCountIncremented = false;
+  private watchLaterRemoved = false;
   private intervalID: number | undefined;
 
   private lastResumeTime = 0;
@@ -92,6 +98,7 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
     this.totalPlayDuration = 0;
     this.currentPlayDuration = 0;
     this.playCountIncremented = false;
+    this.watchLaterRemoved = false;
   }
 
   setEnabled(enabled: boolean) {
@@ -111,6 +118,16 @@ class TrackActivityPlugin extends videojs.getPlugin("plugin") {
 
     this.totalPlayDuration += intervalSeconds;
     this.currentPlayDuration += intervalSeconds;
+
+    if (
+      !this.watchLaterRemoved &&
+      this.watchLater &&
+      this.totalPlayDuration >= this.minimumWatchLaterRemoveSeconds
+    ) {
+      this.removeFromWatchLater();
+      this.watchLaterRemoved = true;
+    }
+
     if (this.totalPlayDuration % sendInterval === 0) {
       this.sendActivity();
     }

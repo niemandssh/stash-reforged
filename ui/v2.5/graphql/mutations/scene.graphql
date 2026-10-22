@@ -64,6 +64,20 @@ mutation SceneResetPlayCount($id: ID!) {
   sceneResetPlayCount(id: $id)
 }
 
+mutation SceneAddWatchLater($id: ID!) {
+  sceneAddWatchLater(id: $id) {
+    watchLater
+    addedAt
+  }
+}
+
+mutation SceneRemoveWatchLater($id: ID!) {
+  sceneRemoveWatchLater(id: $id) {
+    watchLater
+    addedAt
+  }
+}
+
 mutation SceneAddO($id: ID!, $times: [Timestamp!], $performer_ids: [ID!]) {
   sceneAddO(id: $id, times: $times, performer_ids: $performer_ids) {
     count
@@ -148,6 +162,10 @@ mutation SceneSaveFilteredScreenshot(
 
 mutation SceneAssignFile($input: AssignSceneFileInput!) {
   sceneAssignFile(input: $input)
+}
+
+mutation SceneRemoveFile($input: SceneRemoveFileInput!) {
+  sceneRemoveFile(input: $input)
 }
 
 mutation SceneMerge($input: SceneMergeInput!) {

@@ -32,6 +32,8 @@ import { SweatDrops } from "../Shared/SweatDrops";
 import { OMGIcon } from "../Shared/OMGIcon";
 import { WallHoverPreview } from "../Shared/WallHoverPreview";
 import { Form } from "react-bootstrap";
+import { SceneContextMenu } from "../Shared/SceneContextMenu";
+import { getPreferredTagHighlightColor } from "./RemoteSceneSuggestions/tagMatching";
 
 interface IScenePhoto {
   scene: GQL.SlimSceneDataFragment;
@@ -42,6 +44,7 @@ interface IScenePhoto {
   animationSrc?: string;
   /** Selection state and handler for wall selection */
   selected?: boolean;
+  selecting?: boolean;
   onSelectChange?: (selected: boolean, shiftKey: boolean) => void;
 }
 
@@ -59,6 +62,7 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
     configuration?.ui.ratingSystemOptions ?? defaultRatingSystemOptions;
 
   const [layoutHidden, setLayoutHidden] = useState(false);
+  const [scrubbing, setScrubbing] = useState(false);
   const hideLayoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelHideLayout = useCallback(() => {
@@ -101,17 +105,23 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
     divStyle.top = props.top;
   }
 
-  const openInNewTab = useCallback(
+  const { scene, imageSrc, videoSrc, animationSrc, selected, onSelectChange } =
+    props.photo;
+
+  const handleCardClick = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
+
+      if (props.photo.selecting && onSelectChange) {
+        onSelectChange(!(selected ?? false), e.shiftKey);
+        return;
+      }
+
       window.open(props.photo.link, "_blank", "noopener,noreferrer");
     },
-    [props.photo.link]
+    [props.photo.link, props.photo.selecting, onSelectChange, selected]
   );
-
-  const { scene, imageSrc, videoSrc, animationSrc, selected, onSelectChange } =
-    props.photo;
 
   const title = objectTitle(scene);
 
@@ -124,23 +134,50 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
   );
   const hasRating = scene.rating100 != null;
 
+  const preferredTagColor = useMemo(() => {
+    const preferredTagIds = configuration?.ui?.scenePreferredTagIds ?? [];
+    if (preferredTagIds.length === 0) {
+      return null;
+    }
+    const tagsById = new Map(
+      (scene.tags ?? []).map((tag) => [tag.id, tag])
+    );
+    return getPreferredTagHighlightColor(
+      preferredTagIds,
+      tagsById,
+      scene.tags ?? []
+    );
+  }, [configuration?.ui?.scenePreferredTagIds, scene.tags]);
+
   return (
-    <div
-      className={cx("wall-item", {
-        "show-title": showTitle,
-        "wall-item-layout-hidden": layoutHidden,
-        "wall-item-selected": selected,
-      })}
-      role="button"
-      style={{
-        ...divStyle,
-        width: props.photo.width,
-        height: props.photo.height,
-      }}
-      onClick={openInNewTab}
-      onMouseEnter={startHideLayoutTimer}
-      onMouseLeave={onCardMouseLeave}
+    <SceneContextMenu
+      sceneId={scene.id}
+      sceneUrl={props.photo.link}
+      watchLater={scene.watch_later ?? false}
     >
+      <div
+        className={cx("wall-item", {
+          "show-title": showTitle,
+          "wall-item-layout-hidden": layoutHidden,
+          "wall-item-selected": selected,
+          "wall-item--preferred-tag": !!preferredTagColor,
+          "wall-item--scrubbing": scrubbing,
+        })}
+        role="button"
+        style={{
+          ...divStyle,
+          width: props.photo.width,
+          height: props.photo.height,
+          ...(preferredTagColor
+            ? ({
+                ["--preferred-tag-color" as string]: preferredTagColor,
+              } as React.CSSProperties)
+            : undefined),
+        }}
+        onClick={handleCardClick}
+        onMouseEnter={startHideLayoutTimer}
+        onMouseLeave={onCardMouseLeave}
+      >
       {scene.paths.vtt && (
         <div className="wall-item-scrubber-zone">
           <PreviewScrubber
@@ -150,6 +187,7 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
             transforms={scene.video_transforms}
             onProtectedHover={cancelHideLayout}
             onProtectedLeave={startHideLayoutTimer}
+            onScrubbingChange={setScrubbing}
           />
         </div>
       )}
@@ -226,39 +264,48 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
         onMouseLeave={startHideLayoutTimer}
       >
         <footer className="wall-item-footer">
-          <Link
-            to={props.photo.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {title && (
+          {title && (
+            <Link
+              to={props.photo.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="wall-item-title-link"
+            >
               <TruncatedText
                 text={title}
                 lineCount={1}
                 className="wall-item-title"
               />
-            )}
-            {scene.performers.length > 0 && (
-              <span className="wall-item-performers">
-                {scene.performers.map((performer, index) => (
-                  <React.Fragment key={performer.id}>
-                    {index > 0 && ", "}
-                    <PerformerPopover id={performer.id} placement="top">
-                      <Link
-                        to={`/performers/${performer.id}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="wall-item-performer-link"
-                      >
-                        {performer.name}
-                      </Link>
-                    </PerformerPopover>
-                  </React.Fragment>
-                ))}
-              </span>
-            )}
-            <div>{scene.date && TextUtils.formatDate(intl, scene.date, true, scene.date_display)}</div>
-          </Link>
+            </Link>
+          )}
+          {scene.performers.length > 0 && (
+            <span className="wall-item-performers">
+              {scene.performers.map((performer, index) => (
+                <React.Fragment key={performer.id}>
+                  {index > 0 && ", "}
+                  <PerformerPopover id={performer.id} placement="top">
+                    <Link
+                      to={`/performers/${performer.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="wall-item-performer-link"
+                    >
+                      {performer.name}
+                    </Link>
+                  </PerformerPopover>
+                </React.Fragment>
+              ))}
+            </span>
+          )}
+          <div>
+            {scene.date &&
+              TextUtils.formatDate(
+                intl,
+                scene.date,
+                true,
+                scene.date_display
+              )}
+          </div>
         </footer>
         {onSelectChange && (
           <Form.Check
@@ -266,6 +313,7 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
             type="checkbox"
             className="wall-item-select-check"
             checked={selected ?? false}
+            readOnly
             onClick={(e) => {
               e.stopPropagation();
               onSelectChange(!(selected ?? false), e.shiftKey);
@@ -273,7 +321,8 @@ export const SceneWallItem: React.FC<RenderImageProps<IScenePhoto>> = (
           />
         )}
       </div>
-    </div>
+      </div>
+    </SceneContextMenu>
   );
 };
 
@@ -350,6 +399,7 @@ const SceneWall: React.FC<ISceneWallProps> = ({
         alt: objectTitle(s),
         onError: handleError,
         selected: selectedIds?.has(s.id),
+        selecting: (selectedIds?.size ?? 0) > 0,
         onSelectChange: onSelectChange
           ? (selected: boolean, shiftKey: boolean) =>
               onSelectChange(s.id, selected, shiftKey)
@@ -362,9 +412,20 @@ const SceneWall: React.FC<ISceneWallProps> = ({
     (event: React.MouseEvent, { index }: { index: number }) => {
       event.preventDefault();
       event.stopPropagation();
-      window.open(photos[index].link, "_blank", "noopener,noreferrer");
+
+      const photo = photos[index];
+      if ((selectedIds?.size ?? 0) > 0 && onSelectChange) {
+        onSelectChange(
+          photo.scene.id,
+          !selectedIds.has(photo.scene.id),
+          event.shiftKey
+        );
+        return;
+      }
+
+      window.open(photo.link, "_blank", "noopener,noreferrer");
     },
-    [photos]
+    [photos, selectedIds, onSelectChange]
   );
 
   function columns(containerWidth: number) {

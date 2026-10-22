@@ -29,7 +29,7 @@ import {
 } from "../Shared/FilterSelect";
 import { useCompare } from "src/hooks/state";
 import { TagPopover } from "./TagPopover";
-import { TAG_PASTE_DELIMITERS } from "./TagCopyPaste";
+import { parsePastedTagNames } from "./TagCopyPaste";
 import { Placement } from "react-bootstrap/esm/Overlay";
 import { PatchComponent, PatchFunction } from "src/patch";
 import {
@@ -215,14 +215,7 @@ const TagCustomInput = (
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     if (!onPasteTags) return;
     const raw = e.clipboardData.getData("text");
-    const trimmed = raw.trim();
-    const withoutLeadingTrailingDelimiters = trimmed
-      .replace(/^[,;\n|]+/, "")
-      .replace(/[,;\n|]+$/, "");
-    const names = withoutLeadingTrailingDelimiters
-      .split(TAG_PASTE_DELIMITERS)
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const names = parsePastedTagNames(raw);
     if (names.length > 0) {
       e.preventDefault();
       e.stopPropagation();

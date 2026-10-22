@@ -10,6 +10,7 @@ import { SettingsInterfacePanel } from "./SettingsInterfacePanel/SettingsInterfa
 import { SettingsLogsPanel } from "./SettingsLogsPanel";
 import { SettingsTasksPanel } from "./Tasks/SettingsTasksPanel";
 import { SettingsCustomPanel } from "./SettingsCustomPanel";
+import { SettingsHotkeysPanel } from "./SettingsHotkeysPanel";
 import { SettingsPluginsPanel } from "./SettingsPluginsPanel";
 import { SettingsScrapingPanel } from "./SettingsScrapingPanel";
 import { SettingsAIPanel } from "./SettingsAIPanel";
@@ -23,6 +24,7 @@ import Changelog from "../Changelog/Changelog";
 const validTabs = [
   "tasks",
   "custom",
+  "hotkeys",
   "library",
   "interface",
   "security",
@@ -93,6 +95,27 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
                     }`}
                   >
                     <FormattedMessage id="config.categories.custom" />
+                  </Button>
+                </Nav.Link>
+              </NavLink>
+            </Nav.Item>
+            <Nav.Item>
+              <NavLink
+                to="/settings?tab=hotkeys"
+                className="nav-link"
+                isActive={(match, location) => {
+                  const params = new URLSearchParams(location.search);
+                  return params.get("tab") === "hotkeys";
+                }}
+                activeClassName="active"
+              >
+                <Nav.Link eventKey="hotkeys" as="span">
+                  <Button
+                    className={`minimal w-100 text-left ${
+                      tab === "hotkeys" ? "active" : ""
+                    }`}
+                  >
+                    <FormattedMessage id="config.categories.hotkeys" />
                   </Button>
                 </Nav.Link>
               </NavLink>
@@ -385,6 +408,9 @@ const SettingTabs: React.FC<{ tab: TabKey }> = ({ tab }) => {
             </Tab.Pane>
             <Tab.Pane eventKey="custom">
               <SettingsCustomPanel />
+            </Tab.Pane>
+            <Tab.Pane eventKey="hotkeys">
+              <SettingsHotkeysPanel />
             </Tab.Pane>
             <Tab.Pane eventKey="services" unmountOnExit>
               <SettingsServicesPanel />

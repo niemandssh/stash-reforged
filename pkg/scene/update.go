@@ -126,3 +126,67 @@ func (s *Service) AssignFile(ctx context.Context, sceneID int, fileID models.Fil
 
 	return s.Repository.AssignFiles(ctx, sceneID, []models.FileID{fileID})
 }
+
+// RemoveFileOptions controls optional cleanup when detaching a file from a scene.
+type RemoveFileOptions struct {
+	DeleteSprites  bool
+	FileNamingAlgo models.HashAlgorithm
+	FileDeleter    *FileDeleter
+}
+
+func (s *Service) RemoveFile(ctx context.Context, sceneID int, fileID models.FileID, opts RemoveFileOptions) error {
+	scene, err := s.Repository.Find(ctx, sceneID)
+	if err != nil {
+		return fmt.Errorf("finding scene: %w", err)
+	}
+
+	if scene == nil {
+		return fmt.Errorf("scene with id %d not found", sceneID)
+	}
+
+	if err := scene.LoadFiles(ctx, s.Repository); err != nil {
+		return fmt.Errorf("loading scene files: %w", err)
+	}
+
+	// check that the file is assigned to this scene
+	found := false
+	for _, f := range scene.Files.List() {
+		if f.ID == fileID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return fmt.Errorf("file %d is not assigned to scene %d", fileID, sceneID)
+	}
+
+	spriteHash := spriteHashForScene(scene, opts.FileNamingAlgo)
+	preserveForEmbed := !opts.DeleteSprites && shouldPreserveSpritesForEmbed(scene)
+	var embedSpriteHash string
+	if preserveForEmbed && opts.FileDeleter != nil {
+		embedSpriteHash = models.RemoteSceneSpriteHash(sceneID)
+	}
+
+	if err := s.Repository.RemoveFile(ctx, sceneID, fileID); err != nil {
+		return err
+	}
+
+	if opts.FileDeleter == nil {
+		return nil
+	}
+
+	if opts.DeleteSprites {
+		if err := opts.FileDeleter.MarkSpriteFiles(spriteHash); err != nil {
+			return fmt.Errorf("marking sprite files for deletion: %w", err)
+		}
+		return nil
+	}
+
+	if preserveForEmbed {
+		if err := preserveSpriteFiles(opts.FileDeleter.Paths, spriteHash, embedSpriteHash); err != nil {
+			return fmt.Errorf("preserving sprites for remote scene: %w", err)
+		}
+	}
+
+	return nil
+}

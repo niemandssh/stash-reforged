@@ -913,3 +913,130 @@ func (qb *PerformerStore) FindByStashIDStatus(ctx context.Context, hasStashID bo
 
 	return ret, nil
 }
+
+func mergePerformerIDsInHistoryTable(ctx context.Context, table string, source int, destination int) error {
+	query := fmt.Sprintf(`
+UPDATE %s SET performer_ids = (
+  SELECT json_group_array(mapped_val)
+  FROM (
+    SELECT DISTINCT CASE WHEN CAST(value AS INTEGER) = ? THEN ? ELSE CAST(value AS INTEGER) END AS mapped_val
+    FROM json_each(%s.performer_ids)
+  )
+)
+WHERE performer_ids IS NOT NULL
+AND EXISTS (SELECT 1 FROM json_each(performer_ids) WHERE CAST(value AS INTEGER) = ?)
+`, table, table)
+
+	_, err := dbWrapper.Exec(ctx, query, source, destination, source)
+	return err
+}
+
+func (qb *PerformerStore) Merge(ctx context.Context, source []int, destination int) error {
+	if len(source) == 0 {
+		return nil
+	}
+
+	inBinding := getInBinding(len(source))
+
+	args := []interface{}{destination}
+	srcArgs := make([]interface{}, len(source))
+	for i, id := range source {
+		if id == destination {
+			return errors.New("cannot merge where source == destination")
+		}
+		srcArgs[i] = id
+	}
+
+	args = append(args, srcArgs...)
+
+	performerTables := map[string]string{
+		performersScenesTable:    sceneIDColumn,
+		performersImagesTable:    imageIDColumn,
+		performersGalleriesTable: galleryIDColumn,
+		performersTagsTable:      tagIDColumn,
+	}
+
+	args = append(args, destination)
+	for table, idColumn := range performerTables {
+		_, err := dbWrapper.Exec(ctx, `UPDATE OR IGNORE `+table+`
+SET performer_id = ?
+WHERE performer_id IN `+inBinding+`
+AND NOT EXISTS(SELECT 1 FROM `+table+` o WHERE o.`+idColumn+` = `+table+`.`+idColumn+` AND o.performer_id = ?)`,
+			args...,
+		)
+		if err != nil {
+			return err
+		}
+
+		if _, err := dbWrapper.Exec(ctx, `DELETE FROM `+table+` WHERE performer_id IN `+inBinding, srcArgs...); err != nil {
+			return err
+		}
+	}
+
+	// update performer-specific scene tags
+	_, err := dbWrapper.Exec(ctx, `UPDATE OR IGNORE `+scenesTagsTable+`
+SET performer_id = ?
+WHERE performer_id IN `+inBinding+`
+AND NOT EXISTS(SELECT 1 FROM `+scenesTagsTable+` o WHERE o.scene_id = `+scenesTagsTable+`.scene_id AND o.tag_id = `+scenesTagsTable+`.tag_id AND o.performer_id = ?)`,
+		args...,
+	)
+	if err != nil {
+		return err
+	}
+
+	if _, err := dbWrapper.Exec(ctx, `DELETE FROM `+scenesTagsTable+` WHERE performer_id IN `+inBinding, srcArgs...); err != nil {
+		return err
+	}
+
+	for _, table := range []string{scenesODatesTable, scenesOMGDatesTable} {
+		for _, src := range source {
+			if err := mergePerformerIDsInHistoryTable(ctx, table, src, destination); err != nil {
+				return err
+			}
+		}
+	}
+
+	_, err = dbWrapper.Exec(ctx, "INSERT INTO "+performersAliasesTable+" (performer_id, alias) SELECT ?, name FROM "+performerTable+" WHERE id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE "+performersAliasesTable+" SET performer_id = ? WHERE performer_id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE "+performerURLsTable+" SET performer_id = ? WHERE performer_id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE performer_stash_ids SET performer_id = ? WHERE performer_id IN "+inBinding+`
+AND NOT EXISTS(SELECT 1 FROM performer_stash_ids o WHERE o.performer_id = ? AND o.endpoint = performer_stash_ids.endpoint)`, args...)
+	if err != nil {
+		return err
+	}
+
+	if _, err := dbWrapper.Exec(ctx, "DELETE FROM performer_stash_ids WHERE performer_id IN "+inBinding, srcArgs...); err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE "+performerProfileImagesTable+" SET performer_id = ? WHERE performer_id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE performer_custom_fields SET performer_id = ? WHERE performer_id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	for _, id := range source {
+		err = qb.Destroy(ctx, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

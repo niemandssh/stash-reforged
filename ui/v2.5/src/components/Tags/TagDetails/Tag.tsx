@@ -5,6 +5,7 @@ import { FormattedMessage, useIntl } from "react-intl";
 import { Helmet } from "react-helmet";
 import cx from "classnames";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 
 import * as GQL from "src/core/generated-graphql";
 import {
@@ -354,24 +355,30 @@ const TagPage: React.FC<IProps> = ({ tag, tabKey }) => {
     }
   }, [isEditing, image, tag.image_path]);
 
+  const toggleEditHotkey = useHotkey("detail.toggleEdit");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+  const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
+  const toggleFavoriteHotkey = useHotkey("detail.toggleFavorite");
+  const editSaveHotkey = useHotkey("edit.save");
+
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("e", () => toggleEditing());
-    Mousetrap.bind("d d", () => {
+    Mousetrap.bind(toggleEditHotkey, () => toggleEditing());
+    Mousetrap.bind(entityDeleteHotkey, () => {
       setIsDeleteAlertOpen(true);
     });
-    Mousetrap.bind(",", () => setCollapsed(!collapsed));
-    Mousetrap.bind("f", () => setFavorite(!tag.favorite));
+    Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
+    Mousetrap.bind(toggleFavoriteHotkey, () => setFavorite(!tag.favorite));
 
     return () => {
       if (isEditing) {
-        Mousetrap.unbind("s s");
+        Mousetrap.unbind(editSaveHotkey);
       }
 
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("d d");
-      Mousetrap.unbind(",");
-      Mousetrap.unbind("f");
+      Mousetrap.unbind(toggleEditHotkey);
+      Mousetrap.unbind(entityDeleteHotkey);
+      Mousetrap.unbind(toggleSidebarHotkey);
+      Mousetrap.unbind(toggleFavoriteHotkey);
     };
   });
 

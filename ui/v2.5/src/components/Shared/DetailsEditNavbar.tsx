@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { FormattedMessage, useIntl } from "react-intl";
 import { ImageInput } from "./ImageInput";
 import cx from "classnames";
+import { useConfirmOnEnter } from "src/hooks/modal";
 
 interface IProps {
   objectName?: string;
@@ -29,6 +30,8 @@ interface IProps {
 export const DetailsEditNavbar: React.FC<IProps> = (props: IProps) => {
   const intl = useIntl();
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState<boolean>(false);
+
+  useConfirmOnEnter(isDeleteAlertOpen, props.onDelete);
 
   function renderEditButton() {
     if (props.isNew) return;

@@ -650,3 +650,119 @@ func (qb *StudioStore) GetStashIDs(ctx context.Context, studioID int) ([]models.
 func (qb *StudioStore) GetAliases(ctx context.Context, studioID int) ([]string, error) {
 	return studiosAliasesTableMgr.get(ctx, studioID)
 }
+
+func (qb *StudioStore) Merge(ctx context.Context, source []int, destination int) error {
+	if len(source) == 0 {
+		return nil
+	}
+
+	inBinding := getInBinding(len(source))
+
+	args := []interface{}{destination}
+	srcArgs := make([]interface{}, len(source))
+	sourceSet := make(map[int]bool, len(source))
+	for i, id := range source {
+		if id == destination {
+			return errors.New("cannot merge where source == destination")
+		}
+		srcArgs[i] = id
+		sourceSet[id] = true
+	}
+
+	args = append(args, srcArgs...)
+
+	// repoint child studios from sources to destination
+	_, err := dbWrapper.Exec(ctx, `UPDATE `+studioTable+` SET parent_id = ? WHERE parent_id IN `+inBinding+` AND id != ?`, append([]interface{}{destination}, append(srcArgs, destination)...)...)
+	if err != nil {
+		return err
+	}
+
+	// if destination's parent is one of the sources, use that source's parent
+	dest, err := qb.Find(ctx, destination)
+	if err != nil {
+		return err
+	}
+	if dest == nil {
+		return fmt.Errorf("studio with id %d not found", destination)
+	}
+
+	if dest.ParentID != nil && sourceSet[*dest.ParentID] {
+		srcParent, err := qb.Find(ctx, *dest.ParentID)
+		if err != nil {
+			return err
+		}
+
+		var newParentID interface{}
+		if srcParent != nil && srcParent.ParentID != nil {
+			newParentID = *srcParent.ParentID
+		}
+
+		if _, err := dbWrapper.Exec(ctx, `UPDATE `+studioTable+` SET parent_id = ? WHERE id = ?`, newParentID, destination); err != nil {
+			return err
+		}
+	}
+
+	studioFKTables := []string{sceneTable, imageTable, galleryTable, groupTable}
+	for _, table := range studioFKTables {
+		if _, err := dbWrapper.Exec(ctx, `UPDATE `+table+` SET studio_id = ? WHERE studio_id IN `+inBinding, args...); err != nil {
+			return err
+		}
+	}
+
+	args = append(args, destination)
+	_, err = dbWrapper.Exec(ctx, `UPDATE OR IGNORE `+studiosTagsTable+`
+SET studio_id = ?
+WHERE studio_id IN `+inBinding+`
+AND NOT EXISTS(SELECT 1 FROM `+studiosTagsTable+` o WHERE o.tag_id = `+studiosTagsTable+`.tag_id AND o.studio_id = ?)`,
+		args...,
+	)
+	if err != nil {
+		return err
+	}
+
+	if _, err := dbWrapper.Exec(ctx, `DELETE FROM `+studiosTagsTable+` WHERE studio_id IN `+inBinding, srcArgs...); err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "INSERT INTO "+studioAliasesTable+" (studio_id, alias) SELECT ?, name FROM "+studioTable+" WHERE id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE "+studioAliasesTable+" SET studio_id = ? WHERE studio_id IN "+inBinding, args...)
+	if err != nil {
+		return err
+	}
+
+	_, err = dbWrapper.Exec(ctx, "UPDATE studio_stash_ids SET studio_id = ? WHERE studio_id IN "+inBinding+`
+AND NOT EXISTS(SELECT 1 FROM studio_stash_ids o WHERE o.studio_id = ? AND o.endpoint = studio_stash_ids.endpoint)`, args...)
+	if err != nil {
+		return err
+	}
+
+	if _, err := dbWrapper.Exec(ctx, "DELETE FROM studio_stash_ids WHERE studio_id IN "+inBinding, srcArgs...); err != nil {
+		return err
+	}
+
+	// validate hierarchy after merge
+	dest, err = qb.Find(ctx, destination)
+	if err != nil {
+		return err
+	}
+	if dest != nil && dest.ParentID != nil {
+		if err := studio.ValidateModify(ctx, models.StudioPartial{
+			ID:       destination,
+			ParentID: models.NewOptionalInt(*dest.ParentID),
+		}, qb); err != nil {
+			return err
+		}
+	}
+
+	for _, id := range source {
+		if err := qb.Destroy(ctx, id); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

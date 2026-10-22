@@ -22,6 +22,7 @@ const (
 	SiteXVideos  Site = "xvideos"
 	SiteXHamster Site = "xhamster"
 	SiteXnxx     Site = "xnxx"
+	SiteVKVideo  Site = "vkvideo"
 )
 
 var (
@@ -31,11 +32,17 @@ var (
 	xvideosPageNumRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xvideos\.[a-z.]+/video(\d+)`)
 	xvideosEmbedRe   = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xvideos\.[a-z.]+/embedframe/([a-z0-9]+)`)
 
-	xhamsterPageRe  = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xhamster\.[a-z.]+/videos/[^/?#]+-(\d+)`)
-	xhamsterEmbedRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xhamster\.[a-z.]+/xembed\.php\?video=(\d+)`)
+	// Modern xHamster page URLs end with a short code (xh…); legacy URLs end with a numeric id.
+	xhamsterPageRe       = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xhamster\.[a-z.]+/videos/[^/?#]*-(xh[a-z0-9]+|\d+)(?:[/?#]|$)`)
+	xhamsterEmbedPathRe  = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xhamster\.[a-z.]+/embed/(xh[a-z0-9]+|\d+)`)
+	xhamsterEmbedQueryRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xhamster\.[a-z.]+/xembed\.php\?video=(xh[a-z0-9]+|\d+)`)
 
-	xnxxPageRe  = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xnxx\.[a-z.]+/video-([a-z0-9]+)`)
-	xnxxEmbedRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xnxx\.[a-z.]+/embedframe/([a-z0-9]+)`)
+	xnxxPageRe    = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xnxx\.[a-z.]+/video-([a-z0-9]+)`)
+	xnxxPageNumRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xnxx\.[a-z.]+/video(\d+)`)
+	xnxxEmbedRe   = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*xnxx\.[a-z.]+/embedframe/([a-z0-9]+)`)
+
+	vkVideoPageRe  = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*(?:vk\.com|vkvideo\.ru)/video(-?\d+)_(\d+)`)
+	vkVideoEmbedRe = regexp.MustCompile(`(?i)^(?:https?://)?(?:[\w-]+\.)*vk\.com/video_ext\.php\?(?:.+&)?oid=([^&]+)&id=(\d+)(?:&hash=([^&]*))?`)
 )
 
 func normalizeHost(host string) string {
@@ -67,6 +74,11 @@ func isXnxxHost(host string) bool {
 	return strings.HasPrefix(host, "xnxx.") || host == "xnxx.com"
 }
 
+func isVKVideoHost(host string) bool {
+	return strings.HasPrefix(host, "vk.") || host == "vk.com" ||
+		strings.HasPrefix(host, "vkvideo.") || host == "vkvideo.ru"
+}
+
 // Parse converts a page or embed URL into an iframe src URL and site name.
 func Parse(rawURL string) (iframeSrc string, site Site, err error) {
 	rawURL = strings.TrimSpace(rawURL)
@@ -95,8 +107,22 @@ func Parse(rawURL string) (iframeSrc string, site Site, err error) {
 		return parseXHamster(normalized)
 	case isXnxxHost(host):
 		return parseXnxx(normalized)
+	case isVKVideoHost(host):
+		return parseVKVideo(normalized)
+	case isPvvStreamHost(host), isPornzogHost(host):
+		return parseJWPlayerPage(normalized)
+	case isVJavHost(host):
+		return parseVJavPage(normalized)
+	case isEpornerHost(host):
+		return parseEpornerPage(normalized)
+	case isTNAFlixHost(host):
+		return parseTNAFlixPage(normalized)
+	case isNewgroundsHost(host):
+		return parseNewgroundsPage(normalized)
+	case isDirectMediaURL(parsed):
+		return parseDirectMedia(normalized)
 	default:
-		return "", "", ErrUnsupportedSite
+		return parsePlayerJSPage(normalized)
 	}
 }
 
@@ -149,13 +175,24 @@ func parseXVideos(raw string) (string, Site, error) {
 }
 
 func parseXHamster(raw string) (string, Site, error) {
-	if m := xhamsterEmbedRe.FindStringSubmatch(raw); len(m) == 2 {
-		return "https://xhamster.com/xembed.php?video=" + m[1], SiteXHamster, nil
+	if m := xhamsterEmbedPathRe.FindStringSubmatch(raw); len(m) == 2 {
+		return xhamsterEmbedURL(m[1]), SiteXHamster, nil
+	}
+	if m := xhamsterEmbedQueryRe.FindStringSubmatch(raw); len(m) == 2 {
+		return xhamsterEmbedURL(m[1]), SiteXHamster, nil
 	}
 	if m := xhamsterPageRe.FindStringSubmatch(raw); len(m) == 2 {
-		return "https://xhamster.com/xembed.php?video=" + m[1], SiteXHamster, nil
+		return xhamsterEmbedURL(m[1]), SiteXHamster, nil
 	}
 	return "", SiteXHamster, ErrInvalidURL
+}
+
+func xhamsterEmbedURL(id string) string {
+	id = strings.TrimSpace(id)
+	if strings.HasPrefix(strings.ToLower(id), "xh") {
+		return "https://xhamster.com/embed/" + id
+	}
+	return "https://xhamster.com/xembed.php?video=" + id
 }
 
 func parseXnxx(raw string) (string, Site, error) {
@@ -165,7 +202,39 @@ func parseXnxx(raw string) (string, Site, error) {
 	if m := xnxxPageRe.FindStringSubmatch(raw); len(m) == 2 {
 		return "https://www.xnxx.com/embedframe/" + m[1], SiteXnxx, nil
 	}
+	if m := xnxxPageNumRe.FindStringSubmatch(raw); len(m) == 2 {
+		return "https://www.xnxx.com/embedframe/" + m[1], SiteXnxx, nil
+	}
 	return "", SiteXnxx, ErrInvalidURL
+}
+
+func parseVKVideo(raw string) (string, Site, error) {
+	if m := vkVideoEmbedRe.FindStringSubmatch(raw); len(m) >= 3 {
+		oid := m[1]
+		id := m[2]
+		hash := ""
+		if len(m) >= 4 {
+			hash = m[3]
+		}
+		return "https://vk.com/video_ext.php?oid=" + oid + "&id=" + id + "&hash=" + hash, SiteVKVideo, nil
+	}
+	if m := vkVideoPageRe.FindStringSubmatch(raw); len(m) == 3 {
+		oid := m[1]
+		id := m[2]
+		return "https://vk.com/video_ext.php?oid=" + oid + "&id=" + id + "&hash=", SiteVKVideo, nil
+	}
+	return "", SiteVKVideo, ErrInvalidURL
+}
+
+// VKVideoViewPageURL returns the video page URL from a VK Video embed or page URL.
+func VKVideoViewPageURL(rawURL string) string {
+	if m := vkVideoEmbedRe.FindStringSubmatch(rawURL); len(m) == 3 {
+		return "https://vk.com/video" + m[1] + "_" + m[2]
+	}
+	if m := vkVideoPageRe.FindStringSubmatch(rawURL); len(m) == 3 {
+		return "https://vk.com/video" + m[1] + "_" + m[2]
+	}
+	return ""
 }
 
 // Supported returns true if the URL belongs to a supported host.
@@ -194,6 +263,8 @@ func ApplyStartTime(src string, site Site, startSeconds float64) string {
 		// but keep the parameter for hosts that honor it.
 		q.Set("t", formatPornHubStartTime(startSeconds))
 	case SiteXVideos, SiteXHamster, SiteXnxx:
+		q.Set("t", strconv.Itoa(start))
+	case SiteVKVideo:
 		q.Set("t", strconv.Itoa(start))
 	}
 

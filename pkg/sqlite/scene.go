@@ -34,22 +34,24 @@ func performerIDsJSON(performerIDs []int) interface{} {
 }
 
 const (
-	sceneTable             = "scenes"
-	scenesFilesTable       = "scenes_files"
-	sceneIDColumn          = "scene_id"
-	performersScenesTable  = "performers_scenes"
-	scenesTagsTable        = "scenes_tags"
-	scenesGalleriesTable   = "scenes_galleries"
-	groupsScenesTable      = "groups_scenes"
-	scenesURLsTable        = "scene_urls"
-	sceneURLColumn         = "url"
-	scenesViewDatesTable   = "scenes_view_dates"
-	sceneViewDateColumn    = "view_date"
-	scenesODatesTable      = "scenes_o_dates"
-	sceneODateColumn       = "o_date"
-	scenesOMGDatesTable    = "scenes_omg_dates"
-	sceneOMGDateColumn     = "omg_date"
-	sceneSimilaritiesTable = "scene_similarities"
+	sceneTable              = "scenes"
+	scenesFilesTable        = "scenes_files"
+	sceneIDColumn           = "scene_id"
+	performersScenesTable   = "performers_scenes"
+	scenesTagsTable         = "scenes_tags"
+	scenesGalleriesTable    = "scenes_galleries"
+	groupsScenesTable       = "groups_scenes"
+	scenesURLsTable         = "scene_urls"
+	sceneURLColumn          = "url"
+	scenesViewDatesTable    = "scenes_view_dates"
+	sceneViewDateColumn     = "view_date"
+	scenesODatesTable       = "scenes_o_dates"
+	sceneODateColumn        = "o_date"
+	scenesOMGDatesTable     = "scenes_omg_dates"
+	sceneOMGDateColumn      = "omg_date"
+	scenesWatchLaterTable   = "scenes_watch_later"
+	sceneWatchLaterAtColumn = "added_at"
+	sceneSimilaritiesTable  = "scene_similarities"
 
 	sceneCoverBlobColumn = "cover_blob"
 )
@@ -102,6 +104,7 @@ type sceneRow struct {
 	// expressed as 1-100
 	Rating                  null.Int    `db:"rating"`
 	Organized               bool        `db:"organized"`
+	Classified              bool        `db:"classified"`
 	Pinned                  bool        `db:"pinned"`
 	IsBroken                bool        `db:"is_broken"`
 	IsNotBroken             bool        `db:"is_not_broken"`
@@ -141,6 +144,7 @@ func (r *sceneRow) fromScene(o models.Scene) {
 	r.ShootDateDisplay = zero.StringFromPtr(o.ShootDateDisplay)
 	r.Rating = intFromPtr(o.Rating)
 	r.Organized = o.Organized
+	r.Classified = o.Classified
 	r.Pinned = o.Pinned
 	r.IsBroken = o.IsBroken
 	r.IsNotBroken = o.IsNotBroken
@@ -196,6 +200,7 @@ func (r *sceneQueryRow) resolve() *models.Scene {
 		ShootDateDisplay:        zeroStringPtr(r.ShootDateDisplay),
 		Rating:                  nullIntPtr(r.Rating),
 		Organized:               r.Organized,
+		Classified:              r.Classified,
 		Pinned:                  r.Pinned,
 		IsBroken:                r.IsBroken,
 		IsNotBroken:             r.IsNotBroken,
@@ -259,6 +264,7 @@ func (r *sceneRowRecord) fromPartial(o models.ScenePartial) {
 	r.setNullString("shoot_date_display", o.ShootDateDisplay)
 	r.setNullInt("rating", o.Rating)
 	r.setBool("organized", o.Organized)
+	r.setBool("classified", o.Classified)
 	r.setBool("pinned", o.Pinned)
 	r.setBool("is_broken", o.IsBroken)
 	r.setBool("is_not_broken", o.IsNotBroken)
@@ -360,6 +366,7 @@ type SceneStore struct {
 	omgDateManager
 	omgCounterManager
 	viewDateManager
+	watchLaterManager
 
 	repo *storeRepository
 }
@@ -376,6 +383,7 @@ func NewSceneStore(r *storeRepository, blobStore *BlobStore) *SceneStore {
 		oDateManager:      oDateManager{scenesOTableMgr},
 		omgDateManager:    omgDateManager{scenesOMGTableMgr},
 		omgCounterManager: omgCounterManager{sceneTableMgr},
+		watchLaterManager: watchLaterManager{tableMgr: scenesWatchLaterTableMgr},
 		repo:              r,
 	}
 }
@@ -448,14 +456,13 @@ func (qb *SceneStore) Create(ctx context.Context, newObject *models.Scene, fileI
 		}
 	}
 
-	if newObject.PerformerIDs.Loaded() {
-		if err := sceneRepository.performers.insert(ctx, id, newObject.PerformerIDs.List()...); err != nil {
-			return err
-		}
-	}
-
+	// scene_performers supersedes performer_ids; both write to performers_scenes
 	if newObject.ScenePerformers.Loaded() {
 		if err := scenesPerformersTableMgr.insertJoins(ctx, id, newObject.ScenePerformers.List()); err != nil {
+			return err
+		}
+	} else if newObject.PerformerIDs.Loaded() {
+		if err := sceneRepository.performers.insert(ctx, id, newObject.PerformerIDs.List()...); err != nil {
 			return err
 		}
 	}
@@ -519,13 +526,12 @@ func (qb *SceneStore) UpdatePartial(ctx context.Context, id int, partial models.
 			return nil, err
 		}
 	}
-	if partial.PerformerIDs != nil {
-		if err := sceneRepository.performers.modifyJoins(ctx, id, partial.PerformerIDs.IDs, partial.PerformerIDs.Mode); err != nil {
-			return nil, err
-		}
-	}
 	if partial.ScenePerformers != nil {
 		if err := scenesPerformersTableMgr.replaceJoins(ctx, id, partial.ScenePerformers.ScenePerformers); err != nil {
+			return nil, err
+		}
+	} else if partial.PerformerIDs != nil {
+		if err := sceneRepository.performers.modifyJoins(ctx, id, partial.PerformerIDs.IDs, partial.PerformerIDs.Mode); err != nil {
 			return nil, err
 		}
 	}
@@ -577,14 +583,12 @@ func (qb *SceneStore) Update(ctx context.Context, updatedObject *models.Scene) e
 		}
 	}
 
-	if updatedObject.PerformerIDs.Loaded() {
-		if err := sceneRepository.performers.replace(ctx, updatedObject.ID, updatedObject.PerformerIDs.List()); err != nil {
-			return err
-		}
-	}
-
 	if updatedObject.ScenePerformers.Loaded() {
 		if err := scenesPerformersTableMgr.replaceJoins(ctx, updatedObject.ID, updatedObject.ScenePerformers.List()); err != nil {
+			return err
+		}
+	} else if updatedObject.PerformerIDs.Loaded() {
+		if err := sceneRepository.performers.replace(ctx, updatedObject.ID, updatedObject.PerformerIDs.List()); err != nil {
 			return err
 		}
 	}
@@ -1316,6 +1320,7 @@ var sceneSortOptions = sortOptions{
 	"o_omg_counter",
 	"omg_counter",
 	"organized",
+	"classified",
 	"performer_count",
 	"play_count",
 	"play_duration",
@@ -1640,6 +1645,17 @@ func (qb *SceneStore) AssignFiles(ctx context.Context, sceneID int, fileIDs []mo
 
 	firstPrimary := len(existingFileIDs) == 0
 	return scenesFilesTableMgr.insertJoins(ctx, sceneID, firstPrimary, fileIDs)
+}
+
+func (qb *SceneStore) RemoveFile(ctx context.Context, sceneID int, fileID models.FileID) error {
+	q := dialect.Delete(scenesFilesTableMgr.table.table).Where(
+		scenesFilesTableMgr.idColumn.Eq(sceneID),
+		scenesFilesTableMgr.table.table.Col("file_id").Eq(fileID),
+	)
+	if _, err := exec(ctx, q); err != nil {
+		return fmt.Errorf("removing file %d from scene %d: %w", fileID, sceneID, err)
+	}
+	return nil
 }
 
 func (qb *SceneStore) GetGroups(ctx context.Context, id int) (ret []models.GroupsScenes, err error) {

@@ -127,6 +127,7 @@ export type CriterionType =
   | "path"
   | "rating100"
   | "organized"
+  | "classified"
   | "o_counter"
   | "omg_counter"
   | "resolution"

@@ -38,13 +38,28 @@ func setPerformerImage(ctx context.Context, client *http.Client, p *models.Scrap
 }
 
 func setSceneImage(ctx context.Context, client *http.Client, s *models.ScrapedScene, globalConfig GlobalConfig) error {
+	return setSceneImageWithReferer(ctx, client, s, globalConfig, "")
+}
+
+func setSceneImageWithReferer(ctx context.Context, client *http.Client, s *models.ScrapedScene, globalConfig GlobalConfig, referer string) error {
 	// don't try to get the image if it doesn't appear to be a URL
 	if s.Image == nil || !strings.HasPrefix(*s.Image, "http") {
 		// nothing to do
 		return nil
 	}
 
-	img, err := getImage(ctx, *s.Image, client, globalConfig)
+	g := imageGetter{
+		client:       client,
+		globalConfig: globalConfig,
+	}
+	if referer != "" {
+		ref := referer
+		g.requestModifier = func(req *http.Request) {
+			req.Header.Set("Referer", ref)
+		}
+	}
+
+	img, err := g.getImage(ctx, *s.Image)
 	if err != nil {
 		return err
 	}
@@ -52,6 +67,12 @@ func setSceneImage(ctx context.Context, client *http.Client, s *models.ScrapedSc
 	s.Image = img
 
 	return nil
+}
+
+// DownloadScrapedSceneImage downloads a remote scene image URL into a base64
+// data URL. referer should be the scene page URL when CDNs enforce hotlinking.
+func (c Cache) DownloadScrapedSceneImage(ctx context.Context, s *models.ScrapedScene, referer string) error {
+	return setSceneImageWithReferer(ctx, c.client, s, c.globalConfig, referer)
 }
 
 func setMovieFrontImage(ctx context.Context, client *http.Client, m *models.ScrapedMovie, globalConfig GlobalConfig) error {
@@ -129,6 +150,7 @@ type imageGetter struct {
 }
 
 func (i *imageGetter) getImage(ctx context.Context, url string) (*string, error) {
+	url = utils.SanitizeImageURL(url)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

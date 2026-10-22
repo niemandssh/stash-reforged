@@ -9,6 +9,7 @@ import useFocus from "src/utils/focus";
 import ScreenUtils from "src/utils/screen";
 import Mousetrap from "mousetrap";
 import { Button } from "react-bootstrap";
+import { useHotkey } from "src/hooks/hotkeys";
 
 export const FilteredSidebarHeader: React.FC<{
   sidebarOpen: boolean;
@@ -68,9 +69,12 @@ export function useFilteredSidebarKeybinds(props: {
 }) {
   const { showSidebar, setShowSidebar } = props;
 
+  const focusSearchHotkey = useHotkey("list.focusSearch");
+  const closeSidebarHotkey = useHotkey("list.closeSidebar");
+
   // Show the sidebar when the user presses the "/" key
   useEffect(() => {
-    Mousetrap.bind("/", (e) => {
+    Mousetrap.bind(focusSearchHotkey, (e) => {
       if (!showSidebar) {
         setShowSidebar(true);
         e.preventDefault();
@@ -78,13 +82,13 @@ export function useFilteredSidebarKeybinds(props: {
     });
 
     return () => {
-      Mousetrap.unbind("/");
+      Mousetrap.unbind(focusSearchHotkey);
     };
-  }, [showSidebar, setShowSidebar]);
+  }, [showSidebar, setShowSidebar, focusSearchHotkey]);
 
-  // Hide the sidebar when the user presses the "Esc" key
+  // Hide the sidebar when the user presses the close-sidebar hotkey
   useEffect(() => {
-    Mousetrap.bind("esc", (e) => {
+    Mousetrap.bind(closeSidebarHotkey, (e) => {
       if (showSidebar) {
         setShowSidebar(false);
         e.preventDefault();
@@ -92,7 +96,7 @@ export function useFilteredSidebarKeybinds(props: {
     });
 
     return () => {
-      Mousetrap.unbind("esc");
+      Mousetrap.unbind(closeSidebarHotkey);
     };
-  }, [showSidebar, setShowSidebar]);
+  }, [showSidebar, setShowSidebar, closeSidebarHotkey]);
 }

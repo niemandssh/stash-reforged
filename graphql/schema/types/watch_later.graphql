@@ -1,0 +1,14 @@
+type WatchLaterEntry {
+  scene: Scene!
+  addedAt: Time!
+}
+
+type WatchLaterResult {
+  count: Int!
+  items: [WatchLaterEntry!]!
+}
+
+type WatchLaterMutationResult {
+  watchLater: Boolean!
+  addedAt: Time
+}

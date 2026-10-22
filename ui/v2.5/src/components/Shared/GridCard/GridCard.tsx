@@ -20,6 +20,7 @@ interface ICardProps {
   className?: string;
   linkClassName?: string;
   thumbnailSectionClassName?: string;
+  style?: React.CSSProperties;
   width?: number;
   url: string;
   pretitleIcon?: JSX.Element;
@@ -110,6 +111,43 @@ export function useCardWidth(
     return fittedCardWidth;
   }, [containerWidth, zoomIndex, zoomWidths]);
 }
+
+function isExternalUrl(url: string) {
+  return /^https?:\/\//i.test(url);
+}
+
+const CardLink: React.FC<{
+  url: string;
+  className?: string;
+  onClick?: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+  children: React.ReactNode;
+}> = ({ url, className, onClick, children }) => {
+  if (isExternalUrl(url)) {
+    return (
+      <a
+        href={url}
+        className={className}
+        onClick={onClick}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      to={url}
+      className={className}
+      onClick={onClick}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {children}
+    </Link>
+  );
+};
 
 const Checkbox: React.FC<{
   selected?: boolean;
@@ -228,11 +266,12 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       {...dragProps}
-      style={
-        props.width && !ScreenUtils.isMobile()
+      style={{
+        ...(props.width && !ScreenUtils.isMobile()
           ? { width: `${props.width}px` }
-          : {}
-      }
+          : {}),
+        ...props.style,
+      }}
     >
       {moveTarget !== undefined && <MoveTarget dragSide={moveTarget} />}
       <Controls>
@@ -249,26 +288,19 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
       </Controls>
 
       <div className={cx(props.thumbnailSectionClassName, "thumbnail-section")}>
-        <Link
-          to={props.url}
+        <CardLink
+          url={props.url}
           className={props.linkClassName}
           onClick={handleImageClick}
-          target="_blank"
-          rel="noopener noreferrer"
         >
           {props.image}
-        </Link>
+        </CardLink>
         {props.overlays}
         {maybeRenderProgressBar()}
       </div>
       {maybeRenderInteractiveHeatmap()}
       <div className="card-section">
-        <Link
-          to={props.url}
-          onClick={handleImageClick}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <CardLink url={props.url} onClick={handleImageClick}>
           <h5 className="card-section-title flex-aligned">
             {props.pretitleIcon}
             <TruncatedText text={props.title} lineCount={2} />
@@ -282,7 +314,7 @@ export const GridCard: React.FC<ICardProps> = (props: ICardProps) => {
               </span>
             )}
           </h5>
-        </Link>
+        </CardLink>
         {props.details}
       </div>
 

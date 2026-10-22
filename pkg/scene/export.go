@@ -49,6 +49,7 @@ func ToBasicJSON(ctx context.Context, reader ExportGetter, scene *models.Scene) 
 	}
 
 	newSceneJSON.Organized = scene.Organized
+	newSceneJSON.Classified = scene.Classified
 
 	for _, f := range scene.Files.List() {
 		newSceneJSON.Files = append(newSceneJSON.Files, f.Base().Path)

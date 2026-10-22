@@ -53,8 +53,23 @@ func IsAllowedProxyURL(rawURL string) bool {
 	return strings.HasSuffix(host, "phncdn.com") ||
 		strings.Contains(host, "pornhub.") ||
 		strings.HasSuffix(host, "xvideos-cdn.com") ||
+		strings.HasSuffix(host, "eporner.com") ||
+		strings.HasSuffix(host, "tnaflix.com") ||
+		strings.HasSuffix(host, "xhcdn.com") ||
 		strings.Contains(host, "xhamster.") ||
-		strings.Contains(host, "xnxx.")
+		strings.HasSuffix(host, "xnxx-cdn.com") ||
+		strings.Contains(host, "xnxx.") ||
+		strings.HasSuffix(host, "vkvideo.ru") ||
+		strings.HasSuffix(host, "userapi.com") ||
+		strings.Contains(host, "mycdn.me") ||
+		strings.Contains(host, "vk-cdn.") ||
+		strings.Contains(host, "vk.com") ||
+		strings.HasSuffix(host, "backblazeb2.com") ||
+		strings.Contains(host, "backblaze.com") ||
+		strings.Contains(host, "pvvstream.pro") ||
+		strings.HasSuffix(host, "ahcdn.com") ||
+		strings.Contains(host, "ungrounded.net") ||
+		strings.HasSuffix(host, "ngfiles.com")
 }
 
 // FetchStreamResource downloads a remote stream resource using browser-like headers.
@@ -64,7 +79,12 @@ func FetchStreamResource(rawURL string) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	return fetchStreamResourceForSite(rawURL, siteForProxyHost(parsed.Hostname()))
+	site := siteForProxyHost(parsed.Hostname())
+	if site == SiteVKVideo {
+		return fetchVKStreamResource(rawURL)
+	}
+
+	return fetchStreamResourceForSite(rawURL, site)
 }
 
 func IsM3U8Content(contentType, rawURL string) bool {
@@ -361,6 +381,9 @@ func VariantLabel(v HLSVariant) string {
 	}
 	if v.Bandwidth > 0 {
 		return fmt.Sprintf("%dk", v.Bandwidth/1000)
+	}
+	if IsProgressiveMediaURL(v.URL) {
+		return "MP4"
 	}
 	return "HLS"
 }

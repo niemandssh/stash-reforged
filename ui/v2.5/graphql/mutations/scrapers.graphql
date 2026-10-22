@@ -2,6 +2,10 @@ mutation ReloadScrapers {
   reloadScrapers
 }
 
+mutation StartRemoteSceneSuggestions($input: RemoteSceneSuggestionsInput!) {
+  startRemoteSceneSuggestions(input: $input)
+}
+
 mutation InstallScraperPackages($packages: [PackageSpecInput!]!) {
   installPackages(type: Scraper, packages: $packages)
 }

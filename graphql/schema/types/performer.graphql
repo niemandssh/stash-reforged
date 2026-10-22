@@ -5,6 +5,7 @@ enum GenderEnum {
   TRANSGENDER_FEMALE
   INTERSEX
   NON_BINARY
+  COUPLE
 }
 
 enum CircumisedEnum {
@@ -189,6 +190,13 @@ input BulkPerformerUpdateInput {
 
 input PerformerDestroyInput {
   id: ID!
+}
+
+input PerformersMergeInput {
+  source: [ID!]!
+  destination: ID!
+  # values defined here will override values in the destination
+  values: PerformerUpdateInput
 }
 
 type FindPerformersResultType {

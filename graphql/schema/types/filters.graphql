@@ -246,8 +246,12 @@ input SceneFilterType {
   rating100: IntCriterionInput
   "Filter by organized"
   organized: Boolean
+  "Filter by classified"
+  classified: Boolean
   "Filter by pinned"
   pinned: Boolean
+  "Filter by watch later"
+  watch_later: Boolean
   "Filter scenes that have start_time and/or end_time set (need trimming)"
   has_trim_times: Boolean
   "Filter by is_trimmed"
@@ -302,6 +306,8 @@ input SceneFilterType {
   performer_count: IntCriterionInput
   "Filter by StashID"
   stash_id_endpoint: StashIDCriterionInput
+  "Filter by embed url"
+  embed_url: StringCriterionInput
   "Filter by url"
   url: StringCriterionInput
   "Filter by interactive"

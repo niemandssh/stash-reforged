@@ -76,6 +76,11 @@ function appendStartParam(url: URL, startSeconds: number): void {
     return;
   }
 
+  if (host.includes("vk.com") || host.includes("vkvideo")) {
+    url.searchParams.set("t", String(Math.round(startSeconds)));
+    return;
+  }
+
   url.searchParams.set("t", String(Math.round(startSeconds)));
 }
 

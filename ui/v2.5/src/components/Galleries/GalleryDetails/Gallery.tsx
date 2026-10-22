@@ -24,6 +24,7 @@ import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
 import { Icon } from "src/components/Shared/Icon";
 import { Counter } from "src/components/Shared/Counter";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { useGalleryLightbox } from "src/hooks/Lightbox/hooks";
 import { useToast } from "src/hooks/Toast";
 import { OrganizedButton } from "src/components/Scenes/SceneDetails/OrganizedButton";
@@ -383,32 +384,50 @@ export const GalleryPage: React.FC<IProps> = ({ gallery, add }) => {
     });
   }
 
+  const ratingTriggerHotkey = useHotkey("rating.trigger");
+  const tabDetailsHotkey = useHotkey("detail.tabDetails");
+  const tabChaptersHotkey = useHotkey("gallery.tabChapters");
+  const tabHistoryHotkey = useHotkey("detail.tabHistory");
+  const tabEditHotkey = useHotkey("detail.tabEdit");
+  const tabFileInfoHotkey = useHotkey("detail.tabFileInfo");
+  const incrementOHotkey = useHotkey("detail.incrementO");
+  const toggleSidebarHotkey = useHotkey("detail.toggleSidebar");
+
   useRatingKeybinds(
     true,
     configuration?.ui.ratingSystemOptions?.type,
-    setRating
+    setRating,
+    ratingTriggerHotkey
   );
 
   // set up hotkeys
   useEffect(() => {
-    Mousetrap.bind("a", () => setActiveTabKey("gallery-details-panel"));
-    Mousetrap.bind("c", () => setActiveTabKey("gallery-chapter-panel"));
-    Mousetrap.bind("h", () => setActiveTabKey("gallery-history-panel"));
-    Mousetrap.bind("e", () => setActiveTabKey("gallery-edit-panel"));
-    Mousetrap.bind("f", () => setActiveTabKey("gallery-file-info-panel"));
-    Mousetrap.bind("o", () => {
+    Mousetrap.bind(tabDetailsHotkey, () =>
+      setActiveTabKey("gallery-details-panel")
+    );
+    Mousetrap.bind(tabChaptersHotkey, () =>
+      setActiveTabKey("gallery-chapter-panel")
+    );
+    Mousetrap.bind(tabHistoryHotkey, () =>
+      setActiveTabKey("gallery-history-panel")
+    );
+    Mousetrap.bind(tabEditHotkey, () => setActiveTabKey("gallery-edit-panel"));
+    Mousetrap.bind(tabFileInfoHotkey, () =>
+      setActiveTabKey("gallery-file-info-panel")
+    );
+    Mousetrap.bind(incrementOHotkey, () => {
       onIncrementOClick();
     });
-    Mousetrap.bind(",", () => setCollapsed(!collapsed));
+    Mousetrap.bind(toggleSidebarHotkey, () => setCollapsed(!collapsed));
 
     return () => {
-      Mousetrap.unbind("a");
-      Mousetrap.unbind("c");
-      Mousetrap.unbind("h");
-      Mousetrap.unbind("e");
-      Mousetrap.unbind("f");
-      Mousetrap.unbind("o");
-      Mousetrap.unbind(",");
+      Mousetrap.unbind(tabDetailsHotkey);
+      Mousetrap.unbind(tabChaptersHotkey);
+      Mousetrap.unbind(tabHistoryHotkey);
+      Mousetrap.unbind(tabEditHotkey);
+      Mousetrap.unbind(tabFileInfoHotkey);
+      Mousetrap.unbind(incrementOHotkey);
+      Mousetrap.unbind(toggleSidebarHotkey);
     };
   });
 

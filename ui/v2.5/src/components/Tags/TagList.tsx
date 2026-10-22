@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import cloneDeep from "lodash-es/cloneDeep";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { DisplayMode } from "src/models/list-filter/types";
 import { ItemList, ItemListContext, showWhenSelected } from "../List/ItemList";
@@ -79,16 +80,18 @@ export const TagList: React.FC<ITagList> = ({ filterHook, alterQuery }) => {
     },
   ];
 
+  const playRandomHotkey = useHotkey("list.playRandom");
+
   function addKeybinds(
     result: GQL.FindTagsQueryResult,
     filter: ListFilterModel
   ) {
-    Mousetrap.bind("p r", () => {
+    Mousetrap.bind(playRandomHotkey, () => {
       viewRandom(result, filter);
     });
 
     return () => {
-      Mousetrap.unbind("p r");
+      Mousetrap.unbind(playRandomHotkey);
     };
   }
 

@@ -9,6 +9,7 @@ import { flushSync } from "react-dom";
 import { FormattedMessage, useIntl } from "react-intl";
 import { Button, Form, Col, Row, ButtonGroup } from "react-bootstrap";
 import Mousetrap from "mousetrap";
+import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
 import * as yup from "yup";
 import {
@@ -18,6 +19,7 @@ import {
   mutateReloadScrapers,
   queryScrapeSceneQueryFragment,
   queryFindTags,
+  queryFindStudioByAlias,
 } from "src/core/StashService";
 import { Icon } from "src/components/Shared/Icon";
 import { LoadingIndicator } from "src/components/Shared/LoadingIndicator";
@@ -29,7 +31,7 @@ import { useTrimContext } from "src/contexts/TrimContext";
 import ImageUtils from "src/utils/image";
 import { getStashIDs } from "src/utils/stashIds";
 import { useFormik } from "formik";
-import { Prompt, useHistory } from "react-router-dom";
+import { Link, Prompt, useHistory, useLocation } from "react-router-dom";
 import { ConfigurationContext } from "src/hooks/Config";
 import { ListFilterModel } from "src/models/list-filter/filter";
 import { IGroupEntry, SceneGroupTable } from "./SceneGroupTable";
@@ -170,7 +172,15 @@ export const SceneEditPanel: React.FC<IProps> = ({
     setHasUserInteractedWithPerformerTags,
   ] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [scrapeAfterCreate, setScrapeAfterCreate] = useState(true);
   const isMountedRef = useRef(true);
+
+  const [duplicateEmbedScenes, setDuplicateEmbedScenes] = useState<
+    GQL.SelectSceneDataFragment[]
+  >([]);
+  const [checkEmbedDuplicate] = GQL.useFindScenesByEmbedUrlLazyQuery();
+
+  const location = useLocation();
 
   useEffect(() => {
     return () => {
@@ -267,6 +277,27 @@ export const SceneEditPanel: React.FC<IProps> = ({
       setHasInitialized(true);
     }
   }, [isVisible, hasInitialized]);
+
+  // Auto-scrape: triggered when navigating with ?autoEdit=true&scrapeUrl=url
+  useEffect(() => {
+    if (isNew) return;
+
+    const params = new URLSearchParams(location.search);
+    const scrapeUrl = params.get("scrapeUrl");
+    if (!scrapeUrl) return;
+
+    // Clean up params so it doesn't re-trigger
+    const newParams = new URLSearchParams(location.search);
+    newParams.delete("autoEdit");
+    newParams.delete("scrapeUrl");
+    history.replace({
+      ...location,
+      search: newParams.toString() ? `?${newParams.toString()}` : "",
+    });
+
+    // Trigger scrape — same function the URL scrape button calls
+    onScrapeSceneURL(scrapeUrl);
+  }, [isNew]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { trimEnabled, setTrimEnabled } = useTrimContext();
 
@@ -747,14 +778,17 @@ export const SceneEditPanel: React.FC<IProps> = ({
     formik.setFieldTouched("tag_ids", true);
   }
 
+  const editSaveHotkey = useHotkey("edit.save");
+  const entityDeleteHotkey = useHotkey("entity.delete");
+
   useEffect(() => {
     if (isVisible) {
-      Mousetrap.bind("s s", () => {
+      Mousetrap.bind(editSaveHotkey, () => {
         if (formik.dirty) {
           formik.submitForm();
         }
       });
-      Mousetrap.bind("d d", () => {
+      Mousetrap.bind(entityDeleteHotkey, () => {
         if (onDelete) {
           onDelete();
         }
@@ -775,8 +809,8 @@ export const SceneEditPanel: React.FC<IProps> = ({
       document.addEventListener("keydown", handleGlobalKeyDown, true);
 
       return () => {
-        Mousetrap.unbind("s s");
-        Mousetrap.unbind("d d");
+        Mousetrap.unbind(editSaveHotkey);
+        Mousetrap.unbind(entityDeleteHotkey);
         document.removeEventListener("keydown", handleGlobalKeyDown, true);
       };
     }
@@ -852,6 +886,11 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
       const embedURL = input.embed_url?.trim() ? input.embed_url.trim() : null;
 
+      // Auto-duplicate embed URL to urls if urls is empty (for new scenes)
+      if (isNew && embedURL && (!inputWithoutScenePerformers.urls || inputWithoutScenePerformers.urls.length === 0)) {
+        inputWithoutScenePerformers.urls = [embedURL];
+      }
+
       let newSceneId: string | void;
 
       if (isNew) {
@@ -880,6 +919,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
         };
 
         newSceneId = await onSubmit(createInput);
+
       } else {
         const inputWithPerformerTags: GQL.SceneUpdateInput = {
           ...inputWithoutScenePerformers,
@@ -914,7 +954,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
         setHasUserInteractedWithPerformerTags(false);
 
         if (isNew && newSceneId) {
-          history.push(`/scenes/${newSceneId}`);
+          const navUrl = `/scenes/${newSceneId}`;
+
+          if (
+            scrapeAfterCreate &&
+            inputWithoutScenePerformers.urls &&
+            inputWithoutScenePerformers.urls.length > 0
+          ) {
+            history.push(
+              `${navUrl}?autoEdit=true&scrapeUrl=${encodeURIComponent(
+                inputWithoutScenePerformers.urls[0]
+              )}`
+            );
+          } else {
+            history.push(navUrl);
+          }
           return;
         }
 
@@ -1039,10 +1093,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
       return;
     }
 
-    const currentScene = {
-      id: scene.id!,
-      ...formik.values,
-    };
+    const currentScene = { id: scene.id!, ...formik.values };
 
     if (!currentScene.cover_image) {
       currentScene.cover_image = scene.paths?.screenshot;
@@ -1484,6 +1535,93 @@ export const SceneEditPanel: React.FC<IProps> = ({
     }
   }, [allSceneTags, formik.values.performer_tag_ids, onTagsChange]);
 
+  // Helper to try detecting studio from a URL
+  const tryDetectStudioFromUrl = useCallback((url: string) => {
+    if (!url) return;
+    try {
+      const parsedUrl = new URL(url);
+      let hostname = parsedUrl.hostname;
+      if (!hostname) return;
+
+      // Strip www. prefix for broader matching
+      const strippedHostname = hostname.replace(/^www\./, "");
+
+      // Also extract main domain (last two parts) as a fallback
+      const parts = strippedHostname.split(".");
+      const mainDomain =
+        parts.length >= 2 ? parts.slice(-2).join(".") : strippedHostname;
+
+      // Try to match by hostname against studio aliases or name
+      const currentStudioId = formik.values.studio_id;
+      queryFindStudioByAlias(hostname, strippedHostname, mainDomain).then(
+        (foundStudio) => {
+          if (
+            foundStudio &&
+            isMountedRef.current &&
+            !currentStudioId
+          ) {
+            onSetStudio({
+              id: foundStudio.id,
+              name: foundStudio.name,
+              aliases: foundStudio.aliases ?? [],
+            });
+          }
+        }
+      );
+    } catch {
+      // Invalid URL, skip
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Detect studio from the last URL in the list
+  useEffect(() => {
+    const urls = formik.values.urls;
+    if (!urls || urls.length === 0) return;
+
+    const lastUrl = urls[urls.length - 1];
+    if (lastUrl) {
+      tryDetectStudioFromUrl(lastUrl);
+    }
+  }, [formik.values.urls, tryDetectStudioFromUrl]);
+
+  // Detect studio from embed URL
+  useEffect(() => {
+    if (formik.values.embed_url) {
+      tryDetectStudioFromUrl(formik.values.embed_url);
+    }
+  }, [formik.values.embed_url, tryDetectStudioFromUrl]);
+
+  // Debounced check for duplicate embed URLs in other scenes
+  useEffect(() => {
+    const embedUrl = formik.values.embed_url?.trim();
+
+    if (!embedUrl) {
+      setDuplicateEmbedScenes([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await checkEmbedDuplicate({
+          variables: { embed_url: embedUrl },
+        });
+
+        if (data?.findScenes?.scenes) {
+          // Filter out the current scene being edited
+          const otherScenes = data.findScenes.scenes.filter(
+            (s) => s.id !== scene.id
+          );
+          setDuplicateEmbedScenes(otherScenes);
+        }
+      } catch {
+        // Silently ignore errors
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [formik.values.embed_url, checkEmbedDuplicate, scene.id]);
+
   // Memoize performer tag fields to avoid unnecessary re-renders
   const performerTagFields = useMemo(() => {
     // Always use formik values to prevent overwriting user changes
@@ -1608,6 +1746,21 @@ export const SceneEditPanel: React.FC<IProps> = ({
     };
 
     return renderInputField("details", "textarea", "details", props);
+  }
+
+  function renderScrapeAfterCreateField() {
+    if (!isNew) return null;
+    const title = "Scrape data from URL after create";
+    const control = (
+      <Form.Check
+        type="checkbox"
+        id="scrape-after-create"
+        checked={scrapeAfterCreate}
+        onChange={(e) => setScrapeAfterCreate(e.target.checked)}
+      />
+    );
+
+    return renderField("scrape-after-create", title, control);
   }
 
   function renderIsBrokenField() {
@@ -1777,6 +1930,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
           <Col lg={7} xl={12}>
             <div className="mb-n2">{renderInputField("title")}</div>
 
+            {renderDurationField("start_time", "start_time")}
+            {renderDurationField("end_time", "end_time")}
+
             {renderTagsField()}
 
             {performerTagFields}
@@ -1785,10 +1941,25 @@ export const SceneEditPanel: React.FC<IProps> = ({
 
             {renderPerformersField()}
             {renderURLListField("urls", onScrapeSceneURL, urlScrapable)}
+            {duplicateEmbedScenes.length > 0 && (
+              <div
+                className="alert alert-warning"
+                role="alert"
+                style={{ padding: "0.5rem 1rem", marginBottom: "0.5rem" }}
+              >
+                <FormattedMessage id="scene_embed_url.duplicate_warning" />:
+                <ul className="mb-0 mt-1" style={{ listStyle: "none", paddingLeft: 0 }}>
+                  {duplicateEmbedScenes.map((s) => (
+                    <li key={s.id}>
+                      <Link to={`/scenes/${s.id}`}>
+                        {s.title || s.id} (ID: {s.id})
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {renderInputField("embed_url", "url", "scene_embed_url")}
-
-            {renderDurationField("start_time", "start_time")}
-            {renderDurationField("end_time", "end_time")}
 
             {renderDateField("date", "release_date")}
             {renderDateField("shoot_date")}
@@ -1807,6 +1978,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
             )}
           </Col>
           <Col lg={5} xl={12}>
+            {renderScrapeAfterCreateField()}
             {renderIsBrokenField()}
             {renderIsNotBrokenField()}
             {renderIsTrimmedField()}

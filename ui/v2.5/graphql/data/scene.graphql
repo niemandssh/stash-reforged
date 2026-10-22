@@ -13,6 +13,7 @@ fragment SceneData on Scene {
   o_counter
   omgCounter
   organized
+  classified
   interactive
   interactive_speed
   captions {
@@ -40,6 +41,8 @@ fragment SceneData on Scene {
   last_played_at
   play_duration
   play_count
+  watch_later
+  watch_later_at
   start_time
   end_time
 
@@ -57,6 +60,8 @@ fragment SceneData on Scene {
     volume_level
     volume_muted
     vr_projection
+    vr_rotate_speed
+    vr_zoom_speed
   }
 
   video_transforms {
