@@ -96,6 +96,7 @@ interface IScrapedObjectsRow<T> {
   onChange: (value: ScrapeResult<T[]>) => void;
   newObjects?: T[];
   onCreateNew?: (value: T) => void;
+  onCreateAll?: () => void;
   renderObjects: (
     result: ScrapeResult<T[]>,
     isNew?: boolean,
@@ -113,6 +114,7 @@ export const ScrapedObjectsRow = <T,>(props: IScrapedObjectsRow<T>) => {
     onChange,
     newObjects,
     onCreateNew,
+    onCreateAll,
     renderObjects,
     getName,
     onMergeOriginalIntoNew,
@@ -134,6 +136,7 @@ export const ScrapedObjectsRow = <T,>(props: IScrapedObjectsRow<T>) => {
       onCreateNew={(i) => {
         if (onCreateNew) onCreateNew(newObjects![i]);
       }}
+      onCreateAll={onCreateAll}
       getName={getName}
       onMergeOriginalIntoNew={onMergeOriginalIntoNew}
       mergeOriginalTooltip={mergeOriginalTooltip}
@@ -276,7 +279,7 @@ export const ScrapedGroupsRow: React.FC<
 
 export const ScrapedTagsRow: React.FC<
   IScrapedObjectRowImpl<GQL.ScrapedTag>
-> = ({ title, result, onChange, newObjects, onCreateNew }) => {
+> = ({ title, result, onChange, newObjects, onCreateNew, onCreateAll }) => {
   const intl = useIntl();
 
   function mergeScrapedTags(
@@ -356,6 +359,7 @@ export const ScrapedTagsRow: React.FC<
       onChange={onChange}
       newObjects={newObjects}
       onCreateNew={onCreateNew}
+      onCreateAll={onCreateAll}
       getName={getObjectName}
       onMergeOriginalIntoNew={
         (result.originalValue?.length ?? 0) > 0

@@ -20,6 +20,7 @@ function offsetMiddleware(player: VideoJsPlayer) {
   let source: ISource;
   let offsetStart: number | undefined;
   let seeking = 0;
+  let loading = false;
 
   function initCues(cues: TextTrackCueList) {
     const offset = offsetStart ?? 0;
@@ -54,33 +55,32 @@ function offsetMiddleware(player: VideoJsPlayer) {
     }
   }
 
-  const loadSource = debounce(
-    (seconds: number) => {
-      const srcUrl = new URL(source.src);
-      srcUrl.searchParams.set("start", seconds.toString());
-      source.src = srcUrl.toString();
+  const onCanPlay = () => {
+    loading = false;
+    if (offsetStart !== undefined) {
+      updateOffsetStart(offsetStart - tech.currentTime());
+    }
+    if (seeking === 1 || tech.scrubbing()) {
+      tech.pause();
+    }
+    seeking = 0;
+  };
 
-      const poster = player.poster();
-      const playbackRate = tech.playbackRate();
-      seeking = tech.paused() ? 1 : 2;
-      player.poster("");
-      tech.setSource(source);
-      tech.setPlaybackRate(playbackRate);
-      tech.one("canplay", () => {
-        player.poster(poster);
-        if (seeking === 1 || tech.scrubbing()) {
-          tech.pause();
-        }
-        seeking = 0;
-      });
-      tech.trigger("timeupdate");
-      tech.trigger("pause");
-      tech.trigger("seeking");
-      tech.play();
-    },
-    loadDelay,
-    { leading: true }
-  );
+  const loadSource = debounce((seconds: number) => {
+    const srcUrl = new URL(source.src);
+    srcUrl.searchParams.set("start", seconds.toString());
+    source.src = srcUrl.toString();
+
+    const poster = player.poster();
+    const playbackRate = tech.playbackRate();
+    player.poster("");
+    tech.off("canplay", onCanPlay);
+    tech.setSource(source);
+    tech.setPlaybackRate(playbackRate);
+    tech.one("canplay", () => player.poster(poster));
+    tech.one("canplay", onCanPlay);
+    tech.play();
+  }, loadDelay);
 
   return {
     setTech(newTech: videojs.Tech) {
@@ -128,6 +128,10 @@ function offsetMiddleware(player: VideoJsPlayer) {
       } else {
         updateOffsetStart(undefined);
       }
+      loadSource.cancel();
+      tech?.off("canplay", onCanPlay);
+      loading = false;
+      seeking = 0;
       source = srcObj;
       next(null, srcObj);
     },
@@ -140,6 +144,9 @@ function offsetMiddleware(player: VideoJsPlayer) {
     buffered(buffers: TimeRanges) {
       if (offsetStart === undefined) {
         return buffers;
+      }
+      if (loading) {
+        return videojs.createTimeRanges();
       }
 
       const timeRanges: number[][] = [];
@@ -155,6 +162,9 @@ function offsetMiddleware(player: VideoJsPlayer) {
       return videojs.createTimeRanges(timeRanges as any);
     },
     currentTime(seconds: number) {
+      if (loading && offsetStart !== undefined) {
+        return offsetStart;
+      }
       return (offsetStart ?? 0) + seconds;
     },
     setCurrentTime(seconds: number) {
@@ -162,24 +172,25 @@ function offsetMiddleware(player: VideoJsPlayer) {
         return seconds;
       }
 
-      const offsetSeconds = seconds - offsetStart;
-      const buffers = tech.buffered() as TimeRanges;
-      for (let i = 0; i < buffers.length; i++) {
-        const start = buffers.start(i);
-        const end = buffers.end(i);
-        // seek point is in buffer, just seek normally
-        if (start <= offsetSeconds && offsetSeconds <= end) {
-          console.log(
-            "SETCURRENTTIME: Seeking to offset seconds",
-            offsetSeconds
-          );
-          return offsetSeconds;
+      if (!loading) {
+        const offsetSeconds = seconds - offsetStart;
+        const buffers = tech.buffered() as TimeRanges;
+        for (let i = 0; i < buffers.length; i++) {
+          if (
+            buffers.start(i) <= offsetSeconds &&
+            offsetSeconds <= buffers.end(i)
+          ) {
+            return offsetSeconds;
+          }
         }
+        seeking = tech.paused() ? 1 : 2;
+        loading = true;
       }
 
       updateOffsetStart(seconds);
 
       loadSource(seconds);
+      tech.trigger("timeupdate");
 
       return 0;
     },

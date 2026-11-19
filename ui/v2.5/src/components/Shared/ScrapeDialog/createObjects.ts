@@ -168,38 +168,38 @@ export function useCreateScrapedTag(
 ) {
   const [createTag] = useTagCreate();
 
-  const { scrapeResult, setScrapeResult, newObjects, setNewObjects, onTagCreated } =
-    props;
+  const {
+    scrapeResult,
+    setScrapeResult,
+    newObjects,
+    setNewObjects,
+    onTagCreated,
+  } = props;
 
-  async function createNewTag(toCreate: GQL.ScrapedTag) {
-    const input: GQL.TagCreateInput = { name: toCreate.name ?? "" };
-
-    const result = await createTag({
-      variables: { input },
-    });
-
+  async function createNewTags(toCreate: GQL.ScrapedTag[]) {
     const newValue = [...(scrapeResult.newValue ?? [])];
-    if (result.data?.tagCreate) {
-      onTagCreated?.(result.data.tagCreate);
-      newValue.push({
-        stored_id: result.data.tagCreate.id,
-        name: result.data.tagCreate.name,
-      });
+    const created = new Set<string>();
+
+    try {
+      for (const tag of toCreate) {
+        const result = await createTag({
+          variables: { input: { name: tag.name ?? "" } },
+        });
+
+        if (result.data?.tagCreate) {
+          onTagCreated?.(result.data.tagCreate);
+          newValue.push({
+            stored_id: result.data.tagCreate.id,
+            name: result.data.tagCreate.name,
+          });
+        }
+        created.add(tag.name);
+      }
+    } finally {
+      setScrapeResult(scrapeResult.cloneWithValue(newValue));
+      setNewObjects(newObjects.filter((t) => !created.has(t.name)));
     }
-
-    // add the new tag to the new tags value
-    const tagClone = scrapeResult.cloneWithValue(newValue);
-    setScrapeResult(tagClone);
-
-    // remove the tag from the list
-    const newTagsClone = newObjects.concat();
-    const pIndex = newTagsClone.findIndex((p) => p.name === toCreate.name);
-    if (pIndex === -1) throw new Error("Could not find tag to remove");
-
-    newTagsClone.splice(pIndex, 1);
-
-    setNewObjects(newTagsClone);
   }
 
-  return useCreateObject("tag", createNewTag);
+  return useCreateObject("tag", createNewTags);
 }

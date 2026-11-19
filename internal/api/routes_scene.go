@@ -264,6 +264,17 @@ func (rs sceneRoutes) Screenshot(w http.ResponseWriter, r *http.Request) {
 
 func (rs sceneRoutes) Preview(w http.ResponseWriter, r *http.Request) {
 	scene := r.Context().Value(sceneKey).(*models.Scene)
+	if manager.IsEmbedSpriteScene(scene) {
+		filepath := manager.EmbedPreviewPath(scene)
+		if exists, _ := fsutil.FileExists(filepath); !exists {
+			manager.EnsureEmbedPreviewJob(r.Context(), scene)
+			http.NotFound(w, r)
+			return
+		}
+		utils.ServeStaticFile(w, r, filepath)
+		return
+	}
+
 	sceneHash := scene.GetHash(config.GetInstance().GetVideoFileNamingAlgorithm())
 	filepath := manager.GetInstance().Paths.Scene.GetVideoPreviewPath(sceneHash)
 

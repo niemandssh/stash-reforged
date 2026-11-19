@@ -38,6 +38,7 @@ interface IScrapedRowProps<T, V> extends IScrapedFieldProps<T> {
   onChange: (value: ScrapeResult<T>) => void;
   newValues?: V[];
   onCreateNew?: (index: number) => void;
+  onCreateAll?: () => void;
   getName?: (value: V) => string;
   onMergeOriginalIntoNew?: () => void;
   mergeOriginalTooltip?: string;
@@ -96,15 +97,28 @@ export const ScrapeDialogRow = <T, V>(props: IScrapedRowProps<T, V>) => {
 
     const minCollapseLength = 10;
 
-    if (props.newValues!.length >= minCollapseLength) {
-      return (
-        <CollapseButton text={`Missing (${props.newValues!.length})`}>
-          {ret}
-        </CollapseButton>
-      );
-    }
-
-    return ret;
+    return (
+      <>
+        {props.onCreateAll && props.newValues!.length > 1 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="mt-2"
+            onClick={props.onCreateAll}
+          >
+            <Icon className="fa-fw mr-1" icon={faPlus} />
+            <FormattedMessage id="actions.add_all" />
+          </Button>
+        )}
+        {props.newValues!.length >= minCollapseLength ? (
+          <CollapseButton text={`Missing (${props.newValues!.length})`}>
+            {ret}
+          </CollapseButton>
+        ) : (
+          ret
+        )}
+      </>
+    );
   }
 
   return (

@@ -33,6 +33,9 @@ type PreviewOptions struct {
 	Preset string
 
 	Audio bool
+
+	// HTTPHeaders are passed to ffmpeg before the input, for remote streams.
+	HTTPHeaders string
 }
 
 func getExcludeValue(videoDuration float64, v string) float64 {
@@ -124,11 +127,12 @@ func (g *Generator) previewVideo(input string, videoDuration float64, options Pr
 			time := offset + (float64(i) * stepSize)
 
 			chunkOptions := previewChunkOptions{
-				StartTime:  time,
-				Duration:   segmentDuration,
-				OutputPath: chunkFile.Name(),
-				Audio:      options.Audio,
-				Preset:     options.Preset,
+				StartTime:   time,
+				Duration:    segmentDuration,
+				OutputPath:  chunkFile.Name(),
+				Audio:       options.Audio,
+				Preset:      options.Preset,
+				HTTPHeaders: options.HTTPHeaders,
 			}
 
 			if err := g.previewVideoChunk(lockCtx, input, chunkOptions, fallback, useVsync2); err != nil {
@@ -153,11 +157,12 @@ func (g *Generator) previewVideo(input string, videoDuration float64, options Pr
 func (g *Generator) previewVideoSingle(input string, videoDuration float64, options PreviewOptions, fallback bool, useVsync2 bool) generateFn {
 	return func(lockCtx *fsutil.LockContext, tmpFn string) error {
 		chunkOptions := previewChunkOptions{
-			StartTime:  0,
-			Duration:   videoDuration,
-			OutputPath: tmpFn,
-			Audio:      options.Audio,
-			Preset:     options.Preset,
+			StartTime:   0,
+			Duration:    videoDuration,
+			OutputPath:  tmpFn,
+			Audio:       options.Audio,
+			Preset:      options.Preset,
+			HTTPHeaders: options.HTTPHeaders,
 		}
 
 		return g.previewVideoChunk(lockCtx, input, chunkOptions, fallback, useVsync2)
@@ -165,11 +170,12 @@ func (g *Generator) previewVideoSingle(input string, videoDuration float64, opti
 }
 
 type previewChunkOptions struct {
-	StartTime  float64
-	Duration   float64
-	OutputPath string
-	Audio      bool
-	Preset     string
+	StartTime   float64
+	Duration    float64
+	OutputPath  string
+	Audio       bool
+	Preset      string
+	HTTPHeaders string
 }
 
 func (g Generator) previewVideoChunk(lockCtx *fsutil.LockContext, fn string, options previewChunkOptions, fallback bool, useVsync2 bool) error {
@@ -193,6 +199,11 @@ func (g Generator) previewVideoChunk(lockCtx *fsutil.LockContext, fn string, opt
 		videoArgs = append(videoArgs, "-vsync", "2")
 	}
 
+	extraInputArgs := g.FFMpegConfig.GetTranscodeInputArgs()
+	if options.HTTPHeaders != "" {
+		extraInputArgs = append([]string{"-headers", options.HTTPHeaders}, extraInputArgs...)
+	}
+
 	trimOptions := transcoder.TranscodeOptions{
 		OutputPath: options.OutputPath,
 		StartTime:  options.StartTime,
@@ -204,7 +215,7 @@ func (g Generator) previewVideoChunk(lockCtx *fsutil.LockContext, fn string, opt
 		VideoCodec: ffmpeg.VideoCodecLibX264,
 		VideoArgs:  videoArgs,
 
-		ExtraInputArgs:  g.FFMpegConfig.GetTranscodeInputArgs(),
+		ExtraInputArgs:  extraInputArgs,
 		ExtraOutputArgs: g.FFMpegConfig.GetTranscodeOutputArgs(),
 	}
 

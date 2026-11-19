@@ -1,6 +1,7 @@
 {
   "actions": {
     "add": "Add",
+    "add_all": "Add all",
     "add_directory": "Add Directory",
     "add_entity": "Add {entityType}",
     "add_manual_date": "Add manual date",

@@ -39,6 +39,12 @@ func StreamHTTPHeadersForMediaURL(embedURL, mediaURL string) string {
 		return StreamHTTPHeadersForURL(embedURL)
 	}
 
+	if _, site, err := Parse(embedURL); err == nil {
+		if referer, _ := siteReferer(site); referer != "" {
+			return StreamHTTPHeadersForSite(site)
+		}
+	}
+
 	embedHost := hostOf(embedURL)
 	mediaHost := hostOf(mediaURL)
 	if embedHost != "" && mediaHost != "" && !hostsEqualOrSubdomain(mediaHost, embedHost) {

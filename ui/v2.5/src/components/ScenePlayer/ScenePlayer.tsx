@@ -1138,6 +1138,10 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           return !(isFileTranscode && isSafari);
         })
         .sort((a, b) => {
+          const seekRank = (url: string) =>
+            supportsNativeSeek(new URL(url)) ? 0 : 1;
+          const bySeek = seekRank(a.url) - seekRank(b.url);
+          if (bySeek !== 0) return bySeek;
           const height = (label: string | null | undefined) => {
             const match = label?.match(/^(\d+)p$/i);
             return match ? Number(match[1]) : 0;
@@ -1287,7 +1291,7 @@ export const ScenePlayer: React.FC<IScenePlayerProps> = PatchComponent(
           }
           // Some browsers reset to 0 when playback actually starts.
           player.one("playing", () => {
-            if (Math.abs((player.currentTime() ?? 0) - startPosition) > 1) {
+            if ((player.currentTime() ?? 0) < 1) {
               applyStartPosition();
             }
           });

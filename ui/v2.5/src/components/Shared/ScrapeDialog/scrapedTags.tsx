@@ -42,7 +42,7 @@ export function useScrapedTags(
 
   const [createdTags, setCreatedTags] = useState<Tag[]>([]);
 
-  const createNewTag = useCreateScrapedTag({
+  const createNewTags = useCreateScrapedTag({
     scrapeResult: tags,
     setScrapeResult: setTags,
     newObjects: newTags,
@@ -61,7 +61,8 @@ export function useScrapedTags(
       result={tags}
       onChange={(value) => setTags(value)}
       newObjects={newTags}
-      onCreateNew={createNewTag}
+      onCreateNew={(tag) => createNewTags([tag])}
+      onCreateAll={() => createNewTags(newTags)}
     />
   );
 

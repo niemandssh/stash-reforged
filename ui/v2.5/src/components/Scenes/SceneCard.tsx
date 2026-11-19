@@ -89,6 +89,8 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
 }) => {
   const videoEl = useRef<HTMLVideoElement>(null);
   const [scrubbing, setScrubbing] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const uniqueId = useMemo(
     () =>
       `scene-preview-${sceneId ?? "unknown"}-${Math.random()
@@ -154,6 +156,8 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
             } as React.CSSProperties)
           : undefined
       }
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <img
         className="scene-card-preview-image"
@@ -162,18 +166,22 @@ export const ScenePreview: React.FC<IScenePreviewProps> = ({
         alt=""
         style={filterStyle}
       />
-      <video
-        disableRemotePlayback
-        playsInline
-        muted={!soundActive}
-        className="scene-card-preview-video"
-        loop
-        preload="none"
-        ref={videoEl}
-        src={video}
-      />
+      {!videoFailed && (
+        <video
+          disableRemotePlayback
+          playsInline
+          muted={!soundActive}
+          className="scene-card-preview-video"
+          loop
+          preload="none"
+          ref={videoEl}
+          src={video}
+          onError={() => setVideoFailed(true)}
+        />
+      )}
       <PreviewScrubber
         vttPath={vttPath}
+        slideshow={videoFailed && hovered}
         onClick={onScrubberClick}
         sceneId={sceneId}
         filters={filters}
@@ -552,7 +560,12 @@ const SceneCardDetails = PatchComponent(
 
     return (
       <div className="scene-card__details">
-        <span className="scene-card__date">{TextUtils.getDateDisplayString(props.scene.date, props.scene.date_display)}</span>
+        <span className="scene-card__date">
+          {TextUtils.getDateDisplayString(
+            props.scene.date,
+            props.scene.date_display
+          )}
+        </span>
         {file?.size !== undefined ? (
           <span
             className={cx("scene-card__file-size", {
@@ -629,8 +642,7 @@ const SceneCardImage = PatchComponent(
     );
 
     const preferredTagColor = useMemo(() => {
-      const preferredTagIds =
-        configuration?.ui?.scenePreferredTagIds ?? [];
+      const preferredTagIds = configuration?.ui?.scenePreferredTagIds ?? [];
       if (preferredTagIds.length === 0) {
         return null;
       }
@@ -806,11 +818,18 @@ export const SceneCard = PatchComponent(
             placement="top"
             overlay={
               <Tooltip id={`threats-safe-${props.scene.id}`}>
-                <FormattedMessage id="threats_none" defaultMessage="No threats found" />
+                <FormattedMessage
+                  id="threats_none"
+                  defaultMessage="No threats found"
+                />
               </Tooltip>
             }
           >
-            <Icon icon={faShieldAlt} className="text-success" style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }} />
+            <Icon
+              icon={faShieldAlt}
+              className="text-success"
+              style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }}
+            />
           </OverlayTrigger>
         )}
         {hasThreats && (
@@ -818,16 +837,26 @@ export const SceneCard = PatchComponent(
             placement="top"
             overlay={
               <Tooltip id={`threats-found-${props.scene.id}`}>
-                <FormattedMessage id="threats_found" defaultMessage="Threats found" />
+                <FormattedMessage
+                  id="threats_found"
+                  defaultMessage="Threats found"
+                />
                 {primaryFile.threats && (
-                  <pre className="text-danger small mb-0 mt-1" style={{ whiteSpace: "pre-wrap", maxWidth: 300 }}>
+                  <pre
+                    className="text-danger small mb-0 mt-1"
+                    style={{ whiteSpace: "pre-wrap", maxWidth: 300 }}
+                  >
                     {primaryFile.threats}
                   </pre>
                 )}
               </Tooltip>
             }
           >
-            <Icon icon={faShieldAlt} className="text-danger" style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }} />
+            <Icon
+              icon={faShieldAlt}
+              className="text-danger"
+              style={{ fontSize: "0.85em", marginLeft: 0, paddingLeft: 0 }}
+            />
           </OverlayTrigger>
         )}
         {objectTitle(props.scene)}
@@ -841,29 +870,29 @@ export const SceneCard = PatchComponent(
         watchLater={props.scene.watch_later ?? false}
       >
         <GridCard
-        className={`scene-card ${zoomIndex()} ${filelessClass()}`}
-        url={sceneLink}
-        title={titleElement}
-        width={props.width}
-        linkClassName="scene-card-link"
-        thumbnailSectionClassName="video-section"
-        resumeTime={props.scene.resume_time ?? undefined}
-        duration={file?.duration ?? undefined}
-        interactiveHeatmap={
-          props.scene.interactive_speed
-            ? props.scene.paths.interactive_heatmap ?? undefined
-            : undefined
-        }
-        image={<SceneCardImage {...props} />}
-        overlays={<SceneCardOverlays {...props} />}
-        details={<SceneCardDetails {...props} />}
-        popovers={<SceneCardPopovers {...props} />}
-        selected={props.selected}
-        selecting={props.selecting}
-        onSelectedChanged={props.onSelectedChanged}
-        pinButton={pinButton}
-        isPinned={props.scene.pinned}
-      />
+          className={`scene-card ${zoomIndex()} ${filelessClass()}`}
+          url={sceneLink}
+          title={titleElement}
+          width={props.width}
+          linkClassName="scene-card-link"
+          thumbnailSectionClassName="video-section"
+          resumeTime={props.scene.resume_time ?? undefined}
+          duration={file?.duration ?? undefined}
+          interactiveHeatmap={
+            props.scene.interactive_speed
+              ? props.scene.paths.interactive_heatmap ?? undefined
+              : undefined
+          }
+          image={<SceneCardImage {...props} />}
+          overlays={<SceneCardOverlays {...props} />}
+          details={<SceneCardDetails {...props} />}
+          popovers={<SceneCardPopovers {...props} />}
+          selected={props.selected}
+          selecting={props.selecting}
+          onSelectedChanged={props.onSelectedChanged}
+          pinButton={pinButton}
+          isPinned={props.scene.pinned}
+        />
       </SceneContextMenu>
     );
   }

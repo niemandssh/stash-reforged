@@ -28,6 +28,8 @@ interface IScenePreviewProps {
   onProtectedLeave?: () => void;
   /** Called when scrubber active index becomes set/unset */
   onScrubbingChange?: (scrubbing: boolean) => void;
+  /** Cycles through sprites while true and the user is not scrubbing */
+  slideshow?: boolean;
 }
 
 function scaleToFit(dimensions: { w: number; h: number }, bounds: DOMRect) {
@@ -53,11 +55,13 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
   onProtectedHover,
   onProtectedLeave,
   onScrubbingChange,
+  slideshow,
 }) => {
   const imageParentRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState({});
 
   const [activeIndex, setActiveIndex] = useState<number>();
+  const [slideIndex, setSlideIndex] = useState<number>();
 
   const debounceSetActiveIndex = useThrottle(setActiveIndex, 50);
 
@@ -66,18 +70,33 @@ export const PreviewScrubber: React.FC<IScenePreviewProps> = ({
   const spriteInfo = useSpriteInfo(hasLoaded ? vttPath : undefined);
 
   const sprite = useMemo(() => {
-    if (!spriteInfo || activeIndex === undefined) {
+    const index = activeIndex ?? slideIndex;
+    if (!spriteInfo || index === undefined) {
       return undefined;
     }
-    return spriteInfo[activeIndex];
-  }, [activeIndex, spriteInfo]);
+    return spriteInfo[index];
+  }, [activeIndex, slideIndex, spriteInfo]);
 
   // mark as loaded on the first hover
   useEffect(() => {
-    if (activeIndex !== undefined) {
+    if (activeIndex !== undefined || slideshow) {
       setHasLoaded(true);
     }
-  }, [activeIndex]);
+  }, [activeIndex, slideshow]);
+
+  useEffect(() => {
+    if (!slideshow || !spriteInfo?.length) {
+      setSlideIndex(undefined);
+      return;
+    }
+
+    setSlideIndex(0);
+    const timer = setInterval(
+      () => setSlideIndex((i) => ((i ?? 0) + 1) % spriteInfo.length),
+      500
+    );
+    return () => clearInterval(timer);
+  }, [slideshow, spriteInfo]);
 
   useEffect(() => {
     onScrubbingChange?.(activeIndex !== undefined);

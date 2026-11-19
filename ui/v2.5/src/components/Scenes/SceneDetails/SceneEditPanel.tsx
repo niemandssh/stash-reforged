@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { flushSync } from "react-dom";
 import { FormattedMessage, useIntl } from "react-intl";
-import { Button, Form, Col, Row, ButtonGroup } from "react-bootstrap";
+import { Button, Form, Col, Row, ButtonGroup, Spinner } from "react-bootstrap";
 import Mousetrap from "mousetrap";
 import { useHotkey } from "src/hooks/hotkeys";
 import * as GQL from "src/core/generated-graphql";
@@ -784,7 +784,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
   useEffect(() => {
     if (isVisible) {
       Mousetrap.bind(editSaveHotkey, () => {
-        if (formik.dirty) {
+        if (formik.dirty && !formik.isSubmitting) {
           formik.submitForm();
         }
       });
@@ -1876,6 +1876,7 @@ export const SceneEditPanel: React.FC<IProps> = ({
               className="edit-button"
               variant="primary"
               disabled={
+                formik.isSubmitting ||
                 (!isNew &&
                   !formik.dirty &&
                   !hasUserInteractedWithPerformerTags) ||
@@ -1892,6 +1893,9 @@ export const SceneEditPanel: React.FC<IProps> = ({
               }
               onClick={() => formik.submitForm()}
             >
+              {formik.isSubmitting && (
+                <Spinner animation="border" size="sm" className="mr-2" />
+              )}
               <FormattedMessage id="actions.save" />
             </Button>
             <Button
