@@ -78,3 +78,27 @@ func TestLiveCamsClipsKVSExtract(t *testing.T) {
 	}
 	t.Logf("media URL: %s", variants[0].URL)
 }
+
+func TestExtractKVSSourceTagVariants(t *testing.T) {
+	html := `
+<script src="https://xgroovy.com/player/kt_player.js"></script>
+<video>
+<source id="video_source_4" src="https://xgroovy.com/get_file/1/319b6e/39000/39654/39654_1080p.mp4/?br=3026" type="video/mp4" title="1080p" data-fluid-hd="true">
+<source id="video_source_2" src="https://xgroovy.com/get_file/1/5bc611/39000/39654/39654.mp4/?br=793" type="video/mp4" title="480p" >
+</video>`
+
+	if !isKVSPage(html) {
+		t.Fatal("expected KVS page detection")
+	}
+
+	variants, err := extractKVSStreamVariantsFromHTML("https://xgroovy.com/videos/39654/x/", html)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(variants) != 2 {
+		t.Fatalf("got %d variants, want 2", len(variants))
+	}
+	if variants[0].Height != 1080 || variants[1].Height != 480 {
+		t.Fatalf("heights = %d, %d; want 1080, 480", variants[0].Height, variants[1].Height)
+	}
+}

@@ -18,6 +18,8 @@ var (
 	kvsVideoURLTextRe = regexp.MustCompile(`(?i)(video_url|video_alt_url\d*)_text\s*:\s*['"]([^'"]+)['"]`)
 	kvsHeightInTextRe = regexp.MustCompile(`(?i)(\d{3,4})p`)
 	kvsDurationRe     = regexp.MustCompile(`(?i)video_duration\s*:\s*['"]?(\d+(?:\.\d+)?)['"]?`)
+	kvsSourceTagRe    = regexp.MustCompile(`(?i)<source\b[^>]*\bsrc=["']([^"']*/get_file/[^"']+)["'][^>]*>`)
+	kvsTitleAttrRe    = regexp.MustCompile(`(?i)\btitle=["']([^"']*)["']`)
 )
 
 // IsKVSSite reports whether the site is a KVS (kt_player) page.
@@ -29,15 +31,52 @@ func isKVSPage(html string) bool {
 	if !kvsPlayerMarkerRe.MatchString(html) {
 		return false
 	}
-	return strings.Contains(html, "video_url") && strings.Contains(html, "license_code")
+	return (strings.Contains(html, "video_url") && strings.Contains(html, "license_code")) ||
+		kvsSourceTagRe.MatchString(html)
+}
+
+// extractKVSSourceTagVariants reads plain <source> tags that some KVS themes (Fluid Player) render instead of flashvars.
+func extractKVSSourceTagVariants(base *url.URL, html string) []HLSVariant {
+	var variants []HLSVariant
+	seen := make(map[string]struct{})
+	for _, m := range kvsSourceTagRe.FindAllStringSubmatch(html, -1) {
+		abs, err := base.Parse(strings.ReplaceAll(m[1], "&amp;", "&"))
+		if err != nil {
+			continue
+		}
+		mediaURL := abs.String()
+		if _, ok := seen[mediaURL]; ok {
+			continue
+		}
+		seen[mediaURL] = struct{}{}
+
+		height := inferHeightFromURL(mediaURL)
+		if height == 0 {
+			if tm := kvsTitleAttrRe.FindStringSubmatch(m[0]); len(tm) == 2 {
+				if hm := kvsHeightInTextRe.FindStringSubmatch(tm[1]); len(hm) == 2 {
+					height, _ = strconv.Atoi(hm[1])
+				}
+			}
+		}
+		variants = append(variants, HLSVariant{URL: mediaURL, Height: height})
+	}
+	return variants
 }
 
 func extractKVSStreamVariantsFromHTML(pageURL, html string) ([]HLSVariant, error) {
+	base, err := url.Parse(pageURL)
+	if err != nil {
+		return nil, err
+	}
+
 	license := ""
 	if m := kvsLicenseCodeRe.FindStringSubmatch(html); len(m) == 2 {
 		license = strings.TrimSpace(m[1])
 	}
 	if license == "" {
+		if variants := extractKVSSourceTagVariants(base, html); len(variants) > 0 {
+			return variants, nil
+		}
 		return nil, fmt.Errorf("%w: kvs license_code not found", ErrStreamNotFound)
 	}
 
@@ -46,11 +85,6 @@ func extractKVSStreamVariantsFromHTML(pageURL, html string) ([]HLSVariant, error
 		if len(m) == 3 {
 			texts[strings.ToLower(m[1])] = strings.TrimSpace(m[2])
 		}
-	}
-
-	base, err := url.Parse(pageURL)
-	if err != nil {
-		return nil, err
 	}
 
 	var variants []HLSVariant
