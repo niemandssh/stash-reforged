@@ -70,6 +70,24 @@
 - [x] Scene Wall and Marker Wall mode improved (setting to enable/disable autoplay of previews; optional extra info on cards, overlay hides on preview hover, scene selection with checkboxes)
 - [x] Scrubber sprite generated at higher width for better hover preview
 - [x] Pasted text is split into tags by commas, semicolons or line breaks, so you can paste a whole list at once; new tags are created if they don't exist yet
+- [x] **Remote scenes** - add a scene by URL without downloading the video (PornHub, XVideos, Xnxx, XHamster, VK Video, Eporner, TNAFlix, Newgrounds, KVS sites like xgroovy, PlayerJS/JWPlayer pages and direct links). It plays natively in Stash player through proxy, with covers, sprites and previews generated from the stream
+- [x] **Remote scene suggestions** - carousel on the Scenes page with fresh videos from popular sites. You can set minimum duration, priority tags (shown first, with a colored bar) and stop tags (hidden)
+- [x] **Watch Later** - list of scenes to watch later (from the scene context menu), with "added N minutes ago" info
+- [x] **Fill scene data with AI** (strictly optional) - DeepSeek fills title, details and tags by web search; optional vision API (Groq, DeepInfra, Together, OpenAI or custom) analyzes 180 frames of the video for better results
+- [x] **Hot keys settings** - every hotkey can be rebound in Settings - Hot Keys (scenes, lists, slideshow, navigation). Esc always closes dialogs
+- [x] **VR / 360° playback** - per-scene projection (360° mono, 180° side-by-side, 360° top-bottom), WASD to look around, Q/E and mouse wheel to zoom
+- [x] **Archive scene** - mark scene as archived with an optional reason (badge and filter)
+- [x] **Compress video (H.265)** - re-encode to HEVC at visually lossless quality and replace the original only if it becomes smaller (backup is kept in the temp folder)
+- [x] **Studio merge** - like performer and tag merge, with a source/destination comparison of fields
+- [x] **Copy/paste whole scene data** between scenes
+- [x] **"First review" button** - opens a random unclassified scene; "Classified" flag for scenes
+- [x] Scene context menu on cards (open in new tab, watch later, etc.)
+- [x] "Trimmed" badge on scene cards and "Needs Trimming" filter
+- [x] Detach file from scene (file on disk is not deleted, sprites can be removed)
+- [x] Add all missing scraped tags at once, merge tags from existing scene into scraped ones
+- [x] Warmth video filter, volume boost in player
+- [x] "Couple" gender and O+OMG count sort/filter
+- [x] Smooth show and hide of video preview in scene, no preview blink on scene open, improved preview scrubber
 
 ### TODO
 - [ ] Add info about status of handled videos for global recount suggested scenes task

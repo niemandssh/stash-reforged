@@ -33,6 +33,13 @@ This version will be always in develop branch.
 - [x] **Next scene with timer** - after the end of video like in YouTube (selects one of top-5 suggested scenes). You can change time or turn it off in Settings - Custom
 - [x] **New selective scan** - now you can select not only folders, but also individual files for scanning. New convenient Grid mode, selected files and folders are now displayed on the right side 
 - [x] **Separate tags for performers in scene** - useful for add tags by each performer if there is 3 or more performers in scene and you need to describe each of them
+- [x] **Remote scenes** - add a scene by URL without downloading the video (PornHub, XVideos, Xnxx, XHamster, VK Video, Eporner, KVS sites and many others). It plays natively in Stash player with generated covers, sprites and previews
+- [x] **Remote scene suggestions** - carousel on the Scenes page with fresh videos from popular sites, filtered by your priority and stop tags
+- [x] **Watch Later** - list of scenes to watch later
+- [x] **Fill scene data with AI** (strictly optional) - fills title, details and tags by web search and video frames analysis
+- [x] **Hot keys settings** - every hotkey can be rebound
+- [x] **VR / 360° playback** - per-scene projection with WASD look around and zoom
+- [x] **Compress video (H.265)** - replaces the original only if the result is smaller
 
 **And a lot of other improvements! You can view the full list [in this page](IMPROVEMENTS.md).**
 
