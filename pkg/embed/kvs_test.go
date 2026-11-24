@@ -102,3 +102,19 @@ func TestExtractKVSSourceTagVariants(t *testing.T) {
 		t.Fatalf("heights = %d, %d; want 1080, 480", variants[0].Height, variants[1].Height)
 	}
 }
+
+func TestExtractKVSPlainVideoURLWithoutLicense(t *testing.T) {
+	html := `<script src="https://www.camwhores.tv/player/kt_player.js"></script>
+flashvars = {
+video_url: 'https://www.camwhores.tv/get_file/135/abc/15215000/15215026/15215026.mp4/?v-acctoken=x',
+video_url_fhd: '1'
+};`
+
+	variants, err := extractKVSStreamVariantsFromHTML("https://www.camwhores.tv/videos/15215026/iamcassidy2/", html)
+	if err != nil {
+		t.Fatalf("extract: %v", err)
+	}
+	if len(variants) != 1 || !strings.Contains(variants[0].URL, "15215026.mp4") {
+		t.Fatalf("variants = %+v", variants)
+	}
+}

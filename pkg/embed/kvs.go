@@ -77,7 +77,6 @@ func extractKVSStreamVariantsFromHTML(pageURL, html string) ([]HLSVariant, error
 		if variants := extractKVSSourceTagVariants(base, html); len(variants) > 0 {
 			return variants, nil
 		}
-		return nil, fmt.Errorf("%w: kvs license_code not found", ErrStreamNotFound)
 	}
 
 	texts := map[string]string{}
